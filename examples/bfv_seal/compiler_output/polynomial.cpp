@@ -19,8 +19,8 @@ EncodedOutputsMap polynomial(const SEALContext &context,
     Ciphertext &x = inputs["x"];
     Scalar &shift = inputs["shift"];
     Evaluator evaluator(context);
-    BatchEncoder batch_encoder(context);
     // 4x^4 + 8x^3 + 8x^2 + 8x + 4 = 4(x + 1)^2 * (x^2 + 1)
+    // handle 1d vector rotation
     evaluator.rotate_rows_inplace(x, shift.as_int(), galois_keys);
     Ciphertext &x1 = x;
     Plaintext plain1("1");
@@ -37,7 +37,7 @@ EncodedOutputsMap polynomial(const SEALContext &context,
     Plaintext y = x1;
     evaluator.multiply_inplace(y, x2);
     evaluator.relinearize_inplace(y, relin_keys);
+    // handle 1d vector rotation
     evaluator.rotate_rows_inplace(y, -4, galois_keys);
-    evaluator.rotate_columns_inplace(y, galois_keys);
     return {{"y", y}};
 }
