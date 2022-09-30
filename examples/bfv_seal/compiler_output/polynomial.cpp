@@ -37,7 +37,10 @@ EncodedOutputsMap polynomial(const SEALContext &context,
     Plaintext y = x1;
     evaluator.multiply_inplace(y, x2);
     evaluator.relinearize_inplace(y, relin_keys);
-    // handle 1d vector rotation
-    evaluator.rotate_rows_inplace(y, -4, galois_keys);
+    /*
+        Rotation in our DSL is about 1D vectors. 
+        The compiler will translate the rotation on a 1D vector that the user operates on into rotations on 2*(n/2) seal matrix
+    */ 
+    //evaluator.rotate_rows_inplace(y, -4, galois_keys);
     return {{"y", y}};
 }
