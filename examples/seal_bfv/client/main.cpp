@@ -1,3 +1,5 @@
+#include "compiler_output/inputs_setup.hpp"
+#include "compiler_output/outputs_setup.hpp"
 #include "seal/seal.h"
 #include "some_def.h"
 /*
