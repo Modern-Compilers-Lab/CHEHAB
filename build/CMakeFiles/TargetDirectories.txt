@@ -1,0 +1,5 @@
+/home/aimad/Desktop/projects/fhe_compiler/fheco_project/build/CMakeFiles/FHECO_PROJECT.dir
+/home/aimad/Desktop/projects/fhe_compiler/fheco_project/build/CMakeFiles/user_datatypes.dir
+/home/aimad/Desktop/projects/fhe_compiler/fheco_project/build/CMakeFiles/ir.dir
+/home/aimad/Desktop/projects/fhe_compiler/fheco_project/build/CMakeFiles/edit_cache.dir
+/home/aimad/Desktop/projects/fhe_compiler/fheco_project/build/CMakeFiles/rebuild_cache.dir

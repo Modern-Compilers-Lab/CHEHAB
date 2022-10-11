@@ -1,0 +1,2 @@
+/usr/bin/ar qc libuser_datatypes.a CMakeFiles/user_datatypes.dir/src/user_datatypes/ciphertext.cpp.o CMakeFiles/user_datatypes.dir/src/user_datatypes/plaintext.cpp.o CMakeFiles/user_datatypes.dir/src/user_datatypes/scalar.cpp.o
+/usr/bin/ranlib libuser_datatypes.a
