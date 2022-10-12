@@ -84,15 +84,19 @@ Plaintext::Plaintext(std::string tag, bool output_flag, bool input_flag): label(
   auto node_ptr = program->insert_node_in_dataflow<Plaintext>(*this);
   node_ptr->set_iutput_flag(input_flag);
   node_ptr->set_output_flag(output_flag);
-  ir::ConstantTableEntry::ConstantTableEntryType entry_type;
 
-  if( input_flag && output_flag ) entry_type = ir::ConstantTableEntry::io;
-  else if( input_flag ) entry_type = ir::ConstantTableEntry::input;
-  else if( output_flag ) entry_type = ir::ConstantTableEntry::output;
-  else entry_type = ir::ConstantTableEntry::constant;
+  if( tag.length() )
+  {
 
-  ir::ConstantTableEntry::EntryValue entry_value = tag;
-  program->insert_entry_in_constants_table({this->label, {entry_type, entry_value}});
+    ir::ConstantTableEntry::ConstantTableEntryType entry_type;
+    if( input_flag && output_flag ) entry_type = ir::ConstantTableEntry::io;
+    else if( input_flag ) entry_type = ir::ConstantTableEntry::input;
+    else if( output_flag ) entry_type = ir::ConstantTableEntry::output;
+    else entry_type = ir::ConstantTableEntry::constant;
+
+    ir::ConstantTableEntry::EntryValue entry_value = tag;
+    program->insert_entry_in_constants_table({this->label, {entry_type, entry_value}});
+  }
 
 }
 

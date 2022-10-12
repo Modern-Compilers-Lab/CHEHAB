@@ -76,11 +76,13 @@ Scalar::Scalar(double _data): data(_data), label(datatype::sc_label_prefix+std::
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, _data}});
 }
 
+
 Scalar::Scalar(): label(datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++)) 
 {
   program->insert_node_in_dataflow<Scalar>(*this);
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, this->data}});
 }
+
 
 Scalar::Scalar(std::string tag, bool output_flag, bool input_flag): label(datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++))
 {
@@ -90,15 +92,18 @@ Scalar::Scalar(std::string tag, bool output_flag, bool input_flag): label(dataty
   auto node_ptr = program->insert_node_in_dataflow<Scalar>(*this);
   node_ptr->set_iutput_flag(input_flag);
   node_ptr->set_output_flag(output_flag);
-  ir::ConstantTableEntry::ConstantTableEntryType entry_type;
 
-  if( input_flag && output_flag ) entry_type = ir::ConstantTableEntry::io;
-  else if( input_flag ) entry_type = ir::ConstantTableEntry::input;
-  else if( output_flag ) entry_type = ir::ConstantTableEntry::output;
-  else entry_type = ir::ConstantTableEntry::constant;
+  if( tag.length() )
+  {
+    ir::ConstantTableEntry::ConstantTableEntryType entry_type;
+    if( input_flag && output_flag ) entry_type = ir::ConstantTableEntry::io;
+    else if( input_flag ) entry_type = ir::ConstantTableEntry::input;
+    else if( output_flag ) entry_type = ir::ConstantTableEntry::output;
+    else entry_type = ir::ConstantTableEntry::constant;
 
-  ir::ConstantTableEntry::EntryValue entry_value = tag;
-  program->insert_entry_in_constants_table({this->label, {entry_type, entry_value}});
+    ir::ConstantTableEntry::EntryValue entry_value = tag;
+    program->insert_entry_in_constants_table({this->label, {entry_type, entry_value}});
+  }
 
 }
 

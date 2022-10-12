@@ -4,6 +4,7 @@
 #include<variant>
 #include<vector>
 #include"ir_const.hpp"
+#include"datatypes_const.hpp"
 #include<iostream>
 
 namespace fhecompiler
@@ -28,7 +29,7 @@ class Plaintext
   Plaintext(const std::vector<double>& message);
   Plaintext(const std::vector<int>& message): Plaintext((const std::vector<int64_t>& ) message) {}
   
-  Plaintext(std::string tag, bool output_flag=false, bool input_flag=false);
+  Plaintext(std::string tag, bool is_output=false, bool is_input=false);
 
   Plaintext(const Plaintext& pt_copy);
   Plaintext& operator=(const Plaintext& pt_copy);

@@ -21,13 +21,13 @@ class Ciphertext
   static size_t ciphertext_id;
 
   public:
-  
+
   Ciphertext() = delete;
   explicit Ciphertext(Plaintext& );
 
   Ciphertext(const Plaintext& ) = delete;
 
-  Ciphertext(std::string tag, bool output_flag=false, bool input_flag=false);
+  Ciphertext(std::string tag, bool is_output=false, bool is_input=false);
 
   Ciphertext(const Ciphertext& ct_copy);
   Ciphertext& operator=(const Ciphertext& ct_copy);
@@ -56,14 +56,14 @@ class Ciphertext
   friend Ciphertext operator*(const Ciphertext& lhs, const Ciphertext& rhs);
 
   friend Ciphertext operator-(const Ciphertext& rhs);
-
+  
   void reduce(std::uint64_t plaintext_modulus);
   
   std::string get_label() const { return this->label; }
 
   void set_label(std::string label_value )  { this->label = label_value; }
   
-  void set_as_output(const std::string& label = "") const;
+  void set_as_output(const std::string& tag = "") const;
 
   friend inline void set_new_label(Ciphertext& ct);
 

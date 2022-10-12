@@ -18,7 +18,6 @@ inline void set_new_label(Ciphertext& ct)
   ct.set_label(datatype::ct_label_prefix+std::to_string(Ciphertext::ciphertext_id++));
 }
 
-
 std::string Ciphertext::generate_new_label() { return datatype::ct_label_prefix+std::to_string(Ciphertext::ciphertext_id++); }
 
 void compound_operate(Ciphertext& lhs, const Ciphertext& rhs, ir::OpCode opcode)
@@ -54,7 +53,7 @@ Ciphertext::Ciphertext(Plaintext& pt): label(datatype::ct_label_prefix+std::to_s
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, {pt.get_label()}}});
 }
 
-void Ciphertext::set_as_output(const std::string& label) const
+void Ciphertext::set_as_output(const std::string& tag) const
 {
 
   auto this_node_ptr = program->find_node_in_dataflow(this->label);
@@ -62,7 +61,7 @@ void Ciphertext::set_as_output(const std::string& label) const
   auto constant_table_entry = program->get_entry_form_constants_table(this->label);
   if(constant_table_entry == std::nullopt)
   {
-    program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::output, (label.length() ? label : this->label+"_"+datatype::output_tag)}});
+    program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::output, (tag.length() ? tag : this->label+"_"+datatype::output_tag)}});
   }
   else
   {
@@ -79,15 +78,18 @@ Ciphertext::Ciphertext(std::string tag, bool output_flag, bool input_flag): labe
   auto node_ptr = program->insert_node_in_dataflow<Ciphertext>(*this);
   node_ptr->set_iutput_flag(input_flag);
   node_ptr->set_output_flag(output_flag);
-  ir::ConstantTableEntry::ConstantTableEntryType entry_type;
+  
+  if( tag.length() )
+  {
+    ir::ConstantTableEntry::ConstantTableEntryType entry_type;
+    if( input_flag && output_flag ) entry_type = ir::ConstantTableEntry::io;
+    else if( input_flag ) entry_type = ir::ConstantTableEntry::input;
+    else if( output_flag ) entry_type = ir::ConstantTableEntry::output;
+    else entry_type = ir::ConstantTableEntry::constant;
 
-  if( input_flag && output_flag ) entry_type = ir::ConstantTableEntry::io;
-  else if( input_flag ) entry_type = ir::ConstantTableEntry::input;
-  else if( output_flag ) entry_type = ir::ConstantTableEntry::output;
-  else entry_type = ir::ConstantTableEntry::constant;
-
-  ir::ConstantTableEntry::EntryValue entry_value = tag;
-  program->insert_entry_in_constants_table({this->label, {entry_type, entry_value}});
+    ir::ConstantTableEntry::EntryValue entry_value = tag;
+    program->insert_entry_in_constants_table({this->label, {entry_type, entry_value}});
+  }
 
 }
 
@@ -114,7 +116,6 @@ Ciphertext& Ciphertext::operator=(const Ciphertext& ct_copy)
 
 Ciphertext::Ciphertext(const Ciphertext& ct_copy): label(datatype::ct_label_prefix + std::to_string(ciphertext_id++))
 {
-  std::cout << ct_copy.get_label() << "\n";
   auto ct_copy_node_ptr = program->insert_node_in_dataflow<Ciphertext>(ct_copy);
   program->insert_operation_node_in_dataflow(ir::assign, {ct_copy_node_ptr}, this->label, ir::ciphertextType);
   //std::cout << this->label << " = " << ct_copy.get_label() << "\n";

@@ -54,7 +54,9 @@ int main()
   fhecompiler::set_program_scheme(fhecompiler::bfv);
   Plaintext pt1(std::vector<int64_t>{1,3,4,5});
 
-  Ciphertext ct1(pt1); //
+  Ciphertext ct1(pt1);
+  Ciphertext ct2 = ct1+ct1;
+  /*
   Ciphertext ct2 = ct1;
   Ciphertext ct3 = ct1 + ct2 * ct1;
   Ciphertext ct4 = ct3+ct3;
@@ -64,6 +66,7 @@ int main()
 
   ct3.set_as_output("y");
 
-  Ciphertext ct5 = ct3+ct1;
+  Ciphertext ct5 = sum(ct3, ct1);//ct3+ct1;
+  */
   return 0;
 }
