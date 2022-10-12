@@ -5,7 +5,7 @@ namespace ir
 
 using Ptr = std::shared_ptr<Term>;
 
-Ptr Program::insert_operation_node(OpCode opcode, const std::vector<Ptr>& operands, std::string label, TermType term_type)
+Ptr Program::insert_operation_node_in_dataflow(OpCode opcode, const std::vector<Ptr>& operands, std::string label, TermType term_type)
 {
   Term::Operation operation(opcode, operands);
   Ptr new_term = std::make_shared<Term>(operation, label);
@@ -17,7 +17,6 @@ Ptr Program::insert_operation_node(OpCode opcode, const std::vector<Ptr>& operan
   {
     std::cout << new_term->get_label() << "(" << new_term->get_output_flag() << ")" << " = " << operands[0]->get_label() << "(" << operands[0]->get_output_flag() << ")" << " - " << operands[1]->get_label() << "(" << operands[1]->get_output_flag() << ")\n";
   }
-
   if(opcode == ir::assign)
   {
     std::cout << new_term->get_label() << "(" << new_term->get_output_flag() << ")" << " = " << operands[0]->get_label() << "(" << operands[0]->get_output_flag() << ")\n";
@@ -26,16 +25,20 @@ Ptr Program::insert_operation_node(OpCode opcode, const std::vector<Ptr>& operan
   {
     std::cout << new_term->get_label() << "(" << new_term->get_output_flag() << ")" << " = " << operands[0]->get_label() << "(" << operands[0]->get_output_flag() << ")" << " + " << operands[1]->get_label() << "(" << operands[1]->get_output_flag() << ")\n";
   }
+  if(opcode == ir::mul)
+  {
+    std::cout << new_term->get_label() << "(" << new_term->get_output_flag() << ")" << " = " << operands[0]->get_label() << "(" << operands[0]->get_output_flag() << ")" << " * " << operands[1]->get_label() << "(" << operands[1]->get_output_flag() << ")\n";
+  }
   return new_term;
 }
 
 void Program::set_symbol_as_output(std::string symbol)
 {
-  auto symbol_node_ptr = find_node_in_data_flow(symbol);
+  auto symbol_node_ptr = find_node_in_dataflow(symbol);
   if(symbol_node_ptr ) symbol_node_ptr->set_output_flag(true);
 }
 
-Ptr Program::find_node_in_data_flow(std::string label) const
+Ptr Program::find_node_in_dataflow(std::string label) const
 {
    return this->data_flow->find_node(label);
 }

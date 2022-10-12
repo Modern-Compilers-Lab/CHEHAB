@@ -218,9 +218,9 @@ CMakeFiles/user_datatypes.dir/src/user_datatypes/ciphertext.cpp.o: ../src/user_d
   /usr/include/c++/11/istream \
   /usr/include/c++/11/bits/istream.tcc \
   ../src/user_datatypes/ciphertext.hpp \
+  ../src/user_datatypes/datatypes_const.hpp \
   /usr/include/c++/11/optional \
   ../src/user_datatypes/scalar.hpp \
-  ../src/user_datatypes/datatypes_const.hpp \
   ../src/ir/dag.hpp \
   /usr/include/c++/11/unordered_map \
   /usr/include/c++/11/bits/hashtable.h \
@@ -235,7 +235,8 @@ CMakeFiles/user_datatypes.dir/src/user_datatypes/ciphertext.cpp.o: ../src/user_d
   /usr/include/c++/11/list \
   /usr/include/c++/11/bits/stl_list.h \
   /usr/include/c++/11/bits/list.tcc \
-  ../src/fhecompiler/fhecompiler_const.hpp
+  ../src/fhecompiler/fhecompiler_const.hpp \
+  ../src/user_datatypes/datatypes_util.hpp
 
 CMakeFiles/user_datatypes.dir/src/user_datatypes/plaintext.cpp.o: ../src/user_datatypes/plaintext.cpp \
   /usr/include/stdc-predef.h \
@@ -454,9 +455,9 @@ CMakeFiles/user_datatypes.dir/src/user_datatypes/plaintext.cpp.o: ../src/user_da
   /usr/include/c++/11/istream \
   /usr/include/c++/11/bits/istream.tcc \
   ../src/user_datatypes/ciphertext.hpp \
+  ../src/user_datatypes/datatypes_const.hpp \
   /usr/include/c++/11/optional \
   ../src/user_datatypes/scalar.hpp \
-  ../src/user_datatypes/datatypes_const.hpp \
   ../src/ir/dag.hpp \
   /usr/include/c++/11/unordered_map \
   /usr/include/c++/11/bits/hashtable.h \
@@ -471,7 +472,8 @@ CMakeFiles/user_datatypes.dir/src/user_datatypes/plaintext.cpp.o: ../src/user_da
   /usr/include/c++/11/list \
   /usr/include/c++/11/bits/stl_list.h \
   /usr/include/c++/11/bits/list.tcc \
-  ../src/fhecompiler/fhecompiler_const.hpp
+  ../src/fhecompiler/fhecompiler_const.hpp \
+  ../src/user_datatypes/datatypes_util.hpp
 
 CMakeFiles/user_datatypes.dir/src/user_datatypes/scalar.cpp.o: ../src/user_datatypes/scalar.cpp \
   /usr/include/stdc-predef.h \
@@ -707,7 +709,8 @@ CMakeFiles/user_datatypes.dir/src/user_datatypes/scalar.cpp.o: ../src/user_datat
   /usr/include/c++/11/list \
   /usr/include/c++/11/bits/stl_list.h \
   /usr/include/c++/11/bits/list.tcc \
-  ../src/fhecompiler/fhecompiler_const.hpp
+  ../src/fhecompiler/fhecompiler_const.hpp \
+  ../src/user_datatypes/datatypes_util.hpp
 
 
 ../src/user_datatypes/scalar.cpp:
@@ -722,9 +725,9 @@ CMakeFiles/user_datatypes.dir/src/user_datatypes/scalar.cpp.o: ../src/user_datat
 
 /usr/include/c++/11/bits/hashtable.h:
 
-../src/user_datatypes/datatypes_const.hpp:
-
 ../src/user_datatypes/scalar.hpp:
+
+../src/user_datatypes/datatypes_const.hpp:
 
 /usr/include/c++/11/bits/istream.tcc:
 
@@ -1009,6 +1012,8 @@ CMakeFiles/user_datatypes.dir/src/user_datatypes/scalar.cpp.o: ../src/user_datat
 ../src/user_datatypes/ciphertext.hpp:
 
 /usr/include/x86_64-linux-gnu/sys/cdefs.h:
+
+../src/user_datatypes/datatypes_util.hpp:
 
 /usr/include/x86_64-linux-gnu/asm/errno.h:
 

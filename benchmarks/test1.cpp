@@ -3,13 +3,25 @@
 
 using namespace std;
 
+using namespace fhecompiler;
+
+Ciphertext sum(const Ciphertext& a, const Ciphertext& b)
+{
+  return a+b;
+}
+
+void print_string(std::optional<std::string> string_opt)
+{
+  if(string_opt != nullopt) std::cout << *string_opt << "\n";
+}
+
 int main()
 {
   /*
   Scalar sc1 = 12;
   std::cout << sc1.get_label() << "\n"; //object0
   Scalar sc2 = 13;
-  std::cout << sc2.get_label() << "\n"; //object1
+  std::cout << sc2.get_label() << "\n; //object1
   Scalar sc3("y",true, false);
   std::cout << sc3.get_label() << "\n"; //object2
   sc3 = sc1+sc2;
@@ -40,17 +52,18 @@ int main()
 
   fhecompiler::init("test1");
   fhecompiler::set_program_scheme(fhecompiler::bfv);
+  Plaintext pt1(std::vector<int64_t>{1,3,4,5});
 
-  fhecompiler::Plaintext pt1 = std::vector<int64_t>{1,2,3,4};
-  std::cout << pt1.get_label() << "\n";
+  Ciphertext ct1(pt1); //
+  Ciphertext ct2 = ct1;
+  Ciphertext ct3 = ct1 + ct2 * ct1;
+  Ciphertext ct4 = ct3+ct3;
 
-  fhecompiler::Ciphertext ct1(pt1);
-  std::cout << ct1.get_label() << "\n";
+  Scalar sc1 = 12+34;
+  Scalar sc2 = sc1-5*sc1;
 
-  ct1 += ct1;
-  ct1.set_as_output();
-  
-  fhecompiler::Ciphertext ct2 = ct1;
-  std::cout << ct2.get_label() << "\n";
+  ct3.set_as_output("y");
+
+  Ciphertext ct5 = ct3+ct1;
   return 0;
 }

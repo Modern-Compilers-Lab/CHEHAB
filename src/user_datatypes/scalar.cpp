@@ -2,6 +2,7 @@
 #include<memory>
 #include"program.hpp"
 #include"term.hpp"
+#include"datatypes_util.hpp"
 
 extern std::shared_ptr<ir::Program> program;
 
@@ -17,16 +18,18 @@ inline void set_new_label(Scalar& sc)
   sc.set_label(datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++));
 }
 
+std::string Scalar::generate_new_label() { return datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++); }
+
 void compound_operate(Scalar& lhs, const Scalar& rhs, ir::OpCode opcode)
 {
 
-  auto lhs_node_ptr = program->insert_node<Scalar>(lhs);
-  auto rhs_node_ptr = program->insert_node<Scalar>(rhs);
+  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(lhs);
+  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
 
   std::string old_label = lhs.get_label();
 
   set_new_label(lhs);
-  auto new_operation_node_ptr = program->insert_operation_node(opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), ir::scalarType);
+  auto new_operation_node_ptr = program->insert_operation_node_in_dataflow(opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), ir::scalarType);
   if(lhs_node_ptr->get_output_flag()) 
   {
     lhs_node_ptr->set_output_flag(false);
@@ -43,19 +46,10 @@ void compound_operate(Scalar& lhs, const Scalar& rhs, ir::OpCode opcode)
 
 }
 
-Scalar operate(Scalar& sc, ir::OpCode opcode, const std::vector<Ptr>& operands, ir::TermType term_type, bool is_output=false)
-{
-
-  set_new_label(sc);
-  program->insert_operation_node(opcode, operands, sc.get_label(), term_type);
-  return sc;
-
-}
-
 void Scalar::set_as_output() const
 {
 
-  auto this_node_ptr = program->find_node_in_data_flow(this->label);
+  auto this_node_ptr = program->find_node_in_dataflow(this->label);
   this_node_ptr->set_output_flag(true);
   auto constant_table_entry = program->get_entry_form_constants_table(this->label);
   if(constant_table_entry == std::nullopt)
@@ -72,19 +66,19 @@ void Scalar::set_as_output() const
 
 Scalar::Scalar(int64_t _data): data(_data), label(datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++))
 {
-  program->insert_node<Scalar>(*this);
+  program->insert_node_in_dataflow<Scalar>(*this);
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, _data}});
 }
 
 Scalar::Scalar(double _data): data(_data), label(datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++))
 {
-  program->insert_node<Scalar>(*this);
+  program->insert_node_in_dataflow<Scalar>(*this);
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, _data}});
 }
 
 Scalar::Scalar(): label(datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++)) 
 {
-  program->insert_node<Scalar>(*this);
+  program->insert_node_in_dataflow<Scalar>(*this);
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, this->data}});
 }
 
@@ -93,7 +87,7 @@ Scalar::Scalar(std::string tag, bool output_flag, bool input_flag): label(dataty
 
   //we are expecting from the user to provide a tag for input
 
-  auto node_ptr = program->insert_node<Scalar>(*this);
+  auto node_ptr = program->insert_node_in_dataflow<Scalar>(*this);
   node_ptr->set_iutput_flag(input_flag);
   node_ptr->set_output_flag(output_flag);
   ir::ConstantTableEntry::ConstantTableEntryType entry_type;
@@ -110,16 +104,16 @@ Scalar::Scalar(std::string tag, bool output_flag, bool input_flag): label(dataty
 
 Scalar& Scalar::operator=(const Scalar& sc_copy)
 {
-  auto this_node_ptr = program->find_node_in_data_flow(this->get_label());
+  auto this_node_ptr = program->find_node_in_dataflow(this->get_label());
 
   if( this_node_ptr->get_output_flag() )
   {
-    auto sc_copy_node_ptr = program->insert_node<Scalar>(sc_copy);
+    auto sc_copy_node_ptr = program->insert_node_in_dataflow<Scalar>(sc_copy);
     //inserting new output in data flow as assignement, and in the constatns_table but this time we insert it as a symbol with tag
     std::string old_label = this->label;
     set_new_label(*this);
     program->insert_new_entry_from_existing_with_delete(this->label, old_label);
-    auto new_assign_operation = program->insert_operation_node(ir::assign, {sc_copy_node_ptr}, this->label, ir::scalarType);
+    auto new_assign_operation = program->insert_operation_node_in_dataflow(ir::assign, {sc_copy_node_ptr}, this->label, ir::scalarType);
     new_assign_operation->set_output_flag(true);
   }
 
@@ -131,8 +125,8 @@ Scalar& Scalar::operator=(const Scalar& sc_copy)
 Scalar::Scalar(const Scalar& sc_copy): label(datatype::sc_label_prefix + std::to_string(scalar_id++))
 {
 
-  auto sc_copy_node_ptr = program->insert_node<Scalar>(sc_copy);
-  program->insert_operation_node(ir::assign, {sc_copy_node_ptr}, this->label, ir::scalarType);
+  auto sc_copy_node_ptr = program->insert_node_in_dataflow<Scalar>(sc_copy);
+  program->insert_operation_node_in_dataflow(ir::assign, {sc_copy_node_ptr}, this->label, ir::scalarType);
   //std::cout << this->label << " = " << sc_copy.get_label() << "\n";
 }
 
@@ -158,37 +152,72 @@ Scalar& Scalar::operator-=(const Scalar& rhs)
 }
 
 
-Scalar operator+(Scalar& lhs, const Scalar& rhs)
+Scalar Scalar::operator+(const Scalar& rhs)
 {
 
-  auto lhs_node_ptr = program->insert_node<Scalar>(lhs);
-  auto rhs_node_ptr = program->insert_node<Scalar>(rhs);
-  return operate(lhs, ir::add, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
+  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(*this);
+  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
+  return operate<Scalar>(ir::add, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
 
 }
 
-Scalar operator*(Scalar& lhs, const Scalar& rhs)
+
+Scalar Scalar::operator-(const Scalar& rhs)
 {
 
-  auto lhs_node_ptr = program->insert_node<Scalar>(lhs);
-  auto rhs_node_ptr = program->insert_node<Scalar>(rhs);
-  return operate(lhs, ir::mul, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
+  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(*this);
+  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
+  return operate<Scalar>(ir::sub, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
 
 }
 
-Scalar operator-(Scalar& lhs, const Scalar& rhs)
+
+Scalar Scalar::operator*(const Scalar& rhs)
 {
 
-  auto lhs_node_ptr = program->insert_node<Scalar>(lhs);
-  auto rhs_node_ptr = program->insert_node<Scalar>(rhs);
-  return operate(lhs, ir::sub, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
+  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(*this);
+  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
+  return operate<Scalar>(ir::mul, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
 
 }
 
-Scalar operator-(Scalar& rhs) 
+Scalar Scalar::operator-()
 {
-  auto rhs_node_ptr = program->insert_node<Scalar>(rhs);
-  return operate(rhs, ir::negate, {rhs_node_ptr}, ir::scalarType);
+  auto rhs_node_ptr = program->find_node_in_dataflow(this->label);
+  return operate<Scalar>(ir::negate, {rhs_node_ptr}, ir::scalarType);
+}
+
+Scalar operator+(const Scalar& lhs, const Scalar& rhs)
+{
+
+  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(lhs);
+  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
+  return operate<Scalar>(ir::add, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
+
+}
+
+Scalar operator*(const Scalar& lhs, const Scalar& rhs)
+{
+
+  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(lhs);
+  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
+  return operate<Scalar>(ir::mul, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
+
+}
+
+Scalar operator-(const Scalar& lhs, const Scalar& rhs)
+{
+
+  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(lhs);
+  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
+  return operate<Scalar>(ir::sub, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
+
+}
+
+Scalar operator-(const Scalar& rhs) 
+{
+  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
+  return operate<Scalar>(ir::negate, {rhs_node_ptr}, ir::scalarType);
 }
 
 } //namespace fhecompiler

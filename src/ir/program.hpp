@@ -89,16 +89,16 @@ class Program
     data_flow = std::make_unique<DAG>();
   }
 
-  Ptr insert_operation_node(OpCode opcode, const std::vector<Ptr>& operands, std::string label, TermType term_type);
+  Ptr insert_operation_node_in_dataflow(OpCode opcode, const std::vector<Ptr>& operands, std::string label, TermType term_type);
 
-  Ptr find_node_in_data_flow(std::string label ) const;
+  Ptr find_node_in_dataflow(std::string label ) const;
 
   void set_symbol_as_output(std::string symbol );
 
   template < typename T>
-  Ptr insert_node(const T& operand)
+  Ptr insert_node_in_dataflow(const T& operand)
   {
-    auto node_ptr_in_program = find_node_in_data_flow(operand.get_label());
+    auto node_ptr_in_program = find_node_in_dataflow(operand.get_label());
     if(node_ptr_in_program ) 
     {
       return node_ptr_in_program;

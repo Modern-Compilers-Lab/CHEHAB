@@ -26,6 +26,7 @@ using ConstantValue = std::variant<datatype::Scalar, datatype::Plaintext, dataty
 
 using TermValue = std::variant<ConstantValue, Operation>; //be careful order is important here
 */
+
 class Term
 {
 

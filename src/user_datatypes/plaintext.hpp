@@ -28,7 +28,7 @@ class Plaintext
   Plaintext(const std::vector<double>& message);
   Plaintext(const std::vector<int>& message): Plaintext((const std::vector<int64_t>& ) message) {}
   
-  Plaintext(std::string tag, bool output_flag=false, bool input_flag=true);
+  Plaintext(std::string tag, bool output_flag=false, bool input_flag=false);
 
   Plaintext(const Plaintext& pt_copy);
   Plaintext& operator=(const Plaintext& pt_copy);
@@ -40,13 +40,21 @@ class Plaintext
 
   Plaintext& operator-=(const Plaintext& rhs);
 
-  friend Plaintext operator+(Plaintext& lhs, const Plaintext& rhs);
+  Plaintext operator+(const Plaintext& rhs);
 
-  friend Plaintext operator-(Plaintext& lhs, const Plaintext& rhs);
+  Plaintext operator*(const Plaintext& rhs);
 
-  friend Plaintext operator*(Plaintext& lhs, const Plaintext& rhs);
+  Plaintext operator-(const Plaintext& rhs);
 
-  friend Plaintext operator-(Plaintext& rhs);
+  Plaintext operator-();
+
+  friend Plaintext operator+(const Plaintext& lhs, const Plaintext& rhs);
+
+  friend Plaintext operator-(const Plaintext& lhs, const Plaintext& rhs);
+
+  friend Plaintext operator*(const Plaintext& lhs, const Plaintext& rhs);
+
+  friend Plaintext operator-(const Plaintext& rhs);
   
   void reduce(std::uint64_t plaintext_modulus);
   
@@ -54,9 +62,11 @@ class Plaintext
 
   void set_label(std::string label_value )  { this->label = label_value; }
   
-  void set_as_output() const;
+  void set_as_output(const std::string& label = "") const;
 
-  friend inline void set_new_label(Plaintext& sc);
+  friend inline void set_new_label(Plaintext& pt);
+  
+  static std::string generate_new_label();
 
   friend void compound_operate(Plaintext& lhs, const Plaintext& rhs, ir::OpCode);
 };

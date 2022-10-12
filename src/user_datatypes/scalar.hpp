@@ -29,7 +29,7 @@ class Scalar
   Scalar();
   Scalar(int64_t _data);
   Scalar(double _data);
-  Scalar(int _data): Scalar((int64_t) _data) {}
+  Scalar(int _data): Scalar((int64_t) _data) { std::cout << _data << "\n";}
   
   Scalar(std::string tag, bool output_flag=false, bool input_flag=true);
 
@@ -37,19 +37,30 @@ class Scalar
   Scalar& operator=(const Scalar& sc_copy);
   
 
+  Scalar(Scalar&& sc_move) = default;
+  Scalar& operator=(Scalar&& sc_move) = default;
+
   Scalar& operator+=(const Scalar& rhs);
 
   Scalar& operator*=(const Scalar& rhs);
 
   Scalar& operator-=(const Scalar& rhs);
 
-  friend Scalar operator+(Scalar& lhs, const Scalar& rhs);
+  Scalar operator+(const Scalar& rhs);
 
-  friend Scalar operator-(Scalar& lhs, const Scalar& rhs);
+  Scalar operator-(const Scalar& rhs);
 
-  friend Scalar operator*(Scalar& lhs, const Scalar& rhs);
+  Scalar operator*(const Scalar& rhs);
 
-  friend Scalar operator-(Scalar& rhs);
+  Scalar operator-();
+
+  friend Scalar operator+(const Scalar& lhs, const Scalar& rhs);
+
+  friend Scalar operator-(const Scalar& lhs, const Scalar& rhs);
+
+  friend Scalar operator*(const Scalar& lhs, const Scalar& rhs);
+
+  friend Scalar operator-(const Scalar& rhs);
   
   void reduce(std::uint64_t plaintext_modulus);
   
@@ -58,6 +69,8 @@ class Scalar
   void set_label(std::string label_value )  { this->label = label_value; }
   
   void set_as_output() const;
+
+  static std::string generate_new_label();
 
   friend inline void set_new_label(Scalar& sc);
 

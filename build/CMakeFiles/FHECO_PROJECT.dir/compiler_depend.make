@@ -423,8 +423,8 @@ CMakeFiles/FHECO_PROJECT.dir/benchmarks/test1.cpp.o: ../benchmarks/test1.cpp \
   ../src/user_datatypes/plaintext.hpp \
   ../src/ir/ir_const.hpp \
   ../src/user_datatypes/ciphertext.hpp \
-  ../src/user_datatypes/scalar.hpp \
   ../src/user_datatypes/datatypes_const.hpp \
+  ../src/user_datatypes/scalar.hpp \
   ../src/ir/program.hpp \
   ../src/ir/term.hpp \
   ../src/ir/dag.hpp \
