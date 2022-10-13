@@ -3,3 +3,9 @@ Here's some challenges ...
 1) How to deal with assignement, in terms of constructors overloading (solved, no need to overload operator=)
 2) inserting assignement in Intermediate Representation (IR) (solved, this will be done during call for copy constructor)
 3) dead code concerning assignement for outputs
+
+***********************************
+
+todo
+
+- Scope of the inner classes/structs in program class

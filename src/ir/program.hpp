@@ -36,9 +36,24 @@ struct ConstantTableEntry
 
   using VectorValue = std::variant<std::vector<int64_t>, std::vector<double>>;
 
-  using EntryValue = std::variant<std::string, ScalarValue, VectorValue, Encrypt>;
+  using ConstantValue = std::variant<ScalarValue, VectorValue, Encrypt>;
 
-  private:
+  struct EntryValue
+  {
+
+    std::optional<ConstantValue> value;
+    std::string tag;
+
+    EntryValue(const std::string& _tag, std::optional<ConstantValue> _value): value(_value), tag(_tag) {}
+
+    EntryValue(const std::string _tag): tag(_tag), value(std::nullopt) {}
+    
+    EntryValue(std::optional<ConstantValue> _value): value(_value), tag("") {}
+    
+    ~EntryValue() = default;
+
+  };
+
 
   ConstantTableEntry::ConstantTableEntryType entry_type;
   EntryValue entry_value;
@@ -57,7 +72,11 @@ struct ConstantTableEntry
 
   void set_entry_type(ConstantTableEntry::ConstantTableEntryType _type ) { entry_type = _type; }
   
-  void set_entry_value(EntryValue _value) { entry_value = _value; }
+  void set_entry_value(const EntryValue& _value) { entry_value = _value; }
+
+  void set_entry_value(const ConstantValue& _value) { entry_value.value = _value; }
+
+  void set_entry_tag(const std::string& _tag ) { if(_tag.length()) entry_value.tag = _tag; }
 
   EntryValue& get_entry_value() { return entry_value; }
 

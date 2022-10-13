@@ -53,9 +53,12 @@ int main()
   fhecompiler::init("test1");
   fhecompiler::set_program_scheme(fhecompiler::bfv);
   Plaintext pt1(std::vector<int64_t>{1,3,4,5});
-
+  //pt1.set_as_output("z_plain");
   Ciphertext ct1(pt1);
   Ciphertext ct2 = ct1+ct1;
+  ct2.set_as_output("z_cipher");
+  ct1.set_as_output("y_cipher");
+  ct1.set_as_output("z_cesar");
   /*
   Ciphertext ct2 = ct1;
   Ciphertext ct3 = ct1 + ct2 * ct1;

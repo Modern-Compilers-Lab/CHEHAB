@@ -40,7 +40,7 @@ void compound_operate(Scalar& lhs, const Scalar& rhs, ir::OpCode opcode)
   if(table_entry_opt != std::nullopt)
   {
     ir::ConstantTableEntry& table_entry = *table_entry_opt;
-    if(std::get_if<std::string>(&(table_entry.get_entry_value())))
+    if(table_entry.get_entry_type() == ir::ConstantTableEntry::ConstantTableEntryType::output)
       program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
   }
 
@@ -67,20 +67,20 @@ void Scalar::set_as_output() const
 Scalar::Scalar(int64_t _data): data(_data), label(datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++))
 {
   program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, _data}});
+  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, {_data}}});
 }
 
 Scalar::Scalar(double _data): data(_data), label(datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++))
 {
   program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, _data}});
+  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, {_data}}});
 }
 
 
 Scalar::Scalar(): label(datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++)) 
 {
   program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, this->data}});
+  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, {this->data}}});
 }
 
 

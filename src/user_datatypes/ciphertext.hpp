@@ -63,7 +63,7 @@ class Ciphertext
 
   void set_label(std::string label_value )  { this->label = label_value; }
   
-  void set_as_output(const std::string& tag = "") const;
+  void set_as_output(const std::string& tag) const;
 
   friend inline void set_new_label(Ciphertext& ct);
 

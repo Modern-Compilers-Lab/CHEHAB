@@ -40,7 +40,7 @@ void compound_operate(Ciphertext& lhs, const Ciphertext& rhs, ir::OpCode opcode)
   if(table_entry_opt != std::nullopt)
   {
     ir::ConstantTableEntry& table_entry = *table_entry_opt;
-    if(std::get_if<std::string>(&(table_entry.get_entry_value())))
+    if(table_entry.get_entry_type() == ir::ConstantTableEntry::ConstantTableEntryType::output)
       program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
   }
 
@@ -53,20 +53,24 @@ Ciphertext::Ciphertext(Plaintext& pt): label(datatype::ct_label_prefix+std::to_s
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, {pt.get_label()}}});
 }
 
+
 void Ciphertext::set_as_output(const std::string& tag) const
 {
 
   auto this_node_ptr = program->find_node_in_dataflow(this->label);
   this_node_ptr->set_output_flag(true);
   auto constant_table_entry = program->get_entry_form_constants_table(this->label);
+
   if(constant_table_entry == std::nullopt)
   {
-    program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::output, (tag.length() ? tag : this->label+"_"+datatype::output_tag)}});
+    std::string tag_to_insert = tag.length() ? tag : (this->label+"_"+datatype::output_tag);
+    program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::ConstantTableEntryType::output, {tag_to_insert}}});
   }
   else
   {
     ir::ConstantTableEntry& table_entry = *constant_table_entry;
     table_entry.set_entry_type(ir::ConstantTableEntry::output);
+    table_entry.set_entry_tag(tag);
   }
 
 }

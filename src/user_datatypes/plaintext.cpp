@@ -40,7 +40,7 @@ void compound_operate(Plaintext& lhs, const Plaintext& rhs, ir::OpCode opcode)
   if(table_entry_opt != std::nullopt)
   {
     ir::ConstantTableEntry& table_entry = *table_entry_opt;
-    if(std::get_if<std::string>(&(table_entry.get_entry_value())))
+    if(table_entry.get_entry_type() == ir::ConstantTableEntry::ConstantTableEntryType::output)
       program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
   }
 
@@ -67,13 +67,13 @@ void Plaintext::set_as_output(const std::string& label) const
 Plaintext::Plaintext(const std::vector<int64_t>& message): label(datatype::pt_label_prefix+std::to_string(Plaintext::plaintext_id++))
 {
   program->insert_node_in_dataflow<Plaintext>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, message}});
+  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, {message}}});
 }
 
 Plaintext::Plaintext(const std::vector<double>& message): label(datatype::pt_label_prefix+std::to_string(Plaintext::plaintext_id++))
 {
   program->insert_node_in_dataflow<Plaintext>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, message}});
+  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, {message}}});
 }
 
 Plaintext::Plaintext(std::string tag, bool output_flag, bool input_flag): label(datatype::pt_label_prefix+std::to_string(Plaintext::plaintext_id++))
