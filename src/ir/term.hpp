@@ -14,17 +14,21 @@ namespace ir
 {
 
 /*
+
 using PlaintextRef = std::reference_wrapper<const datatype::Plaintext>;
 
 using CiphertextRef = std::reference_wrapper<const datatype::Ciphertext>;
 
 using ScalarRef = std::reference_wrapper<datatype::Scalar>;
+
 */
 
 /*
+
 using ConstantValue = std::variant<datatype::Scalar, datatype::Plaintext, datatype::Ciphertext>; //be careful order is important here
 
 using TermValue = std::variant<ConstantValue, Operation>; //be careful order is important here
+
 */
 
 class Term
@@ -37,7 +41,7 @@ class Term
   private:
 
   int term_id;
-
+  
   TermType type;
   
   OpCode opcode = undefined;
@@ -72,6 +76,8 @@ class Term
   const std::optional<std::vector<Ptr>>& get_operands() const { return this->operands; }
 
   OpCode get_opcode() const { return this->opcode; }
+
+  void add_operand(const Ptr& operand );
 
   void set_iutput_flag(bool input_flag) { this->is_input=input_flag; }
 
