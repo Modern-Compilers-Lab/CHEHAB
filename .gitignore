@@ -33,3 +33,11 @@
 
 # VSCode settings
 .vscode/
+
+# Build
+bin/
+lib/
+build/
+*.build
+env
+thirdparty/
