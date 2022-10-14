@@ -7,28 +7,9 @@ using Ptr = std::shared_ptr<Term>;
 
 Ptr Program::insert_operation_node_in_dataflow(OpCode opcode, const std::vector<Ptr>& operands, std::string label, TermType term_type)
 {
-  Term::Operation operation(opcode, operands);
-  Ptr new_term = std::make_shared<Term>(operation, label);
+  Ptr new_term = std::make_shared<Term>(opcode, std::move(operands), label);
   new_term->set_term_type(term_type);
-  new_term->set_operation_attribute(operation);
   this->data_flow->insert_node(new_term);
-
-  if(opcode == ir::sub)
-  {
-    std::cout << new_term->get_label() << "(" << new_term->get_output_flag() << ")" << " = " << operands[0]->get_label() << "(" << operands[0]->get_output_flag() << ")" << " - " << operands[1]->get_label() << "(" << operands[1]->get_output_flag() << ")\n";
-  }
-  if(opcode == ir::assign)
-  {
-    std::cout << new_term->get_label() << "(" << new_term->get_output_flag() << ")" << " = " << operands[0]->get_label() << "(" << operands[0]->get_output_flag() << ")\n";
-  }
-  if(opcode == ir::add)
-  {
-    std::cout << new_term->get_label() << "(" << new_term->get_output_flag() << ")" << " = " << operands[0]->get_label() << "(" << operands[0]->get_output_flag() << ")" << " + " << operands[1]->get_label() << "(" << operands[1]->get_output_flag() << ")\n";
-  }
-  if(opcode == ir::mul)
-  {
-    std::cout << new_term->get_label() << "(" << new_term->get_output_flag() << ")" << " = " << operands[0]->get_label() << "(" << operands[0]->get_output_flag() << ")" << " * " << operands[1]->get_label() << "(" << operands[1]->get_output_flag() << ")\n";
-  }
   return new_term;
 }
 
@@ -90,5 +71,9 @@ bool Program::insert_new_entry_from_existing_with_delete(std::string new_entry_k
 
 }
 
+void Program::traverse_dataflow()
+{
+  this->data_flow->traverse();
+}
 
 } // namespace ir

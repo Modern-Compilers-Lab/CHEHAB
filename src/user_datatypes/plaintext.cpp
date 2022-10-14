@@ -46,7 +46,7 @@ void compound_operate(Plaintext& lhs, const Plaintext& rhs, ir::OpCode opcode)
 
 }
 
-void Plaintext::set_as_output(const std::string& label) const
+void Plaintext::set_as_output(const std::string& tag) const
 {
 
   auto this_node_ptr = program->find_node_in_dataflow(this->label);
@@ -54,12 +54,14 @@ void Plaintext::set_as_output(const std::string& label) const
   auto constant_table_entry = program->get_entry_form_constants_table(this->label);
   if(constant_table_entry == std::nullopt)
   {
-    program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::output, (label.length() ? label : this->label+"_"+datatype::output_tag)}});
+    std::string tag_to_insert = tag.length() ? tag : (this->label+"_"+datatype::output_tag);
+    program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::output, {tag_to_insert}}});
   }
   else
   {
     ir::ConstantTableEntry& table_entry = *constant_table_entry;
     table_entry.set_entry_type(ir::ConstantTableEntry::output);
+    table_entry.set_entry_tag(tag);
   }
 
 }
@@ -81,12 +83,13 @@ Plaintext::Plaintext(std::string tag, bool output_flag, bool input_flag): label(
 
   //we are expecting from the user to provide a tag for input
 
-  auto node_ptr = program->insert_node_in_dataflow<Plaintext>(*this);
-  node_ptr->set_iutput_flag(input_flag);
-  node_ptr->set_output_flag(output_flag);
 
   if( tag.length() )
   {
+    
+    auto node_ptr = program->insert_node_in_dataflow<Plaintext>(*this);
+    node_ptr->set_iutput_flag(input_flag);
+    node_ptr->set_output_flag(output_flag);
 
     ir::ConstantTableEntry::ConstantTableEntryType entry_type;
     if( input_flag && output_flag ) entry_type = ir::ConstantTableEntry::io;

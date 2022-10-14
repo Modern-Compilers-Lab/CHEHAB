@@ -18,6 +18,8 @@ class DAG
 
   std::vector<Ptr> nodes_ptrs;
 
+  std::vector<Ptr> nodes_ptrs_topsorted; //node ntopologically sorted 
+
   std::unordered_map<std::string, Ptr> node_ptr_from_label;
 
   public:
@@ -33,6 +35,8 @@ class DAG
   void traverse_dag() const;
 
   Ptr find_node(std::string node_label) const;
+
+  void traverse();
 
 };
 

@@ -44,21 +44,32 @@ int main()
   pt3 = pt2+pt1;
   Plaintext pt4 = pt3+pt1;
   */
+
+
   /*
   Scalar pt1 = 34;
   Scalar pt2 = 11;
   Scalar pt3 = pt1 + pt2;
   */
-
+  
   fhecompiler::init("test1");
+
   fhecompiler::set_program_scheme(fhecompiler::bfv);
-  Plaintext pt1(std::vector<int64_t>{1,3,4,5});
+
+  
+  fhecompiler::Plaintext pt1(std::vector<int64_t>{1,3,4,5});
   //pt1.set_as_output("z_plain");
   Ciphertext ct1(pt1);
+
   Ciphertext ct2 = ct1+ct1;
-  ct2.set_as_output("z_cipher");
-  ct1.set_as_output("y_cipher");
-  ct1.set_as_output("z_cesar");
+
+  Scalar sc1 = 2;
+  Scalar sc2 = 3;
+  Scalar sc3 = sc1+sc2;
+  sc3 += sc1;
+
+  fhecompiler::compile();
+
   /*
   Ciphertext ct2 = ct1;
   Ciphertext ct3 = ct1 + ct2 * ct1;

@@ -69,6 +69,8 @@ class Ciphertext
 
   static std::string generate_new_label();
 
+  std::string get_node_tag();
+
   friend void compound_operate(Ciphertext& lhs, const Ciphertext& rhs, ir::OpCode);
 };
 

@@ -12,6 +12,8 @@ enum TermType
 };
 
 enum OpCode {
+  undefined,
+  constant,
   assign,
   add,
   mul,

@@ -29,7 +29,7 @@ class Scalar
   Scalar();
   Scalar(int64_t _data);
   Scalar(double _data);
-  Scalar(int _data): Scalar((int64_t) _data) { std::cout << _data << "\n";}
+  Scalar(int _data): Scalar((int64_t) _data) {}
   
   Scalar(std::string tag, bool output_flag=false, bool input_flag=true);
 

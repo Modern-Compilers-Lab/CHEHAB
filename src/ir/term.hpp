@@ -33,48 +33,17 @@ class Term
   public:
 
   using Ptr = std::shared_ptr<Term>;
-
-  class Operation
-  {
-    //we refer to FHE Operation the same as FHE Instruction
-    private:
-
-    OpCode op;
-    
-    std::vector<Ptr> operands;
-
-    public:
-
-    Operation() = delete;
-
-    Operation(const Operation& ) = default;
-    Operation& operator=(const Operation& ) = default;
-
-    Operation(OpCode _op, const std::vector<Ptr>& _operands) : operands(_operands), op(_op) {}
-    
-    OpCode get_opcode() const
-    { return this->op; }
-    
-    std::vector<Ptr>& get_operands() { return this->operands; }
-
-    void replace_operation(const Operation& replace)
-    {
-      if(this == &replace) return; //here we are comparing addresses, so if it's the same object then there is no replace
-      *this = replace;
-    }
-
-    void add_operand(Ptr operand) { this->operands.push_back(operand); }
-  };
-
-
+  
   private:
 
   int term_id;
 
   TermType type;
   
-  std::optional<Operation> operation;
-  
+  OpCode opcode = undefined;
+
+  std::optional<std::vector<Ptr>> operands;
+
   std::string label;
 
   bool is_input=false;
@@ -83,11 +52,12 @@ class Term
 
   public:
 
-  Term() = default;
+  Term() = delete;
+
+  ~Term() {}
 
   Term(const Term& term_copy) = default;
   Term& operator=(const Term& term_copy) = default;
-
   
   Term(const fhecompiler::Ciphertext& ct): label(ct.get_label()), type(ir::ciphertextType) {}
 
@@ -95,13 +65,13 @@ class Term
 
   Term(const fhecompiler::Scalar& sc): label(sc.get_label()), type(ir::scalarType) {}
 
-  Term(const Operation& operation_value, std::string label_value): operation(operation_value), label(label_value) {}
+  Term(OpCode _opcode, const std::vector<Ptr>& _operands, std::string label_value): opcode(_opcode), operands(std::make_optional<std::vector<Ptr>>(std::move(_operands))), label(label_value) {}
   
   bool merge_with_node(Ptr node_to_merge_with); 
 
-  std::optional<Operation> get_operation_attribute() const { return this->operation; }
+  const std::optional<std::vector<Ptr>>& get_operands() const { return this->operands; }
 
-  void set_operation_attribute(const Operation& oprt) { this->operation = oprt; }
+  OpCode get_opcode() const { return this->opcode; }
 
   void set_iutput_flag(bool input_flag) { this->is_input=input_flag; }
 
@@ -109,14 +79,12 @@ class Term
 
   void set_term_type(TermType term_type) { this->type = term_type; }
 
-  std::string get_label() const { return this->label; }
+  std::string get_label() const { return this->label;  }
 
   bool get_input_flag() const { return this->is_input; }
 
   bool get_output_flag() const { return this->is_output; }
 
 };
-
-
 
 } // namespace ir

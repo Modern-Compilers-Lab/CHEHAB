@@ -226,7 +226,14 @@ CMakeFiles/ir.dir/src/ir/dag.cpp.o: ../src/ir/dag.cpp \
   /usr/include/c++/11/bits/istream.tcc \
   ../src/user_datatypes/ciphertext.hpp \
   /usr/include/c++/11/optional \
-  ../src/user_datatypes/scalar.hpp
+  ../src/user_datatypes/scalar.hpp \
+  /usr/include/c++/11/stack \
+  /usr/include/c++/11/deque \
+  /usr/include/c++/11/bits/stl_deque.h \
+  /usr/include/c++/11/bits/deque.tcc \
+  /usr/include/c++/11/bits/stl_stack.h \
+  /usr/include/c++/11/unordered_set \
+  /usr/include/c++/11/bits/unordered_set.h
 
 CMakeFiles/ir.dir/src/ir/program.cpp.o: ../src/ir/program.cpp \
   /usr/include/stdc-predef.h \
@@ -689,6 +696,12 @@ CMakeFiles/ir.dir/src/ir/term.cpp.o: ../src/ir/term.cpp \
 
 /usr/include/c++/11/bits/stl_map.h:
 
+/usr/include/c++/11/bits/unordered_set.h:
+
+/usr/include/c++/11/bits/stl_stack.h:
+
+/usr/include/c++/11/bits/stl_deque.h:
+
 ../src/user_datatypes/scalar.hpp:
 
 /usr/include/c++/11/bits/istream.tcc:
@@ -822,6 +835,8 @@ CMakeFiles/ir.dir/src/ir/term.cpp.o: ../src/ir/term.cpp \
 /usr/include/c++/11/bits/exception_ptr.h:
 
 /usr/include/c++/11/exception:
+
+/usr/include/c++/11/stack:
 
 /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 
@@ -1035,6 +1050,8 @@ CMakeFiles/ir.dir/src/ir/term.cpp.o: ../src/ir/term.cpp \
 
 /usr/include/c++/11/bits/uses_allocator.h:
 
+/usr/include/c++/11/bits/deque.tcc:
+
 /usr/include/c++/11/iostream:
 
 /usr/include/x86_64-linux-gnu/bits/select.h:
@@ -1095,6 +1112,8 @@ CMakeFiles/ir.dir/src/ir/term.cpp.o: ../src/ir/term.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
 
+/usr/include/c++/11/deque:
+
 /usr/include/c++/11/ios:
 
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
@@ -1154,6 +1173,8 @@ CMakeFiles/ir.dir/src/ir/term.cpp.o: ../src/ir/term.cpp \
 /usr/include/c++/11/bits/shared_ptr_base.h:
 
 /usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
+
+/usr/include/c++/11/unordered_set:
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h:
 

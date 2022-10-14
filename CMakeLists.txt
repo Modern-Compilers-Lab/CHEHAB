@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-project(FHECO_PROJECT)
+set(CMAKE_C_COMPILER "gcc")
+set(CMAKE_CXX_COMPILER "g++")
+
+project(FHECO_PROJECT LANGUAGES C CXX)
 
 add_executable(${PROJECT_NAME} benchmarks/test1.cpp)
 

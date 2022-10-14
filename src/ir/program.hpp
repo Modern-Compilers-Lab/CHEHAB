@@ -108,7 +108,7 @@ class Program
     data_flow = std::make_unique<DAG>();
   }
 
-  Ptr insert_operation_node_in_dataflow(OpCode opcode, const std::vector<Ptr>& operands, std::string label, TermType term_type);
+  Ptr insert_operation_node_in_dataflow(OpCode _opcode, const std::vector<Ptr>& _operands, std::string label, TermType term_type);
 
   Ptr find_node_in_dataflow(std::string label ) const;
 
@@ -136,8 +136,10 @@ class Program
   bool insert_new_entry_from_existing(std::string new_entry_key, std::string exsisting_entry_key);
 
   bool insert_new_entry_from_existing_with_delete(std::string new_entry_key, std::string exsisting_entry_key);
+  
+  void traverse_dataflow();
 
-  std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(const std::string& );
+  std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(const std::string& ); 
 
 };
   

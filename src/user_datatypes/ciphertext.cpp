@@ -79,12 +79,15 @@ Ciphertext::Ciphertext(std::string tag, bool output_flag, bool input_flag): labe
 {
 
   //we are expecting from the user to provide a tag for input
-  auto node_ptr = program->insert_node_in_dataflow<Ciphertext>(*this);
-  node_ptr->set_iutput_flag(input_flag);
-  node_ptr->set_output_flag(output_flag);
+
   
   if( tag.length() )
   {
+    
+    auto node_ptr = program->insert_node_in_dataflow<Ciphertext>(*this);
+    node_ptr->set_iutput_flag(input_flag);
+    node_ptr->set_output_flag(output_flag);
+
     ir::ConstantTableEntry::ConstantTableEntryType entry_type;
     if( input_flag && output_flag ) entry_type = ir::ConstantTableEntry::io;
     else if( input_flag ) entry_type = ir::ConstantTableEntry::input;
@@ -198,6 +201,17 @@ Ciphertext operator-(const Ciphertext& rhs)
 {
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   return operate<Ciphertext>(ir::negate, {rhs_node_ptr}, ir::ciphertextType);
+}
+
+std::string Ciphertext::get_node_tag()
+{
+  auto table_entry = program->get_entry_form_constants_table(this->label);
+  if(table_entry != std::nullopt)
+  {
+    ir::ConstantTableEntry table_entry_dereferenced = *table_entry;
+    return table_entry_dereferenced.get_entry_value().tag;
+  }
+  else return "";
 }
 
 } //namespace fhecompiler

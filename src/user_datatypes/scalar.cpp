@@ -89,12 +89,14 @@ Scalar::Scalar(std::string tag, bool output_flag, bool input_flag): label(dataty
 
   //we are expecting from the user to provide a tag for input
 
-  auto node_ptr = program->insert_node_in_dataflow<Scalar>(*this);
-  node_ptr->set_iutput_flag(input_flag);
-  node_ptr->set_output_flag(output_flag);
 
   if( tag.length() )
   {
+   
+    auto node_ptr = program->insert_node_in_dataflow<Scalar>(*this);
+    node_ptr->set_iutput_flag(input_flag);
+    node_ptr->set_output_flag(output_flag);
+
     ir::ConstantTableEntry::ConstantTableEntryType entry_type;
     if( input_flag && output_flag ) entry_type = ir::ConstantTableEntry::io;
     else if( input_flag ) entry_type = ir::ConstantTableEntry::input;
@@ -121,7 +123,6 @@ Scalar& Scalar::operator=(const Scalar& sc_copy)
     auto new_assign_operation = program->insert_operation_node_in_dataflow(ir::assign, {sc_copy_node_ptr}, this->label, ir::scalarType);
     new_assign_operation->set_output_flag(true);
   }
-
   else this->label = sc_copy.get_label();
 
   return *this;
