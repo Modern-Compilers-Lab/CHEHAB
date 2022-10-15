@@ -13,13 +13,30 @@ Ptr Program::insert_operation_node_in_dataflow(OpCode opcode, const std::vector<
   return new_term;
 }
 
-void Program::set_symbol_as_output(std::string symbol)
+void Program::set_symbol_as_output(const std::string& label, const std::string& tag)
 {
-  auto symbol_node_ptr = find_node_in_dataflow(symbol);
+
+  //set as output in data flow (DAG, IR)
+  auto symbol_node_ptr = find_node_in_dataflow(label);
   if(symbol_node_ptr ) symbol_node_ptr->set_output_flag(true);
+
+  //set as output in ConstantsTable
+  auto constant_table_entry = this->get_entry_form_constants_table(label);
+  if(constant_table_entry == std::nullopt)
+  {
+    std::string tag_to_insert = tag.length() ? tag : (label+"_"+datatype::output_tag);
+    this->insert_entry_in_constants_table({label, {ir::ConstantTableEntry::output, {tag_to_insert}}});
+  }
+  else
+  {
+    ir::ConstantTableEntry& table_entry = *constant_table_entry;
+    table_entry.set_entry_type(ir::ConstantTableEntry::output);
+    table_entry.set_entry_tag(tag);
+  }
+
 }
 
-Ptr Program::find_node_in_dataflow(std::string label) const
+Ptr Program::find_node_in_dataflow(const std::string& label) const
 {
   return this->data_flow->find_node(label);
 }

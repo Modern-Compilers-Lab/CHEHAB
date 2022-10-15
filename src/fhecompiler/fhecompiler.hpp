@@ -15,7 +15,7 @@ namespace fhecompiler
 {
 
 void init(const std::string& program_name, size_t dim)
-{ 
+{
   static ir::Program program_object(program_name, dim);
   program = &program_object;
 }
@@ -23,7 +23,6 @@ void init(const std::string& program_name, size_t dim)
 void set_program_scheme(Scheme program_scheme )
 { 
   program->set_scheme(program_scheme); 
-
 }
 
 void compile() 

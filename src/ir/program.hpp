@@ -103,6 +103,8 @@ class Program
     
   using Ptr = std::shared_ptr<Term>;
 
+  Program() = delete;
+
   Program(const std::string& tag_value, size_t dim): program_tag{tag_value}, dimension(dim) 
   {
     data_flow = std::make_unique<DAG>();
@@ -112,9 +114,9 @@ class Program
 
   Ptr insert_operation_node_in_dataflow(OpCode _opcode, const std::vector<Ptr>& _operands, std::string label, TermType term_type);
 
-  Ptr find_node_in_dataflow(std::string label ) const;
+  Ptr find_node_in_dataflow(const std::string& label ) const;
 
-  void set_symbol_as_output(std::string symbol );
+  void set_symbol_as_output(const std::string& label, const std::string& tag );
 
   template < typename T>
   Ptr insert_node_in_dataflow(const T& operand)
@@ -139,7 +141,7 @@ class Program
 
   bool insert_new_entry_from_existing_with_delete(std::string new_entry_key, std::string exsisting_entry_key);
   
-  bool get_dimension() const  { return this->dimension; }
+  size_t get_dimension() const  { return this->dimension; }
 
   void traverse_dataflow();
 

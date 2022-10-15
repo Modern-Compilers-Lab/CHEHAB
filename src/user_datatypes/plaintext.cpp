@@ -23,29 +23,20 @@ inline void set_new_label(Plaintext& pt)
 }
 
 void Plaintext::set_as_output(const std::string& tag) const
-{
-
-  auto this_node_ptr = program->find_node_in_dataflow(this->label);
-  this_node_ptr->set_output_flag(true);
-  auto constant_table_entry = program->get_entry_form_constants_table(this->label);
-  if(constant_table_entry == std::nullopt)
-  {
-    std::string tag_to_insert = tag.length() ? tag : (this->label+"_"+datatype::output_tag);
-    program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::output, {tag_to_insert}}});
-  }
-  else
-  {
-    ir::ConstantTableEntry& table_entry = *constant_table_entry;
-    table_entry.set_entry_type(ir::ConstantTableEntry::output);
-    table_entry.set_entry_tag(tag);
-  }
-
+{ 
+  //by symbol here is function name, we mean the label associated to the object
+  program->set_symbol_as_output(this->label, tag);
 }
 
 Plaintext::Plaintext(const std::vector<int64_t>& message): label(datatype::pt_label_prefix+std::to_string(Plaintext::plaintext_id++))
 {
+
+  if( (size_t )message.size() > program->get_dimension() )
+    throw ("Number of messages in one vector is larger than the expcted value ");
+
   program->insert_node_in_dataflow<Plaintext>(*this);
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::constant, {message}}});
+
 }
 
 Plaintext::Plaintext(const std::vector<double>& message): label(datatype::pt_label_prefix+std::to_string(Plaintext::plaintext_id++))
@@ -59,10 +50,8 @@ Plaintext::Plaintext(std::string tag, bool output_flag, bool input_flag): label(
 
   //we are expecting from the user to provide a tag for input
 
-
   if( tag.length() )
   {
-    
     auto node_ptr = program->insert_node_in_dataflow<Plaintext>(*this);
     node_ptr->set_iutput_flag(input_flag);
     node_ptr->set_output_flag(output_flag);

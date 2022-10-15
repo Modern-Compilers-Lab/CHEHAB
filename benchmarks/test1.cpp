@@ -22,7 +22,6 @@ int main()
 
   fhecompiler::set_program_scheme(fhecompiler::bfv);
 
-  
   fhecompiler::Plaintext pt1(std::vector<int64_t>{1,3,4,5});
   pt1.set_as_output("z_plain");
   fhecompiler::Ciphertext ct1(pt1);
@@ -44,4 +43,5 @@ int main()
   fhecompiler::compile();
 
   return 0;
+  
 }
