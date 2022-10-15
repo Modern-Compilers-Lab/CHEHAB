@@ -2,6 +2,7 @@
 
 #include"datatypes_const.hpp"
 #include"ir_const.hpp"
+#include<string>
 #include<variant>
 #include<iostream>
 
@@ -68,7 +69,7 @@ class Scalar
 
   void set_label(std::string label_value )  { this->label = label_value; }
   
-  void set_as_output() const;
+  void set_as_output(const std::string& tag) const;
 
   static std::string generate_new_label();
 

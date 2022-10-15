@@ -22,22 +22,9 @@ inline void set_new_label(Scalar& sc)
 
 std::string Scalar::generate_new_label() { return datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++); }
 
-void Scalar::set_as_output() const
+void Scalar::set_as_output(const std::string& tag) const
 {
-
-  auto this_node_ptr = program->find_node_in_dataflow(this->label);
-  this_node_ptr->set_output_flag(true);
-  auto constant_table_entry = program->get_entry_form_constants_table(this->label);
-  if(constant_table_entry == std::nullopt)
-  {
-    program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntry::output, this->label+"_"+datatype::output_tag}});
-  }
-  else
-  {
-    ir::ConstantTableEntry& table_entry = *constant_table_entry;
-    table_entry.set_entry_type(ir::ConstantTableEntry::output);
-  }
-
+  program->set_symbol_as_output(this->label, tag);
 }
 
 Scalar::Scalar(int64_t _data): data(_data), label(datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++))
