@@ -26,6 +26,8 @@ class DAG
     
   DAG() = default;
 
+  ~DAG() {}
+
   void insert_node(Ptr node_ptr);
 
   void delete_node(Ptr node_ptr);

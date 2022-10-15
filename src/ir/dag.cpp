@@ -89,6 +89,7 @@ std::string dfs(Ptr term, std::unordered_set<std::string>& visited)
   {
     const std::vector<Ptr>& operands = * term->get_operands();
     if(term->get_opcode() == ir::assign) return operands[0]->get_label();
+    else if(term->get_opcode() == ir::negate) return "-"+operands[0]->get_label();
     else return dfs(operands[0], visited)+opcode_map[term->get_opcode()]+dfs(operands[1], visited);
   }
 }

@@ -97,16 +97,18 @@ class Program
   
   fhecompiler::Scheme program_scheme;
 
-  //BackendLibrary targeted_backend;
+  size_t dimension; //
 
   public:
     
   using Ptr = std::shared_ptr<Term>;
 
-  Program(const std::string& tag_value): program_tag{tag_value} 
+  Program(const std::string& tag_value, size_t dim): program_tag{tag_value}, dimension(dim) 
   {
     data_flow = std::make_unique<DAG>();
   }
+
+  ~Program() { }
 
   Ptr insert_operation_node_in_dataflow(OpCode _opcode, const std::vector<Ptr>& _operands, std::string label, TermType term_type);
 
@@ -137,6 +139,8 @@ class Program
 
   bool insert_new_entry_from_existing_with_delete(std::string new_entry_key, std::string exsisting_entry_key);
   
+  bool get_dimension() const  { return this->dimension; }
+
   void traverse_dataflow();
 
   std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(const std::string& ); 

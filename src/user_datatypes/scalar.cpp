@@ -4,7 +4,9 @@
 #include"term.hpp"
 #include"datatypes_util.hpp"
 
-extern std::shared_ptr<ir::Program> program;
+using namespace datatype;
+
+extern ir::Program* program;
 
 namespace fhecompiler
 {
@@ -19,32 +21,6 @@ inline void set_new_label(Scalar& sc)
 }
 
 std::string Scalar::generate_new_label() { return datatype::sc_label_prefix+std::to_string(Scalar::scalar_id++); }
-
-void compound_operate(Scalar& lhs, const Scalar& rhs, ir::OpCode opcode)
-{
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
-
-  std::string old_label = lhs.get_label();
-
-  set_new_label(lhs);
-  auto new_operation_node_ptr = program->insert_operation_node_in_dataflow(opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), ir::scalarType);
-  if(lhs_node_ptr->get_output_flag()) 
-  {
-    lhs_node_ptr->set_output_flag(false);
-    new_operation_node_ptr->set_output_flag(true);
-  }
-
-  auto table_entry_opt = program->get_entry_form_constants_table(old_label);
-  if(table_entry_opt != std::nullopt)
-  {
-    ir::ConstantTableEntry& table_entry = *table_entry_opt;
-    if(table_entry.get_entry_type() == ir::ConstantTableEntry::ConstantTableEntryType::output)
-      program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
-  }
-
-}
 
 void Scalar::set_as_output() const
 {
@@ -139,7 +115,7 @@ Scalar::Scalar(const Scalar& sc_copy): label(datatype::sc_label_prefix + std::to
 Scalar& Scalar::operator+=(const Scalar& rhs) 
 {
 
-  compound_operate(*this, rhs, ir::add);
+  compound_operate<Scalar>(*this, rhs, ir::add, ir::scalarType);
   return *this;
 
 }
@@ -147,83 +123,58 @@ Scalar& Scalar::operator+=(const Scalar& rhs)
 
 Scalar& Scalar::operator*=(const Scalar& rhs) 
 {
-  compound_operate(*this, rhs, ir::mul);
+  compound_operate<Scalar>(*this, rhs, ir::mul, ir::scalarType);
   return *this;
 }
 
 Scalar& Scalar::operator-=(const Scalar& rhs) 
 {
-  compound_operate(*this, rhs, ir::sub);
+  compound_operate(*this, rhs, ir::sub, ir::scalarType);
   return *this;
 }
 
 
 Scalar Scalar::operator+(const Scalar& rhs)
 {
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(*this);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
-  return operate<Scalar>(ir::add, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
-
+  return operate_binary<Scalar>(*this, rhs, ir::add, ir::scalarType);
 }
 
 
 Scalar Scalar::operator-(const Scalar& rhs)
 {
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(*this);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
-  return operate<Scalar>(ir::sub, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
-
+  return operate_binary<Scalar>(*this, rhs, ir::sub, ir::scalarType);
 }
 
 
 Scalar Scalar::operator*(const Scalar& rhs)
 {
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(*this);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
-  return operate<Scalar>(ir::mul, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
-
+  return operate_binary<Scalar>(*this, rhs, ir::mul, ir::scalarType);
 }
 
 Scalar Scalar::operator-()
 {
-  auto rhs_node_ptr = program->find_node_in_dataflow(this->label);
-  return operate<Scalar>(ir::negate, {rhs_node_ptr}, ir::scalarType);
+  return operate_unary<Scalar>(*this, ir::negate, ir::scalarType);
 }
 
 Scalar operator+(const Scalar& lhs, const Scalar& rhs)
 {
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
-  return operate<Scalar>(ir::add, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
-
+  return operate_binary<Scalar>(lhs, rhs, ir::add, ir::scalarType);
 }
 
 Scalar operator*(const Scalar& lhs, const Scalar& rhs)
 {
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
-  return operate<Scalar>(ir::mul, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
-
+  return operate_binary<Scalar>(lhs, rhs, ir::mul, ir::scalarType);
 }
 
 Scalar operator-(const Scalar& lhs, const Scalar& rhs)
 {
 
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Scalar>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
-  return operate<Scalar>(ir::sub, {lhs_node_ptr, rhs_node_ptr}, ir::scalarType);
-
+  return operate_binary<Scalar>(lhs, rhs, ir::sub, ir::scalarType);
 }
 
 Scalar operator-(const Scalar& rhs) 
 {
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Scalar>(rhs);
-  return operate<Scalar>(ir::negate, {rhs_node_ptr}, ir::scalarType);
+  return operate_unary<Scalar>(rhs, ir::negate, ir::scalarType);
 }
 
 } //namespace fhecompiler

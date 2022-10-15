@@ -9,13 +9,23 @@
 #include<string>
 #include<memory>
 
-std::shared_ptr<ir::Program> program;
+ir::Program* program;
 
 namespace fhecompiler
 {
 
-void init(const std::string& program_name) { program = std::make_shared<ir::Program>(program_name); }
-void set_program_scheme(Scheme program_scheme ) { program->set_scheme(program_scheme); }
+void init(const std::string& program_name, size_t dim)
+{ 
+  static ir::Program program_object(program_name, dim);
+  program = &program_object;
+}
+
+void set_program_scheme(Scheme program_scheme )
+{ 
+  program->set_scheme(program_scheme); 
+
+}
+
 void compile() 
 {
   program->traverse_dataflow();

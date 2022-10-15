@@ -18,7 +18,7 @@ void print_string(std::optional<std::string> string_opt)
 int main()
 {
 
-  fhecompiler::init("test1");
+  fhecompiler::init("test1", 1024);
 
   fhecompiler::set_program_scheme(fhecompiler::bfv);
 
@@ -39,6 +39,7 @@ int main()
   fhecompiler::Scalar sc2 = 3;
   fhecompiler::Scalar sc3 = sc1+sc2;
   sc3 += sc1;
+  sc3 = -sc3;
 
   fhecompiler::compile();
 

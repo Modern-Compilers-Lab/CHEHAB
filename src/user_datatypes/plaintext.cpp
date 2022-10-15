@@ -4,7 +4,9 @@
 #include"plaintext.hpp"
 #include"datatypes_util.hpp"
 
-extern std::shared_ptr<ir::Program> program;
+using namespace datatype;
+
+extern ir::Program* program;
 
 namespace fhecompiler
 {
@@ -18,32 +20,6 @@ std::string Plaintext::generate_new_label() { return datatype::ct_label_prefix+s
 inline void set_new_label(Plaintext& pt)
 {
   pt.set_label(datatype::pt_label_prefix+std::to_string(Plaintext::plaintext_id++));
-}
-
-void compound_operate(Plaintext& lhs, const Plaintext& rhs, ir::OpCode opcode)
-{
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(rhs);
-
-  std::string old_label = lhs.get_label();
-
-  set_new_label(lhs);
-  auto new_operation_node_ptr = program->insert_operation_node_in_dataflow(opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), ir::plaintextType);
-  if(lhs_node_ptr->get_output_flag()) 
-  {
-    lhs_node_ptr->set_output_flag(false);
-    new_operation_node_ptr->set_output_flag(true);
-  }
-
-  auto table_entry_opt = program->get_entry_form_constants_table(old_label);
-  if(table_entry_opt != std::nullopt)
-  {
-    ir::ConstantTableEntry& table_entry = *table_entry_opt;
-    if(table_entry.get_entry_type() == ir::ConstantTableEntry::ConstantTableEntryType::output)
-      program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
-  }
-
 }
 
 void Plaintext::set_as_output(const std::string& tag) const
@@ -134,7 +110,7 @@ Plaintext::Plaintext(const Plaintext& pt_copy): label(datatype::pt_label_prefix 
 Plaintext& Plaintext::operator+=(const Plaintext& rhs) 
 {
 
-  compound_operate(*this, rhs, ir::add);
+  compound_operate<Plaintext>(*this, rhs, ir::add, ir::plaintextType);
   return *this;
 
 }
@@ -142,74 +118,54 @@ Plaintext& Plaintext::operator+=(const Plaintext& rhs)
 
 Plaintext& Plaintext::operator*=(const Plaintext& rhs) 
 {
-  compound_operate(*this, rhs, ir::mul);
+  compound_operate<Plaintext>(*this, rhs, ir::mul, ir::plaintextType);
   return *this;
 }
 
 Plaintext& Plaintext::operator-=(const Plaintext& rhs) 
 {
-  compound_operate(*this, rhs, ir::sub);
+  compound_operate<Plaintext>(*this, rhs, ir::sub, ir::plaintextType);
   return *this;
 }
 
 Plaintext Plaintext::operator+(const Plaintext& rhs)
 {
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(*this);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(rhs);
-  return operate<Plaintext>(ir::add, {lhs_node_ptr, rhs_node_ptr}, ir::plaintextType);
+  return operate_binary<Plaintext>(*this, rhs, ir::add, ir::plaintextType);
 }
 
 Plaintext Plaintext::operator-(const Plaintext& rhs)
-{ 
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(*this);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(rhs);
-  return operate<Plaintext>(ir::sub, {lhs_node_ptr, rhs_node_ptr}, ir::plaintextType);
+{
+  return operate_binary<Plaintext>(*this, rhs, ir::sub, ir::plaintextType);
 }
 
 Plaintext Plaintext::operator*(const Plaintext& rhs)
-{ 
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(*this);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(rhs);
-  return operate<Plaintext>(ir::mul, {lhs_node_ptr, rhs_node_ptr}, ir::plaintextType);
+{
+  return operate_binary<Plaintext>(*this, rhs, ir::mul, ir::plaintextType);
 }
 
 Plaintext Plaintext::operator-()
 {
-  auto rhs_node_ptr = program->find_node_in_dataflow(this->label);
-  return operate<Plaintext>(ir::negate, {rhs_node_ptr}, ir::plaintextType);
+  return operate_unary<Plaintext>(*this, ir::negate, ir::plaintextType);
 }
 
 Plaintext operator+(const Plaintext& lhs, const Plaintext& rhs)
 {
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(rhs);
-  return operate<Plaintext>(ir::add, {lhs_node_ptr, rhs_node_ptr}, ir::plaintextType);
-
+  return operate_binary<Plaintext>(lhs, rhs, ir::add, ir::plaintextType);
 }
 
 Plaintext operator*(const Plaintext& lhs, const Plaintext& rhs)
 {
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(rhs);
-  return operate<Plaintext>(ir::mul, {lhs_node_ptr, rhs_node_ptr}, ir::plaintextType);
-
+  return operate_binary<Plaintext>(lhs, rhs, ir::mul, ir::plaintextType);
 }
 
 Plaintext operator-(const Plaintext& lhs, const Plaintext& rhs)
 {
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(rhs);
-  return operate<Plaintext>(ir::sub, {lhs_node_ptr, rhs_node_ptr}, ir::plaintextType);
-
+  return operate_binary<Plaintext>(lhs, rhs, ir::sub, ir::plaintextType);
 }
 
 Plaintext operator-(Plaintext& rhs) 
 {
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Plaintext>(rhs);
-  return operate<Plaintext>(ir::negate, {rhs_node_ptr}, ir::plaintextType);
+  return operate_unary(rhs, ir::negate, ir::plaintextType);
 }
 
 } //namespace fhecompiler

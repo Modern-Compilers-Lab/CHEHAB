@@ -4,7 +4,9 @@
 #include"ciphertext.hpp"
 #include"datatypes_util.hpp"
 
-extern std::shared_ptr<ir::Program> program;
+extern ir::Program* program;
+
+using namespace datatype;
 
 namespace fhecompiler
 {
@@ -19,32 +21,6 @@ inline void set_new_label(Ciphertext& ct)
 }
 
 std::string Ciphertext::generate_new_label() { return datatype::ct_label_prefix+std::to_string(Ciphertext::ciphertext_id++); }
-
-void compound_operate(Ciphertext& lhs, const Ciphertext& rhs, ir::OpCode opcode)
-{
-
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(rhs);
-
-  std::string old_label = lhs.get_label();
-
-  set_new_label(lhs);
-  auto new_operation_node_ptr = program->insert_operation_node_in_dataflow(opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), ir::ciphertextType);
-  if(lhs_node_ptr->get_output_flag()) 
-  {
-    lhs_node_ptr->set_output_flag(false);
-    new_operation_node_ptr->set_output_flag(true);
-  }
-
-  auto table_entry_opt = program->get_entry_form_constants_table(old_label);
-  if(table_entry_opt != std::nullopt)
-  {
-    ir::ConstantTableEntry& table_entry = *table_entry_opt;
-    if(table_entry.get_entry_type() == ir::ConstantTableEntry::ConstantTableEntryType::output)
-      program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
-  }
-
-}
 
 Ciphertext::Ciphertext(Plaintext& pt): label(datatype::ct_label_prefix+std::to_string(Ciphertext::ciphertext_id++))
 {
@@ -131,79 +107,65 @@ Ciphertext::Ciphertext(const Ciphertext& ct_copy): label(datatype::ct_label_pref
 
 Ciphertext& Ciphertext::operator+=(const Ciphertext& rhs) 
 {
-  compound_operate(*this, rhs, ir::add);
+  compound_operate<Ciphertext>(*this, rhs, ir::add, ir::ciphertextType);
   return *this;
 }
 
 
 Ciphertext& Ciphertext::operator*=(const Ciphertext& rhs) 
 {
-  compound_operate(*this, rhs, ir::mul);
+  compound_operate<Ciphertext>(*this, rhs, ir::mul, ir::ciphertextType);
   return *this;
 }
 
 Ciphertext& Ciphertext::operator-=(const Ciphertext& rhs) 
 {
-  compound_operate(*this, rhs, ir::sub);
+  compound_operate<Ciphertext>(*this, rhs, ir::sub, ir::ciphertextType);
   return *this;
 }
 
 
 Ciphertext Ciphertext::operator+(const Ciphertext& rhs)
 {
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(*this);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(rhs);
-  return operate<Ciphertext>(ir::add, {lhs_node_ptr, rhs_node_ptr}, ir::ciphertextType);
+  return operate_binary<Ciphertext>(*this, rhs, ir::add, ir::ciphertextType);
 }
 
 Ciphertext Ciphertext::operator-(const Ciphertext& rhs)
 {
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(*this);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(rhs);
-  return operate<Ciphertext>(ir::sub, {lhs_node_ptr, rhs_node_ptr}, ir::ciphertextType);
+  return operate_binary<Ciphertext>(*this, rhs, ir::sub, ir::ciphertextType);
 }
 
 Ciphertext Ciphertext::operator*(const Ciphertext& rhs)
 {
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(*this);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(rhs);
-  return operate<Ciphertext>(ir::mul, {lhs_node_ptr, rhs_node_ptr}, ir::ciphertextType);
+  return operate_binary<Ciphertext>(*this, rhs, ir::mul, ir::ciphertextType);
 }
 
 Ciphertext Ciphertext::operator-()
 {
-  auto rhs_node_ptr = program->find_node_in_dataflow(this->label);
-  return operate<Ciphertext>(ir::negate, {rhs_node_ptr}, ir::ciphertextType);
+  return operate_unary<Ciphertext>(*this, ir::negate, ir::ciphertextType);
 }
 
 Ciphertext operator+(const Ciphertext& lhs, const Ciphertext& rhs)
 {
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(rhs);
-  return operate<Ciphertext>(ir::add, {lhs_node_ptr, rhs_node_ptr}, ir::ciphertextType);
+  return operate_binary<Ciphertext>(lhs, rhs, ir::add, ir::ciphertextType);
 }
 
 Ciphertext operator*(const Ciphertext& lhs, const Ciphertext& rhs)
 {
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(rhs);
-  return operate<Ciphertext>(ir::mul, {lhs_node_ptr, rhs_node_ptr}, ir::ciphertextType);
+  return operate_binary<Ciphertext>(lhs, rhs, ir::mul, ir::ciphertextType);
 }
 
 Ciphertext operator-(const Ciphertext& lhs, const Ciphertext& rhs)
 {
-  auto lhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<Ciphertext>(rhs);
-  return operate<Ciphertext>(ir::sub, {lhs_node_ptr, rhs_node_ptr}, ir::ciphertextType);
+  return operate_binary<Ciphertext>(lhs, rhs, ir::sub, ir::ciphertextType);
 }
 
 Ciphertext operator-(const Ciphertext& rhs)
 {
-  auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
-  return operate<Ciphertext>(ir::negate, {rhs_node_ptr}, ir::ciphertextType);
+  return operate_unary<Ciphertext>(rhs, ir::negate, ir::ciphertextType);
 }
 
-std::string Ciphertext::get_node_tag()
+std::string Ciphertext::get_term_tag()
 {
   auto table_entry = program->get_entry_form_constants_table(this->label);
   if(table_entry != std::nullopt)
