@@ -77,27 +77,29 @@ std::unordered_map<ir::OpCode, std::string> opcode_map =
   {ir::assign,"="}
 };
 
-std::string dfs(Ptr term, std::unordered_map<std::string, std::string>& expr)
+std::string dfs(Ptr term, std::unordered_set<std::string>& visited)
 {
-  if(expr.find(term->get_label()) != expr.end()) return expr[term->get_label()];
+  if(visited.find(term->get_label()) != visited.end()) return term->get_label();
+  visited.insert(term->get_label());
   if(term->get_operands() == std::nullopt)
   {
-    return expr[term->get_label()] = term->get_label();
+    return term->get_label();
   }
   else
   {
     const std::vector<Ptr>& operands = * term->get_operands();
-    return expr[term->get_label()]= dfs(operands[0], expr)+opcode_map[term->get_opcode()]+dfs(operands[1], expr);
+    if(term->get_opcode() == ir::assign) return operands[0]->get_label();
+    else return dfs(operands[0], visited)+opcode_map[term->get_opcode()]+dfs(operands[1], visited);
   }
 }
 
 void DAG::traverse()
 {
-  std::unordered_map<std::string, std::string> expr;
+  std::unordered_set<std::string> visited;
   this->apply_topological_sort();
   for(auto& node_ptr : this->nodes_ptrs)
   {
-    std::cout << node_ptr->get_label() << " = " << dfs(node_ptr, expr) << "\n";
+    std::cout << node_ptr->get_label() << " = " << dfs(node_ptr, visited) << "\n";
   }
 }
 

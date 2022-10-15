@@ -7,7 +7,7 @@ using Ptr = std::shared_ptr<Term>;
 
 Ptr Program::insert_operation_node_in_dataflow(OpCode opcode, const std::vector<Ptr>& operands, std::string label, TermType term_type)
 {
-  Ptr new_term = std::make_shared<Term>(opcode, std::move(operands), label);
+  Ptr new_term = std::make_shared<Term>(opcode, operands, label);
   new_term->set_term_type(term_type);
   this->data_flow->insert_node(new_term);
   return new_term;
@@ -21,7 +21,7 @@ void Program::set_symbol_as_output(std::string symbol)
 
 Ptr Program::find_node_in_dataflow(std::string label) const
 {
-   return this->data_flow->find_node(label);
+  return this->data_flow->find_node(label);
 }
 
 void Program::insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry)
