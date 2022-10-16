@@ -32,7 +32,7 @@ class Scalar
   Scalar(int64_t _data);
   Scalar(double _data);
   Scalar(int _data): Scalar((int64_t) _data) {}
-  Scalar(const std::string& tag, VarType var_type=VarType::temp);
+  Scalar(const std::string& tag, VarType var_type=VarType::constant);
 
   Scalar(const Scalar& sc_copy);
   Scalar& operator=(const Scalar& sc_copy);
