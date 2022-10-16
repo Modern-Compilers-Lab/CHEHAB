@@ -11,9 +11,8 @@ enum TermType
   scalarType, ciphertextType, plaintextType
 };
 
-enum OpCode {
+enum class OpCode {
   undefined,
-  constant,
   assign,
   add,
   mul,
@@ -26,5 +25,14 @@ enum OpCode {
   relinearize,
   rescale
 };
+
+enum class ConstantTableEntryType { 
+  undefined,
+  constant, //nor input nor output
+  input, 
+  output,
+  temp//input and output at the same time
+};
+
 
 } //namespace ir

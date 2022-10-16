@@ -16,15 +16,10 @@
 namespace ir
 {
 
+class Term;
+
 struct ConstantTableEntry
 {
-
-  enum ConstantTableEntryType { 
-    constant, //nor input nor output
-    input, 
-    output,
-    io //input and output at the same time
-  };
 
   struct Encrypt
   {
@@ -55,7 +50,7 @@ struct ConstantTableEntry
   };
 
 
-  ConstantTableEntry::ConstantTableEntryType entry_type;
+  ConstantTableEntryType entry_type;
   EntryValue entry_value;
 
   public:
@@ -68,9 +63,9 @@ struct ConstantTableEntry
   ConstantTableEntry(ConstantTableEntry&& entry_copy) = default;
   ConstantTableEntry& operator=(ConstantTableEntry& entry_copy) = default;
 
-  ConstantTableEntry(ConstantTableEntry::ConstantTableEntryType _type, EntryValue _value): entry_type(_type), entry_value(_value) {}
+  ConstantTableEntry(ConstantTableEntryType _type, EntryValue _value): entry_type(_type), entry_value(_value) {}
 
-  void set_entry_type(ConstantTableEntry::ConstantTableEntryType _type ) { entry_type = _type; }
+  void set_entry_type(ConstantTableEntryType _type ) { entry_type = _type; }
   
   void set_entry_value(const EntryValue& _value) { entry_value = _value; }
 
@@ -100,7 +95,7 @@ class Program
   size_t dimension; //
 
   public:
-    
+
   using Ptr = std::shared_ptr<Term>;
 
   Program() = delete;
@@ -140,7 +135,9 @@ class Program
   bool insert_new_entry_from_existing(std::string new_entry_key, std::string exsisting_entry_key);
 
   bool insert_new_entry_from_existing_with_delete(std::string new_entry_key, std::string exsisting_entry_key);
-  
+
+  ConstantTableEntryType type_of(const std::string& label);
+      
   size_t get_dimension() const  { return this->dimension; }
 
   void traverse_dataflow();

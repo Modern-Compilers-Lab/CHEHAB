@@ -10,26 +10,9 @@
 #include"scalar.hpp"
 #include"ir_const.hpp"
 
+
 namespace ir
 {
-
-/*
-
-using PlaintextRef = std::reference_wrapper<const datatype::Plaintext>;
-
-using CiphertextRef = std::reference_wrapper<const datatype::Ciphertext>;
-
-using ScalarRef = std::reference_wrapper<datatype::Scalar>;
-
-*/
-
-/*
-
-using ConstantValue = std::variant<datatype::Scalar, datatype::Plaintext, datatype::Ciphertext>; //be careful order is important here
-
-using TermValue = std::variant<ConstantValue, Operation>; //be careful order is important here
-
-*/
 
 class Term
 {
@@ -44,15 +27,11 @@ class Term
   
   TermType type;
   
-  OpCode opcode = undefined;
+  OpCode opcode;
 
   std::optional<std::vector<Ptr>> operands;
 
   std::string label;
-
-  bool is_input=false;
-  
-  bool is_output=false;
 
   public:
 
@@ -79,17 +58,9 @@ class Term
 
   void add_operand(const Ptr& operand );
 
-  void set_iutput_flag(bool input_flag) { this->is_input=input_flag; }
-
-  void set_output_flag(bool output_flag) { this->is_output=output_flag; } 
-
   void set_term_type(TermType term_type) { this->type = term_type; }
 
   std::string get_label() const { return this->label;  }
-
-  bool get_input_flag() const { return this->is_input; }
-
-  bool get_output_flag() const { return this->is_output; }
 
 };
 

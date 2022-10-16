@@ -2,6 +2,7 @@
 
 #include"datatypes_const.hpp"
 #include"ir_const.hpp"
+#include"fhecompiler_const.hpp"
 #include<string>
 #include<variant>
 #include<iostream>
@@ -31,8 +32,7 @@ class Scalar
   Scalar(int64_t _data);
   Scalar(double _data);
   Scalar(int _data): Scalar((int64_t) _data) {}
-  
-  Scalar(std::string tag, bool output_flag=false, bool input_flag=true);
+  Scalar(const std::string& tag, VarType var_type=VarType::temp);
 
   Scalar(const Scalar& sc_copy);
   Scalar& operator=(const Scalar& sc_copy);
@@ -69,11 +69,7 @@ class Scalar
 
   void set_label(std::string label_value )  { this->label = label_value; }
   
-  void set_as_output(const std::string& tag) const;
-
-  static std::string generate_new_label();
-
-  friend inline void set_new_label(Scalar& sc);
+  void set_new_label();
 
   friend void compound_operate(Scalar& lhs, const Scalar& rhs, ir::OpCode);
 

@@ -5,6 +5,7 @@
 #include<vector>
 #include"ir_const.hpp"
 #include"datatypes_const.hpp"
+#include"fhecompiler_const.hpp"
 #include"plaintext.hpp"
 #include<iostream>
 
@@ -27,7 +28,7 @@ class Ciphertext
 
   Ciphertext(const Plaintext& ) = delete;
 
-  Ciphertext(std::string tag, bool is_output=false, bool is_input=false);
+  Ciphertext(const std::string& tag, VarType var_type=VarType::temp);
 
   Ciphertext(const Ciphertext& ct_copy);
   Ciphertext& operator=(const Ciphertext& ct_copy);
@@ -47,6 +48,8 @@ class Ciphertext
 
   Ciphertext operator*(const Ciphertext& rhs);
 
+  Ciphertext operator+(const Plaintext& rhs);
+
   Ciphertext operator-();
   
   friend Ciphertext operator+(const Ciphertext& lhs, const Ciphertext& rhs);
@@ -63,13 +66,11 @@ class Ciphertext
 
   void set_label(std::string label_value )  { this->label = label_value; }
   
-  void set_as_output(const std::string& tag) const;
-
-  friend inline void set_new_label(Ciphertext& ct);
-
-  static std::string generate_new_label();
-
   std::string get_term_tag();
+
+  void set_new_label();
+
+  bool is_output() const;
 
   friend void compound_operate(Ciphertext& lhs, const Ciphertext& rhs, ir::OpCode);
 };
