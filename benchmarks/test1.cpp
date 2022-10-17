@@ -30,7 +30,11 @@ int main()
 
     fhecompiler::Plaintext pt2("pt2_input", VarType::input);
 
+    fhecompiler::Plaintext pt3("pt3"); //temp is default type
+
     pt1 *= pt1;
+
+    pt3 = pt1*123;
 
     fhecompiler::Ciphertext ct1 = fhecompiler::Ciphertext::encrypt(pt1);
 

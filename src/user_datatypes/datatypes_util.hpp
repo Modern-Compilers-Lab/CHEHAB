@@ -84,7 +84,11 @@ template <typename T> T &operate_assignement(T &lhs, const T &rhs, ir::TermType 
 
 inline void operate_in_constants_table(const std::string &label, const std::string &tag, fhecompiler::VarType var_type)
 {
-  if (tag.length())
+
+  if (label.length() == 0 && var_type == fhecompiler::VarType::temp)
+    return;
+
+  else
   {
 
     ir::ConstantTableEntryType entry_type;
