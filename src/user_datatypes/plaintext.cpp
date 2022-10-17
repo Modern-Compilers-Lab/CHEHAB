@@ -61,38 +61,35 @@ Plaintext::Plaintext(const Plaintext& pt_copy): label(datatype::pt_label_prefix 
 
 Plaintext& Plaintext::operator+=(const Plaintext& rhs) 
 {
-
-  compound_operate<Plaintext>(*this, rhs, ir::OpCode::add, ir::plaintextType);
-  return *this;
+  
+  if(is_compile_time_evaluation_possible<Plaintext>(*this, rhs))
+  {
+    compound_operate<Plaintext,Plaintext>(*this, rhs, ir::OpCode::add, ir::plaintextType);
+    return *this;
+  }
+  else throw (datatype::eval_not_supported);
 
 }
 
 
 Plaintext& Plaintext::operator*=(const Plaintext& rhs) 
 {
-  compound_operate<Plaintext>(*this, rhs, ir::OpCode::mul, ir::plaintextType);
-  return *this;
+  if(is_compile_time_evaluation_possible<Plaintext>(*this, rhs))
+  {
+    compound_operate<Plaintext,Plaintext>(*this, rhs, ir::OpCode::mul, ir::plaintextType);
+    return *this;
+  }
+  else throw(datatype::eval_not_supported);
 }
 
 Plaintext& Plaintext::operator-=(const Plaintext& rhs) 
 {
-  compound_operate<Plaintext>(*this, rhs, ir::OpCode::sub, ir::plaintextType);
-  return *this;
-}
-
-Plaintext Plaintext::operator+(const Plaintext& rhs)
-{
-  return operate_binary<Plaintext, Plaintext, Plaintext>(*this, rhs, ir::OpCode::add, ir::plaintextType);
-}
-
-Plaintext Plaintext::operator-(const Plaintext& rhs)
-{
-  return operate_binary<Plaintext, Plaintext, Plaintext>(*this, rhs, ir::OpCode::sub, ir::plaintextType);
-}
-
-Plaintext Plaintext::operator*(const Plaintext& rhs)
-{
-  return operate_binary<Plaintext, Plaintext, Plaintext>(*this, rhs, ir::OpCode::mul, ir::plaintextType);
+  if(is_compile_time_evaluation_possible<Plaintext>(*this, rhs))
+  {
+    compound_operate<Plaintext,Plaintext>(*this, rhs, ir::OpCode::sub, ir::plaintextType);
+    return *this;
+  }
+  else throw(datatype::eval_not_supported);
 }
 
 Plaintext Plaintext::operator-()
@@ -102,22 +99,34 @@ Plaintext Plaintext::operator-()
 
 Plaintext operator+(const Plaintext& lhs, const Plaintext& rhs)
 {
-  return operate_binary<Plaintext, Plaintext, Plaintext>(lhs, rhs, ir::OpCode::add, ir::plaintextType);
+  if(is_compile_time_evaluation_possible<Plaintext>(lhs, rhs))
+  {
+    return operate_binary<Plaintext, Plaintext, Plaintext>(lhs, rhs, ir::OpCode::add, ir::plaintextType);
+  }
+  else throw(datatype::eval_not_supported);
 }
 
 Plaintext operator*(const Plaintext& lhs, const Plaintext& rhs)
 {
-  return operate_binary<Plaintext, Plaintext, Plaintext>(lhs, rhs, ir::OpCode::mul, ir::plaintextType);
+  if(is_compile_time_evaluation_possible<Plaintext>(lhs, rhs))
+  {
+    return operate_binary<Plaintext, Plaintext, Plaintext>(lhs, rhs, ir::OpCode::mul, ir::plaintextType);
+  }
+  else throw(datatype::eval_not_supported);
 }
 
 Plaintext operator-(const Plaintext& lhs, const Plaintext& rhs)
 {
-  return operate_binary<Plaintext>(lhs, rhs, ir::OpCode::sub, ir::plaintextType);
+  if(is_compile_time_evaluation_possible<Plaintext>(lhs, rhs))
+  {
+    return operate_binary<Plaintext, Plaintext, Plaintext>(lhs, rhs, ir::OpCode::sub, ir::plaintextType);
+  }
+  else throw(datatype::eval_not_supported);
 }
 
 Plaintext operator-(Plaintext& rhs) 
 {
-  return operate_unary(rhs, ir::OpCode::negate, ir::plaintextType);
+  return operate_unary<Plaintext>(rhs, ir::OpCode::negate, ir::plaintextType);
 }
 
 } //namespace fhecompiler

@@ -428,8 +428,14 @@ CMakeFiles/FHECO_PROJECT.dir/benchmarks/test1.cpp.o: ../benchmarks/test1.cpp \
   ../src/user_datatypes/scalar.hpp \
   ../src/ir/program.hpp \
   ../src/ir/term.hpp \
-  ../src/ir/dag.hpp
+  ../src/ir/dag.hpp \
+  ../src/user_datatypes/ops_overloads.hpp \
+  ../src/user_datatypes/datatypes_util.hpp
 
+
+../src/user_datatypes/datatypes_util.hpp:
+
+../src/user_datatypes/ops_overloads.hpp:
 
 ../src/ir/dag.hpp:
 

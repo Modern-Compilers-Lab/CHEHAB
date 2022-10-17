@@ -5,6 +5,7 @@
 #include"scalar.hpp"
 #include"program.hpp"
 #include"fhecompiler_const.hpp"
+#include"ops_overloads.hpp"
 #include<iostream>
 #include<string>
 #include<memory>

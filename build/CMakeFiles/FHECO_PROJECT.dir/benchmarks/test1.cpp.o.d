@@ -338,4 +338,6 @@ CMakeFiles/FHECO_PROJECT.dir/benchmarks/test1.cpp.o: \
  /home/aimad/Desktop/projects/fhe_compiler/fheco_project/src/user_datatypes/scalar.hpp \
  /home/aimad/Desktop/projects/fhe_compiler/fheco_project/src/ir/program.hpp \
  /home/aimad/Desktop/projects/fhe_compiler/fheco_project/src/ir/term.hpp \
- /home/aimad/Desktop/projects/fhe_compiler/fheco_project/src/ir/dag.hpp
+ /home/aimad/Desktop/projects/fhe_compiler/fheco_project/src/ir/dag.hpp \
+ /home/aimad/Desktop/projects/fhe_compiler/fheco_project/src/user_datatypes/ops_overloads.hpp \
+ /home/aimad/Desktop/projects/fhe_compiler/fheco_project/src/user_datatypes/datatypes_util.hpp

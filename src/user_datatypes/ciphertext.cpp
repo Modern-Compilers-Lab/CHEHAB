@@ -20,11 +20,14 @@ void Ciphertext::set_new_label()
   this->set_label(datatype::ct_label_prefix+std::to_string(Ciphertext::ciphertext_id++));
 }
 
-Ciphertext::Ciphertext(Plaintext& pt): label(datatype::ct_label_prefix+std::to_string(Ciphertext::ciphertext_id++))
+
+Ciphertext Ciphertext::encrypt(const Plaintext& pt)
 {
+  Ciphertext new_ct("");
   program->insert_node_in_dataflow<Plaintext>(pt);
-  program->insert_node_in_dataflow<Ciphertext>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {pt.get_label()}}});
+  program->insert_node_in_dataflow<Ciphertext>(new_ct);
+  program->insert_entry_in_constants_table({new_ct.get_label(), {ir::ConstantTableEntryType::constant, {pt.get_label()}}});
+  return new_ct;
 }
 
 Ciphertext::Ciphertext(const std::string& tag, VarType var_type): label(datatype::ct_label_prefix+std::to_string(Ciphertext::ciphertext_id++))
@@ -49,37 +52,21 @@ Ciphertext::Ciphertext(const Ciphertext& ct_copy): label(datatype::ct_label_pref
 
 Ciphertext& Ciphertext::operator+=(const Ciphertext& rhs) 
 {
-  compound_operate<Ciphertext>(*this, rhs, ir::OpCode::add, ir::ciphertextType);
+  compound_operate<Ciphertext,Ciphertext>(*this, rhs, ir::OpCode::add, ir::ciphertextType);
   return *this;
 }
 
 
 Ciphertext& Ciphertext::operator*=(const Ciphertext& rhs) 
 {
-  compound_operate<Ciphertext>(*this, rhs, ir::OpCode::mul, ir::ciphertextType);
+  compound_operate<Ciphertext,Ciphertext>(*this, rhs, ir::OpCode::mul, ir::ciphertextType);
   return *this;
 }
 
 Ciphertext& Ciphertext::operator-=(const Ciphertext& rhs) 
 {
-  compound_operate<Ciphertext>(*this, rhs, ir::OpCode::sub, ir::ciphertextType);
+  compound_operate<Ciphertext,Ciphertext>(*this, rhs, ir::OpCode::sub, ir::ciphertextType);
   return *this;
-}
-
-
-Ciphertext Ciphertext::operator+(const Ciphertext& rhs)
-{
-  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(*this, rhs, ir::OpCode::add, ir::ciphertextType);
-}
-
-Ciphertext Ciphertext::operator-(const Ciphertext& rhs)
-{
-  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(*this, rhs, ir::OpCode::sub, ir::ciphertextType);
-}
-
-Ciphertext Ciphertext::operator*(const Ciphertext& rhs)
-{
-  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(*this, rhs, ir::OpCode::mul, ir::ciphertextType);
 }
 
 Ciphertext Ciphertext::operator-()
@@ -105,11 +92,6 @@ Ciphertext operator-(const Ciphertext& lhs, const Ciphertext& rhs)
 Ciphertext operator-(const Ciphertext& rhs)
 {
   return operate_unary<Ciphertext>(rhs, ir::OpCode::negate, ir::ciphertextType);
-}
-
-Ciphertext Ciphertext::operator+(const Plaintext& rhs)
-{
-  return operate_binary<Ciphertext, Ciphertext, Plaintext>(*this, rhs, ir::OpCode::add, ir::ciphertextType);
 }
 
 std::string Ciphertext::get_term_tag()

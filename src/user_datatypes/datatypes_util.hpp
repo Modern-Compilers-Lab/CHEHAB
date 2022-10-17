@@ -22,12 +22,12 @@ T operate(ir::OpCode opcode, const std::vector<Ptr>& operands, ir::TermType term
 }
 
 
-template< typename T >
-void compound_operate(T& lhs, const T& rhs, ir::OpCode opcode, ir::TermType term_type)
+template< typename T1, typename T2 >
+void compound_operate(T1& lhs, const T2& rhs, ir::OpCode opcode, ir::TermType term_type)
 {
 
-  auto lhs_node_ptr = program->insert_node_in_dataflow<T>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<T>(rhs);
+  auto lhs_node_ptr = program->insert_node_in_dataflow<T1>(lhs);
+  auto rhs_node_ptr = program->insert_node_in_dataflow<T2>(rhs);
 
   std::string old_label = lhs.get_label();
 
@@ -96,6 +96,14 @@ inline void operate_in_constants_table(const std::string& label, const std::stri
     program->insert_entry_in_constants_table({label, {entry_type, entry_value}});
 
   }
+}
+
+
+template< typename T > /* T cannot be a Ciphertext since we don't support Ciphertext evaluation during compile time*/
+bool is_compile_time_evaluation_possible(const T& lhs, const T& rhs)
+{
+  ir::ConstantTableEntryType lhs_entry_type = program->type_of(lhs.get_label());
+  return (lhs_entry_type == ir::ConstantTableEntryType::constant && lhs_entry_type == program->type_of(rhs.get_label()));
 }
 
 } // namespace datatypes

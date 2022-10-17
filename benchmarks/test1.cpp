@@ -17,7 +17,6 @@ void print_string(std::optional<std::string> string_opt)
 
 int main()
 {
-
   try
   {
   fhecompiler::init("test1", 1024);
@@ -25,18 +24,18 @@ int main()
   fhecompiler::set_program_scheme(fhecompiler::bfv);
 
   fhecompiler::Plaintext pt1(std::vector<int64_t>{1,3,4,5});
-  //pt1.set_as_output("z_plain");
-  fhecompiler::Plaintext pt1_output("pt1_output", VarType::output);
-  pt1_output = pt1;
-  pt1_output += pt1;
+  fhecompiler::Plaintext pt2("pt2_input", VarType::input);
 
-  fhecompiler::Ciphertext ct1(pt1);
+  pt1 *= pt1;
+
+  fhecompiler::Ciphertext ct1 = fhecompiler::Ciphertext::encrypt(pt1);
 
   fhecompiler::Ciphertext ct2 = ct1+ct1;
 
-
   fhecompiler::Ciphertext ct3 = ct2;
   ct3 += ct1;
+
+  ct3 += ct3;
 
   fhecompiler::Scalar sc1 = 2;
   fhecompiler::Scalar sc2 = 3;
@@ -44,13 +43,18 @@ int main()
   sc3 += sc1;
   sc3 = -sc3; 
 
-  fhecompiler::Ciphertext ct4 = ct3+pt1;
+  fhecompiler::Ciphertext ct4 = ct3 + pt1;
+
+  fhecompiler::Ciphertext ct7 = ct3-pt1;
 
   Ciphertext ct5("x", VarType::output);
   ct5 = ct4;
   //ct5 += ct4;
   //ct5 += ct5;
+  Ciphertext ct6 = 123*ct1;
   std:cout << ct5.is_output() << "\n";
+
+  ct6 -= 12;
 
   fhecompiler::compile();
 

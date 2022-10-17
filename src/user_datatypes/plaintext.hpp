@@ -34,7 +34,6 @@ class Plaintext
 
   Plaintext(const Plaintext& pt_copy);
   Plaintext& operator=(const Plaintext& pt_copy);
-  
 
   Plaintext& operator+=(const Plaintext& rhs);
 
@@ -42,14 +41,8 @@ class Plaintext
 
   Plaintext& operator-=(const Plaintext& rhs);
 
-  Plaintext operator+(const Plaintext& rhs);
-
-  Plaintext operator*(const Plaintext& rhs);
-
-  Plaintext operator-(const Plaintext& rhs);
-
   Plaintext operator-();
-
+  
   friend Plaintext operator+(const Plaintext& lhs, const Plaintext& rhs);
 
   friend Plaintext operator-(const Plaintext& lhs, const Plaintext& rhs);
@@ -75,4 +68,4 @@ class Plaintext
   friend void compound_operate(Plaintext& lhs, const Plaintext& rhs, ir::OpCode);
 };
 
-}// namespace fhecompiler
+}// namespace fhecompiler!!

@@ -47,12 +47,6 @@ class Scalar
 
   Scalar& operator-=(const Scalar& rhs);
 
-  Scalar operator+(const Scalar& rhs);
-
-  Scalar operator-(const Scalar& rhs);
-
-  Scalar operator*(const Scalar& rhs);
-
   Scalar operator-();
 
   friend Scalar operator+(const Scalar& lhs, const Scalar& rhs);

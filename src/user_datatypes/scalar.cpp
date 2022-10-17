@@ -64,40 +64,21 @@ Scalar::Scalar(const Scalar& sc_copy): label(datatype::sc_label_prefix + std::to
 Scalar& Scalar::operator+=(const Scalar& rhs) 
 {
 
-  compound_operate<Scalar>(*this, rhs, ir::OpCode::add, ir::scalarType);
+  compound_operate<Scalar,Scalar>(*this, rhs, ir::OpCode::add, ir::scalarType);
   return *this;
 
 }
 
-
 Scalar& Scalar::operator*=(const Scalar& rhs) 
 {
-  compound_operate<Scalar>(*this, rhs, ir::OpCode::mul, ir::scalarType);
+  compound_operate<Scalar,Scalar>(*this, rhs, ir::OpCode::mul, ir::scalarType);
   return *this;
 }
 
 Scalar& Scalar::operator-=(const Scalar& rhs) 
 {
-  compound_operate(*this, rhs, ir::OpCode::sub, ir::scalarType);
+  compound_operate<Scalar,Scalar>(*this, rhs, ir::OpCode::sub, ir::scalarType);
   return *this;
-}
-
-
-Scalar Scalar::operator+(const Scalar& rhs)
-{
-  return operate_binary<Scalar, Scalar, Scalar>(*this, rhs, ir::OpCode::add, ir::scalarType);
-}
-
-
-Scalar Scalar::operator-(const Scalar& rhs)
-{
-  return operate_binary<Scalar, Scalar, Scalar>(*this, rhs, ir::OpCode::sub, ir::scalarType);
-}
-
-
-Scalar Scalar::operator*(const Scalar& rhs)
-{
-  return operate_binary<Scalar, Scalar, Scalar>(*this, rhs, ir::OpCode::mul, ir::scalarType);
 }
 
 Scalar Scalar::operator-()

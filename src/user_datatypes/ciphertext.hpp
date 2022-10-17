@@ -24,9 +24,10 @@ class Ciphertext
   public:
 
   Ciphertext() = delete;
-  explicit Ciphertext(Plaintext& );
-
   Ciphertext(const Plaintext& ) = delete;
+  Ciphertext(Plaintext ) = delete;
+
+  static Ciphertext encrypt(const Plaintext& pt);
 
   Ciphertext(const std::string& tag, VarType var_type=VarType::temp);
 
@@ -35,20 +36,12 @@ class Ciphertext
 
   Ciphertext(Ciphertext&& ct_move) = default;
   Ciphertext& operator=(Ciphertext&& ct_move) = default;
-  
+
   Ciphertext& operator+=(const Ciphertext& rhs);
 
   Ciphertext& operator*=(const Ciphertext& rhs);
 
   Ciphertext& operator-=(const Ciphertext& rhs);
-
-  Ciphertext operator+(const Ciphertext& rhs);
-
-  Ciphertext operator-(const Ciphertext& rhs);
-
-  Ciphertext operator*(const Ciphertext& rhs);
-
-  Ciphertext operator+(const Plaintext& rhs);
 
   Ciphertext operator-();
   
