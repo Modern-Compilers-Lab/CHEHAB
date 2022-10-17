@@ -1,35 +1,30 @@
 #pragma once
 
-#include"plaintext.hpp"
-#include"ciphertext.hpp"
-#include"scalar.hpp"
-#include"program.hpp"
-#include"fhecompiler_const.hpp"
-#include"ops_overloads.hpp"
-#include<iostream>
-#include<string>
-#include<memory>
+#include "ciphertext.hpp"
+#include "fhecompiler_const.hpp"
+#include "ops_overloads.hpp"
+#include "plaintext.hpp"
+#include "program.hpp"
+#include "scalar.hpp"
+#include <iostream>
+#include <memory>
+#include <string>
 
-ir::Program* program;
+ir::Program *program;
 
 namespace fhecompiler
 {
 
-void init(const std::string& program_name, size_t dim)
+void init(const std::string &program_name, size_t dim, Scheme program_scheme)
 {
   static ir::Program program_object(program_name, dim);
   program = &program_object;
+  program->set_scheme(program_scheme);
 }
 
-void set_program_scheme(Scheme program_scheme )
-{ 
-  program->set_scheme(program_scheme); 
-}
-
-void compile() 
+void compile()
 {
   program->traverse_dataflow();
 }
 
 } // namespace fhecompiler
-

@@ -1,17 +1,20 @@
 #pragma once
 
-#include<vector>
-#include<variant>
+#include <variant>
+#include <vector>
 
 namespace ir
 {
 
 enum TermType
 {
-  scalarType, ciphertextType, plaintextType
+  scalarType,
+  ciphertextType,
+  plaintextType
 };
 
-enum class OpCode {
+enum class OpCode
+{
   undefined,
   assign,
   add,
@@ -26,13 +29,13 @@ enum class OpCode {
   rescale
 };
 
-enum class ConstantTableEntryType { 
+enum class ConstantTableEntryType
+{
   undefined,
-  constant, //nor input nor output
-  input, 
+  constant, // nor input nor output
+  input,
   output,
-  temp//input and output at the same time
+  temp // input and output at the same time
 };
 
-
-} //namespace ir
+} // namespace ir
