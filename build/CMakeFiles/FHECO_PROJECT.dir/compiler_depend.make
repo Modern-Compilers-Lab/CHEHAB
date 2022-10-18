@@ -199,12 +199,12 @@ CMakeFiles/FHECO_PROJECT.dir/benchmarks/test1.cpp.o: ../benchmarks/test1.cpp \
   /usr/include/c++/11/bits/ostream.tcc \
   /usr/include/c++/11/istream \
   /usr/include/c++/11/bits/istream.tcc \
+  ../src/user_datatypes/scalar.hpp \
   ../src/user_datatypes/ops_overloads.hpp \
   ../src/user_datatypes/datatypes_util.hpp \
   ../src/ir/program.hpp \
   ../src/ir/dag.hpp \
   ../src/ir/term.hpp \
-  ../src/user_datatypes/scalar.hpp \
   /usr/include/c++/11/memory \
   /usr/include/c++/11/bits/stl_tempbuf.h \
   /usr/include/c++/11/bits/stl_raw_storage_iter.h \
