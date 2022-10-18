@@ -45,6 +45,8 @@ int main()
 
     ct3 += ct3;
 
+    ct3 = ct1+ct1;
+
     fhecompiler::Scalar sc1 = 2;
     fhecompiler::Scalar sc2 = 3;
     fhecompiler::Scalar sc3 = sc1 + sc2;
@@ -60,8 +62,7 @@ int main()
     // ct5 += ct4;
     // ct5 += ct5;
     Ciphertext ct6 = 123 * ct1;
-    ct6 -= 12;
-
+    ct6 += 12;
     fhecompiler::compile();
   }
   catch (const char *message)

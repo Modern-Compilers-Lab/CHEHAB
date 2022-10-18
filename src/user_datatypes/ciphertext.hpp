@@ -4,6 +4,7 @@
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
 #include "plaintext.hpp"
+#include "scalar.hpp"
 #include <iostream>
 #include <string>
 #include <variant>
@@ -41,6 +42,12 @@ public:
 
   Ciphertext &operator-=(const Ciphertext &rhs);
 
+  Ciphertext &square(const Scalar &rhs);
+
+  Ciphertext &exponentiate(const Scalar &rhs);
+
+  Ciphertext &rotate(const Scalar &rhs);
+
   Ciphertext operator-();
 
   friend Ciphertext operator+(const Ciphertext &lhs, const Ciphertext &rhs);
@@ -50,6 +57,12 @@ public:
   friend Ciphertext operator*(const Ciphertext &lhs, const Ciphertext &rhs);
 
   friend Ciphertext operator-(const Ciphertext &rhs);
+
+  friend Ciphertext exponentiate(const Ciphertext &lhs, const Scalar &rhs);
+
+  friend Ciphertext square(const Ciphertext lhs, const Scalar &rhs);
+
+  friend Ciphertext rotate(const Ciphertext &rhs, const Scalar &lhs);
 
   void reduce(std::uint64_t plaintext_modulus);
 

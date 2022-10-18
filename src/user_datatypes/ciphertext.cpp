@@ -68,6 +68,24 @@ Ciphertext &Ciphertext::operator-=(const Ciphertext &rhs)
   return *this;
 }
 
+Ciphertext &Ciphertext::square(const Scalar &rhs)
+{
+  compound_operate<Ciphertext, Scalar>(*this, rhs, ir::OpCode::square, ir::ciphertextType);
+  return *this;
+}
+
+Ciphertext &Ciphertext::exponentiate(const Scalar &rhs)
+{
+  compound_operate<Ciphertext, Scalar>(*this, rhs, ir::OpCode::exponentiate, ir::ciphertextType);
+  return *this;
+}
+
+Ciphertext &Ciphertext::rotate(const Scalar &rhs)
+{
+  compound_operate<Ciphertext, Scalar>(*this, rhs, ir::OpCode::rotate, ir::ciphertextType);
+  return *this;
+}
+
 Ciphertext Ciphertext::operator-()
 {
   return operate_unary<Ciphertext>(*this, ir::OpCode::negate, ir::ciphertextType);
@@ -91,6 +109,21 @@ Ciphertext operator-(const Ciphertext &lhs, const Ciphertext &rhs)
 Ciphertext operator-(const Ciphertext &rhs)
 {
   return operate_unary<Ciphertext>(rhs, ir::OpCode::negate, ir::ciphertextType);
+}
+
+Ciphertext exponentiate(const Ciphertext &lhs, const Scalar &rhs)
+{
+  return operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::exponentiate, ir::ciphertextType);
+}
+
+Ciphertext square(const Ciphertext &lhs, const Scalar &rhs)
+{
+  return operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::square, ir::ciphertextType);
+}
+
+Ciphertext rotate(const Ciphertext &lhs, const Scalar &rhs)
+{
+  return operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::rotate, ir::ciphertextType);
 }
 
 std::string Ciphertext::get_term_tag()
