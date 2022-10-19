@@ -24,9 +24,7 @@ private:
 public:
   DAG() = default;
 
-  ~DAG()
-  {
-  }
+  ~DAG() {}
 
   void insert_node(Ptr node_ptr);
 

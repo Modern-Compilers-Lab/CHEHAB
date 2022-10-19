@@ -38,17 +38,11 @@ struct ConstantTableEntry
     std::optional<ConstantValue> value;
     std::string tag;
 
-    EntryValue(const std::string &_tag, std::optional<ConstantValue> _value) : value(_value), tag(_tag)
-    {
-    }
+    EntryValue(const std::string &_tag, std::optional<ConstantValue> _value) : value(_value), tag(_tag) {}
 
-    EntryValue(const std::string _tag) : tag(_tag), value(std::nullopt)
-    {
-    }
+    EntryValue(const std::string _tag) : tag(_tag), value(std::nullopt) {}
 
-    EntryValue(std::optional<ConstantValue> _value) : value(_value), tag("")
-    {
-    }
+    EntryValue(std::optional<ConstantValue> _value) : value(_value), tag("") {}
 
     ~EntryValue() = default;
   };
@@ -65,24 +59,13 @@ public:
   ConstantTableEntry(ConstantTableEntry &&entry_copy) = default;
   ConstantTableEntry &operator=(ConstantTableEntry &entry_copy) = default;
 
-  ConstantTableEntry(ConstantTableEntryType _type, EntryValue _value) : entry_type(_type), entry_value(_value)
-  {
-  }
+  ConstantTableEntry(ConstantTableEntryType _type, EntryValue _value) : entry_type(_type), entry_value(_value) {}
 
-  void set_entry_type(ConstantTableEntryType _type)
-  {
-    entry_type = _type;
-  }
+  void set_entry_type(ConstantTableEntryType _type) { entry_type = _type; }
 
-  void set_entry_value(const EntryValue &_value)
-  {
-    entry_value = _value;
-  }
+  void set_entry_value(const EntryValue &_value) { entry_value = _value; }
 
-  void set_entry_value(const ConstantValue &_value)
-  {
-    entry_value.value = _value;
-  }
+  void set_entry_value(const ConstantValue &_value) { entry_value.value = _value; }
 
   void set_entry_tag(const std::string &_tag)
   {
@@ -90,15 +73,9 @@ public:
       entry_value.tag = _tag;
   }
 
-  EntryValue &get_entry_value()
-  {
-    return entry_value;
-  }
+  EntryValue &get_entry_value() { return entry_value; }
 
-  ConstantTableEntryType get_entry_type() const
-  {
-    return this->entry_type;
-  }
+  ConstantTableEntryType get_entry_type() const { return this->entry_type; }
 };
 
 class Program
@@ -110,7 +87,7 @@ private:
   std::unique_ptr<DAG> data_flow; // data_flow points to the IR which is a Directed Acyclic Graph (DAG)
 
   std::unordered_map<std::string, ConstantTableEntry>
-      constants_table; // we will have a symbol table, the data structure is a hash table
+    constants_table; // we will have a symbol table, the data structure is a hash table
 
   fhecompiler::Scheme program_scheme;
 
@@ -126,18 +103,17 @@ public:
     data_flow = std::make_unique<DAG>();
   }
 
-  ~Program()
-  {
-  }
+  ~Program() {}
 
-  Ptr insert_operation_node_in_dataflow(OpCode _opcode, const std::vector<Ptr> &_operands, std::string label,
-                                        TermType term_type);
+  Ptr insert_operation_node_in_dataflow(
+    OpCode _opcode, const std::vector<Ptr> &_operands, std::string label, TermType term_type);
 
   Ptr find_node_in_dataflow(const std::string &label) const;
 
   void set_symbol_as_output(const std::string &label, const std::string &tag);
 
-  template <typename T> Ptr insert_node_in_dataflow(const T &operand)
+  template <typename T>
+  Ptr insert_node_in_dataflow(const T &operand)
   {
     auto node_ptr_in_program = find_node_in_dataflow(operand.get_label());
     if (node_ptr_in_program)
@@ -149,10 +125,7 @@ public:
     return new_term;
   }
 
-  void set_scheme(fhecompiler::Scheme program_scheme_value)
-  {
-    program_scheme = program_scheme_value;
-  }
+  void set_scheme(fhecompiler::Scheme program_scheme_value) { program_scheme = program_scheme_value; }
 
   void insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry);
 
@@ -164,10 +137,7 @@ public:
 
   ConstantTableEntryType type_of(const std::string &label);
 
-  size_t get_dimension() const
-  {
-    return this->dimension;
-  }
+  size_t get_dimension() const { return this->dimension; }
 
   void traverse_dataflow();
 

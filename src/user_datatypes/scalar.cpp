@@ -39,7 +39,7 @@ Scalar::Scalar() : label(datatype::sc_label_prefix + std::to_string(Scalar::scal
 }
 
 Scalar::Scalar(const std::string &tag, VarType var_type)
-    : label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
+  : label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
 
   // we are expecting from the user to provide a tag for input

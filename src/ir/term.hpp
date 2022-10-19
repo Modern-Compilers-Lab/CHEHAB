@@ -33,53 +33,32 @@ private:
 public:
   Term() = delete;
 
-  ~Term()
-  {
-  }
+  ~Term() {}
 
   Term(const Term &term_copy) = default;
   Term &operator=(const Term &term_copy) = default;
 
-  Term(const fhecompiler::Ciphertext &ct) : label(ct.get_label()), type(ir::ciphertextType)
-  {
-  }
+  Term(const fhecompiler::Ciphertext &ct) : label(ct.get_label()), type(ir::ciphertextType) {}
 
-  Term(const fhecompiler::Plaintext &pt) : label(pt.get_label()), type(ir::plaintextType)
-  {
-  }
+  Term(const fhecompiler::Plaintext &pt) : label(pt.get_label()), type(ir::plaintextType) {}
 
-  Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::scalarType)
-  {
-  }
+  Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::scalarType) {}
 
   Term(OpCode _opcode, const std::vector<Ptr> &_operands, std::string label_value)
-      : opcode(_opcode), operands(std::make_optional<std::vector<Ptr>>(std::move(_operands))), label(label_value)
-  {
-  }
+    : opcode(_opcode), operands(std::make_optional<std::vector<Ptr>>(std::move(_operands))), label(label_value)
+  {}
 
   bool merge_with_node(Ptr node_to_merge_with);
 
-  const std::optional<std::vector<Ptr>> &get_operands() const
-  {
-    return this->operands;
-  }
+  const std::optional<std::vector<Ptr>> &get_operands() const { return this->operands; }
 
-  OpCode get_opcode() const
-  {
-    return this->opcode;
-  }
+  OpCode get_opcode() const { return this->opcode; }
 
   void add_operand(const Ptr &operand);
 
-  void set_term_type(TermType term_type)
-  {
-    this->type = term_type;
-  }
+  void set_term_type(TermType term_type) { this->type = term_type; }
 
-  std::string get_label() const
-  {
-    return this->label;
-  }
+  std::string get_label() const { return this->label; }
 };
 
 } // namespace ir

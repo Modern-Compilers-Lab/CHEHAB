@@ -5,8 +5,8 @@ namespace ir
 
 using Ptr = std::shared_ptr<Term>;
 
-Ptr Program::insert_operation_node_in_dataflow(OpCode opcode, const std::vector<Ptr> &operands, std::string label,
-                                               TermType term_type)
+Ptr Program::insert_operation_node_in_dataflow(
+  OpCode opcode, const std::vector<Ptr> &operands, std::string label, TermType term_type)
 {
   Ptr new_term = std::make_shared<Term>(opcode, operands, label);
   new_term->set_term_type(term_type);
@@ -38,7 +38,7 @@ bool Program::delete_entry_from_constants_table(std::string entry_key)
 }
 
 std::optional<std::reference_wrapper<ConstantTableEntry>> Program::get_entry_form_constants_table(
-    const std::string &search_key)
+  const std::string &search_key)
 {
   // search key is the label/symbol of the object
   auto it = constants_table.find(search_key);

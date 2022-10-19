@@ -26,9 +26,7 @@ public:
   Plaintext() = delete;
   Plaintext(const std::vector<int64_t> &message);
   Plaintext(const std::vector<double> &message);
-  Plaintext(const std::vector<int> &message) : Plaintext((const std::vector<int64_t> &)message)
-  {
-  }
+  Plaintext(const std::vector<int> &message) : Plaintext((const std::vector<int64_t> &)message) {}
 
   Plaintext(const std::string &tag, VarType var_type = VarType::temp);
 
@@ -53,15 +51,9 @@ public:
 
   void reduce(std::uint64_t plaintext_modulus);
 
-  std::string get_label() const
-  {
-    return this->label;
-  }
+  std::string get_label() const { return this->label; }
 
-  void set_label(std::string label_value)
-  {
-    this->label = label_value;
-  }
+  void set_label(std::string label_value) { this->label = label_value; }
 
   friend inline void set_new_label(Plaintext &pt);
 

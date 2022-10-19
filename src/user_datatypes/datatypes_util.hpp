@@ -32,7 +32,7 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
 
   lhs.set_new_label();
   auto new_operation_node_ptr =
-      program->insert_operation_node_in_dataflow(opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), term_type);
+    program->insert_operation_node_in_dataflow(opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), term_type);
 
   auto table_entry_opt = program->get_entry_form_constants_table(old_label);
   if (table_entry_opt != std::nullopt)
@@ -51,13 +51,15 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
   return operate<T1>(opcode, {lhs_node_ptr, rhs_node_ptr}, term_type);
 }
 
-template <typename T> T operate_unary(const T &rhs, ir::OpCode opcode, ir::TermType term_type)
+template <typename T>
+T operate_unary(const T &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
   auto rhs_node_ptr = program->insert_node_in_dataflow<T>(rhs);
   return operate<T>(opcode, {rhs_node_ptr}, term_type);
 }
 
-template <typename T> T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
+template <typename T>
+T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 {
   auto lhs_entry = program->get_entry_form_constants_table(lhs.get_label());
 
@@ -73,7 +75,7 @@ template <typename T> T &operate_assignement(T &lhs, const T &rhs, ir::TermType 
     lhs.set_new_label();
     program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
     auto new_assign_operation =
-        program->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, lhs.get_label(), term_type);
+      program->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, lhs.get_label(), term_type);
   }
 
   else
@@ -90,8 +92,8 @@ inline void operate_in_constants_table(const std::string &label, const std::stri
 
   else
   {
-    
-    std::string tag_to_insert = ( tag.length() ? tag : label );
+
+    std::string tag_to_insert = (tag.length() ? tag : label);
 
     ir::ConstantTableEntryType entry_type;
     if (var_type == fhecompiler::VarType::input)
@@ -112,8 +114,8 @@ template <typename T> /* T cannot be a Ciphertext since we don't support Ciphert
 bool is_compile_time_evaluation_possible(const T &lhs, const T &rhs)
 {
   ir::ConstantTableEntryType lhs_entry_type = program->type_of(lhs.get_label());
-  return (lhs_entry_type == ir::ConstantTableEntryType::constant &&
-          lhs_entry_type == program->type_of(rhs.get_label()));
+  return (
+    lhs_entry_type == ir::ConstantTableEntryType::constant && lhs_entry_type == program->type_of(rhs.get_label()));
 }
 
 } // namespace datatype

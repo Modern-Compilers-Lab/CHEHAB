@@ -26,12 +26,12 @@ Ciphertext Ciphertext::encrypt(const Plaintext &pt)
   program->insert_node_in_dataflow<Plaintext>(pt);
   program->insert_node_in_dataflow<Ciphertext>(new_ct);
   program->insert_entry_in_constants_table(
-      {new_ct.get_label(), {ir::ConstantTableEntryType::constant, {pt.get_label()}}});
+    {new_ct.get_label(), {ir::ConstantTableEntryType::constant, {pt.get_label()}}});
   return new_ct;
 }
 
 Ciphertext::Ciphertext(const std::string &tag, VarType var_type)
-    : label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++))
+  : label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++))
 {
   // we are expecting from the user to provide a tag for input
   // this constructor and function needs to be revised later

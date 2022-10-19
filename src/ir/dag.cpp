@@ -68,7 +68,7 @@ void DAG::apply_topological_sort()
 }
 
 std::unordered_map<ir::OpCode, std::string> opcode_map = {
-    {OpCode::add, "+"}, {OpCode::sub, "-"}, {OpCode::mul, "*"}, {OpCode::assign, "="}};
+  {OpCode::add, "+"}, {OpCode::sub, "-"}, {OpCode::mul, "*"}, {OpCode::assign, "="}};
 
 std::string dfs(Ptr term, std::unordered_set<std::string> &visited)
 {
