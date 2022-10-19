@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/FHECO_PROJECT.dir/benchmarks/test1.cpp.o -o FHECO_PROJECT  libuser_datatypes.a libir.a 
