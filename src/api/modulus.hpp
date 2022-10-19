@@ -1,5 +1,7 @@
 #pragma once
 
-namespace api {
-class Modulus {};
-}  // namespace api
+namespace api
+{
+class Modulus
+{};
+} // namespace api

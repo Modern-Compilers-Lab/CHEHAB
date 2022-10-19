@@ -2,6 +2,8 @@
 
 #include "encryptionparameters.hpp"
 
-namespace api {
-class Context {};
-}  // namespace api
+namespace api
+{
+class Context
+{};
+} // namespace api

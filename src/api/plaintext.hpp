@@ -1,5 +1,7 @@
 #pragma once
 
-namespace api {
-class Plaintext {};
-}  // namespace api
+namespace api
+{
+class Plaintext
+{};
+} // namespace api

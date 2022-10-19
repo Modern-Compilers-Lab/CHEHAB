@@ -1,5 +1,7 @@
 #pragma once
 
-namespace api {
-class PublicKey {};
-}  // namespace api
+namespace api
+{
+class PublicKey
+{};
+} // namespace api
