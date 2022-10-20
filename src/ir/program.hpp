@@ -11,11 +11,12 @@
 #include <string>
 #include <unordered_map>
 #include <variant>
+#include<optional>
+#include<variant>
+
 
 namespace ir
 {
-
-class Term;
 
 struct ConstantTableEntry
 {

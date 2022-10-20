@@ -1,4 +1,5 @@
 #include "dag.hpp"
+#include <algorithm>
 #include <stack>
 #include <unordered_set>
 
@@ -30,75 +31,34 @@ void DAG::apply_topological_sort()
 
   std::stack<Ptr> traversal_stack;
 
-  std::unordered_set<std::string> visited_set;
+  std::unordered_set<std::string> visited_labels;
 
-  for (auto &node_ptr : this->nodes_ptrs)
+  for (auto &node_ptr : nodes_ptrs)
   {
-
-    std::string node_label = node_ptr->get_label();
-
-    if (visited_set.find(node_label) != visited_set.end())
+    if (visited_labels.find(node_ptr->get_label()) != visited_labels.end())
       continue;
 
-    visited_set.insert(node_label);
-
+    visited_labels.insert(node_ptr->get_label());
     traversal_stack.push(node_ptr);
 
     while (!traversal_stack.empty())
     {
-
-      auto top_node_ptr = traversal_stack.top();
+      auto &top_node_ptr = traversal_stack.top();
       traversal_stack.pop();
-
-      if (top_node_ptr->get_operands() == std::nullopt)
+      nodes_ptrs_topsorted.push_back(top_node_ptr);
+      if (top_node_ptr->get_operands() != std::nullopt)
       {
-        nodes_ptrs_topsorted.push_back(top_node_ptr);
-      }
-      else
-      {
-
-        for (auto &operand_ptr : *(top_node_ptr->get_operands()))
+        const auto &operands_nodes_ptrs = *(top_node_ptr->get_operands());
+        for (auto &operand_node_ptr : operands_nodes_ptrs)
         {
-          traversal_stack.push(operand_ptr);
-          visited_set.insert(operand_ptr->get_label());
+          if (visited_labels.find(operand_node_ptr->get_label()) == visited_labels.end())
+          {
+            visited_labels.insert(operand_node_ptr->get_label());
+            traversal_stack.push(operand_node_ptr);
+          }
         }
       }
     }
-  }
-}
-
-std::unordered_map<ir::OpCode, std::string> opcode_map = {
-  {OpCode::add, "+"}, {OpCode::sub, "-"}, {OpCode::mul, "*"}, {OpCode::assign, "="}};
-
-std::string dfs(Ptr term, std::unordered_set<std::string> &visited)
-{
-  if (visited.find(term->get_label()) != visited.end())
-    return term->get_label();
-  visited.insert(term->get_label());
-  if (term->get_operands() == std::nullopt)
-  {
-    return term->get_label();
-  }
-  else
-  {
-    const std::vector<Ptr> &operands = *term->get_operands();
-    if (term->get_opcode() == OpCode::assign)
-      return operands[0]->get_label();
-    else if (term->get_opcode() == OpCode::negate)
-      return "-" + operands[0]->get_label();
-    else
-      return dfs(operands[0], visited) + opcode_map[term->get_opcode()] + dfs(operands[1], visited);
-  }
-}
-
-void DAG::traverse()
-{
-
-  std::unordered_set<std::string> visited;
-  this->apply_topological_sort();
-  for (auto &node_ptr : this->nodes_ptrs)
-  {
-    std::cout << node_ptr->get_label() << " = " << dfs(node_ptr, visited) << "\n";
   }
 }
 

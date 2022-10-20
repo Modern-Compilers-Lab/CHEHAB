@@ -1,0 +1,2 @@
+/usr/bin/ar qc libir.a CMakeFiles/ir.dir/src/ir/program.cpp.o CMakeFiles/ir.dir/src/ir/term.cpp.o CMakeFiles/ir.dir/src/ir/dag.cpp.o
+/usr/bin/ranlib libir.a

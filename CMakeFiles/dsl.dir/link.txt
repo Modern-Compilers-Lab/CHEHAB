@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdsl.a CMakeFiles/dsl.dir/src/dsl/ciphertext.cpp.o CMakeFiles/dsl.dir/src/dsl/plaintext.cpp.o CMakeFiles/dsl.dir/src/dsl/scalar.cpp.o
+/usr/bin/ranlib libdsl.a

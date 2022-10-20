@@ -1,4 +1,5 @@
 #include "program.hpp"
+#include<unordered_set>
 
 namespace ir
 {
@@ -77,11 +78,40 @@ ConstantTableEntryType Program::type_of(const std::string &label)
     return ConstantTableEntryType::undefined;
   else
     return (*table_entry).get().entry_type;
+
+}
+
+std::unordered_map<ir::OpCode, std::string> opcode_map = {
+  {OpCode::add, "+"}, {OpCode::sub, "-"}, {OpCode::mul, "*"}, {OpCode::assign, "="}};
+
+std::string dfs(Ptr term, std::unordered_set<std::string> &visited)
+{
+  if (visited.find(term->get_label()) != visited.end())
+    return term->get_label();
+  visited.insert(term->get_label());
+  if (term->get_operands() == std::nullopt)
+  {
+    return term->get_label();
+  }
+  else
+  {
+    const std::vector<Ptr> &operands = *term->get_operands();
+    if (term->get_opcode() == OpCode::assign)
+      return operands[0]->get_label();
+    else if (term->get_opcode() == OpCode::negate)
+      return "-" + operands[0]->get_label();
+    else
+      return dfs(operands[0], visited) + opcode_map[term->get_opcode()] + dfs(operands[1], visited);
+  }
 }
 
 void Program::traverse_dataflow()
 {
-  this->data_flow->traverse();
-}
+  std::unordered_set<std::string> visited;
+  this->data_flow->apply_topological_sort();
+  for (auto &node_ptr : this->data_flow->get_nodes_ptrs_topsorted())
+  {
+    std::cout << node_ptr->get_label() << " = " << dfs(node_ptr, visited) << "\n";
+  }}
 
 } // namespace ir

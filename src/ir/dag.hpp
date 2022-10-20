@@ -32,11 +32,11 @@ public:
 
   void apply_topological_sort();
 
-  void traverse_dag() const;
-
   Ptr find_node(std::string node_label) const;
 
-  void traverse();
+  const std::vector<Ptr> &get_node_ptrs() const { return nodes_ptrs; }
+
+  const std::vector<Ptr>& get_nodes_ptrs_topsorted() const { return nodes_ptrs_topsorted; }
 };
 
 } // namespace ir

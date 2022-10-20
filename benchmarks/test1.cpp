@@ -32,37 +32,11 @@ int main()
 
     fhecompiler::Plaintext pt3("pt3"); //temp is default type
 
-    pt1 *= pt1;
+    fhecompiler::Ciphertext ct1 = fhecompiler::Ciphertext::encrypt(pt2);
+    
+    auto ct2 = ct1+pt1+ct1+pt2+pt3;
+    ct2 += ct2;
 
-    pt3 = pt1*123;
-
-    fhecompiler::Ciphertext ct1 = fhecompiler::Ciphertext::encrypt(pt1);
-
-    fhecompiler::Ciphertext ct2 = ct1 + ct1;
-
-    fhecompiler::Ciphertext ct3 = ct2;
-    ct3 += ct1;
-
-    ct3 += ct3;
-
-    ct3 = ct1+ct1;
-
-    fhecompiler::Scalar sc1 = 2;
-    fhecompiler::Scalar sc2 = 3;
-    fhecompiler::Scalar sc3 = sc1 + sc2;
-    sc3 += sc1;
-    sc3 = -sc3;
-
-    fhecompiler::Ciphertext ct4 = ct3 + pt1;
-
-    fhecompiler::Ciphertext ct7 = ct3 - pt1;
-
-    Ciphertext ct5("x", VarType::output);
-    ct5 = ct4;
-    // ct5 += ct4;
-    // ct5 += ct5;
-    Ciphertext ct6 = 123 * ct1;
-    ct6 += 12;
     fhecompiler::compile();
   }
   catch (const char *message)

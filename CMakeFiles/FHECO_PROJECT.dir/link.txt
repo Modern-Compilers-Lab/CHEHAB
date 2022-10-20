@@ -1,0 +1,1 @@
+/usr/bin/g++ CMakeFiles/FHECO_PROJECT.dir/benchmarks/test1.cpp.o -o FHECO_PROJECT  libdsl.a libir.a 

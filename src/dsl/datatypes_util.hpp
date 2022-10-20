@@ -114,8 +114,7 @@ template <typename T> /* T cannot be a Ciphertext since we don't support Ciphert
 bool is_compile_time_evaluation_possible(const T &lhs, const T &rhs)
 {
   ir::ConstantTableEntryType lhs_entry_type = program->type_of(lhs.get_label());
-  return (
-    lhs_entry_type == ir::ConstantTableEntryType::constant && lhs_entry_type == program->type_of(rhs.get_label()));
+  return lhs_entry_type == ir::ConstantTableEntryType::constant && lhs_entry_type == program->type_of(rhs.get_label());
 }
 
 } // namespace datatype
