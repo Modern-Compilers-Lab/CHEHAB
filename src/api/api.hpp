@@ -1,14 +1,16 @@
 #pragma once
 
+#include "batchencoder.hpp"
 #include "ciphertext.hpp"
-#include "context.hpp"
 #include "decryptor.hpp"
-#include "encoder.hpp"
+#include "encryptioncontext.hpp"
 #include "encryptionparameters.hpp"
 #include "encryptor.hpp"
 #include "evaluator.hpp"
+#include "galoiskeys.hpp"
 #include "keygenerator.hpp"
 #include "modulus.hpp"
 #include "plaintext.hpp"
 #include "publickey.hpp"
+#include "relinkeys.hpp"
 #include "secretkey.hpp"
