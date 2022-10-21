@@ -29,7 +29,7 @@ int main()
 
     // scheme better to be introduced in init
     fhecompiler::Plaintext pt1(std::vector<int64_t>{1, 3, 4, 5});
-
+  
     fhecompiler::Plaintext pt2("pt2_input", VarType::input);
 
     fhecompiler::Plaintext pt3("pt3"); //temp is default type

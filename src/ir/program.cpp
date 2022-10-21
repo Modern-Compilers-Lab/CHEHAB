@@ -104,29 +104,19 @@ std::string dfs(Ptr term, std::unordered_set<std::string> &visited)
   }
 }
 
+void print_node(const Ptr& node_ptr)
+{
+  std::cout << node_ptr->get_label() << "\n";
+}
+
 void Program::traverse_dataflow()
 {
   std::unordered_set<std::string> visited;
   this->data_flow->apply_topological_sort();
-  for (auto &node_ptr : this->data_flow->get_nodes_ptrs_topsorted())
+  const std::vector<Ptr>& nodes_ptrs_topsorted = this->data_flow->get_nodes_ptrs_topsorted();
+  for ( auto& node_ptr : nodes_ptrs_topsorted )
   {
-    auto constant_table_entry_opt = this->get_entry_form_constants_table(node_ptr->get_label());
-    if (constant_table_entry_opt != std::nullopt)
-    {
-      ConstantTableEntry constant_table_entry = *constant_table_entry_opt;
-      auto entry_value = constant_table_entry.get_entry_value();
-      if (auto encrypt_value = std::get_if<ConstantTableEntry::Encrypt>(&(*entry_value.value)))
-      {
-        std::cout << node_ptr->get_label() << " = "
-                  << "encrypt(" << (*encrypt_value).plaintext_label << ")"
-                  << "\n";
-      }
-      else if(entry_value.get_tag().length() ) std::cout << node_ptr->get_label() << " = " << entry_value.get_tag() << "\n";
-    }
-    else
-    {
-      std::cout << node_ptr->get_label() << " = " << dfs(node_ptr, visited) << "\n";
-    }
+    print_node(node_ptr);
   }
 }
 

@@ -39,24 +39,28 @@ void DAG::apply_topological_sort()
 
     visited_labels.insert(node_ptr->get_label());
     traversal_stack.push(node_ptr);
-
-    while (!traversal_stack.empty())
     {
-      auto &top_node_ptr = traversal_stack.top();
-      traversal_stack.pop();
-      nodes_ptrs_topsorted.push_back(top_node_ptr);
-      if (top_node_ptr->get_operands() != std::nullopt)
+      std::vector<Ptr> tmp_vector;
+
+      while (!traversal_stack.empty())
       {
-        const auto &operands_nodes_ptrs = *(top_node_ptr->get_operands());
-        for (auto &operand_node_ptr : operands_nodes_ptrs)
+        auto &top_node_ptr = traversal_stack.top();
+        traversal_stack.pop();
+        tmp_vector.push_back(top_node_ptr);
+        if (top_node_ptr->get_operands() != std::nullopt)
         {
-          if (visited_labels.find(operand_node_ptr->get_label()) == visited_labels.end())
+          const auto &operands_nodes_ptrs = *(top_node_ptr->get_operands());
+          for (auto &operand_node_ptr : operands_nodes_ptrs)
           {
-            visited_labels.insert(operand_node_ptr->get_label());
-            traversal_stack.push(operand_node_ptr);
+            if (visited_labels.find(operand_node_ptr->get_label()) == visited_labels.end())
+            {
+              visited_labels.insert(operand_node_ptr->get_label());
+              traversal_stack.push(operand_node_ptr);
+            }
           }
         }
       }
+      while(!tmp_vector.empty()) nodes_ptrs_topsorted.emplace_back(tmp_vector.back()), tmp_vector.pop_back();
     }
   }
 }
