@@ -1,5 +1,5 @@
 #include "program.hpp"
-#include<unordered_set>
+#include <unordered_set>
 
 namespace ir
 {
@@ -78,7 +78,6 @@ ConstantTableEntryType Program::type_of(const std::string &label)
     return ConstantTableEntryType::undefined;
   else
     return (*table_entry).get().entry_type;
-
 }
 
 std::unordered_map<ir::OpCode, std::string> opcode_map = {
@@ -111,7 +110,24 @@ void Program::traverse_dataflow()
   this->data_flow->apply_topological_sort();
   for (auto &node_ptr : this->data_flow->get_nodes_ptrs_topsorted())
   {
-    std::cout << node_ptr->get_label() << " = " << dfs(node_ptr, visited) << "\n";
-  }}
+    auto constant_table_entry_opt = this->get_entry_form_constants_table(node_ptr->get_label());
+    if (constant_table_entry_opt != std::nullopt)
+    {
+      ConstantTableEntry constant_table_entry = *constant_table_entry_opt;
+      auto entry_value = constant_table_entry.get_entry_value();
+      if (auto encrypt_value = std::get_if<ConstantTableEntry::Encrypt>(&(*entry_value.value)))
+      {
+        std::cout << node_ptr->get_label() << " = "
+                  << "encrypt(" << (*encrypt_value).plaintext_label << ")"
+                  << "\n";
+      }
+      else if(entry_value.get_tag().length() ) std::cout << node_ptr->get_label() << " = " << entry_value.get_tag() << "\n";
+    }
+    else
+    {
+      std::cout << node_ptr->get_label() << " = " << dfs(node_ptr, visited) << "\n";
+    }
+  }
+}
 
 } // namespace ir

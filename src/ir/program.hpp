@@ -11,9 +11,6 @@
 #include <string>
 #include <unordered_map>
 #include <variant>
-#include<optional>
-#include<variant>
-
 
 namespace ir
 {
@@ -44,6 +41,8 @@ struct ConstantTableEntry
     EntryValue(const std::string _tag) : tag(_tag), value(std::nullopt) {}
 
     EntryValue(std::optional<ConstantValue> _value) : value(_value), tag("") {}
+
+    std::string get_tag() { return this->tag; }
 
     ~EntryValue() = default;
   };
@@ -92,7 +91,7 @@ private:
 
   fhecompiler::Scheme program_scheme;
 
-  size_t dimension; //
+  size_t dimension;
 
 public:
   using Ptr = std::shared_ptr<Term>;

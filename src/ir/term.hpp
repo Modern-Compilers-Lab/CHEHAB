@@ -61,4 +61,18 @@ public:
   std::string get_label() const { return this->label; }
 };
 
+/*
+
+  Rewrite rules
+
+  c1 * x + c2 * x -> (c1 + c2 = c3) * x, where c1 and c2 are scalars
+  ct1*ct1 -> square(ct1), since square is better than * in SEAL //this rule can apply always
+  4*x
+   +
+  4*x
+  ((x+x)+(x+x))
+        +
+  ((x+x)+(x+x))
+*/
+
 } // namespace ir

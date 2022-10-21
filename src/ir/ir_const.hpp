@@ -32,10 +32,10 @@ enum class OpCode
 enum class ConstantTableEntryType
 {
   undefined,
-  constant, // nor input nor output
+  constant,
   input,
   output,
-  temp // input and output at the same time
+  temp
 };
 
 } // namespace ir

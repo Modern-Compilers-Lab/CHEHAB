@@ -36,7 +36,7 @@ public:
 
   const std::vector<Ptr> &get_node_ptrs() const { return nodes_ptrs; }
 
-  const std::vector<Ptr>& get_nodes_ptrs_topsorted() const { return nodes_ptrs_topsorted; }
+  const std::vector<Ptr> &get_nodes_ptrs_topsorted() const { return nodes_ptrs_topsorted; }
 };
 
 } // namespace ir

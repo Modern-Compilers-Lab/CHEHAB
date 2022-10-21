@@ -19,13 +19,15 @@ void print_string(std::optional<std::string> string_opt)
 int main()
 {
 
+  /*
+    Encrypt, Decrypt, Evaluate(add, mul, sub, rotate), generate keys  
+  */
+
   try
   {
-
     fhecompiler::init("test1", 1024, fhecompiler::bfv);
 
     // scheme better to be introduced in init
-
     fhecompiler::Plaintext pt1(std::vector<int64_t>{1, 3, 4, 5});
 
     fhecompiler::Plaintext pt2("pt2_input", VarType::input);
@@ -34,7 +36,7 @@ int main()
 
     fhecompiler::Ciphertext ct1 = fhecompiler::Ciphertext::encrypt(pt2);
     
-    auto ct2 = ct1+pt1+ct1+pt2+pt3;
+    fhecompiler::Ciphertext ct2 = ct1+pt1+ct1*pt2*pt3;
     ct2 += ct2;
 
     fhecompiler::compile();

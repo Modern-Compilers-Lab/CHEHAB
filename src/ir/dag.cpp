@@ -24,8 +24,7 @@ Ptr DAG::find_node(std::string node_label) const
 
 void DAG::apply_topological_sort()
 {
-  // iterative algorithm
-
+  
   if (nodes_ptrs_topsorted.size())
     return;
 
