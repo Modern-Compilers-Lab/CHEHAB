@@ -13,6 +13,8 @@ class Evaluator
 public:
   Evaluator(const EncryptionContext &context) { init(context); }
 
+  virtual ~Evaluator() {}
+
   virtual void negate_inplace(Ciphertext &encrypted) const = 0;
 
   virtual void negate(const Ciphertext &encrypted, Ciphertext &destination) const = 0;
@@ -94,8 +96,6 @@ public:
     const Ciphertext &encrypted, const GaloisKeys &galois_keys, Ciphertext &destination) const = 0;
 
 private:
-  Evaluator() {}
-
   virtual void init(const EncryptionContext &context) = 0;
 };
 } // namespace api

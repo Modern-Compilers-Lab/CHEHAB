@@ -9,12 +9,13 @@ class EncryptionContext
 public:
   EncryptionContext(const EncryptionParameters &parms) { init(parms); }
 
+  virtual ~EncryptionContext() {}
+
   virtual const EncryptionParameters &get_parms() const = 0;
 
   // TODO: Virtual getters for context pre-computation data
 
 private:
-  EncryptionContext() {}
   virtual void init(const EncryptionParameters &parms) = 0;
 };
 } // namespace api

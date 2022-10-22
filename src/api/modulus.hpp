@@ -9,6 +9,8 @@ class Modulus
 public:
   Modulus(std::uint64_t value) { init(value); }
 
+  virtual ~Modulus() {}
+
   virtual int bit_count() const = 0;
 
   virtual std::uint64_t value() const = 0;

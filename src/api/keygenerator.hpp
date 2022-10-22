@@ -15,6 +15,8 @@ public:
 
   KeyGenerator(const EncryptionContext &context, const SecretKey &secret_key) { init(context, secret_key); }
 
+  virtual ~KeyGenerator() {}
+
   virtual const SecretKey &secret_key() const = 0;
 
   virtual void create_public_key(PublicKey &destination) const = 0;
@@ -30,8 +32,6 @@ public:
   // TODO: allow creating seeded objects
 
 private:
-  KeyGenerator() {}
-
   virtual void init(const EncryptionContext &context) = 0;
 
   virtual void init(const EncryptionContext &context, const SecretKey &secret_key) = 0;

@@ -14,6 +14,8 @@ public:
 
   Plaintext(const std::string &hex_poly) { init(hex_poly); }
 
+  virtual ~Plaintext() {}
+
   virtual void resize(std::size_t coeff_count) = 0;
 
   virtual void set_zero(std::size_t start_coeff, std::size_t length) = 0;

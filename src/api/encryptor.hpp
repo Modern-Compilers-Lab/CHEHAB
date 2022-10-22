@@ -20,6 +20,8 @@ public:
     init(context, public_key, secret_key);
   }
 
+  virtual ~Encryptor() {}
+
   virtual void encrypt(const Plaintext &plain, Ciphertext &destination) const = 0;
 
   virtual void encrypt_symmetric(const Plaintext &plain, Ciphertext &destination) const = 0;
@@ -27,8 +29,6 @@ public:
   // TODO: allow creating seeded objects
 
 private:
-  Encryptor() {}
-
   virtual void init(const EncryptionContext &context, const PublicKey &public_key) = 0;
 
   virtual void init(const EncryptionContext &context, const SecretKey &secret_key) = 0;

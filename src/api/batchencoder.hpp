@@ -12,6 +12,8 @@ class BatchEncoder
 public:
   BatchEncoder(const EncryptionContext &context) { init(context); }
 
+  virtual ~BatchEncoder() {}
+
   virtual void encode(const std::vector<std::uint64_t> &values_vector, Plaintext &destination) = 0;
 
   virtual void encode(const std::vector<std::int64_t> &values_vector, Plaintext &destination) = 0;
@@ -23,7 +25,6 @@ public:
   // TODO: Handle CKKS
 
 private:
-  BatchEncoder() {}
   virtual void init(const EncryptionContext &context) = 0;
 };
 } // namespace api

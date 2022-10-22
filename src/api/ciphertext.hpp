@@ -11,6 +11,8 @@ public:
 
   Ciphertext(const EncryptionContext &context) { init(context); }
 
+  virtual ~Ciphertext() {}
+
   // TODO: Constructor from context and a specefic parms_id_type from the modulus switching chain
 
   // TODO: resize
