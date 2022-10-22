@@ -1,3 +1,5 @@
+#pragma once
+
 #include "program.hpp"
 #include "term.hpp"
 #include <fstream>
@@ -16,13 +18,13 @@ private:
   ir::Program *program;
 
   void translate_binary_operation(
-    const Ptr &term_ptr, const std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt) const;
+    const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt) const;
   void translate_nary_operation(
-    const Ptr &term_ptr, const std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt) const;
+    const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt) const;
   void translate_unary_operation(
-    const Ptr &term_ptr, const std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt) const;
+    const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt) const;
 
-  void translate_constant_table_entry(const ir::ConstantTableEntry &table_entry) const;
+  void translate_constant_table_entry(ir::ConstantTableEntry &table_entry, ir::TermType term_type) const;
 
   void translate_term(const Ptr &term_ptr) const;
 

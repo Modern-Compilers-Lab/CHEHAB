@@ -59,6 +59,8 @@ public:
   void set_term_type(TermType term_type) { this->type = term_type; }
 
   std::string get_label() const { return this->label; }
+
+  TermType get_term_type() const { return this->type; }
 };
 
 /*

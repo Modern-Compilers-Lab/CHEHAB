@@ -27,9 +27,8 @@ Ciphertext Ciphertext::encrypt(const Plaintext &pt)
   program->insert_node_in_dataflow<Ciphertext>(new_ct);
   ir::ConstantTableEntry::Encrypt encrypt_value = {pt.get_label()};
   ir::ConstantTableEntry::ConstantValue constant_value = encrypt_value;
-  ir::ConstantTableEntry::EntryValue entry_value = {constant_value};
-  program->insert_entry_in_constants_table(
-    {new_ct.get_label(), {ir::ConstantTableEntryType::constant, entry_value}});
+  ir::ConstantTableEntry::EntryValue entry_value = {new_ct.get_label(), constant_value};
+  program->insert_entry_in_constants_table({new_ct.get_label(), {ir::ConstantTableEntryType::constant, entry_value}});
   return new_ct;
 }
 

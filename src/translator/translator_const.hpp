@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ir_const.hpp"
 #include <unordered_map>
 
@@ -7,9 +9,12 @@ namespace translator
 /* return types map, it maps IR types with corresponding literal for code generation that targets the API */
 std::unordered_map<ir::TermType, const char *> types_map = {
 
-  {ir::ciphertextType, "Ciphertext "}, {ir::plaintextType, "Plaintext"}, {ir::scalarType, "Scalar"}
+  {ir::ciphertextType, "Ciphertext "}, {ir::plaintextType, "Plaintext"}
 
 };
+
+const char *scalar_int = "uint64_t";
+const char *scalar_float = "double";
 
 /* ops_map maps and IR operation code with corresponding literal for code generation that targets the API*/
 std::unordered_map<ir::OpCode, const char *> ops_map = {

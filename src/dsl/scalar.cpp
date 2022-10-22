@@ -23,19 +23,19 @@ void Scalar::set_new_label()
 Scalar::Scalar(int64_t _data) : data(_data), label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
   program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {_data}}});
+  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
 }
 
 Scalar::Scalar(double _data) : data(_data), label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
   program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {_data}}});
+  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
 }
 
 Scalar::Scalar() : label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
   program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {this->data}}});
+  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, this->data}}});
 }
 
 Scalar::Scalar(const std::string &tag, VarType var_type)

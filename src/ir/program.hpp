@@ -144,6 +144,8 @@ public:
   std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(const std::string &);
 
   const std::string &get_program_tag() const { return this->program_tag; }
+
+  fhecompiler::Scheme get_encryption_scheme() const { return this->program_scheme; }
 };
 
 } // namespace ir
