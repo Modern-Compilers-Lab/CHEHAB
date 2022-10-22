@@ -1,5 +1,6 @@
 #include "dag.hpp"
 #include <algorithm>
+#include <optional>
 #include <stack>
 #include <unordered_set>
 
@@ -24,7 +25,7 @@ Ptr DAG::find_node(std::string node_label) const
 
 void DAG::apply_topological_sort()
 {
-  
+
   if (nodes_ptrs_topsorted.size())
     return;
 
@@ -60,7 +61,8 @@ void DAG::apply_topological_sort()
           }
         }
       }
-      while(!tmp_vector.empty()) nodes_ptrs_topsorted.emplace_back(tmp_vector.back()), tmp_vector.pop_back();
+      while (!tmp_vector.empty())
+        nodes_ptrs_topsorted.emplace_back(tmp_vector.back()), tmp_vector.pop_back();
     }
   }
 }

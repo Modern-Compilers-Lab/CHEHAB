@@ -142,6 +142,8 @@ public:
   void traverse_dataflow();
 
   std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(const std::string &);
+
+  const std::string &get_program_tag() const { return this->program_tag; }
 };
 
 } // namespace ir

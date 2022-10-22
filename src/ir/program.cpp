@@ -104,7 +104,7 @@ std::string dfs(Ptr term, std::unordered_set<std::string> &visited)
   }
 }
 
-void print_node(const Ptr& node_ptr)
+void print_node(const Ptr &node_ptr)
 {
   std::cout << node_ptr->get_label() << "\n";
 }
@@ -113,8 +113,8 @@ void Program::traverse_dataflow()
 {
   std::unordered_set<std::string> visited;
   this->data_flow->apply_topological_sort();
-  const std::vector<Ptr>& nodes_ptrs_topsorted = this->data_flow->get_nodes_ptrs_topsorted();
-  for ( auto& node_ptr : nodes_ptrs_topsorted )
+  const std::vector<Ptr> &nodes_ptrs_topsorted = this->data_flow->get_nodes_ptrs_topsorted();
+  for (auto &node_ptr : nodes_ptrs_topsorted)
   {
     print_node(node_ptr);
   }

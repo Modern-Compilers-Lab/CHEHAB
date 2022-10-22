@@ -6,6 +6,8 @@
 #include "plaintext.hpp"
 #include "program.hpp"
 #include "scalar.hpp"
+#include "translator.hpp"
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -25,6 +27,17 @@ void init(const std::string &program_name, size_t dim, Scheme program_scheme)
 void compile()
 {
   program->traverse_dataflow();
+  translator::Translator tr(program);
+  {
+    std::ofstream translation_os("./test1.hpp");
+
+    if (!translation_os)
+      throw("couldn't open file for translation.\n");
+
+    tr.translate(translation_os);
+
+    translation_os.close();
+  }
 }
 
 } // namespace fhecompiler
