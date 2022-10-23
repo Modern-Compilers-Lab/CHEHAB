@@ -103,9 +103,9 @@ inline void operate_in_constants_table(const std::string &label, const std::stri
     else if (var_type == fhecompiler::VarType::constant)
       entry_type = ir::ConstantTableEntryType::constant;
     else
-      entry_type = ir::ConstantTableEntryType::constant;
+      entry_type = ir::ConstantTableEntryType::temp;
 
-    ir::ConstantTableEntry::EntryValue entry_value = tag;
+    ir::ConstantTableEntry::EntryValue entry_value = tag_to_insert;
     program->insert_entry_in_constants_table({label, {entry_type, entry_value}});
   }
 }
