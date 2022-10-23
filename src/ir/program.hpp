@@ -139,7 +139,9 @@ public:
 
   size_t get_dimension() const { return this->dimension; }
 
-  void traverse_dataflow();
+  void sort_dataflow();
+
+  const std::vector<Ptr> &get_dataflow_sorted_nodes() const;
 
   std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(const std::string &);
 

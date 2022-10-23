@@ -7,13 +7,16 @@ project(FHECO_PROJECT LANGUAGES C CXX)
 
 add_executable(${PROJECT_NAME} benchmarks/test1.cpp)
 
-include_directories(${PROJECT_NAME} src/ir src/dsl src/fhecompiler src/translator)
+include_directories(${PROJECT_NAME} src/ir src/dsl src/fhecompiler src/params_selector src/translator)
 
 add_library(dsl src/dsl/ciphertext.cpp src/dsl/plaintext.cpp src/dsl/scalar.cpp) 
 add_library(ir src/ir/program.cpp src/ir/term.cpp src/ir/dag.cpp)
+add_library(params_selector src/params_selector/params_selector.cpp)
 add_library(translator src/translator/translator.cpp)
 
 
 target_link_libraries(${PROJECT_NAME} dsl)
 target_link_libraries(${PROJECT_NAME} ir)
+target_link_libraries(${PROJECT_NAME} params_selector)
 target_link_libraries(${PROJECT_NAME} translator)
+

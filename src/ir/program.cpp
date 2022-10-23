@@ -109,7 +109,13 @@ void print_node(const Ptr &node_ptr)
   std::cout << node_ptr->get_label() << "\n";
 }
 
-void Program::traverse_dataflow()
+const std::vector<Ptr> &Program::get_dataflow_sorted_nodes() const
+{
+  this->data_flow->apply_topological_sort();
+  return this->data_flow->get_nodes_ptrs_topsorted();
+}
+
+void Program::sort_dataflow()
 {
   std::unordered_set<std::string> visited;
   this->data_flow->apply_topological_sort();
