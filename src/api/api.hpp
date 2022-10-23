@@ -1,16 +1,18 @@
 #pragma once
 
-#include "batchencoder.hpp"
-#include "ciphertext.hpp"
-#include "decryptor.hpp"
-#include "encryptioncontext.hpp"
-#include "encryptionparameters.hpp"
-#include "encryptor.hpp"
-#include "evaluator.hpp"
-#include "galoiskeys.hpp"
-#include "keygenerator.hpp"
-#include "modulus.hpp"
-#include "plaintext.hpp"
-#include "publickey.hpp"
-#include "relinkeys.hpp"
-#include "secretkey.hpp"
+#include "backend.hpp"
+#include <cstdint>
+
+namespace api
+{
+class API
+{
+public:
+  static inline void set_default_backend(Backend backend) { backend_ = backend; }
+
+  static inline Backend default_backend() { return backend_; }
+
+private:
+  static Backend backend_;
+};
+} // namespace api
