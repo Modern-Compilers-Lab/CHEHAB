@@ -12,14 +12,13 @@ std::unique_ptr<Modulus> Modulus::create(Backend backend, std::uint64_t value)
   switch (backend)
   {
   case Backend::seal:
-    ptr = std::unique_ptr<seal_backend::Modulus>(new seal_backend::Modulus());
+    ptr = std::make_unique<seal_backend::Modulus>(value);
     break;
 
   default:
     throw std::invalid_argument("unsupported backend");
     break;
   }
-  ptr->init(value);
   return ptr;
 }
 } // namespace ufhe

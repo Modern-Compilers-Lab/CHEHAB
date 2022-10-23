@@ -15,6 +15,8 @@ public:
 
   virtual ~Modulus() = default;
 
+  virtual Modulus &operator=(std::uint64_t value) = 0;
+
   virtual int bit_count() const = 0;
 
   virtual std::uint64_t value() const = 0;
@@ -40,7 +42,12 @@ public:
 protected:
   Modulus() = default;
 
-private:
-  virtual void init(std::uint64_t value) = 0;
+  Modulus(const Modulus &) = default;
+
+  Modulus &operator=(const Modulus &) = default;
+
+  Modulus(Modulus &&) = default;
+
+  Modulus &operator=(Modulus &&) = default;
 };
 } // namespace ufhe
