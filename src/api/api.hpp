@@ -1,18 +1,25 @@
 #pragma once
 
-#include "backend.hpp"
 #include <cstdint>
 
-namespace api
+namespace ufhe
 {
+
+enum class Backend : std::uint8_t
+{
+  none = 0x0,
+
+  seal = 0x1
+};
+
 class API
 {
 public:
-  static inline void set_default_backend(Backend backend) { backend_ = backend; }
+  static inline void set_default_backend(Backend backend) { default_backend_ = backend; }
 
-  static inline Backend default_backend() { return backend_; }
+  static inline Backend default_backend() { return default_backend_; }
 
 private:
-  static Backend backend_;
+  static Backend default_backend_;
 };
-} // namespace api
+} // namespace ufhe

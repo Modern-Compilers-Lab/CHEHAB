@@ -1,3 +1,6 @@
 #include "api.hpp"
 
-api::Backend api::API::backend_ = api::Backend::seal;
+namespace ufhe
+{
+Backend API::default_backend_ = Backend::seal;
+}

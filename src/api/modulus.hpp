@@ -1,12 +1,11 @@
 #pragma once
 
-#include "backend.hpp"
+#include "api.hpp"
 #include <cstdint>
 #include <memory>
 
-namespace api
+namespace ufhe
 {
-
 class Modulus
 {
 public:
@@ -44,4 +43,4 @@ protected:
 private:
   virtual void init(std::uint64_t value) = 0;
 };
-} // namespace api
+} // namespace ufhe

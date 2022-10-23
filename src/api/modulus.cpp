@@ -1,9 +1,8 @@
 #include "modulus.hpp"
-#include "api.hpp"
 #include "seal_backend/modulus.hpp"
 #include <stdexcept>
 
-namespace api
+namespace ufhe
 {
 std::unique_ptr<Modulus> Modulus::create(Backend backend, std::uint64_t value)
 {
@@ -23,4 +22,4 @@ std::unique_ptr<Modulus> Modulus::create(Backend backend, std::uint64_t value)
   ptr->init(value);
   return ptr;
 }
-} // namespace api
+} // namespace ufhe

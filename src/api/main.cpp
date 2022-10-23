@@ -1,13 +1,15 @@
-#include "api_includes.hpp"
 #include "seal_backend/seal_backend.hpp"
+#include "ufhe.hpp"
 #include <iostream>
 
+using namespace ufhe;
 using namespace std;
 
 int main()
 {
-  auto ptr = api::Modulus::create(api::Backend::seal, 22);
+  auto ptr = Modulus::create(Backend::seal, 22);
   cout << ptr->value() << endl;
-  api::Modulus &modulus = *ptr;
+  Modulus &modulus = *ptr;
+  cout << typeid(modulus).name() << endl;
   return 0;
 }
