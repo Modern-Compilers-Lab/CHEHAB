@@ -4,11 +4,11 @@
 
 namespace ufhe
 {
-std::unique_ptr<Modulus> Modulus::create(Backend backend, std::uint64_t value)
+Modulus::ptr Modulus::create(Backend backend, std::uint64_t value)
 {
   if (backend == Backend::none)
     backend = API::default_backend();
-  std::unique_ptr<Modulus> ptr;
+  Modulus::ptr ptr;
   switch (backend)
   {
   case Backend::seal:

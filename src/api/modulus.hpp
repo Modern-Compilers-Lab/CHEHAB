@@ -3,15 +3,22 @@
 #include "api.hpp"
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace ufhe
 {
 class Modulus
 {
 public:
-  static std::unique_ptr<Modulus> create(Backend backend, std::uint64_t value);
+  using ptr = std::unique_ptr<Modulus>;
 
-  static inline std::unique_ptr<Modulus> create(std::uint64_t value) { return create(Backend::none, value); }
+  using vector = std::vector<ptr>;
+
+  static ptr create(Backend backend, std::uint64_t value = 0);
+
+  static inline ptr create(std::uint64_t value = 0) { return create(Backend::none, value); }
+
+  virtual ptr clone() = 0;
 
   virtual ~Modulus() = default;
 

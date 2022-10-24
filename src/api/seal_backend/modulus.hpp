@@ -11,9 +11,11 @@ namespace seal_backend
   class Modulus : public ufhe::Modulus
   {
   public:
-    Modulus(std::uint64_t value) : modulus_(seal::Modulus(value)) {}
+    inline Modulus(std::uint64_t value = 0) : modulus_(seal::Modulus(value)) {}
 
     inline operator const seal::Modulus &() const { return modulus_; }
+
+    inline ptr clone() override { return std::make_unique<Modulus>(modulus_.value()); }
 
     inline ufhe::Modulus &operator=(std::uint64_t value) override
     {

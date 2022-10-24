@@ -3,34 +3,48 @@
 #include "modulus.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
-namespace api
+namespace ufhe
 {
-
 class SchemeType
 {
 public:
-  SchemeType(std::uint8_t scheme_id) { init(scheme_id); }
+  using ptr = std::unique_ptr<SchemeType>;
 
-  virtual ~SchemeType() {}
+  static ptr create(Backend backend, std::uint8_t scheme_id);
 
-private:
-  SchemeType() {}
+  static inline ptr create(std::uint8_t scheme_id) { return create(Backend::none, scheme_id); }
 
-  virtual void init(std::uint8_t scheme_id) = 0;
+  virtual ~SchemeType() = default;
+
+protected:
+  SchemeType() = default;
+
+  SchemeType(const SchemeType &) = default;
+
+  SchemeType &operator=(const SchemeType &) = default;
+
+  SchemeType(SchemeType &&) = default;
+
+  SchemeType &operator=(SchemeType &&) = default;
 };
 
 class EncryptionParameters
 {
 public:
-  EncryptionParameters(const SchemeType &scheme) { init(scheme); }
+  using ptr = std::unique_ptr<EncryptionParameters>;
+
+  static ptr create(Backend backend, const SchemeType &scheme);
+
+  static inline ptr create(const SchemeType &scheme) { return create(Backend::none, scheme); }
 
   virtual ~EncryptionParameters() {}
 
-  virtual void set_poly_modulus_degree(const std::size_t poly_modulus_degree) = 0;
+  virtual void set_poly_modulus_degree(std::size_t poly_modulus_degree) = 0;
 
-  virtual void set_coeff_modulus(const std::vector<Modulus> &coeff_modulus) = 0;
+  virtual void set_coeff_modulus(const Modulus::vector &coeff_modulus) = 0;
 
   virtual void set_plain_modulus(const Modulus &plain_modulus) = 0;
 
@@ -40,7 +54,7 @@ public:
 
   virtual std::size_t poly_modulus_degree() const = 0;
 
-  virtual const std::vector<Modulus> &coeff_modulus() const = 0;
+  virtual const Modulus::vector &coeff_modulus() const = 0;
 
   virtual const Modulus &plain_modulus() const = 0;
 
@@ -48,7 +62,15 @@ public:
 
   // TODO: Serialization support
 
-private:
-  virtual void init(const SchemeType &scheme_type) = 0;
+protected:
+  EncryptionParameters() = default;
+
+  EncryptionParameters(const EncryptionParameters &) = default;
+
+  EncryptionParameters &operator=(const EncryptionParameters &) = default;
+
+  EncryptionParameters(EncryptionParameters &&) = default;
+
+  EncryptionParameters &operator=(EncryptionParameters &&) = default;
 };
-} // namespace api
+} // namespace ufhe

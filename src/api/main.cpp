@@ -7,9 +7,10 @@ using namespace std;
 
 int main()
 {
-  auto ptr = Modulus::create(Backend::seal, 22);
-  cout << ptr->value() << endl;
-  Modulus &modulus = *ptr;
+  Modulus::ptr modulus = Modulus::create(Backend::seal, 22);
+  cout << modulus->value() << endl;
   cout << typeid(modulus).name() << endl;
+  SchemeType::ptr scheme = SchemeType::create(1);
+  EncryptionParameters::ptr params = EncryptionParameters::create(*scheme);
   return 0;
 }
