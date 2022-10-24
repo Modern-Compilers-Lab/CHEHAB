@@ -1,7 +1,7 @@
 #include "translator.hpp"
 #include "fhecompiler_const.hpp"
 #include "program.hpp"
-#include "translator_const.hpp"
+#include <fstream>
 
 namespace translator
 {
@@ -72,24 +72,24 @@ void Translator::translate_constant_table_entry(
 
 void Translator::translate_binary_operation(
   const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-  std::ofstream &os) const
+  std::ofstream &os, const Evaluator &evaluator) const
 {
   std::string op_identifier = get_identifier(term_ptr);
   const std::vector<Ptr> &operands = *(term_ptr->get_operands());
   std::string lhs_identifier = get_identifier(operands[0]);
   std::string rhs_identifier = get_identifier(operands[1]);
-  std::string op_type = types_map[term_ptr->get_term_type()];
-  os << op_type << " " << op_identifier << ";" << '\n'
-     << ops_map[term_ptr->get_opcode()] << open_parantesis << lhs_identifier << "," << rhs_identifier << ","
-     << op_identifier << close_parantesis << end_of_command << '\n';
+  evaluator.write_binary_operation(
+    term_ptr->get_term_type(), term_ptr->get_opcode(), op_identifier, lhs_identifier, rhs_identifier, os);
 }
+
 void Translator::translate_nary_operation(
   const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-  std::ofstream &os) const
+  std::ofstream &os, const Evaluator &evaluator) const
 {}
+
 void Translator::translate_unary_operation(
   const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-  std::ofstream &os) const
+  std::ofstream &os, const Evaluator &evaluator) const
 {
   std::string op_identifier = get_identifier(term_ptr);
   std::string rhs_identifier = get_identifier((*term_ptr->get_operands())[0]);
@@ -97,7 +97,7 @@ void Translator::translate_unary_operation(
   os << op_type << " " << op_identifier << ops_map[term_ptr->get_opcode()] << rhs_identifier << end_of_command << '\n';
 }
 
-void Translator::translate_term(const Ptr &term, std::ofstream &os) const
+void Translator::translate_term(const Ptr &term, std::ofstream &os, const Evaluator &evaluator) const
 {
 
   auto constant_table_entry_opt = program->get_entry_form_constants_table(term->get_label());
@@ -109,15 +109,15 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os) const
 
     if (operands.size() == 1)
     {
-      translate_unary_operation(term, constant_table_entry_opt, os);
+      translate_unary_operation(term, constant_table_entry_opt, os, evaluator);
     }
     else if (operands.size() == 2)
     {
-      translate_binary_operation(term, constant_table_entry_opt, os);
+      translate_binary_operation(term, constant_table_entry_opt, os, evaluator);
     }
     else
     {
-      translate_nary_operation(term, constant_table_entry_opt, os);
+      translate_nary_operation(term, constant_table_entry_opt, os, evaluator);
     }
   }
   else if (constant_table_entry_opt != std::nullopt)
@@ -129,12 +129,16 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os) const
 
 void Translator::translate(std::ofstream &os) const
 {
+
   generate_function_signature(os);
   os << start_block << '\n';
+
+  Evaluator evaluator(context_identifier, evaluator_identifier);
+  os << evaluator << end_of_command << '\n';
   const std::vector<Ptr> nodes_ptr = program->get_dataflow_sorted_nodes();
   for (auto &node_ptr : nodes_ptr)
   {
-    translate_term(node_ptr, os);
+    translate_term(node_ptr, os, evaluator);
   }
   os << end_block << '\n';
 }

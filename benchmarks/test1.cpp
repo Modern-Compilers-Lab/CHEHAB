@@ -48,7 +48,9 @@ int main()
     fhecompiler::Ciphertext ct_for_debug("ct_to_debug", VarType::output);
     ct_for_debug = ct2;
 
-    fhecompiler::compile();
+    Ciphertext ct3 = ct2 - pt1;
+
+    fhecompiler::compile("test1.hpp");
   }
   catch (const char *message)
   {

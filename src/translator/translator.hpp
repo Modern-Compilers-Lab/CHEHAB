@@ -3,6 +3,7 @@
 #include "encryption_context.hpp"
 #include "program.hpp"
 #include "term.hpp"
+#include "translator_const.hpp"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -21,18 +22,18 @@ private:
 
   void translate_binary_operation(
     const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-    std::ofstream &os) const;
+    std::ofstream &os, const Evaluator &evaluator) const;
   void translate_nary_operation(
     const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-    std::ofstream &os) const;
+    std::ofstream &os, const Evaluator &evaluator) const;
   void translate_unary_operation(
     const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-    std::ofstream &os) const;
+    std::ofstream &os, const Evaluator &evaluator) const;
 
   void translate_constant_table_entry(
     ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os) const;
 
-  void translate_term(const Ptr &term_ptr, std::ofstream &os) const;
+  void translate_term(const Ptr &term_ptr, std::ofstream &os, const Evaluator &evaluator) const;
 
   std::string get_identifier(const Ptr &term_ptr) const;
 

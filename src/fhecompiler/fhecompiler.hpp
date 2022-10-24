@@ -26,13 +26,15 @@ void init(const std::string &program_name, size_t dim, Scheme program_scheme)
   program->set_scheme(program_scheme);
 }
 
-void compile()
+void compile(const std::string &output_filename)
 {
   params_selector::ParameterSelector parameters_selector(program);
   params_selector::EncryptionContext ctxt = parameters_selector.select_parameters();
+
   translator::Translator tr(program, &ctxt);
+
   {
-    std::ofstream translation_os("./test1.hpp");
+    std::ofstream translation_os(output_filename);
 
     if (!translation_os)
       throw("couldn't open file for translation.\n");
