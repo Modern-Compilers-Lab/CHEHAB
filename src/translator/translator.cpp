@@ -46,8 +46,10 @@ void Translator::translate_constant_table_entry(
   ir::ConstantTableEntryType entry_type = table_entry.get_entry_type();
   if (entry_type == ir::ConstantTableEntryType::input)
   {
-    os << type_str << " " << entry_value.get_tag() << " = " << inputs_map_by_type[term_type] << open_bracket
-       << entry_value.get_tag() << close_bracket << end_of_command << '\n';
+    MAP_ACCESSOR map_accessor;
+    std::string tag = entry_value.get_tag();
+    os << type_str << " " << tag << " = "
+       << map_accessor(inputs_map_identifier_by_type[term_type], stringfy_string(tag)) << end_of_command << '\n';
   }
   else if (entry_type == ir::ConstantTableEntryType::constant)
   {
@@ -77,8 +79,9 @@ void Translator::translate_binary_operation(
   std::string lhs_identifier = get_identifier(operands[0]);
   std::string rhs_identifier = get_identifier(operands[1]);
   std::string op_type = types_map[term_ptr->get_term_type()];
-  os << op_type << " " << op_identifier << " = " << ops_map[term_ptr->get_opcode()] << open_parantesis << lhs_identifier
-     << "," << rhs_identifier << close_parantesis << end_of_command << '\n';
+  os << op_type << " " << op_identifier << ";" << '\n'
+     << ops_map[term_ptr->get_opcode()] << open_parantesis << lhs_identifier << "," << rhs_identifier << ","
+     << op_identifier << close_parantesis << end_of_command << '\n';
 }
 void Translator::translate_nary_operation(
   const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
@@ -138,9 +141,22 @@ void Translator::translate(std::ofstream &os) const
 
 void Translator::generate_function_signature(std::ofstream &os) const
 {
-  os << vector_literal << "<" << types_map[ir::ciphertextType] << ">"
-     << " " << program->get_program_tag() << open_parantesis << inputs_map_by_type[ir::ciphertextType] << ","
-     << inputs_map_by_type[ir::plaintextType] << close_parantesis << '\n';
+  CONTAINER_OF container_of;
+  ARGUMENTS_LIST argument_list;
+  os << "void " << program->get_program_tag()
+     << argument_list(
+          {{inputs_map_by_type[ir::ciphertextType], inputs_map_identifier_by_type[ir::ciphertextType],
+            AccessType::readOnly},
+           {inputs_map_by_type[ir::plaintextType], inputs_map_identifier_by_type[ir::plaintextType],
+            AccessType::readOnly},
+           {outputs_map_by_type[ir::plaintextType], outputs_map_identifier_by_type[ir::plaintextType],
+            AccessType::readAndModify},
+           {outputs_map_by_type[ir::ciphertextType], outputs_map_identifier_by_type[ir::ciphertextType],
+            AccessType::readAndModify},
+           {context_type_literal, context_identifier, AccessType::readOnly},
+           {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
+           {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly}})
+     << '\n';
 }
 
 } // namespace translator

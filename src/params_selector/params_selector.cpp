@@ -4,6 +4,10 @@
 namespace params_selector
 {
 
-EncryptionContext ParameterSelector::select_parameters() {}
+EncryptionContext ParameterSelector::select_parameters()
+{
+  EncryptionContext ctxt;
+  return ctxt;
+}
 
 } // namespace params_selector
