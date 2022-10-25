@@ -1,8 +1,8 @@
 #pragma once
 
 #include "term.hpp"
-#include <memory>
 #include <deque>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -16,9 +16,9 @@ class DAG
   using Ptr = std::shared_ptr<Term>;
 
 private:
-  std::vector<Ptr> nodes_ptrs;
+  std::unordered_map<std::string, Ptr> outputs_nodes;
 
-  std::vector<Ptr> nodes_ptrs_topsorted; // nodes topologically sorted
+  std::vector<Ptr> outputs_nodes_topsorted; // nodes topologically sorted
 
   std::unordered_map<std::string, Ptr> node_ptr_from_label;
 
@@ -27,7 +27,7 @@ public:
 
   ~DAG() {}
 
-  void insert_node(Ptr node_ptr);
+  void insert_node(Ptr node_ptr, bool is_output = false);
 
   void delete_node(Ptr node_ptr);
 
@@ -35,9 +35,11 @@ public:
 
   Ptr find_node(std::string node_label) const;
 
-  const std::vector<Ptr> &get_node_ptrs() const { return nodes_ptrs; }
+  void delete_node_from_outputs(const std::string &key);
 
-  const std::vector<Ptr> &get_nodes_ptrs_topsorted() const { return nodes_ptrs_topsorted; }
+  const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const { return outputs_nodes; }
+
+  const std::vector<Ptr> &get_outputs_nodes_topsorted() const { return outputs_nodes_topsorted; }
 };
 
 } // namespace ir

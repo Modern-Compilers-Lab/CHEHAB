@@ -60,10 +60,10 @@ INLINE std::unordered_map<ir::TermType, const char *> outputs_map_by_type = {
 /* literals related to api/backend */
 INLINE const char *scalar_int = "uint64_t";
 INLINE const char *scalar_float = "double";
-INLINE const char *encode_literal = "Encode";
-INLINE const char *decode_literal = "Decode";
-INLINE const char *encrypt_literal = "Encrypt";
-INLINE const char *decrypt_literal = "Decrypt";
+INLINE const char *encode_literal = "encode";
+INLINE const char *decode_literal = "decode";
+INLINE const char *encrypt_literal = "encrypt";
+INLINE const char *decrypt_literal = "decrypt";
 INLINE const char *context_type_literal = "Context";
 INLINE const char *context_identifier = "context";
 INLINE const char *public_key_literal = "PublicKey";
@@ -75,7 +75,8 @@ INLINE const char *galois_keys_type_literal = "GaloisKeys";
 INLINE const char *galois_keys_identifier = "galois_keys";
 INLINE const char *evaluator_type_literal = "Evaluator";
 INLINE const char *evaluator_identifier = "evaluator";
-
+INLINE const char *encoder_type_literal = "Encoder";
+INLINE const char *encoder_type_identifier = "encoder";
 /* general literals for C++ */
 INLINE const char *new_line = "\n";
 INLINE const char *end_of_command = ";";
@@ -183,10 +184,58 @@ public:
   friend std::ostream &operator<<(std::ostream &o_stream, const Evaluator &evaluator);
 };
 
-INLINE std::ostream &operator<<(std::ostream &o_stream, const Evaluator &evaluator)
+template <typename T>
+inline void dump_vector(const std::vector<T> &v, std::string &vector_str)
 {
-  o_stream << evaluator_type_literal << " " << evaluator.evaluator_id << "(" << evaluator.context_id << ")";
-  return o_stream;
+  vector_str = '{';
+  for (size_t i = 0; i < v.size(); i++)
+  {
+    vector_str += std::to_string(v[i]);
+    if (i < v.size() - 1)
+      vector_str += ',';
+  }
+  vector_str += '}';
+}
+
+struct Encoder
+{
+private:
+  std::string context_id;
+
+public:
+  bool is_defined = false;
+
+  Encoder(const std::string &ctxt_id) : context_id(ctxt_id) {}
+
+  template <typename T>
+  void write_encode(
+    const std::vector<T> &clear_message, const std::string &identifier, std::ostream &os,
+    const char *constant_type) const
+  {
+    std::string vector_str;
+    dump_vector(clear_message, vector_str);
+    CONTAINER_OF container_of;
+    std::string vector_identifier = identifier + "_clear";
+    os << container_of(ContainerType::vector, constant_type) << " " << vector_identifier << " = " << vector_str << ";"
+       << '\n';
+    os << types_map[ir::plaintextType] << " " << identifier << ";" << '\n';
+    os << encoder_type_identifier << "." << encode_literal << "(" << vector_identifier << "," << identifier << ");"
+       << '\n';
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const Encoder &encoder);
+};
+
+INLINE std::ostream &operator<<(std::ostream &os, const Evaluator &evaluator)
+{
+  os << evaluator_type_literal << " " << evaluator.evaluator_id << "(" << evaluator.context_id << ")";
+  return os;
+}
+
+INLINE std::ostream &operator<<(std::ostream &os, const Encoder &encoder)
+{
+  os << encoder_type_literal << " " << encoder_type_identifier << "(" << encoder.context_id << ")";
+  return os;
 }
 
 inline std::string stringfy_string(std::string &str)

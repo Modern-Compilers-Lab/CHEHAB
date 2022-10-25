@@ -28,7 +28,7 @@ int main()
     fhecompiler::init("test1", 1024, fhecompiler::bfv);
 
     // scheme better to be introduced in init
-    // fhecompiler::Plaintext pt1(std::vector<int64_t>{1, 3, 4, 5});
+    fhecompiler::Plaintext pt11(std::vector<int64_t>{1, 3, 4, 5});
 
     fhecompiler::Plaintext pt1("pt1", VarType::input);
 
@@ -49,6 +49,18 @@ int main()
     ct_for_debug = ct2;
 
     Ciphertext ct3 = ct2 - pt1;
+
+    ct3 += 123;
+
+    ct3 *= (ct2 + pt1);
+
+    fhecompiler::Ciphertext ct4("ct4");
+
+    ct4 = ct3 * ct3;
+
+    ct4 += ct3;
+
+    fhecompiler::Ciphertext ct5 = ct4 + 1337;
 
     fhecompiler::compile("test1.hpp");
   }

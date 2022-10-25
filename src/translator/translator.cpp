@@ -19,7 +19,7 @@ std::string Translator::get_identifier(const Ptr &term_ptr) const
 }
 
 void Translator::translate_constant_table_entry(
-  ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os) const
+  ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os, Encoder &encoder) const
 {
   /*
   basically in this function we need to generate a decalartion or a definition in C++ for a given entry.
@@ -27,32 +27,48 @@ void Translator::translate_constant_table_entry(
   specified by the programmer
   */
 
+  // Retrieving needed information
+  ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
+  ir::ConstantTableEntryType entry_type = table_entry.get_entry_type();
+  std::string tag = entry_value.get_tag();
+
   // getting type
   std::string type_str;
+
   if (term_type == ir::TermType::scalarType)
   {
     fhecompiler::Scheme scheme = program->get_encryption_scheme();
     if (scheme == fhecompiler::bfv || scheme == fhecompiler::bgv)
       type_str = scalar_int;
     else if (scheme == fhecompiler::ckks)
-      type_str = scalar_float;
+    {
+      using ScalarValue = ir::ConstantTableEntry::ScalarValue;
+      ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
+      if (auto scalar_constant = std::get_if<int64_t>(&scalar_value))
+      {
+        type_str = scalar_int;
+      }
+    }
     else
       throw("scheme not supported\n");
   }
   else
     type_str = types_map[term_type];
 
-  ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
-  ir::ConstantTableEntryType entry_type = table_entry.get_entry_type();
   if (entry_type == ir::ConstantTableEntryType::input)
   {
     MAP_ACCESSOR map_accessor;
-    std::string tag = entry_value.get_tag();
     os << type_str << " " << tag << " = "
        << map_accessor(inputs_map_identifier_by_type[term_type], stringfy_string(tag)) << end_of_command << '\n';
   }
   else if (entry_type == ir::ConstantTableEntryType::constant)
   {
+    if (encoder.is_defined == false)
+    {
+      encoder.is_defined = true;
+      os << encoder << end_of_command << '\n';
+    }
+
     if (term_type == ir::ciphertextType)
     {
       // encryption
@@ -60,10 +76,36 @@ void Translator::translate_constant_table_entry(
     else if (term_type == ir::plaintextType)
     {
       // encoding
+      using VectorValue = ir::ConstantTableEntry::VectorValue;
+      VectorValue vector_value = std::get<VectorValue>(*(entry_value.value));
+      using VectorInt = std::vector<int64_t>;
+      using VectorFloat = std::vector<double>;
+      if (auto vector_literal = std::get_if<VectorInt>(&vector_value))
+        encoder.write_encode(*vector_literal, tag, os, scalar_int);
+      else if (auto vector_literal = std::get_if<VectorFloat>(&vector_value))
+        encoder.write_encode(*vector_literal, tag, os, scalar_float);
+      else
+        throw("unsupported data type by schemes\n");
     }
     else if (term_type == ir::scalarType)
     {
-      // define and int
+      // don't forget to reduce
+      using ScalarValue = ir::ConstantTableEntry::ScalarValue;
+      ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
+      if (type_str == scalar_int)
+      {
+        // bfv/bgv
+        // we call reduce
+        uint64_t value = static_cast<uint64_t>(std::get<int64_t>(scalar_value)); // later we change that
+        encoder.write_encode(std::vector<uint64_t>{value}, tag, os, scalar_int);
+      }
+      else if (type_str == scalar_float)
+      {
+        // ckks
+        // we call reduce
+        double value = static_cast<double>(std::get<double>(scalar_value)); // later we change that
+        encoder.write_encode(std::vector<double>{value}, tag, os, scalar_int);
+      }
     }
     else
       throw("type not supported ");
@@ -97,7 +139,7 @@ void Translator::translate_unary_operation(
   os << op_type << " " << op_identifier << ops_map[term_ptr->get_opcode()] << rhs_identifier << end_of_command << '\n';
 }
 
-void Translator::translate_term(const Ptr &term, std::ofstream &os, const Evaluator &evaluator) const
+void Translator::translate_term(const Ptr &term, std::ofstream &os, const Evaluator &evaluator, Encoder &encoder) const
 {
 
   auto constant_table_entry_opt = program->get_entry_form_constants_table(term->get_label());
@@ -123,7 +165,7 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os, const Evalua
   else if (constant_table_entry_opt != std::nullopt)
   {
     ir::ConstantTableEntry &constant_table_entry = *constant_table_entry_opt;
-    translate_constant_table_entry(constant_table_entry, term->get_term_type(), os);
+    translate_constant_table_entry(constant_table_entry, term->get_term_type(), os, encoder);
   }
 }
 
@@ -134,11 +176,14 @@ void Translator::translate(std::ofstream &os) const
   os << start_block << '\n';
 
   Evaluator evaluator(context_identifier, evaluator_identifier);
+
+  Encoder encoder(context_identifier); // for now we assume that we have only one context
+
   os << evaluator << end_of_command << '\n';
   const std::vector<Ptr> nodes_ptr = program->get_dataflow_sorted_nodes();
   for (auto &node_ptr : nodes_ptr)
   {
-    translate_term(node_ptr, os, evaluator);
+    translate_term(node_ptr, os, evaluator, encoder);
   }
   os << end_block << '\n';
 }

@@ -20,6 +20,12 @@ void Plaintext::set_new_label()
   this->set_label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++));
 }
 
+Plaintext &Plaintext::operator=(Plaintext &&pt_move)
+{
+  operate_move<Plaintext>(*this, std::move(pt_move), ir::plaintextType);
+  return *this;
+}
+
 Plaintext::Plaintext(const std::vector<int64_t> &message)
   : label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++))
 {
@@ -41,7 +47,10 @@ Plaintext::Plaintext(const std::vector<double> &message)
 Plaintext::Plaintext(const std::string &tag, VarType var_type)
   : label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++))
 {
-
+  if (var_type == VarType::input)
+  {
+    program->insert_node_in_dataflow(*this);
+  }
   // we are expecting from the user to provide a tag for input
   operate_in_constants_table(this->label, tag, var_type);
 }
@@ -53,9 +62,11 @@ Plaintext &Plaintext::operator=(const Plaintext &pt_copy)
 
 Plaintext::Plaintext(const Plaintext &pt_copy) : label(datatype::pt_label_prefix + std::to_string(plaintext_id++))
 {
-
+  operate_copy<Plaintext>(*this, pt_copy, ir::plaintextType);
+  /*
   auto pt_copy_node_ptr = program->insert_node_in_dataflow<Plaintext>(pt_copy);
   program->insert_operation_node_in_dataflow(ir::OpCode::assign, {pt_copy_node_ptr}, this->label, ir::plaintextType);
+  */
   // std::cout << this->label << " = " << pt_copy.get_label() << "\n";
 }
 

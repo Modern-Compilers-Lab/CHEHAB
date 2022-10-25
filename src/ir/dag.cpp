@@ -9,9 +9,11 @@ namespace ir
 
 using Ptr = std::shared_ptr<Term>;
 
-void DAG::insert_node(Ptr node)
+void DAG::insert_node(Ptr node, bool is_output)
 {
-  this->nodes_ptrs.push_back(node);
+  if (is_output)
+    outputs_nodes.insert({node->get_label(), node});
+
   this->node_ptr_from_label[node->get_label()] = node;
 }
 
@@ -23,18 +25,30 @@ Ptr DAG::find_node(std::string node_label) const
   return nullptr;
 }
 
+void DAG::delete_node_from_outputs(const std::string &key)
+{
+  auto it = this->outputs_nodes.find(key);
+  if (it != this->outputs_nodes.end())
+  {
+    this->outputs_nodes.erase(it);
+  }
+}
+
 void DAG::apply_topological_sort()
 {
 
-  if (nodes_ptrs_topsorted.size())
+  if (outputs_nodes_topsorted.size())
     return;
 
   std::stack<Ptr> traversal_stack;
 
   std::unordered_set<std::string> visited_labels;
 
-  for (auto &node_ptr : nodes_ptrs)
+  for (auto &e : outputs_nodes)
   {
+
+    auto &node_ptr = e.second;
+
     if (visited_labels.find(node_ptr->get_label()) != visited_labels.end())
       continue;
 
@@ -62,7 +76,7 @@ void DAG::apply_topological_sort()
         }
       }
       while (!tmp_vector.empty())
-        nodes_ptrs_topsorted.emplace_back(tmp_vector.back()), tmp_vector.pop_back();
+        outputs_nodes_topsorted.emplace_back(tmp_vector.back()), tmp_vector.pop_back();
     }
   }
 }

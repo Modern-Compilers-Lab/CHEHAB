@@ -34,7 +34,7 @@ public:
   Ciphertext &operator=(const Ciphertext &ct_copy);
 
   Ciphertext(Ciphertext &&ct_move) = default;
-  Ciphertext &operator=(Ciphertext &&ct_move) = default;
+  Ciphertext &operator=(Ciphertext &&ct_move);
 
   Ciphertext &operator+=(const Ciphertext &rhs);
 

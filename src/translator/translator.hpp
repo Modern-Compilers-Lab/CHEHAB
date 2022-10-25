@@ -31,9 +31,9 @@ private:
     std::ofstream &os, const Evaluator &evaluator) const;
 
   void translate_constant_table_entry(
-    ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os) const;
+    ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os, Encoder &encoder) const;
 
-  void translate_term(const Ptr &term_ptr, std::ofstream &os, const Evaluator &evaluator) const;
+  void translate_term(const Ptr &term_ptr, std::ofstream &os, const Evaluator &evaluator, Encoder &encoder) const;
 
   std::string get_identifier(const Ptr &term_ptr) const;
 

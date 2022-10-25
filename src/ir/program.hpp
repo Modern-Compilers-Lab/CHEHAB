@@ -121,7 +121,7 @@ public:
       return node_ptr_in_program;
     }
     Ptr new_term = std::make_shared<Term>(operand);
-    this->data_flow->insert_node(new_term);
+    this->data_flow->insert_node(new_term, this->type_of(new_term->get_label()) == ConstantTableEntryType::output);
     return new_term;
   }
 
@@ -130,6 +130,8 @@ public:
   void insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry);
 
   bool delete_entry_from_constants_table(std::string entry_key);
+
+  void delete_node_from_outputs(const std::string &key);
 
   bool insert_new_entry_from_existing(std::string new_entry_key, std::string exsisting_entry_key);
 

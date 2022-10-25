@@ -11,7 +11,7 @@ Ptr Program::insert_operation_node_in_dataflow(
 {
   Ptr new_term = std::make_shared<Term>(opcode, operands, label);
   new_term->set_term_type(term_type);
-  this->data_flow->insert_node(new_term);
+  this->data_flow->insert_node(new_term, this->type_of(new_term->get_label()) == ConstantTableEntryType::output);
   return new_term;
 }
 
@@ -23,6 +23,11 @@ Ptr Program::find_node_in_dataflow(const std::string &label) const
 void Program::insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry)
 {
   this->constants_table.insert(table_entry);
+}
+
+void Program::delete_node_from_outputs(const std::string &key)
+{
+  this->data_flow->delete_node_from_outputs(key);
 }
 
 bool Program::delete_entry_from_constants_table(std::string entry_key)
@@ -112,14 +117,14 @@ void print_node(const Ptr &node_ptr)
 const std::vector<Ptr> &Program::get_dataflow_sorted_nodes() const
 {
   this->data_flow->apply_topological_sort();
-  return this->data_flow->get_nodes_ptrs_topsorted();
+  return this->data_flow->get_outputs_nodes_topsorted();
 }
 
 void Program::sort_dataflow()
 {
   std::unordered_set<std::string> visited;
   this->data_flow->apply_topological_sort();
-  const std::vector<Ptr> &nodes_ptrs_topsorted = this->data_flow->get_nodes_ptrs_topsorted();
+  const std::vector<Ptr> &nodes_ptrs_topsorted = this->data_flow->get_outputs_nodes_topsorted();
   for (auto &node_ptr : nodes_ptrs_topsorted)
   {
     print_node(node_ptr);

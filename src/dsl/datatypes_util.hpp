@@ -11,6 +11,8 @@ extern ir::Program *program;
 namespace datatype
 {
 
+inline bool is_tracked_object(const std::string &label);
+
 using Ptr = std::shared_ptr<ir::Term>;
 
 template <typename T>
@@ -25,8 +27,13 @@ template <typename T1, typename T2>
 void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
 
-  auto lhs_node_ptr = program->insert_node_in_dataflow<T1>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<T2>(rhs);
+  auto lhs_node_ptr = program->find_node_in_dataflow(lhs.get_label());
+  auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
+
+  if (rhs_node_ptr == nullptr || lhs_node_ptr == nullptr)
+  {
+    throw("operand is not defined, maybe it was only declared\n");
+  }
 
   std::string old_label = lhs.get_label();
 
@@ -38,23 +45,37 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
   if (table_entry_opt != std::nullopt)
   {
     ir::ConstantTableEntry &table_entry = *table_entry_opt;
-    if (table_entry.get_entry_type() == ir::ConstantTableEntryType::output)
+    bool is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
+    if (is_output || is_tracked_object(old_label))
+    {
+      if (is_output)
+        program->delete_node_from_outputs(old_label);
+
       program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+    }
   }
 }
 
 template <typename T1, typename T2, typename T3>
 T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
-  auto lhs_node_ptr = program->insert_node_in_dataflow<T2>(lhs);
-  auto rhs_node_ptr = program->insert_node_in_dataflow<T3>(rhs);
+  auto lhs_node_ptr = program->find_node_in_dataflow(lhs.get_label());
+  auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
+  if (lhs_node_ptr == nullptr || rhs_node_ptr == nullptr)
+  {
+    throw("operand is not defined, maybe it was only declared\n");
+  }
   return operate<T1>(opcode, {lhs_node_ptr, rhs_node_ptr}, term_type);
 }
 
 template <typename T>
 T operate_unary(const T &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
-  auto rhs_node_ptr = program->insert_node_in_dataflow<T>(rhs);
+  auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
+  if (rhs_node_ptr == nullptr)
+  {
+    throw("operand is not defined, maybe it was only declared\n");
+  }
   return operate<T>(opcode, {rhs_node_ptr}, term_type);
 }
 
@@ -66,20 +87,34 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
   if (lhs_entry == std::nullopt)
     throw(" object node doesnt exist in dataflow when trying to overload assign operator for Ciphertext ");
 
-  if (program->type_of(lhs.get_label()) == ir::ConstantTableEntryType::output)
+  auto copy_node_ptr = program->find_node_in_dataflow(rhs.get_label());
+
+  if (copy_node_ptr == nullptr)
   {
-    auto ct_copy_node_ptr = program->insert_node_in_dataflow<T>(rhs);
+    throw("operand is not defined, maybe it was only declared\n");
+  }
+
+  if ((program->type_of(lhs.get_label()) == ir::ConstantTableEntryType::output))
+  {
     // inserting new output in data flow as assignement, and in the constatns_table but this time we insert it as a
     // symbol with tag
     std::string old_label = lhs.get_label();
     lhs.set_new_label();
     program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
     auto new_assign_operation =
-      program->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, lhs.get_label(), term_type);
+      program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
   }
-
   else
-    lhs.set_label(rhs.get_label());
+  {
+    if (is_tracked_object(lhs.get_label()))
+    {
+      auto new_assign_operation =
+        program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
+    }
+
+    else
+      lhs.set_label(rhs.get_label());
+  }
 
   return lhs;
 }
@@ -115,6 +150,34 @@ bool is_compile_time_evaluation_possible(const T &lhs, const T &rhs)
 {
   ir::ConstantTableEntryType lhs_entry_type = program->type_of(lhs.get_label());
   return lhs_entry_type == ir::ConstantTableEntryType::constant && lhs_entry_type == program->type_of(rhs.get_label());
+}
+
+inline bool is_tracked_object(const std::string &label)
+{
+  auto table_entry = program->get_entry_form_constants_table(label);
+
+  ir::ConstantTableEntry lhs_table_entry_value = *table_entry;
+
+  ir::ConstantTableEntry::EntryValue entry_value = lhs_table_entry_value.get_entry_value();
+
+  return entry_value.get_tag().length() > 0;
+}
+
+template <typename T>
+void operate_copy(const T &lhs, const T &t_copy, ir::TermType term_type)
+{
+  auto copy_node_ptr = program->insert_node_in_dataflow<T>(t_copy);
+  program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
+}
+
+template <typename T>
+void operate_move(const T &lhs, T &&t_move, ir::TermType term_type)
+{
+  if (is_tracked_object(lhs.get_label()))
+  {
+    auto move_node_ptr = program->insert_node_in_dataflow<T>(t_move);
+    program->insert_operation_node_in_dataflow(ir::OpCode::assign, {move_node_ptr}, lhs.get_label(), term_type);
+  }
 }
 
 } // namespace datatype

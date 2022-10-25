@@ -20,6 +20,12 @@ void Ciphertext::set_new_label()
   this->set_label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++));
 }
 
+Ciphertext &Ciphertext::operator=(Ciphertext &&ct_move)
+{
+  operate_move<Ciphertext>(*this, std::move(ct_move), ir::ciphertextType);
+  return *this;
+}
+
 Ciphertext Ciphertext::encrypt(const Plaintext &pt)
 {
   Ciphertext new_ct("");
@@ -35,6 +41,10 @@ Ciphertext Ciphertext::encrypt(const Plaintext &pt)
 Ciphertext::Ciphertext(const std::string &tag, VarType var_type)
   : label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++))
 {
+  if (var_type == VarType::input)
+  {
+    program->insert_node_in_dataflow(*this);
+  }
   operate_in_constants_table(this->label, tag, var_type);
 }
 
@@ -45,8 +55,12 @@ Ciphertext &Ciphertext::operator=(const Ciphertext &ct_copy)
 
 Ciphertext::Ciphertext(const Ciphertext &ct_copy) : label(datatype::ct_label_prefix + std::to_string(ciphertext_id++))
 {
+  /*
   auto ct_copy_node_ptr = program->insert_node_in_dataflow<Ciphertext>(ct_copy);
   program->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, this->label, ir::ciphertextType);
+  */
+  std::cout << "copy called \n";
+  operate_copy<Ciphertext>(*this, ct_copy, ir::ciphertextType);
 }
 
 Ciphertext &Ciphertext::operator+=(const Ciphertext &rhs)
