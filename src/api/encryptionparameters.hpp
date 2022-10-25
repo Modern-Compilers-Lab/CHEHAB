@@ -36,9 +36,9 @@ class EncryptionParameters
 public:
   using ptr = std::unique_ptr<EncryptionParameters>;
 
-  static ptr create(Backend backend, const SchemeType &scheme);
+  static ptr create(Backend backend, const SchemeType::ptr &scheme);
 
-  static inline ptr create(const SchemeType &scheme) { return create(Backend::none, scheme); }
+  static inline ptr create(const SchemeType::ptr &scheme) { return create(Backend::none, scheme); }
 
   virtual ~EncryptionParameters() {}
 
@@ -46,7 +46,7 @@ public:
 
   virtual void set_coeff_modulus(const Modulus::vector &coeff_modulus) = 0;
 
-  virtual void set_plain_modulus(const Modulus &plain_modulus) = 0;
+  virtual void set_plain_modulus(const Modulus::ptr &plain_modulus) = 0;
 
   // TODO: Virtual setter for the random number generator factory
 

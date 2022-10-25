@@ -23,9 +23,9 @@ namespace seal_backend
   class EncryptionParameters : public ufhe::EncryptionParameters
   {
   public:
-    inline EncryptionParameters(const ufhe::SchemeType &scheme)
-      : params_(seal::EncryptionParameters(dynamic_cast<const SchemeType &>(scheme))),
-        scheme_type_(dynamic_cast<const SchemeType &>(scheme))
+    inline EncryptionParameters(const ufhe::SchemeType::ptr &scheme)
+      : params_(seal::EncryptionParameters(dynamic_cast<const SchemeType &>(*scheme))),
+        scheme_type_(dynamic_cast<const SchemeType &>(*scheme))
     {}
 
     inline operator const seal::EncryptionParameters &() const { return params_; }
@@ -37,9 +37,9 @@ namespace seal_backend
 
     void set_coeff_modulus(const ufhe::Modulus::vector &coeff_modulus) override;
 
-    inline void set_plain_modulus(const ufhe::Modulus &plain_modulus) override
+    inline void set_plain_modulus(const ufhe::Modulus::ptr &plain_modulus) override
     {
-      plain_modulus_ = dynamic_cast<const Modulus &>(plain_modulus);
+      plain_modulus_ = dynamic_cast<const Modulus &>(*plain_modulus);
       params_.set_plain_modulus(plain_modulus_);
     }
 

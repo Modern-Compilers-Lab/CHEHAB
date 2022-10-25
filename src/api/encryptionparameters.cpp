@@ -23,7 +23,7 @@ SchemeType::ptr SchemeType::create(Backend backend, std::uint8_t scheme_id)
   return ptr;
 }
 
-EncryptionParameters::ptr EncryptionParameters::create(Backend backend, const SchemeType &scheme)
+EncryptionParameters::ptr EncryptionParameters::create(Backend backend, const SchemeType::ptr &scheme)
 {
   if (backend == Backend::none)
     backend = API::default_backend();

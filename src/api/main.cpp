@@ -1,4 +1,3 @@
-#include "seal_backend/seal_backend.hpp"
 #include "ufhe.hpp"
 #include <iostream>
 
@@ -9,8 +8,9 @@ int main()
 {
   Modulus::ptr modulus = Modulus::create(Backend::seal, 22);
   cout << modulus->value() << endl;
-  cout << typeid(modulus).name() << endl;
   SchemeType::ptr scheme = SchemeType::create(1);
-  EncryptionParameters::ptr params = EncryptionParameters::create(*scheme);
+  EncryptionParameters::ptr params = EncryptionParameters::create(scheme);
+  const SchemeType &scheme_ref = params->scheme();
+  cout << typeid(scheme_ref).name() << endl;
   return 0;
 }
