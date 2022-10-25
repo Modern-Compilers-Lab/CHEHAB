@@ -24,12 +24,15 @@ INLINE std::unordered_map<ir::TermType, const char *> types_map = {
 INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
 
   {ir::OpCode::add, "add"},
+  {ir::OpCode::add_plain, "add_plain"},
   {ir::OpCode::assign, "="},
   {ir::OpCode::exponentiate, "exponentiate"},
   {ir::OpCode::negate, "negate"},
   {ir::OpCode::modswitch, "modswitch"},
   {ir::OpCode::mul, "mul"},
+  {ir::OpCode::mul_plain, "mul_plain"},
   {ir::OpCode::sub, "sub"},
+  {ir::OpCode::sub_plain, "sub_plain"},
   {ir::OpCode::rescale, "rescale"},
   {ir::OpCode::square, "square"},
   {ir::OpCode::rotate, "rotate"},

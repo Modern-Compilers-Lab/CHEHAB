@@ -10,13 +10,14 @@ namespace fhecompiler
 // addition
 Ciphertext &operator+=(Ciphertext &lhs, const Plaintext &rhs)
 {
-  datatype::compound_operate<Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::add, ir::ciphertextType);
+  datatype::compound_operate<Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::add_plain, ir::ciphertextType);
   return lhs;
 }
 
 Ciphertext operator+(const Ciphertext &lhs, const Plaintext &rhs)
 {
-  return datatype::operate_binary<Ciphertext, Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::add, ir::ciphertextType);
+  return datatype::operate_binary<Ciphertext, Ciphertext, Plaintext>(
+    lhs, rhs, ir::OpCode::add_plain, ir::ciphertextType);
 }
 
 Ciphertext operator+(const Plaintext &lhs, const Ciphertext &rhs)
@@ -42,12 +43,12 @@ Plaintext operator+(const Scalar &rhs, const Plaintext &lhs)
 
 Ciphertext operator+(const Ciphertext &lhs, const Scalar &rhs)
 {
-  return datatype::operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::add, ir::ciphertextType);
+  return datatype::operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::add_plain, ir::ciphertextType);
 }
 
 Ciphertext &operator+=(Ciphertext &lhs, const Scalar &rhs)
 {
-  datatype::compound_operate<Ciphertext, Scalar>(lhs, rhs, ir::OpCode::add, ir::ciphertextType);
+  datatype::compound_operate<Ciphertext, Scalar>(lhs, rhs, ir::OpCode::add_plain, ir::ciphertextType);
   return lhs;
 }
 
@@ -59,12 +60,13 @@ Ciphertext operator+(const Scalar &lhs, const Ciphertext &rhs)
 // subtraction
 Ciphertext operator-(const Ciphertext &lhs, const Plaintext &rhs)
 {
-  return datatype::operate_binary<Ciphertext, Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::sub, ir::ciphertextType);
+  return datatype::operate_binary<Ciphertext, Ciphertext, Plaintext>(
+    lhs, rhs, ir::OpCode::sub_plain, ir::ciphertextType);
 }
 
 Ciphertext &operator-=(Ciphertext &lhs, const Plaintext &rhs)
 {
-  datatype::compound_operate<Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::sub, ir::ciphertextType);
+  datatype::compound_operate<Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::sub_plain, ir::ciphertextType);
   return lhs;
 }
 
@@ -91,12 +93,12 @@ Plaintext operator-(const Scalar &lhs, const Plaintext &rhs)
 
 Ciphertext operator-(const Ciphertext &lhs, const Scalar &rhs)
 {
-  return datatype::operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::sub, ir::ciphertextType);
+  return datatype::operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::sub_plain, ir::ciphertextType);
 }
 
 Ciphertext operator-=(Ciphertext &lhs, const Scalar &rhs)
 {
-  datatype::compound_operate<Ciphertext, Scalar>(lhs, rhs, ir::OpCode::sub, ir::ciphertextType);
+  datatype::compound_operate<Ciphertext, Scalar>(lhs, rhs, ir::OpCode::sub_plain, ir::ciphertextType);
   return lhs;
 }
 
@@ -108,12 +110,13 @@ Ciphertext operator-(const Scalar &lhs, const Ciphertext &rhs)
 // multiplication
 Ciphertext operator*(const Ciphertext &lhs, const Plaintext &rhs)
 {
-  return datatype::operate_binary<Ciphertext, Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::mul, ir::ciphertextType);
+  return datatype::operate_binary<Ciphertext, Ciphertext, Plaintext>(
+    lhs, rhs, ir::OpCode::mul_plain, ir::ciphertextType);
 }
 
 Ciphertext &operator*=(Ciphertext &lhs, const Plaintext &rhs)
 {
-  datatype::compound_operate<Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::mul, ir::ciphertextType);
+  datatype::compound_operate<Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::mul_plain, ir::ciphertextType);
   return lhs;
 }
 
@@ -124,7 +127,7 @@ Ciphertext operator*(const Plaintext &lhs, const Ciphertext &rhs)
 
 Ciphertext operator*(const Scalar &lhs, const Ciphertext &rhs)
 {
-  return datatype::operate_binary<Ciphertext, Scalar, Ciphertext>(lhs, rhs, ir::OpCode::mul, ir::ciphertextType);
+  return datatype::operate_binary<Ciphertext, Scalar, Ciphertext>(lhs, rhs, ir::OpCode::mul_plain, ir::ciphertextType);
 }
 
 Ciphertext operator*(const Ciphertext &lhs, const Scalar &rhs)
@@ -134,7 +137,7 @@ Ciphertext operator*(const Ciphertext &lhs, const Scalar &rhs)
 
 Ciphertext &operator*=(Ciphertext &lhs, const Scalar &rhs)
 {
-  datatype::compound_operate<Ciphertext, Scalar>(lhs, rhs, ir::OpCode::mul, ir::ciphertextType);
+  datatype::compound_operate<Ciphertext, Scalar>(lhs, rhs, ir::OpCode::mul_plain, ir::ciphertextType);
   return lhs;
 }
 

@@ -40,7 +40,7 @@ void DAG::apply_topological_sort()
   if (outputs_nodes_topsorted.size())
     return;
 
-  std::stack<Ptr> traversal_stack;
+  std::stack<std::pair<bool, Ptr>> traversal_stack;
 
   std::unordered_set<std::string> visited_labels;
 
@@ -49,34 +49,36 @@ void DAG::apply_topological_sort()
 
     auto &node_ptr = e.second;
 
-    if (visited_labels.find(node_ptr->get_label()) != visited_labels.end())
-      continue;
-
-    visited_labels.insert(node_ptr->get_label());
-    traversal_stack.push(node_ptr);
+    if (visited_labels.find(node_ptr->get_label()) == visited_labels.end())
     {
-      std::vector<Ptr> tmp_vector;
+      traversal_stack.push(std::make_pair(false, node_ptr));
+    }
 
-      while (!traversal_stack.empty())
+    while (!traversal_stack.empty())
+    {
+      auto top_node = traversal_stack.top();
+      traversal_stack.pop();
+      if (top_node.first)
       {
-        auto &top_node_ptr = traversal_stack.top();
-        traversal_stack.pop();
-        tmp_vector.push_back(top_node_ptr);
-        if (top_node_ptr->get_operands() != std::nullopt)
+        outputs_nodes_topsorted.push_back(top_node.second);
+        continue;
+      }
+      if (visited_labels.find(top_node.second->get_label()) != visited_labels.end())
+        continue;
+
+      visited_labels.insert(top_node.second->get_label());
+      traversal_stack.push(std::make_pair(true, top_node.second));
+      if (top_node.second->get_operands() != std::nullopt)
+      {
+        const std::vector<Ptr> &operands = *(top_node.second)->get_operands();
+        for (auto &operand_ptr : operands)
         {
-          const auto &operands_nodes_ptrs = *(top_node_ptr->get_operands());
-          for (auto &operand_node_ptr : operands_nodes_ptrs)
+          if (visited_labels.find(operand_ptr->get_label()) == visited_labels.end())
           {
-            if (visited_labels.find(operand_node_ptr->get_label()) == visited_labels.end())
-            {
-              visited_labels.insert(operand_node_ptr->get_label());
-              traversal_stack.push(operand_node_ptr);
-            }
+            traversal_stack.push(std::make_pair(false, operand_ptr));
           }
         }
       }
-      while (!tmp_vector.empty())
-        outputs_nodes_topsorted.emplace_back(tmp_vector.back()), tmp_vector.pop_back();
     }
   }
 }

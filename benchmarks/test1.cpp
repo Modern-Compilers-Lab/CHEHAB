@@ -60,6 +60,10 @@ int main()
 
     ct4 += ct3;
 
+    fhecompiler::Ciphertext ct4_output("ct4_output", VarType::output);
+
+    ct4_output = ct4;
+
     fhecompiler::Ciphertext ct5 = ct4 + 1337;
 
     fhecompiler::compile("test1.hpp");

@@ -59,7 +59,6 @@ Ciphertext::Ciphertext(const Ciphertext &ct_copy) : label(datatype::ct_label_pre
   auto ct_copy_node_ptr = program->insert_node_in_dataflow<Ciphertext>(ct_copy);
   program->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, this->label, ir::ciphertextType);
   */
-  std::cout << "copy called \n";
   operate_copy<Ciphertext>(*this, ct_copy, ir::ciphertextType);
 }
 
