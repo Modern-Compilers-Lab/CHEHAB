@@ -18,13 +18,13 @@ public:
 protected:
   ISchemeType() = default;
 
-  ISchemeType(const ISchemeType &) = default;
+  ISchemeType(const ISchemeType &copy) = default;
 
-  ISchemeType &operator=(const ISchemeType &) = default;
+  ISchemeType &operator=(const ISchemeType &assign) = default;
 
-  ISchemeType(ISchemeType &&) = default;
+  ISchemeType(ISchemeType &&source) = default;
 
-  ISchemeType &operator=(ISchemeType &&) = default;
+  ISchemeType &operator=(ISchemeType &&assign) = default;
 };
 
 class IEncryptionParameters
@@ -46,7 +46,8 @@ public:
 
   virtual std::size_t poly_modulus_degree() const = 0;
 
-  virtual const IModulus::vector &coeff_modulus() const = 0;
+  // TODO: Try to make IModulus::vector coeff_modulus() const again
+  virtual IModulus::vector coeff_modulus() = 0;
 
   virtual const IModulus &plain_modulus() const = 0;
 

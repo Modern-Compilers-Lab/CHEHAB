@@ -7,65 +7,79 @@
 namespace ufhe
 {
 class EncryptionParameters;
-class SchemeType;
-
 namespace seal_backend
 {
   class SchemeType : public ISchemeType
   {
-    friend class ufhe::SchemeType;
+    friend class EncryptionParameters;
 
   public:
-    inline SchemeType(std::uint8_t scheme_id) : scheme_(static_cast<seal::scheme_type>(scheme_id)) {}
+    inline SchemeType(std::uint8_t scheme_id) : SchemeType(static_cast<seal::scheme_type>(scheme_id)) {}
 
     inline Backend backend() override { return Backend::seal; };
 
-    inline operator seal::scheme_type() const { return scheme_; }
-
   private:
-    seal::scheme_type scheme_;
+    inline SchemeType(seal::scheme_type seal_scheme) : underlying_(seal_scheme) {}
+
+    inline seal::scheme_type underlying() const { return underlying_; }
+
+    seal::scheme_type underlying_;
   };
 
   class EncryptionParameters : public IEncryptionParameters
   {
-    friend class EncryptionParameters;
-
   public:
     inline EncryptionParameters(const ufhe::ISchemeType &scheme)
-      : params_(seal::EncryptionParameters(dynamic_cast<const SchemeType &>(scheme))),
-        scheme_type_(dynamic_cast<const SchemeType &>(scheme))
+      : EncryptionParameters(
+          new seal::EncryptionParameters(dynamic_cast<const SchemeType &>(scheme).underlying()), true)
     {}
 
-    inline operator const seal::EncryptionParameters &() const { return params_; }
+    EncryptionParameters(const EncryptionParameters &copy) : EncryptionParameters(copy.underlying_, false) {}
+
+    EncryptionParameters &operator=(const EncryptionParameters &assign) = delete;
+
+    inline ~EncryptionParameters()
+    {
+      if (is_owner_)
+        delete underlying_;
+    }
 
     inline Backend backend() override { return Backend::seal; };
 
     inline void set_poly_modulus_degree(std::size_t poly_modulus_degree) override
     {
-      params_.set_poly_modulus_degree(poly_modulus_degree);
+      underlying().set_poly_modulus_degree(poly_modulus_degree);
     }
 
     void set_coeff_modulus(const IModulus::vector &coeff_modulus) override;
 
     inline void set_plain_modulus(const IModulus &plain_modulus) override
     {
-      plain_modulus_ = dynamic_cast<const Modulus &>(plain_modulus);
-      params_.set_plain_modulus(plain_modulus_);
+      underlying().set_plain_modulus(dynamic_cast<const Modulus &>(plain_modulus).underlying());
     }
 
-    inline const ISchemeType &scheme() const override { return scheme_type_; }
+    inline const ISchemeType &scheme() const override { return scheme_; }
 
-    inline std::size_t poly_modulus_degree() const override { return params_.poly_modulus_degree(); }
+    inline std::size_t poly_modulus_degree() const override { return underlying().poly_modulus_degree(); }
 
-    inline const IModulus::vector &coeff_modulus() const override { return coeff_modulus_; }
+    IModulus::vector coeff_modulus() override;
 
     inline const IModulus &plain_modulus() const override { return plain_modulus_; }
 
   private:
-    seal::EncryptionParameters params_;
-    SchemeType scheme_type_;
-    IModulus::vector coeff_modulus_{};
-    Modulus plain_modulus_{0};
+    EncryptionParameters(seal::EncryptionParameters *seal_params, bool is_owner)
+      : underlying_(seal_params), is_owner_(is_owner), scheme_(seal_params->scheme()),
+        plain_modulus_(const_cast<seal::Modulus *>(&underlying_->plain_modulus()), false)
+    {}
+
+    inline seal::EncryptionParameters &underlying() const { return *underlying_; }
+
+    seal::EncryptionParameters *underlying_;
+    bool is_owner_;
+
+    SchemeType scheme_;
+    std::vector<Modulus> coeff_modulus_holder_{};
+    Modulus plain_modulus_;
   };
 } // namespace seal_backend
 } // namespace ufhe

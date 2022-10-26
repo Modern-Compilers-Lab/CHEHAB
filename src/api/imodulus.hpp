@@ -10,7 +10,7 @@ namespace ufhe
 class IModulus
 {
 public:
-  using vector = std::vector<std::reference_wrapper<IModulus>>;
+  using vector = std::vector<std::reference_wrapper<const IModulus>>;
 
   virtual ~IModulus() = default;
 
@@ -43,12 +43,12 @@ public:
 protected:
   IModulus() = default;
 
-  IModulus(const IModulus &) = default;
+  IModulus(const IModulus &copy) = default;
 
-  IModulus &operator=(const IModulus &) = default;
+  IModulus &operator=(const IModulus &assign) = default;
 
-  IModulus(IModulus &&) = default;
+  IModulus(IModulus &&source) = default;
 
-  IModulus &operator=(IModulus &&) = default;
+  IModulus &operator=(IModulus &&assign) = default;
 };
 } // namespace ufhe

@@ -7,7 +7,6 @@ add_executable(test_api main.cpp)
 target_sources(test_api
 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/api.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/encryptionparameters.cpp
     ${CMAKE_CURRENT_LIST_DIR}/seal_backend/encryptionparameters.cpp
 )
 
