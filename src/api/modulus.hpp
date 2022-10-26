@@ -31,53 +31,55 @@ public:
 
   ~Modulus() { delete underlying_; }
 
-  inline Backend backend() override { return underlying_->backend(); }
+  inline Backend backend() override { return underlying().backend(); }
 
   inline IModulus &operator=(std::uint64_t value) override
   {
-    *underlying_ = value;
+    underlying() = value;
     return *this;
   }
 
-  inline int bit_count() const override { return underlying_->bit_count(); }
+  inline int bit_count() const override { return underlying().bit_count(); }
 
-  inline std::uint64_t value() const override { return underlying_->value(); }
+  inline std::uint64_t value() const override { return underlying().value(); }
 
-  inline bool is_prime() const override { return underlying_->is_prime(); }
+  inline bool is_prime() const override { return underlying().is_prime(); }
 
   inline bool operator==(const IModulus &compare) const override
   {
-    return *underlying_ == *dynamic_cast<const Modulus &>(compare).underlying_;
+    return underlying() == dynamic_cast<const Modulus &>(compare).underlying();
   }
 
   inline bool operator!=(const IModulus &compare) const override
   {
-    return *underlying_ != *dynamic_cast<const Modulus &>(compare).underlying_;
+    return underlying() != dynamic_cast<const Modulus &>(compare).underlying();
   }
 
   inline bool operator<(const IModulus &compare) const override
   {
-    return *underlying_ < *dynamic_cast<const Modulus &>(compare).underlying_;
+    return underlying() < dynamic_cast<const Modulus &>(compare).underlying();
   }
 
   inline bool operator<=(const IModulus &compare) const override
   {
-    return *underlying_ <= *dynamic_cast<const Modulus &>(compare).underlying_;
+    return underlying() <= dynamic_cast<const Modulus &>(compare).underlying();
   }
 
   inline bool operator>(const IModulus &compare) const override
   {
-    return *underlying_ > *dynamic_cast<const Modulus &>(compare).underlying_;
+    return underlying() > dynamic_cast<const Modulus &>(compare).underlying();
   }
 
   inline bool operator>=(const IModulus &compare) const override
   {
-    return *underlying_ >= *dynamic_cast<const Modulus &>(compare).underlying_;
+    return underlying() >= dynamic_cast<const Modulus &>(compare).underlying();
   }
 
   inline std::uint64_t reduce(std::uint64_t value) const override { return underlying_->reduce(value); }
 
 private:
+  inline IModulus &underlying() const { return *underlying_; }
+
   IModulus *underlying_;
 };
 } // namespace ufhe

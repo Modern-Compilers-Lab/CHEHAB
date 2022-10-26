@@ -6,13 +6,13 @@ using namespace std;
 
 int main()
 {
-  seal_backend::SchemeType scheme(1);
-  seal_backend::EncryptionParameters params(scheme);
-  params.set_plain_modulus(seal_backend::Modulus(22));
+  SchemeType scheme(1);
+  EncryptionParameters params(scheme);
+  params.set_plain_modulus(Modulus(22));
   cout << params.plain_modulus().value() << endl;
-  seal_backend::Modulus m1(22);
-  seal_backend::Modulus m2(33);
-  seal_backend::Modulus m3(44);
+  Modulus m1(22);
+  Modulus m2(33);
+  Modulus m3(44);
   IModulus::vector v;
   v.push_back(m1);
   v.push_back(m2);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "api.hpp"
-//#include "encryptionparameters.hpp"
+#include "encryptionparameters.hpp"
 #include "iencryptionparameters.hpp"
 #include "imodulus.hpp"
 #include "modulus.hpp"

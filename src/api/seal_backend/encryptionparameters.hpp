@@ -69,7 +69,7 @@ namespace seal_backend
   private:
     EncryptionParameters(seal::EncryptionParameters *seal_params, bool is_owner)
       : underlying_(seal_params), is_owner_(is_owner), scheme_(seal_params->scheme()),
-        plain_modulus_(const_cast<seal::Modulus *>(&underlying_->plain_modulus()), false)
+        plain_modulus_(const_cast<seal::Modulus *>(&underlying().plain_modulus()), false)
     {}
 
     inline seal::EncryptionParameters &underlying() const { return *underlying_; }
