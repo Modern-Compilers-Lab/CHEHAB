@@ -1,60 +1,83 @@
 #pragma once
 
-#include "api.hpp"
-#include <cstdint>
-#include <memory>
-#include <vector>
+#include "imodulus.hpp"
+#include "seal_backend/modulus.hpp"
+#include <cstddef>
 
 namespace ufhe
 {
-class Modulus
+class Modulus : public IModulus
 {
+  friend class EncryptionParameters;
+
 public:
-  using ptr = std::unique_ptr<Modulus>;
+  inline Modulus(Backend backend, std::uint64_t value)
+  {
+    if (backend == Backend::none)
+      backend = API::default_backend();
+    switch (backend)
+    {
+    case Backend::seal:
+      underlying_ = new seal_backend::Modulus(value);
+      break;
 
-  using vector = std::vector<ptr>;
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  static ptr create(Backend backend, std::uint64_t value = 0);
+  inline Modulus(std::uint64_t value) : Modulus(Backend::none, value) {}
 
-  static inline ptr create(std::uint64_t value = 0) { return create(Backend::none, value); }
+  ~Modulus() { delete underlying_; }
 
-  virtual ptr clone() = 0;
+  inline Backend backend() override { return underlying_->backend(); }
 
-  virtual ~Modulus() = default;
+  inline IModulus &operator=(std::uint64_t value) override
+  {
+    *underlying_ = value;
+    return *this;
+  }
 
-  virtual Modulus &operator=(std::uint64_t value) = 0;
+  inline int bit_count() const override { return underlying_->bit_count(); }
 
-  virtual int bit_count() const = 0;
+  inline std::uint64_t value() const override { return underlying_->value(); }
 
-  virtual std::uint64_t value() const = 0;
+  inline bool is_prime() const override { return underlying_->is_prime(); }
 
-  virtual bool is_prime() const = 0;
+  inline bool operator==(const IModulus &compare) const override
+  {
+    return *underlying_ == *dynamic_cast<const Modulus &>(compare).underlying_;
+  }
 
-  virtual bool operator==(const Modulus &compare) const = 0;
+  inline bool operator!=(const IModulus &compare) const override
+  {
+    return *underlying_ != *dynamic_cast<const Modulus &>(compare).underlying_;
+  }
 
-  virtual bool operator!=(const Modulus &compare) const = 0;
+  inline bool operator<(const IModulus &compare) const override
+  {
+    return *underlying_ < *dynamic_cast<const Modulus &>(compare).underlying_;
+  }
 
-  virtual bool operator<(const Modulus &compare) const = 0;
+  inline bool operator<=(const IModulus &compare) const override
+  {
+    return *underlying_ <= *dynamic_cast<const Modulus &>(compare).underlying_;
+  }
 
-  virtual bool operator<=(const Modulus &compare) const = 0;
+  inline bool operator>(const IModulus &compare) const override
+  {
+    return *underlying_ > *dynamic_cast<const Modulus &>(compare).underlying_;
+  }
 
-  virtual bool operator>(const Modulus &compare) const = 0;
+  inline bool operator>=(const IModulus &compare) const override
+  {
+    return *underlying_ >= *dynamic_cast<const Modulus &>(compare).underlying_;
+  }
 
-  virtual bool operator>=(const Modulus &compare) const = 0;
+  inline std::uint64_t reduce(std::uint64_t value) const override { return underlying_->reduce(value); }
 
-  virtual std::uint64_t reduce(std::uint64_t value) const = 0;
-
-  // TODO: Serialization support
-
-protected:
-  Modulus() = default;
-
-  Modulus(const Modulus &) = default;
-
-  Modulus &operator=(const Modulus &) = default;
-
-  Modulus(Modulus &&) = default;
-
-  Modulus &operator=(Modulus &&) = default;
+private:
+  IModulus *underlying_;
 };
 } // namespace ufhe

@@ -1,76 +1,88 @@
 #pragma once
 
+#include "iencryptionparameters.hpp"
 #include "modulus.hpp"
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <vector>
+#include "seal_backend/encryptionparameters.hpp"
 
 namespace ufhe
 {
-class SchemeType
+class SchemeType : public ISchemeType
 {
+  friend class EncryptionParameters;
+
 public:
-  using ptr = std::unique_ptr<SchemeType>;
+  inline SchemeType(Backend backend, std::uint8_t scheme_id)
+  {
+    if (backend == Backend::none)
+      backend = API::default_backend();
+    switch (backend)
+    {
+    case Backend::seal:
+      underlying_ = new seal_backend::SchemeType(scheme_id);
+      break;
 
-  static ptr create(Backend backend, std::uint8_t scheme_id);
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  static inline ptr create(std::uint8_t scheme_id) { return create(Backend::none, scheme_id); }
+  inline SchemeType(std::uint8_t scheme_id) : SchemeType(Backend::none, scheme_id) {}
 
-  virtual ~SchemeType() = default;
+  ~SchemeType() { delete underlying_; }
 
-protected:
-  SchemeType() = default;
+  inline Backend backend() override { return underlying_->backend(); }
 
-  SchemeType(const SchemeType &) = default;
-
-  SchemeType &operator=(const SchemeType &) = default;
-
-  SchemeType(SchemeType &&) = default;
-
-  SchemeType &operator=(SchemeType &&) = default;
+private:
+  ISchemeType *underlying_;
 };
 
-class EncryptionParameters
+class EncryptionParameters : public IEncryptionParameters
 {
 public:
-  using ptr = std::unique_ptr<EncryptionParameters>;
+  inline EncryptionParameters(Backend backend, const ufhe::ISchemeType &scheme)
+  {
+    if (backend == Backend::none)
+      backend = API::default_backend();
+    switch (backend)
+    {
+    case Backend::seal:
+      underlying_ = new seal_backend::EncryptionParameters(*dynamic_cast<const SchemeType &>(scheme).underlying_);
+      break;
 
-  static ptr create(Backend backend, const SchemeType::ptr &scheme);
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  static inline ptr create(const SchemeType::ptr &scheme) { return create(Backend::none, scheme); }
+  inline EncryptionParameters(const ufhe::ISchemeType &scheme) : EncryptionParameters(Backend::none, scheme) {}
 
-  virtual ~EncryptionParameters() {}
+  ~EncryptionParameters() { delete underlying_; }
 
-  virtual void set_poly_modulus_degree(std::size_t poly_modulus_degree) = 0;
+  inline Backend backend() override { return underlying_->backend(); }
 
-  virtual void set_coeff_modulus(const Modulus::vector &coeff_modulus) = 0;
+  inline void set_poly_modulus_degree(std::size_t poly_modulus_degree) override
+  {
+    underlying_->set_poly_modulus_degree(poly_modulus_degree);
+  }
 
-  virtual void set_plain_modulus(const Modulus::ptr &plain_modulus) = 0;
+  void set_coeff_modulus(const IModulus::vector &coeff_modulus) override;
 
-  // TODO: Virtual setter for the random number generator factory
+  inline void set_plain_modulus(const IModulus &plain_modulus) override
+  {
+    underlying_->set_plain_modulus(*dynamic_cast<const Modulus &>(plain_modulus).underlying_);
+  }
 
-  virtual const SchemeType &scheme() const = 0;
+  inline const ISchemeType &scheme() const override { return underlying_->scheme(); }
 
-  virtual std::size_t poly_modulus_degree() const = 0;
+  inline std::size_t poly_modulus_degree() const override { return underlying_->poly_modulus_degree(); }
 
-  virtual const Modulus::vector &coeff_modulus() const = 0;
+  inline const IModulus::vector &coeff_modulus() const override { return underlying_->coeff_modulus(); };
 
-  virtual const Modulus &plain_modulus() const = 0;
+  inline const IModulus &plain_modulus() const override { return underlying_->plain_modulus(); }
 
-  // TODO: Virtual getter for the random number generator factory
-
-  // TODO: Serialization support
-
-protected:
-  EncryptionParameters() = default;
-
-  EncryptionParameters(const EncryptionParameters &) = default;
-
-  EncryptionParameters &operator=(const EncryptionParameters &) = default;
-
-  EncryptionParameters(EncryptionParameters &&) = default;
-
-  EncryptionParameters &operator=(EncryptionParameters &&) = default;
+private:
+  IEncryptionParameters *underlying_;
 };
 } // namespace ufhe

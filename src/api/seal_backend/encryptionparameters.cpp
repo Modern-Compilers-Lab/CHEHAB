@@ -4,18 +4,18 @@ namespace ufhe
 {
 namespace seal_backend
 {
-  void EncryptionParameters::set_coeff_modulus(const ufhe::Modulus::vector &coeff_modulus)
+  void EncryptionParameters::set_coeff_modulus(const IModulus::vector &coeff_modulus)
   {
     coeff_modulus_.reserve(coeff_modulus.size());
-    for (const auto &e : coeff_modulus)
-      coeff_modulus_.push_back(e->clone());
-    std::vector<seal::Modulus> v;
-    v.reserve(coeff_modulus.size());
-    for (const auto &e : coeff_modulus)
+    std::vector<seal::Modulus> seal_coeff_modulus;
+    seal_coeff_modulus.reserve(coeff_modulus.size());
+    for (const IModulus &e : coeff_modulus)
     {
-      v.push_back(*dynamic_cast<Modulus *>(e.get()));
+      Modulus modulus = dynamic_cast<const Modulus &>(e);
+      coeff_modulus_.push_back(modulus);
+      seal_coeff_modulus.push_back(modulus);
     }
-    params_.set_coeff_modulus(v);
+    params_.set_coeff_modulus(seal_coeff_modulus);
   }
 } // namespace seal_backend
 } // namespace ufhe

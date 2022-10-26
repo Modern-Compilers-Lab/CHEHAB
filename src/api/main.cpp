@@ -6,11 +6,19 @@ using namespace std;
 
 int main()
 {
-  Modulus::ptr modulus = Modulus::create(Backend::seal, 22);
-  cout << modulus->value() << endl;
-  SchemeType::ptr scheme = SchemeType::create(1);
-  EncryptionParameters::ptr params = EncryptionParameters::create(scheme);
-  const SchemeType &scheme_ref = params->scheme();
-  cout << typeid(scheme_ref).name() << endl;
+  SchemeType scheme(1);
+  EncryptionParameters params(scheme);
+  params.set_plain_modulus(Modulus(22));
+  cout << params.plain_modulus().value() << endl;
+  Modulus m1(22);
+  Modulus m2(33);
+  Modulus m3(44);
+  IModulus::vector v{m1, m2, m3};
+  params.set_coeff_modulus(v);
+  for (const IModulus &e : params.coeff_modulus())
+  {
+    cout << e.value() << " ";
+  }
+  cout << endl;
   return 0;
 }

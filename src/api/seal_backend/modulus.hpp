@@ -1,23 +1,25 @@
 #pragma once
 
-#include "../modulus.hpp"
+#include "../imodulus.hpp"
 #include "seal/seal.h"
 #include <cstddef>
 
 namespace ufhe
 {
+class Modulus;
+
 namespace seal_backend
 {
-  class Modulus : public ufhe::Modulus
+  class Modulus : public IModulus
   {
   public:
-    inline Modulus(std::uint64_t value = 0) : modulus_(seal::Modulus(value)) {}
+    inline Modulus(std::uint64_t value) : modulus_(seal::Modulus(value)) {}
 
     inline operator const seal::Modulus &() const { return modulus_; }
 
-    inline ptr clone() override { return std::make_unique<Modulus>(modulus_.value()); }
+    inline Backend backend() override { return Backend::seal; };
 
-    inline ufhe::Modulus &operator=(std::uint64_t value) override
+    inline IModulus &operator=(std::uint64_t value) override
     {
       modulus_ = value;
       return *this;
@@ -29,32 +31,32 @@ namespace seal_backend
 
     inline bool is_prime() const override { return modulus_.is_prime(); }
 
-    inline bool operator==(const ufhe::Modulus &compare) const override
+    inline bool operator==(const IModulus &compare) const override
     {
       return modulus_ == dynamic_cast<const Modulus &>(compare);
     }
 
-    inline bool operator!=(const ufhe::Modulus &compare) const override
+    inline bool operator!=(const IModulus &compare) const override
     {
       return modulus_ != dynamic_cast<const Modulus &>(compare);
     }
 
-    inline bool operator<(const ufhe::Modulus &compare) const override
+    inline bool operator<(const IModulus &compare) const override
     {
       return modulus_ < dynamic_cast<const Modulus &>(compare);
     }
 
-    inline bool operator<=(const ufhe::Modulus &compare) const override
+    inline bool operator<=(const IModulus &compare) const override
     {
       return modulus_ <= dynamic_cast<const Modulus &>(compare);
     }
 
-    inline bool operator>(const ufhe::Modulus &compare) const override
+    inline bool operator>(const IModulus &compare) const override
     {
       return modulus_ > dynamic_cast<const Modulus &>(compare);
     }
 
-    inline bool operator>=(const ufhe::Modulus &compare) const override
+    inline bool operator>=(const IModulus &compare) const override
     {
       return modulus_ >= dynamic_cast<const Modulus &>(compare);
     }

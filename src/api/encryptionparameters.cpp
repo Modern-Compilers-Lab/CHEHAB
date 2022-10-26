@@ -1,43 +1,16 @@
 #include "encryptionparameters.hpp"
-#include "seal_backend/encryptionparameters.hpp"
-#include <stdexcept>
 
 namespace ufhe
 {
-
-SchemeType::ptr SchemeType::create(Backend backend, std::uint8_t scheme_id)
+void EncryptionParameters::set_coeff_modulus(const IModulus::vector &coeff_modulus)
 {
-  if (backend == Backend::none)
-    backend = API::default_backend();
-  SchemeType::ptr ptr;
-  switch (backend)
+  IModulus::vector coeff_modulus_;
+  coeff_modulus_.reserve(coeff_modulus.size());
+  for (const IModulus &e : coeff_modulus)
   {
-  case Backend::seal:
-    ptr = std::make_unique<seal_backend::SchemeType>(scheme_id);
-    break;
-
-  default:
-    throw std::invalid_argument("unsupported backend");
-    break;
+    const Modulus &modulus = dynamic_cast<const Modulus &>(e);
+    coeff_modulus_.push_back(*modulus.underlying_);
   }
-  return ptr;
-}
-
-EncryptionParameters::ptr EncryptionParameters::create(Backend backend, const SchemeType::ptr &scheme)
-{
-  if (backend == Backend::none)
-    backend = API::default_backend();
-  EncryptionParameters::ptr ptr;
-  switch (backend)
-  {
-  case Backend::seal:
-    ptr = std::make_unique<seal_backend::EncryptionParameters>(scheme);
-    break;
-
-  default:
-    throw std::invalid_argument("unsupported backend");
-    break;
-  }
-  return ptr;
+  underlying_->set_coeff_modulus(coeff_modulus_);
 }
 } // namespace ufhe
