@@ -25,46 +25,25 @@ int main()
 
   try
   {
-    fhecompiler::init("test1", 1024, fhecompiler::bfv);
+    fhecompiler::init("test1", 1024, fhecompiler::Scheme::bfv);
 
-    // scheme better to be introduced in init
-    fhecompiler::Plaintext pt11(std::vector<int64_t>{1, 3, 4, 5});
+    // fhecompiler::Plaintext pt11(std::vector<int64_t>{1, 3, 4, 5});
 
+    fhecompiler::Ciphertext ct1("ct1", VarType::input);
     fhecompiler::Plaintext pt1("pt1", VarType::input);
 
-    fhecompiler::Plaintext pt2("pt2_input", VarType::input);
+    fhecompiler::Ciphertext output1("output1", VarType::output);
 
-    fhecompiler::Plaintext pt3("pt3", VarType::input); // temp is default type
+    output1 = (ct1 + pt1) * 2 + ct1 + ct1 + pt1;
+    /*
+      {1, 3, 4}
 
-    // fhecompiler::Ciphertext ct1 = fhecompiler::Ciphertext::encrypt(pt2);
-
-    fhecompiler::Ciphertext ct_input1("ct_input1", VarType::input);
-
-    fhecompiler::Ciphertext ct_input2("ct_input2", VarType::input);
-
-    fhecompiler::Ciphertext ct_output("ct_output", VarType::output);
-    fhecompiler::Ciphertext ct2 = ct_input2 + pt1 + ct_input2 * pt2 * pt3 + ct_input1;
-    ct2 += ct2;
-    fhecompiler::Ciphertext ct_for_debug("ct_to_debug", VarType::output);
-    ct_for_debug = ct2;
-
-    Ciphertext ct3 = ct2 - pt1;
-
-    ct3 += 123;
-
-    ct3 *= (ct2 + pt1);
-
-    fhecompiler::Ciphertext ct4("ct4");
-
-    ct4 = ct3 * ct3;
-
-    ct4 += ct3;
-
-    fhecompiler::Ciphertext ct4_output("ct4_output", VarType::output);
-
-    ct4_output = ct4;
-
-    fhecompiler::Ciphertext ct5 = ct4 + 1337;
+      ct1 + pt1 -> {2, 6, 8}
+      (ct1 + pt1) * 2 -> {4, 0, 0}
+      ct1 + ct1 -> {2, 6, 8}
+      ct1 + ct1 + pt1 -> {3, 9, 12}
+      (ct1 + pt1) * 2 + ct1 + ct1 + pt1 -> {7, 9, 12} final result
+    */
 
     fhecompiler::compile("test1.hpp");
   }
