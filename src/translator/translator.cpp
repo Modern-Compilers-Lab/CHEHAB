@@ -57,9 +57,7 @@ void Translator::translate_constant_table_entry(
 
   if (entry_type == ir::ConstantTableEntryType::input)
   {
-    MAP_ACCESSOR map_accessor;
-    os << type_str << " " << tag << " = " << map_accessor(inputs_class_identifier, stringfy_string(tag))
-       << end_of_command << '\n';
+    write_input(tag, term_type, os);
   }
   else if (entry_type == ir::ConstantTableEntryType::constant)
   {

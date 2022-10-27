@@ -92,6 +92,11 @@ INLINE const char *encoder_type_literal = "BatchEncoder";
 INLINE const char *encoder_type_identifier = "encoder";
 INLINE const char *encryptor_type_literal = "Encryptor";
 INLINE const char *encryptor_type_identifier = "encryptor";
+INLINE const char *insert_object_instruction = "insert"; // instruction to insert inputs/outputs
+
+INLINE std::unordered_map<ir::TermType, const char *> get_instruction_by_type = {
+  {ir::plaintextType, "get_plaintext"}, {ir::ciphertextType, "get_ciphertext"}};
+
 /* general literals for C++ */
 INLINE const char *new_line = "\n";
 INLINE const char *end_of_command = ";";
@@ -291,9 +296,17 @@ INLINE std::ostream &operator<<(std::ostream &os, const Encoder &encoder)
   return os;
 }
 
+inline void write_input(const std::string &input_identifier, ir::TermType type, std::ostream &os)
+{
+  // retrieve an input from object
+  os << types_map[type] << " " << input_identifier << " = " << inputs_class_identifier << "."
+     << get_instruction_by_type[type] << "(" << stringfy_string(input_identifier) << ")" << end_of_command << '\n';
+}
+
 inline void write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os)
 {
-  os << outputs_class_identifier << ".insert"
+  // insert output in object
+  os << outputs_class_identifier << "." << insert_object_instruction << "<" << types_map[type] << ">"
      << "({" << stringfy_string(output_identifier) << "," << output_identifier << "})" << end_of_command << '\n';
 }
 

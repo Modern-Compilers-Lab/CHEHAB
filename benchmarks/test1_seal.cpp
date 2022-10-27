@@ -1,3 +1,4 @@
+#include "utils.hpp"
 #include <bits/stdc++.h>
 #include <seal/seal.h>
 
@@ -11,14 +12,16 @@ using EncryptedOutputs = EncryptedInputs;
 using Context = seal::SEALContext;
 
 void test1(
-  EncryptedInputs &cipher_inputs, EncodedInputs &plain_inputs, EncodedOutputs &plain_outputs,
-  EncryptedOutputs &cipher_outputs, const Context &context, const RelinKeys &relin_keys, const GaloisKeys &galois_keys,
+  Inputs &inputs, Outputs &outputs, const Context &context, const RelinKeys &relin_keys, const GaloisKeys &galois_keys,
   const PublicKey &public_key)
 {
   Evaluator evaluator(context);
-  Plaintext pt1 = plain_inputs["pt1"];
-  Ciphertext ct1 = cipher_inputs["ct1"];
   BatchEncoder encoder(context);
+  std::vector<uint64_t> scalar1_clear = {1312};
+  Plaintext scalar1;
+  encoder.encode(scalar1_clear, scalar1);
+  Plaintext pt1 = inputs.get_plaintext("pt1");
+  Ciphertext ct1 = inputs.get_ciphertext("ct1");
   std::vector<uint64_t> scalar0_clear = {2};
   Plaintext scalar0;
   encoder.encode(scalar0_clear, scalar0);
@@ -32,8 +35,10 @@ void test1(
   evaluator.add(ciphertext4, ct1, ciphertext5);
   Ciphertext ciphertext6;
   evaluator.add_plain(ciphertext5, pt1, ciphertext6);
-  Ciphertext output1 = ciphertext6;
-  cipher_outputs.insert({"output1", output1});
+  Ciphertext ciphertext1 = ciphertext6;
+  Ciphertext output1;
+  evaluator.add_plain(ciphertext1, scalar1, output1);
+  outputs.insert<Ciphertext>({"output1", output1});
 }
 
 void print_vector(const std::vector<uint64_t> &v)
@@ -71,19 +76,23 @@ int main(void)
   Ciphertext ct1;
   encryptor.encrypt(pt1, ct1);
 
-  encoded_inputs["pt1"] = pt1;
-  encrypted_inputs["ct1"] = ct1;
+  Inputs inputs;
+  Outputs outputs;
+
+  // encoded_inputs["pt1"] = pt1;
+  inputs.insert<Plaintext>({"pt1", pt1});
+  // encrypted_inputs["ct1"] = ct1;
+  inputs.insert<Ciphertext>({"ct1", ct1});
 
   RelinKeys relin_keys;
   GaloisKeys galois_keys;
 
   // server
 
-  test1(
-    encrypted_inputs, encoded_inputs, encoded_outputs, encrypted_outputs, context, relin_keys, galois_keys, public_key);
+  test1(inputs, outputs, context, relin_keys, galois_keys, public_key);
 
   // client
-  Ciphertext output1 = encrypted_outputs["output1"];
+  Ciphertext output1 = outputs.get_ciphertext("output1");
 
   Plaintext output1_pt;
 

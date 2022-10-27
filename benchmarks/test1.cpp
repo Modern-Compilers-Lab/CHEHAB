@@ -35,6 +35,8 @@ int main()
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
     output1 = (ct1 + pt1) * 2 + ct1 + ct1 + pt1;
+
+    output1 += 1312;
     /*
       {1, 3, 4}
 
