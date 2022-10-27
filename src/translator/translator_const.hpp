@@ -42,6 +42,7 @@ INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
 
 };
 
+/*
 INLINE std::unordered_map<ir::TermType, const char *> inputs_map_by_type = {
   {ir::TermType::scalarType, "ScalarInputs"},
   {ir::TermType::plaintextType, "EncodedInputs"},
@@ -61,8 +62,14 @@ INLINE std::unordered_map<ir::TermType, const char *> outputs_map_by_type = {
   {ir::TermType::scalarType, "ScalarOutputs"},
   {ir::TermType::plaintextType, "EncodedOutputs"},
   {ir::TermType::ciphertextType, "EncryptedOutputs"}};
+*/
 
 /* literals related to api/backend */
+INLINE const char *outputs_class_identifier = "outputs";
+INLINE const char *outputs_class_literal = "Outputs";
+INLINE const char *inputs_class_identifier = "inputs";
+INLINE const char *inputs_class_literal = "Inputs";
+
 INLINE const char *scalar_int = "uint64_t";
 INLINE const char *scalar_float = "double";
 INLINE const char *encode_literal = "encode";
@@ -286,7 +293,7 @@ INLINE std::ostream &operator<<(std::ostream &os, const Encoder &encoder)
 
 inline void write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os)
 {
-  os << outputs_map_identifier_by_type[type] << ".insert"
+  os << outputs_class_identifier << ".insert"
      << "({" << stringfy_string(output_identifier) << "," << output_identifier << "})" << end_of_command << '\n';
 }
 
