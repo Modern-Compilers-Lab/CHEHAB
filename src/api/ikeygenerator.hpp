@@ -9,7 +9,7 @@ namespace ufhe
 class IKeyGenerator : public Interface
 {
 public:
-  // virtual const ISecretKey &secret_key() const = 0;
+  virtual const ISecretKey &secret_key() const = 0;
 
   virtual void create_public_key(IPublicKey &destination) const = 0;
 
