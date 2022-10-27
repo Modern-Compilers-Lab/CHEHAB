@@ -41,6 +41,8 @@ private:
 
 class EncryptionParameters : public IEncryptionParameters
 {
+  friend class EncryptionContext;
+
 public:
   inline EncryptionParameters(Backend backend, const ufhe::ISchemeType &scheme)
   {
@@ -59,6 +61,10 @@ public:
   }
 
   inline EncryptionParameters(const ufhe::ISchemeType &scheme) : EncryptionParameters(Backend::none, scheme) {}
+
+  EncryptionParameters(const EncryptionParameters &copy) = delete;
+
+  EncryptionParameters &operator=(const EncryptionParameters &assign) = delete;
 
   ~EncryptionParameters() { delete underlying_; }
 

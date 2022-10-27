@@ -1,10 +1,10 @@
 #pragma once
 
 #include "api.hpp"
+#include "icoeff_modulus.hpp"
 #include "imodulus.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <vector>
 
 namespace ufhe
 {
@@ -36,7 +36,7 @@ public:
 
   virtual void set_poly_modulus_degree(std::size_t poly_modulus_degree) = 0;
 
-  virtual void set_coeff_modulus(const IModulus::vector &coeff_modulus) = 0;
+  virtual void set_coeff_modulus(const ICoeffModulus &coeff_modulus) = 0;
 
   virtual void set_plain_modulus(const IModulus &plain_modulus) = 0;
 
@@ -46,8 +46,7 @@ public:
 
   virtual std::size_t poly_modulus_degree() const = 0;
 
-  // TODO: Try to make IModulus::vector coeff_modulus() const again
-  virtual IModulus::vector coeff_modulus() = 0;
+  virtual const ICoeffModulus &coeff_modulus() const = 0;
 
   virtual const IModulus &plain_modulus() const = 0;
 

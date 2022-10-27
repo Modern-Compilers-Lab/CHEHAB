@@ -1,21 +1,47 @@
 #pragma once
 
+#include "api.hpp"
 #include "encryptionparameters.hpp"
+#include "iencryptioncontext.hpp"
+#include "seal_backend/encryptioncontext.hpp"
 
-namespace api
+namespace ufhe
 {
-class EncryptionContext
+class EncryptionContext : public IEncryptionContext
 {
+  friend class KeyGenerator;
+
 public:
-  EncryptionContext(const EncryptionParameters &parms) { init(parms); }
+  inline EncryptionContext(Backend backend, const IEncryptionParameters &parms)
+  {
+    if (backend == Backend::none)
+      backend = API::default_backend();
+    switch (backend)
+    {
+    case Backend::seal:
+      underlying_ = new seal_backend::EncryptionContext(dynamic_cast<const EncryptionParameters &>(parms).underlying());
+      break;
 
-  virtual ~EncryptionContext() {}
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  virtual const EncryptionParameters &get_parms() const = 0;
+  inline EncryptionContext(const IEncryptionParameters &parms) : EncryptionContext(Backend::none, parms) {}
 
-  // TODO: Virtual getters for context pre-computation data
+  EncryptionContext(const EncryptionContext &copy) = delete;
+
+  EncryptionContext &operator=(const EncryptionContext &assign) = delete;
+
+  inline ~EncryptionContext() { delete underlying_; }
+
+  inline Backend backend() { return underlying().backend(); }
 
 private:
-  virtual void init(const EncryptionParameters &parms) = 0;
+  inline IEncryptionContext &underlying() const { return *underlying_; }
+
+  IEncryptionContext *underlying_;
 };
-} // namespace api
+
+} // namespace ufhe

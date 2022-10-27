@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../imodulus.hpp"
+#include "cstddef"
 #include "seal/seal.h"
-#include <cstddef>
 
 namespace ufhe
 {
@@ -12,10 +12,16 @@ namespace seal_backend
 {
   class Modulus : public IModulus
   {
+    friend class CoeffModulus;
     friend class EncryptionParameters;
 
   public:
     inline Modulus(std::uint64_t value) : Modulus(new seal::Modulus(value), true) {}
+
+    static inline Modulus PlainModulus(std::size_t poly_modulus_degree, int bit_size)
+    {
+      return Modulus(new seal::Modulus(seal::PlainModulus::Batching(poly_modulus_degree, bit_size)), true);
+    }
 
     inline Modulus(const Modulus &copy) : Modulus(copy.underlying_, false) {}
 

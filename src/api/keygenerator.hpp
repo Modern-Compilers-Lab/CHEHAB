@@ -1,39 +1,68 @@
 #pragma once
 
+#include "api.hpp"
 #include "encryptioncontext.hpp"
-#include "galoiskeys.hpp"
-#include "publickey.hpp"
-#include "relinkeys.hpp"
+#include "ikeygenerator.hpp"
+#include "seal_backend/keygenerator.hpp"
 #include "secretkey.hpp"
 
-namespace api
+namespace ufhe
 {
-class KeyGenerator
+class KeyGenerator : public IKeyGenerator
 {
 public:
-  KeyGenerator(const EncryptionContext &context) { init(context); }
+  inline KeyGenerator(Backend backend, IEncryptionContext &context)
+  {
+    if (backend == Backend::none)
+      backend = API::default_backend();
+    switch (backend)
+    {
+    case Backend::seal:
+      underlying_ = new seal_backend::KeyGenerator(dynamic_cast<const EncryptionContext &>(context).underlying());
+      break;
 
-  KeyGenerator(const EncryptionContext &context, const SecretKey &secret_key) { init(context, secret_key); }
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  virtual ~KeyGenerator() {}
+  inline KeyGenerator(Backend backend, const IEncryptionContext &context, const ISecretKey &secret_key)
+  {
+    if (backend == Backend::none)
+      backend = API::default_backend();
+    switch (backend)
+    {
+    case Backend::seal:
+      underlying_ = new seal_backend::KeyGenerator(
+        dynamic_cast<const EncryptionContext &>(context).underlying(),
+        dynamic_cast<const SecretKey &>(secret_key).underlying());
+      break;
 
-  virtual const SecretKey &secret_key() const = 0;
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  virtual void create_public_key(PublicKey &destination) const = 0;
+  inline KeyGenerator(const KeyGenerator &copy) = delete;
 
-  virtual void create_relin_keys(RelinKeys &destination) const = 0;
+  KeyGenerator &operator=(const KeyGenerator &assign) = delete;
 
-  virtual void create_galois_keys(const std::vector<std::uint32_t> &galois_elts, GaloisKeys &destination) const = 0;
+  inline ~KeyGenerator() { delete underlying_; }
 
-  virtual void create_galois_keys(const std::vector<int> &steps, GaloisKeys &destination) const = 0;
+  inline Backend backend() override { return underlying().backend(); }
 
-  virtual void create_galois_keys(GaloisKeys &destination) const = 0;
+  inline const ISecretKey &secret_key() const override { return underlying().secret_key(); }
 
-  // TODO: allow creating seeded objects
+  inline void create_public_key(IPublicKey &destination) const override
+  {
+    underlying().create_public_key(dynamic_cast<PublicKey &>(destination).underlying());
+  }
 
 private:
-  virtual void init(const EncryptionContext &context) = 0;
+  inline IKeyGenerator &underlying() const { return *underlying_; }
 
-  virtual void init(const EncryptionContext &context, const SecretKey &secret_key) = 0;
+  IKeyGenerator *underlying_;
 };
-} // namespace api
+} // namespace ufhe

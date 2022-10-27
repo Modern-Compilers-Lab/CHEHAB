@@ -1,18 +1,41 @@
 #pragma once
 
-namespace api
+#include "ipublickey.hpp"
+#include "seal_backend/publickey.hpp"
+
+namespace ufhe
 {
-class PublicKey
+class PublicKey : public IPublicKey
 {
+  friend class KeyGenerator;
+
 public:
-  PublicKey() { init(); }
+  inline PublicKey(Backend backend)
+  {
+    if (backend == Backend::none)
+      backend = API::default_backend();
+    switch (backend)
+    {
+    case Backend::seal:
+      underlying_ = new seal_backend::PublicKey();
+      break;
 
-  virtual ~PublicKey() {}
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
+  inline PublicKey(const PublicKey &copy) = delete;
 
-  // TODO: Allow access to the key parms_id
+  PublicKey &operator=(const PublicKey &assign) = delete;
 
-  // TODO: Serialization support
+  inline ~PublicKey() { delete underlying_; }
+
+  inline Backend backend() override { return underlying().backend(); }
+
 private:
-  virtual void init() = 0;
+  inline IPublicKey &underlying() const { return *underlying_; }
+
+  IPublicKey *underlying_;
 };
-} // namespace api
+} // namespace ufhe

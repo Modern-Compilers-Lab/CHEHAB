@@ -29,6 +29,10 @@ public:
 
   inline Modulus(std::uint64_t value) : Modulus(Backend::none, value) {}
 
+  Modulus(const Modulus &copy) = delete;
+
+  Modulus &operator=(const Modulus &assign) = delete;
+
   ~Modulus() { delete underlying_; }
 
   inline Backend backend() override { return underlying().backend(); }
