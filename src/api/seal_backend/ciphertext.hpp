@@ -2,14 +2,13 @@
 
 #include "../iciphertext.hpp"
 #include "encryptioncontext.hpp"
-#include "implementation.hpp"
 #include "seal/seal.h"
 
 namespace ufhe
 {
 namespace seal_backend
 {
-  class Ciphertext : public Implementation, public ICiphertext
+  class Ciphertext : public ICiphertext
   {
     friend class Evaluator;
     friend class Encryptor;
@@ -19,6 +18,8 @@ namespace seal_backend
     inline Ciphertext() : underlying_(seal::Ciphertext()) {}
 
     inline Ciphertext(const EncryptionContext &context) : underlying_(seal::Ciphertext(context.underlying_)) {}
+
+    inline Backend backend() const override { return Backend::seal; }
 
     inline std::size_t coeff_modulus_size() const override { return underlying_.coeff_modulus_size(); }
 

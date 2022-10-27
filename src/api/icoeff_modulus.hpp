@@ -5,7 +5,7 @@
 
 namespace ufhe
 {
-class ICoeffModulus : public virtual Interface
+class ICoeffModulus : public Interface
 {
 public:
   virtual IModulus::vector value() const = 0;

@@ -7,7 +7,7 @@
 
 namespace ufhe
 {
-class IBatchEncoder : public virtual Interface
+class IBatchEncoder : public Interface
 {
 public:
   virtual void encode(const std::vector<std::uint64_t> &values_vector, IPlaintext &destination) const = 0;

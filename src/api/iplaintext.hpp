@@ -6,7 +6,7 @@
 
 namespace ufhe
 {
-class IPlaintext : public virtual Interface
+class IPlaintext : public Interface
 {
 public:
   virtual void resize(std::size_t coeff_count) = 0;

@@ -7,7 +7,7 @@
 
 namespace ufhe
 {
-class IEvaluator : public virtual Interface
+class IEvaluator : public Interface
 {
 public:
   virtual void negate_inplace(ICiphertext &encrypted) const = 0;

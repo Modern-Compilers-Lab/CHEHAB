@@ -2,14 +2,13 @@
 
 #include "../iencryptioncontext.hpp"
 #include "encryptionparameters.hpp"
-#include "implementation.hpp"
 #include "seal/seal.h"
 
 namespace ufhe
 {
 namespace seal_backend
 {
-  class EncryptionContext : public Implementation, public IEncryptionContext
+  class EncryptionContext : public IEncryptionContext
   {
     friend class BatchEncoder;
     friend class KeyGenerator;
@@ -20,6 +19,8 @@ namespace seal_backend
 
   public:
     inline EncryptionContext(const EncryptionParameters &parms) : underlying_(seal::SEALContext(parms.underlying_)) {}
+
+    inline Backend backend() const override { return Backend::seal; }
 
   private:
     seal::SEALContext underlying_;

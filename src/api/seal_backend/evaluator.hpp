@@ -3,7 +3,6 @@
 #include "../ievaluator.hpp"
 #include "ciphertext.hpp"
 #include "encryptioncontext.hpp"
-#include "implementation.hpp"
 #include "plaintext.hpp"
 #include "seal/seal.h"
 
@@ -11,10 +10,12 @@ namespace ufhe
 {
 namespace seal_backend
 {
-  class Evaluator : public Implementation, public IEvaluator
+  class Evaluator : public IEvaluator
   {
   public:
     inline Evaluator(const EncryptionContext &context) : underlying_(seal::Evaluator(context.underlying_)) {}
+
+    inline Backend backend() const override { return Backend::seal; }
 
     inline void negate_inplace(ICiphertext &encrypted) const override
     {

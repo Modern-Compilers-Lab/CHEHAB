@@ -6,7 +6,7 @@
 
 namespace ufhe
 {
-class IEncryptor : public virtual Interface
+class IEncryptor : public Interface
 {
 public:
   virtual void encrypt(const IPlaintext &plain, ICiphertext &destination) const = 0;

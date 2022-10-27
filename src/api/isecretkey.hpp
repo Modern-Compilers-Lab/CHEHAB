@@ -4,7 +4,7 @@
 
 namespace ufhe
 {
-class ISecretKey : public virtual Interface
+class ISecretKey : public Interface
 {
   // TODO: Allow access to the key parms_id
 

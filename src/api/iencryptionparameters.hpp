@@ -8,10 +8,10 @@
 
 namespace ufhe
 {
-class ISchemeType : public virtual Interface
+class ISchemeType : public Interface
 {};
 
-class IEncryptionParameters
+class IEncryptionParameters : public Interface
 {
 public:
   virtual void set_poly_modulus_degree(std::size_t poly_modulus_degree) = 0;

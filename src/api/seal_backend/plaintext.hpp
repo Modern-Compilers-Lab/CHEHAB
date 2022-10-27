@@ -1,14 +1,13 @@
 #pragma once
 
 #include "../iplaintext.hpp"
-#include "implementation.hpp"
 #include "seal/seal.h"
 
 namespace ufhe
 {
 namespace seal_backend
 {
-  class Plaintext : public Implementation, public IPlaintext
+  class Plaintext : public IPlaintext
   {
     friend class BatchEncoder;
     friend class Encryptor;
@@ -21,6 +20,8 @@ namespace seal_backend
     inline Plaintext(std::size_t coeff_count) : underlying_(seal::Plaintext(coeff_count)) {}
 
     inline Plaintext(const std::string &hex_poly) : underlying_(seal::Plaintext(hex_poly)) {}
+
+    inline Backend backend() const override { return Backend::seal; }
 
     inline void resize(std::size_t coeff_count) override { underlying_.resize(coeff_count); }
 

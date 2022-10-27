@@ -2,7 +2,6 @@
 
 #include "../imodulus.hpp"
 #include "cstddef"
-#include "implementation.hpp"
 #include "seal/seal.h"
 
 namespace ufhe
@@ -11,7 +10,7 @@ class Modulus;
 
 namespace seal_backend
 {
-  class Modulus : public Implementation, public IModulus
+  class Modulus : public IModulus
   {
     friend class CoeffModulus;
     friend class EncryptionParameters;
@@ -23,6 +22,8 @@ namespace seal_backend
     {
       return Modulus(seal::PlainModulus::Batching(poly_modulus_degree, bit_size));
     }
+
+    inline Backend backend() const override { return Backend::seal; }
 
     inline IModulus &operator=(std::uint64_t value) override
     {

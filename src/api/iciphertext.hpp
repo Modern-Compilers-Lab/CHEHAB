@@ -5,7 +5,7 @@
 
 namespace ufhe
 {
-class ICiphertext : public virtual Interface
+class ICiphertext : public Interface
 {
 public:
   // TODO: Constructor from context and a specefic parms_id_type from the modulus switching chain

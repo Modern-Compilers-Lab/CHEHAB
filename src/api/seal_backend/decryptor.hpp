@@ -3,7 +3,6 @@
 #include "../idecryptor.hpp"
 #include "ciphertext.hpp"
 #include "encryptioncontext.hpp"
-#include "implementation.hpp"
 #include "plaintext.hpp"
 #include "seal/seal.h"
 #include "secretkey.hpp"
@@ -12,12 +11,14 @@ namespace ufhe
 {
 namespace seal_backend
 {
-  class Decryptor : public Implementation, public IDecryptor
+  class Decryptor : public IDecryptor
   {
   public:
     inline Decryptor(const EncryptionContext &context, const SecretKey &secret_key)
       : underlying_(seal::Decryptor(context.underlying_, secret_key.underlying_))
     {}
+
+    inline Backend backend() const override { return Backend::seal; }
 
     inline void decrypt(const ICiphertext &encrypted, IPlaintext &destination) override
     {

@@ -4,7 +4,7 @@
 
 namespace ufhe
 {
-class IEncryptionContext : public virtual Interface
+class IEncryptionContext : public Interface
 {
 public:
   // virtual const IEncryptionParameters &get_parms() const = 0;

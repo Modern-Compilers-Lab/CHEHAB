@@ -2,7 +2,6 @@
 
 #include "../ibatchencoder.hpp"
 #include "encryptioncontext.hpp"
-#include "implementation.hpp"
 #include "plaintext.hpp"
 #include "seal/seal.h"
 
@@ -10,10 +9,12 @@ namespace ufhe
 {
 namespace seal_backend
 {
-  class BatchEncoder : public Implementation, public IBatchEncoder
+  class BatchEncoder : public IBatchEncoder
   {
   public:
     inline BatchEncoder(const EncryptionContext &context) : underlying_(seal::BatchEncoder(context.underlying_)) {}
+
+    inline Backend backend() const override { return Backend::seal; }
 
     inline void encode(const std::vector<std::uint64_t> &values_vector, IPlaintext &destination) const override
     {

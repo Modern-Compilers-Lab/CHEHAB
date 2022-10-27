@@ -3,7 +3,6 @@
 #include "../iencryptor.hpp"
 #include "ciphertext.hpp"
 #include "encryptioncontext.hpp"
-#include "implementation.hpp"
 #include "plaintext.hpp"
 #include "publickey.hpp"
 #include "seal/seal.h"
@@ -13,7 +12,7 @@ namespace ufhe
 {
 namespace seal_backend
 {
-  class Encryptor : public Implementation, public IEncryptor
+  class Encryptor : public IEncryptor
   {
   public:
     inline Encryptor(const EncryptionContext &context, const PublicKey &public_key)
@@ -27,6 +26,8 @@ namespace seal_backend
     inline Encryptor(const EncryptionContext &context, const PublicKey &public_key, const SecretKey &secret_key)
       : underlying_(seal::Encryptor(context.underlying_, public_key.underlying_, secret_key.underlying_))
     {}
+
+    inline Backend backend() const override { return Backend::seal; }
 
     inline void encrypt(const IPlaintext &plain, ICiphertext &destination) const override
     {

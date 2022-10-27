@@ -6,7 +6,7 @@
 
 namespace ufhe
 {
-class IKeyGenerator : public virtual Interface
+class IKeyGenerator : public Interface
 {
 public:
   // virtual const ISecretKey &secret_key() const = 0;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../icoeff_modulus.hpp"
-#include "implementation.hpp"
 #include "modulus.hpp"
 #include "seal/seal.h"
 #include <stddef.h>
@@ -11,7 +10,7 @@ namespace ufhe
 {
 namespace seal_backend
 {
-  class CoeffModulus : public Implementation, public ICoeffModulus
+  class CoeffModulus : public ICoeffModulus
   {
     friend class EncryptionParameters;
 
@@ -22,6 +21,8 @@ namespace seal_backend
     {
       return CoeffModulus(seal::CoeffModulus::BFVDefault(poly_modulus_degree));
     }
+
+    inline Backend backend() const override { return Backend::seal; }
 
     IModulus::vector value() const override;
 

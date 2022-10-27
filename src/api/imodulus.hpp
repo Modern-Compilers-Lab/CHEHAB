@@ -7,7 +7,7 @@
 
 namespace ufhe
 {
-class IModulus : public virtual Interface
+class IModulus : public Interface
 {
 public:
   using vector = std::vector<std::reference_wrapper<const IModulus>>;
