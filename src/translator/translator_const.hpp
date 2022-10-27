@@ -3,6 +3,7 @@
 #include "ir_const.hpp"
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <stdio.h>
 #include <string>
 #include <tuple>
@@ -12,7 +13,7 @@
 
 namespace translator
 {
-
+inline std::string stringfy_string(const std::string &str);
 /* return types map, it maps IR types with corresponding literal for code generation that targets the API */
 INLINE std::unordered_map<ir::TermType, const char *> types_map = {
 
@@ -23,14 +24,15 @@ INLINE std::unordered_map<ir::TermType, const char *> types_map = {
 /* ops_map maps IR operation code with corresponding literal for code generation that targets the API */
 INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
 
+  {ir::OpCode::encrypt, "encrypt"},
   {ir::OpCode::add, "add"},
   {ir::OpCode::add_plain, "add_plain"},
   {ir::OpCode::assign, "="},
   {ir::OpCode::exponentiate, "exponentiate"},
   {ir::OpCode::negate, "negate"},
   {ir::OpCode::modswitch, "modswitch"},
-  {ir::OpCode::mul, "mul"},
-  {ir::OpCode::mul_plain, "mul_plain"},
+  {ir::OpCode::mul, "multiply"},
+  {ir::OpCode::mul_plain, "multiply_plain"},
   {ir::OpCode::sub, "sub"},
   {ir::OpCode::sub_plain, "sub_plain"},
   {ir::OpCode::rescale, "rescale"},
@@ -70,6 +72,7 @@ INLINE const char *decrypt_literal = "decrypt";
 INLINE const char *context_type_literal = "Context";
 INLINE const char *context_identifier = "context";
 INLINE const char *public_key_literal = "PublicKey";
+INLINE const char *public_key_identifier = "public_key";
 INLINE const char *secret_key_literal = "SecretKey";
 INLINE const char *secret_key_identifier = "secret_key";
 INLINE const char *relin_keys_type_literal = "RelinKeys";
@@ -78,8 +81,10 @@ INLINE const char *galois_keys_type_literal = "GaloisKeys";
 INLINE const char *galois_keys_identifier = "galois_keys";
 INLINE const char *evaluator_type_literal = "Evaluator";
 INLINE const char *evaluator_identifier = "evaluator";
-INLINE const char *encoder_type_literal = "Encoder";
+INLINE const char *encoder_type_literal = "BatchEncoder";
 INLINE const char *encoder_type_identifier = "encoder";
+INLINE const char *encryptor_type_literal = "Encryptor";
+INLINE const char *encryptor_type_identifier = "encryptor";
 /* general literals for C++ */
 INLINE const char *new_line = "\n";
 INLINE const char *end_of_command = ";";
@@ -229,6 +234,44 @@ public:
   friend std::ostream &operator<<(std::ostream &os, const Encoder &encoder);
 };
 
+struct Encryptor
+{
+private:
+  std::string context_id;
+  std::string public_key_id;
+  std::optional<std::string> private_key_id;
+
+public:
+  bool is_defined = false;
+  Encryptor(const std::string &ctxt_id, const std::string &pbk_id, const std::optional<std::string> &pvk_id)
+    : context_id(ctxt_id), public_key_id(pbk_id), private_key_id(pvk_id)
+  {}
+
+  void write_encrypt(const std::string &cipher_dest_id, const std::string &plaintext_id, std::ostream &os)
+  {
+    os << types_map[ir::ciphertextType] << " " << cipher_dest_id << end_of_command << '\n';
+    os << encryptor_type_identifier << "." << encrypt_literal << "(" << plaintext_id << "," << cipher_dest_id << ")"
+       << end_of_command << '\n';
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const Encryptor &encryptor);
+};
+
+INLINE std::ostream &operator<<(std::ostream &os, const Encryptor &encryptor)
+{
+  if (encryptor.private_key_id != std::nullopt)
+  {
+    os << encryptor_type_literal << " " << encryptor_type_identifier << "(" << encryptor.context_id << ","
+       << encryptor.public_key_id << "," << *(encryptor.private_key_id) << ")";
+  }
+  else
+  {
+    os << encryptor_type_literal << " " << encoder_type_identifier << "(" << encryptor.context_id << ","
+       << encryptor.public_key_id << ")";
+  }
+  return os;
+}
+
 INLINE std::ostream &operator<<(std::ostream &os, const Evaluator &evaluator)
 {
   os << evaluator_type_literal << " " << evaluator.evaluator_id << "(" << evaluator.context_id << ")";
@@ -241,7 +284,13 @@ INLINE std::ostream &operator<<(std::ostream &os, const Encoder &encoder)
   return os;
 }
 
-inline std::string stringfy_string(std::string &str)
+inline void write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os)
+{
+  os << outputs_map_identifier_by_type[type] << ".insert"
+     << "({" << stringfy_string(output_identifier) << "," << output_identifier << "})" << end_of_command << '\n';
+}
+
+inline std::string stringfy_string(const std::string &str)
 {
   return '"' + str + '"';
 }

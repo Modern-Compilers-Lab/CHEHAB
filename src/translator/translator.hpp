@@ -1,6 +1,6 @@
 #pragma once
 
-#include "encryption_context.hpp"
+#include "encryption_parameters.hpp"
 #include "program.hpp"
 #include "term.hpp"
 #include "translator_const.hpp"
@@ -18,7 +18,7 @@ class Translator
 
 private:
   ir::Program *program;
-  params_selector::EncryptionContext *context;
+  params_selector::EncryptionParameters *encryption_parameters;
 
   void translate_binary_operation(
     const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
@@ -33,12 +33,15 @@ private:
   void translate_constant_table_entry(
     ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os, Encoder &encoder) const;
 
-  void translate_term(const Ptr &term_ptr, std::ofstream &os, const Evaluator &evaluator, Encoder &encoder) const;
+  void translate_term(
+    const Ptr &term_ptr, std::ofstream &os, const Evaluator &evaluator, Encoder &encoder, Encryptor &encryptor) const;
 
   std::string get_identifier(const Ptr &term_ptr) const;
 
 public:
-  Translator(ir::Program *prgm, params_selector::EncryptionContext *ctxt) : program(prgm), context(ctxt) {}
+  Translator(ir::Program *prgm, params_selector::EncryptionParameters *params)
+    : program(prgm), encryption_parameters(params)
+  {}
   void generate_function_signature(std::ofstream &os) const;
   ~Translator() {}
 

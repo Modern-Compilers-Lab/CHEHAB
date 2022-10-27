@@ -80,7 +80,7 @@ Scalar &Scalar::operator-=(const Scalar &rhs)
 
 Scalar Scalar::operator-()
 {
-  return operate_unary<Scalar>(*this, ir::OpCode::negate, ir::scalarType);
+  return operate_unary<Scalar, Scalar>(*this, ir::OpCode::negate, ir::scalarType);
 }
 
 Scalar operator+(const Scalar &lhs, const Scalar &rhs)
@@ -101,7 +101,7 @@ Scalar operator-(const Scalar &lhs, const Scalar &rhs)
 
 Scalar operator-(const Scalar &rhs)
 {
-  return operate_unary<Scalar>(rhs, ir::OpCode::negate, ir::scalarType);
+  return operate_unary<Scalar, Scalar>(rhs, ir::OpCode::negate, ir::scalarType);
 }
 
 } // namespace fhecompiler

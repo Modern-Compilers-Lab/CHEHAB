@@ -17,6 +17,7 @@ enum class OpCode
 {
   undefined,
   assign,
+  encrypt,
   add,
   add_plain,
   mul,

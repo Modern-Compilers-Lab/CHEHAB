@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ciphertext.hpp"
-#include "encryption_context.hpp"
+#include "encryption_parameters.hpp"
 #include "fhecompiler_const.hpp"
 #include "ops_overloads.hpp"
 #include "params_selector.hpp"
@@ -29,9 +29,9 @@ void init(const std::string &program_name, size_t dim, Scheme program_scheme)
 void compile(const std::string &output_filename)
 {
   params_selector::ParameterSelector parameters_selector(program);
-  params_selector::EncryptionContext ctxt = parameters_selector.select_parameters();
+  params_selector::EncryptionParameters params = parameters_selector.select_parameters();
 
-  translator::Translator tr(program, &ctxt);
+  translator::Translator tr(program, &params);
 
   {
     std::ofstream translation_os(output_filename);

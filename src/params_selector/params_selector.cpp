@@ -1,13 +1,13 @@
 #include "params_selector.hpp"
-#include "encryption_context.hpp"
+#include "encryption_parameters.hpp"
 
 namespace params_selector
 {
 
-EncryptionContext ParameterSelector::select_parameters()
+EncryptionParameters ParameterSelector::select_parameters()
 {
-  EncryptionContext ctxt;
-  return ctxt;
+  EncryptionParameters params;
+  return params;
 }
 
 } // namespace params_selector

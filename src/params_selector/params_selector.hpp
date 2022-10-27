@@ -1,6 +1,6 @@
 #pragma once
 
-#include "encryption_context.hpp"
+#include "encryption_parameters.hpp"
 #include "program.hpp"
 #include <vector>
 
@@ -14,6 +14,6 @@ private:
 
 public:
   ParameterSelector(ir::Program *prgm) : program(prgm) {}
-  EncryptionContext select_parameters();
+  EncryptionParameters select_parameters();
 };
 } // namespace params_selector

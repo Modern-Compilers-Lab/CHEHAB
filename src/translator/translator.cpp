@@ -69,11 +69,7 @@ void Translator::translate_constant_table_entry(
       os << encoder << end_of_command << '\n';
     }
 
-    if (term_type == ir::ciphertextType)
-    {
-      // encryption
-    }
-    else if (term_type == ir::plaintextType)
+    if (term_type == ir::plaintextType)
     {
       // encoding
       using VectorValue = ir::ConstantTableEntry::VectorValue;
@@ -87,6 +83,7 @@ void Translator::translate_constant_table_entry(
       else
         throw("unsupported data type by schemes\n");
     }
+
     else if (term_type == ir::scalarType)
     {
       // don't forget to reduce
@@ -139,7 +136,8 @@ void Translator::translate_unary_operation(
   os << op_type << " " << op_identifier << ops_map[term_ptr->get_opcode()] << rhs_identifier << end_of_command << '\n';
 }
 
-void Translator::translate_term(const Ptr &term, std::ofstream &os, const Evaluator &evaluator, Encoder &encoder) const
+void Translator::translate_term(
+  const Ptr &term, std::ofstream &os, const Evaluator &evaluator, Encoder &encoder, Encryptor &encryptor) const
 {
 
   auto constant_table_entry_opt = program->get_entry_form_constants_table(term->get_label());
@@ -151,7 +149,17 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os, const Evalua
 
     if (operands.size() == 1)
     {
-      translate_unary_operation(term, constant_table_entry_opt, os, evaluator);
+      if (term->get_opcode() == ir::OpCode::encrypt)
+      {
+        if (encryptor.is_defined == false)
+        {
+          os << encryptor << end_of_command << '\n';
+          encryptor.is_defined = true;
+        }
+        encryptor.write_encrypt(get_identifier(term), get_identifier((*term->get_operands())[0]), os);
+      }
+      else
+        translate_unary_operation(term, constant_table_entry_opt, os, evaluator);
     }
     else if (operands.size() == 2)
     {
@@ -179,11 +187,17 @@ void Translator::translate(std::ofstream &os) const
 
   Encoder encoder(context_identifier); // for now we assume that we have only one context
 
+  Encryptor encryptor(context_identifier, public_key_identifier, std::nullopt);
+
   os << evaluator << end_of_command << '\n';
-  const std::vector<Ptr> nodes_ptr = program->get_dataflow_sorted_nodes();
+  const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes();
   for (auto &node_ptr : nodes_ptr)
   {
-    translate_term(node_ptr, os, evaluator, encoder);
+    translate_term(node_ptr, os, evaluator, encoder, encryptor);
+  }
+  for (auto &output_node : program->get_outputs_nodes())
+  {
+    write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
   }
   os << end_block << '\n';
 }
@@ -195,16 +209,17 @@ void Translator::generate_function_signature(std::ofstream &os) const
   os << "void " << program->get_program_tag()
      << argument_list(
           {{inputs_map_by_type[ir::ciphertextType], inputs_map_identifier_by_type[ir::ciphertextType],
-            AccessType::readOnly},
+            AccessType::readAndModify},
            {inputs_map_by_type[ir::plaintextType], inputs_map_identifier_by_type[ir::plaintextType],
-            AccessType::readOnly},
+            AccessType::readAndModify},
            {outputs_map_by_type[ir::plaintextType], outputs_map_identifier_by_type[ir::plaintextType],
             AccessType::readAndModify},
            {outputs_map_by_type[ir::ciphertextType], outputs_map_identifier_by_type[ir::ciphertextType],
             AccessType::readAndModify},
            {context_type_literal, context_identifier, AccessType::readOnly},
            {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
-           {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly}})
+           {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
+           {public_key_literal, public_key_identifier, AccessType::readOnly}})
      << '\n';
 }
 

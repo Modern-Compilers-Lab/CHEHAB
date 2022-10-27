@@ -85,50 +85,15 @@ ConstantTableEntryType Program::type_of(const std::string &label)
     return (*table_entry).get().entry_type;
 }
 
-std::unordered_map<ir::OpCode, std::string> opcode_map = {
-  {OpCode::add, "+"}, {OpCode::sub, "-"}, {OpCode::mul, "*"}, {OpCode::assign, "="}};
-
-std::string dfs(Ptr term, std::unordered_set<std::string> &visited)
+const std::unordered_map<std::string, Ptr> &Program::get_outputs_nodes() const
 {
-  if (visited.find(term->get_label()) != visited.end())
-    return term->get_label();
-  visited.insert(term->get_label());
-  if (term->get_operands() == std::nullopt)
-  {
-    return term->get_label();
-  }
-  else
-  {
-    const std::vector<Ptr> &operands = *term->get_operands();
-    if (term->get_opcode() == OpCode::assign)
-      return operands[0]->get_label();
-    else if (term->get_opcode() == OpCode::negate)
-      return "-" + operands[0]->get_label();
-    else
-      return dfs(operands[0], visited) + opcode_map[term->get_opcode()] + dfs(operands[1], visited);
-  }
-}
-
-void print_node(const Ptr &node_ptr)
-{
-  std::cout << node_ptr->get_label() << "\n";
+  return this->data_flow->get_outputs_nodes();
 }
 
 const std::vector<Ptr> &Program::get_dataflow_sorted_nodes() const
 {
   this->data_flow->apply_topological_sort();
   return this->data_flow->get_outputs_nodes_topsorted();
-}
-
-void Program::sort_dataflow()
-{
-  std::unordered_set<std::string> visited;
-  this->data_flow->apply_topological_sort();
-  const std::vector<Ptr> &nodes_ptrs_topsorted = this->data_flow->get_outputs_nodes_topsorted();
-  for (auto &node_ptr : nodes_ptrs_topsorted)
-  {
-    print_node(node_ptr);
-  }
 }
 
 } // namespace ir

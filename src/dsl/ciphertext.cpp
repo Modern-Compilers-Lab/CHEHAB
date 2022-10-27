@@ -28,14 +28,12 @@ Ciphertext &Ciphertext::operator=(Ciphertext &&ct_move)
 
 Ciphertext Ciphertext::encrypt(const Plaintext &pt)
 {
-  Ciphertext new_ct("");
-  program->insert_node_in_dataflow<Plaintext>(pt);
-  program->insert_node_in_dataflow<Ciphertext>(new_ct);
-  ir::ConstantTableEntry::Encrypt encrypt_value = {pt.get_label()};
-  ir::ConstantTableEntry::ConstantValue constant_value = encrypt_value;
-  ir::ConstantTableEntry::EntryValue entry_value = {new_ct.get_label(), constant_value};
-  program->insert_entry_in_constants_table({new_ct.get_label(), {ir::ConstantTableEntryType::constant, entry_value}});
-  return new_ct;
+  auto pt_ptr = program->find_node_in_dataflow(pt.get_label());
+  if (pt_ptr == nullptr)
+  {
+    throw("plaintext to encrypt is not defined, maybe it is only declared.\n");
+  }
+  return operate_unary<Ciphertext, Plaintext>(pt, ir::OpCode::encrypt, ir::ciphertextType);
 }
 
 Ciphertext::Ciphertext(const std::string &tag, VarType var_type)
@@ -100,7 +98,7 @@ Ciphertext &Ciphertext::rotate(const Scalar &rhs)
 
 Ciphertext Ciphertext::operator-()
 {
-  return operate_unary<Ciphertext>(*this, ir::OpCode::negate, ir::ciphertextType);
+  return operate_unary<Ciphertext, Ciphertext>(*this, ir::OpCode::negate, ir::ciphertextType);
 }
 
 Ciphertext operator+(const Ciphertext &lhs, const Ciphertext &rhs)
@@ -120,7 +118,7 @@ Ciphertext operator-(const Ciphertext &lhs, const Ciphertext &rhs)
 
 Ciphertext operator-(const Ciphertext &rhs)
 {
-  return operate_unary<Ciphertext>(rhs, ir::OpCode::negate, ir::ciphertextType);
+  return operate_unary<Ciphertext, Ciphertext>(rhs, ir::OpCode::negate, ir::ciphertextType);
 }
 
 Ciphertext exponentiate(const Ciphertext &lhs, const Scalar &rhs)

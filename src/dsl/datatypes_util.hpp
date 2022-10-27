@@ -38,8 +38,6 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
   std::string old_label = lhs.get_label();
 
   lhs.set_new_label();
-  auto new_operation_node_ptr =
-    program->insert_operation_node_in_dataflow(opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), term_type);
 
   auto table_entry_opt = program->get_entry_form_constants_table(old_label);
   if (table_entry_opt != std::nullopt)
@@ -54,6 +52,8 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
       program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
     }
   }
+  auto new_operation_node_ptr =
+    program->insert_operation_node_in_dataflow(opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), term_type);
 }
 
 template <typename T1, typename T2, typename T3>
@@ -68,15 +68,15 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
   return operate<T1>(opcode, {lhs_node_ptr, rhs_node_ptr}, term_type);
 }
 
-template <typename T>
-T operate_unary(const T &rhs, ir::OpCode opcode, ir::TermType term_type)
+template <typename T1, typename T2>
+T1 operate_unary(const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (rhs_node_ptr == nullptr)
   {
     throw("operand is not defined, maybe it was only declared\n");
   }
-  return operate<T>(opcode, {rhs_node_ptr}, term_type);
+  return operate<T1>(opcode, {rhs_node_ptr}, term_type);
 }
 
 template <typename T>
