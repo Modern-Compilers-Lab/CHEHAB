@@ -12,6 +12,8 @@ namespace seal_backend
   class Ciphertext : public Implementation, public ICiphertext
   {
     friend class Evaluator;
+    friend class Encryptor;
+    friend class Decryptor;
 
   public:
     inline Ciphertext() : Ciphertext(new seal::Ciphertext(), true) {}
@@ -40,7 +42,7 @@ namespace seal_backend
     inline double &scale() override { return underlying().scale(); }
 
   private:
-    inline Ciphertext(seal::Ciphertext *seal_pt, bool is_owner) : underlying_(seal_pt), is_owner_(is_owner) {}
+    inline Ciphertext(seal::Ciphertext *seal_ct, bool is_owner) : underlying_(seal_ct), is_owner_(is_owner) {}
 
     inline seal::Ciphertext &underlying() const { return *underlying_; }
 

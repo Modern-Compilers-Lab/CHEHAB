@@ -11,8 +11,11 @@ namespace seal_backend
 {
   class EncryptionContext : public Implementation, public IEncryptionContext
   {
+    friend class BatchEncoder;
     friend class KeyGenerator;
+    friend class Encryptor;
     friend class Ciphertext;
+    friend class Decryptor;
     friend class Evaluator;
 
   public:

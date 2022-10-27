@@ -10,6 +10,9 @@ namespace seal_backend
 {
   class Plaintext : public Implementation, public IPlaintext
   {
+    friend class BatchEncoder;
+    friend class Encryptor;
+    friend class Decryptor;
     friend class Evaluator;
 
   public:

@@ -11,6 +11,8 @@ namespace seal_backend
   class SecretKey : public Implementation, public ISecretKey
   {
     friend class KeyGenerator;
+    friend class Encryptor;
+    friend class Decryptor;
 
   public:
     inline SecretKey() : SecretKey(new seal::SecretKey(), true) {}

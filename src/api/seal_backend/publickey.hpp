@@ -11,6 +11,7 @@ namespace seal_backend
   class PublicKey : public Implementation, public IPublicKey
   {
     friend class KeyGenerator;
+    friend class Encryptor;
 
   public:
     inline PublicKey() : PublicKey(new seal::PublicKey(), true) {}
@@ -26,7 +27,7 @@ namespace seal_backend
     }
 
   private:
-    inline PublicKey(seal::PublicKey *seal_skey, bool is_owner) : underlying_(seal_skey), is_owner_(is_owner) {}
+    inline PublicKey(seal::PublicKey *seal_pkey, bool is_owner) : underlying_(seal_pkey), is_owner_(is_owner) {}
 
     inline seal::PublicKey &underlying() const { return *underlying_; }
 

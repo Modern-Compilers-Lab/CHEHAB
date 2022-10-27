@@ -169,7 +169,8 @@ namespace seal_backend
     }
 
   private:
-    inline Evaluator(seal::Evaluator *seal_skey, bool is_owner) : underlying_(seal_skey), is_owner_(is_owner) {}
+    inline Evaluator(seal::Evaluator *seal_evaluator, bool is_owner) : underlying_(seal_evaluator), is_owner_(is_owner)
+    {}
 
     inline seal::Evaluator &underlying() const { return *underlying_; }
 
