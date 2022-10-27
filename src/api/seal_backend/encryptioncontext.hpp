@@ -2,13 +2,14 @@
 
 #include "../iencryptioncontext.hpp"
 #include "encryptionparameters.hpp"
+#include "implementation.hpp"
 #include "seal/seal.h"
 
 namespace ufhe
 {
 namespace seal_backend
 {
-  class EncryptionContext : public IEncryptionContext
+  class EncryptionContext : public Implementation, public IEncryptionContext
   {
     friend class KeyGenerator;
 
@@ -26,8 +27,6 @@ namespace seal_backend
       if (is_owner_)
         delete underlying_;
     }
-
-    inline Backend backend() { return Backend::seal; }
 
   private:
     EncryptionContext(seal::SEALContext *seal_context, bool is_owner) : underlying_(seal_context), is_owner_(is_owner)

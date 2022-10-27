@@ -1,19 +1,14 @@
 #pragma once
 
-#include "api.hpp"
+#include "interface.hpp"
+#include "ipublickey.hpp"
+#include "isecretkey.hpp"
 
 namespace ufhe
 {
-class ISecretKey;
-class IPublicKey;
-
-class IKeyGenerator
+class IKeyGenerator : public virtual Interface
 {
 public:
-  virtual ~IKeyGenerator() {}
-
-  virtual Backend backend() = 0;
-
   virtual const ISecretKey &secret_key() const = 0;
 
   virtual void create_public_key(IPublicKey &destination) const = 0;
@@ -27,20 +22,5 @@ public:
   // virtual void create_galois_keys(GaloisKeys &destination) const = 0;
 
   // TODO: allow creating seeded objects
-
-protected:
-  IKeyGenerator() = default;
-
-  IKeyGenerator(const IKeyGenerator &copy) = default;
-
-  IKeyGenerator &operator=(const IKeyGenerator &assign) = default;
-
-  IKeyGenerator(IKeyGenerator &&source) = default;
-
-  IKeyGenerator &operator=(IKeyGenerator &&assign) = default;
-
-  // virtual void init(const IEncryptionContext &context) = 0;
-
-  // virtual void init(const IEncryptionContext &context, const ISecretKey &secret_key) = 0;
 };
 } // namespace ufhe

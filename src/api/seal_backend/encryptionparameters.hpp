@@ -2,6 +2,7 @@
 
 #include "../iencryptionparameters.hpp"
 #include "coeff_modulus.hpp"
+#include "implementation.hpp"
 #include "modulus.hpp"
 #include "seal/seal.h"
 
@@ -9,14 +10,12 @@ namespace ufhe
 {
 namespace seal_backend
 {
-  class SchemeType : public ISchemeType
+  class SchemeType : public Implementation, public ISchemeType
   {
     friend class EncryptionParameters;
 
   public:
     inline SchemeType(std::uint8_t scheme_id) : SchemeType(static_cast<seal::scheme_type>(scheme_id)) {}
-
-    inline Backend backend() override { return Backend::seal; };
 
   private:
     inline SchemeType(seal::scheme_type seal_scheme) : underlying_(seal_scheme) {}
@@ -26,7 +25,7 @@ namespace seal_backend
     seal::scheme_type underlying_;
   };
 
-  class EncryptionParameters : public IEncryptionParameters
+  class EncryptionParameters : public Implementation, public IEncryptionParameters
   {
     friend class EncryptionContext;
 
@@ -44,8 +43,6 @@ namespace seal_backend
       if (is_owner_)
         delete underlying_;
     }
-
-    inline Backend backend() override { return Backend::seal; };
 
     inline void set_poly_modulus_degree(std::size_t poly_modulus_degree) override
     {

@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../isecretkey.hpp"
+#include "implementation.hpp"
 #include "seal/seal.h"
 
 namespace ufhe
 {
 namespace seal_backend
 {
-  class SecretKey : public ISecretKey
+  class SecretKey : public Implementation, public ISecretKey
   {
     friend class KeyGenerator;
 
@@ -23,8 +24,6 @@ namespace seal_backend
       if (is_owner_)
         delete underlying_;
     }
-
-    inline Backend backend() override { return Backend::seal; }
 
   private:
     inline SecretKey(seal::SecretKey *seal_skey, bool is_owner) : underlying_(seal_skey), is_owner_(is_owner) {}

@@ -2,6 +2,7 @@
 
 #include "../ikeygenerator.hpp"
 #include "encryptioncontext.hpp"
+#include "implementation.hpp"
 #include "publickey.hpp"
 #include "seal/seal.h"
 #include "secretkey.hpp"
@@ -10,7 +11,7 @@ namespace ufhe
 {
 namespace seal_backend
 {
-  class KeyGenerator : public IKeyGenerator
+  class KeyGenerator : public Implementation, public IKeyGenerator
   {
     friend class EncryptionParameters;
 
@@ -32,8 +33,6 @@ namespace seal_backend
       if (is_owner_)
         delete underlying_;
     }
-
-    inline Backend backend() override { return Backend::seal; };
 
     inline const ISecretKey &secret_key() const override { return secret_key_; }
 
