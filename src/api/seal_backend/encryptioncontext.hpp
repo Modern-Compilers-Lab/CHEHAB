@@ -12,6 +12,8 @@ namespace seal_backend
   class EncryptionContext : public Implementation, public IEncryptionContext
   {
     friend class KeyGenerator;
+    friend class Ciphertext;
+    friend class Evaluator;
 
   public:
     inline EncryptionContext(const EncryptionParameters &parms)
