@@ -16,6 +16,8 @@ namespace seal_backend
 
     inline Backend backend() const override { return Backend::seal; }
 
+    inline std::size_t slot_count() override { return underlying_.slot_count(); }
+
     inline void encode(const std::vector<std::uint64_t> &values_vector, IPlaintext &destination) const override
     {
       underlying_.encode(values_vector, dynamic_cast<Plaintext &>(destination).underlying_);
