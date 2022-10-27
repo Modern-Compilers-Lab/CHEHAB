@@ -16,43 +16,19 @@ namespace seal_backend
     friend class EncryptionParameters;
 
   public:
-    inline KeyGenerator(const EncryptionContext &context)
-      : KeyGenerator(new seal::KeyGenerator(context.underlying()), true)
-    {}
+    inline KeyGenerator(const EncryptionContext &context) : underlying_(seal::KeyGenerator(context.underlying_)) {}
 
     inline KeyGenerator(const EncryptionContext &context, const SecretKey &secret_key)
-      : KeyGenerator(new seal::KeyGenerator(context.underlying(), secret_key.underlying()), true)
+      : underlying_(seal::KeyGenerator(context.underlying_, secret_key.underlying_))
     {}
-
-    inline KeyGenerator(const KeyGenerator &copy) : KeyGenerator(copy.underlying_, false) {}
-
-    KeyGenerator &operator=(const KeyGenerator &assign) = delete;
-
-    inline ~KeyGenerator()
-    {
-      if (is_owner_)
-        delete underlying_;
-    }
-
-    inline const ISecretKey &secret_key() const override { return secret_key_; }
 
     inline void create_public_key(IPublicKey &destination) const override
     {
-      underlying().create_public_key(dynamic_cast<PublicKey &>(destination).underlying());
+      underlying_.create_public_key(dynamic_cast<PublicKey &>(destination).underlying_);
     }
 
   private:
-    inline KeyGenerator(seal::KeyGenerator *seal_keygen, bool is_owner)
-      : underlying_(seal_keygen), is_owner_(is_owner),
-        secret_key_(const_cast<seal::SecretKey *>(&underlying().secret_key()), false)
-    {}
-
-    inline seal::KeyGenerator &underlying() const { return *underlying_; }
-
-    seal::KeyGenerator *underlying_;
-    bool is_owner_;
-
-    SecretKey secret_key_;
+    seal::KeyGenerator underlying_;
   };
 } // namespace seal_backend
 } // namespace ufhe

@@ -16,38 +16,22 @@ namespace seal_backend
   {
   public:
     inline Decryptor(const EncryptionContext &context, const SecretKey &secret_key)
-      : Decryptor(new seal::Decryptor(context.underlying(), secret_key.underlying()), true)
+      : underlying_(seal::Decryptor(context.underlying_, secret_key.underlying_))
     {}
 
-    inline Decryptor(const Decryptor &copy) : Decryptor(copy.underlying_, false) {}
-
-    Decryptor &operator=(const Decryptor &assign) = delete;
-
-    inline ~Decryptor()
+    inline void decrypt(const ICiphertext &encrypted, IPlaintext &destination) override
     {
-      if (is_owner_)
-        delete underlying_;
+      underlying_.decrypt(
+        dynamic_cast<const Ciphertext &>(encrypted).underlying_, dynamic_cast<Plaintext &>(destination).underlying_);
     }
 
-    inline void decrypt(const ICiphertext &encrypted, IPlaintext &destination) const override
+    inline int invariant_noise_budget(const ICiphertext &encrypted) override
     {
-      underlying().decrypt(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<Plaintext &>(destination).underlying());
-    }
-
-    inline int invariant_noise_budget(const ICiphertext &encrypted) const override
-    {
-      return underlying().invariant_noise_budget(dynamic_cast<const Ciphertext &>(encrypted).underlying());
+      return underlying_.invariant_noise_budget(dynamic_cast<const Ciphertext &>(encrypted).underlying_);
     }
 
   private:
-    inline Decryptor(seal::Decryptor *seal_decryptor, bool is_owner) : underlying_(seal_decryptor), is_owner_(is_owner)
-    {}
-
-    inline seal::Decryptor &underlying() const { return *underlying_; }
-
-    seal::Decryptor *underlying_;
-    bool is_owner_;
+    seal::Decryptor underlying_;
   };
 } // namespace seal_backend
 } // namespace ufhe

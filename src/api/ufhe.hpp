@@ -1,10 +1,17 @@
 #pragma once
 
 #include "api.hpp"
+#include "ibatchencoder.hpp"
+#include "iciphertext.hpp"
+#include "icoeff_modulus.hpp"
+#include "idecryptor.hpp"
 #include "iencryptioncontext.hpp"
 #include "iencryptionparameters.hpp"
+#include "iencryptor.hpp"
+#include "ievaluator.hpp"
 #include "ikeygenerator.hpp"
 #include "imodulus.hpp"
+#include "iplaintext.hpp"
 #include "ipublickey.hpp"
 #include "isecretkey.hpp"
 #include "seal_backend/seal_backend.hpp"

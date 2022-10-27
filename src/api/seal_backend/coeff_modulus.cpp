@@ -4,26 +4,23 @@ namespace ufhe
 {
 namespace seal_backend
 {
-  CoeffModulus::CoeffModulus(const std::vector<Modulus> &moduli) : CoeffModulus(new std::vector<seal::Modulus>, true)
+  CoeffModulus::CoeffModulus(const std::vector<Modulus> &moduli) : moduli_(moduli)
   {
     for (const Modulus &modulus : moduli)
-      underlying().push_back(modulus.underlying());
+      underlying_.push_back(modulus.underlying_);
+  }
+
+  CoeffModulus::CoeffModulus(std::vector<seal::Modulus> seal_moduli) : underlying_(seal_moduli), moduli_()
+  {
+    moduli_.reserve(underlying_.size());
+    for (const seal::Modulus &seal_modulus : underlying_)
+      moduli_.push_back(Modulus(seal_modulus));
   }
 
   IModulus::vector CoeffModulus::value() const
   {
-    delete *moduli_p_;
-    *moduli_p_ = new std::vector<Modulus>;
-    std::vector<Modulus> &moduli_ = **moduli_p_;
-    moduli_.reserve(underlying().size());
-    for (seal::Modulus &seal_modulus : underlying())
-      moduli_.push_back(Modulus(&seal_modulus, false));
-    IModulus::vector moduli_wrappers;
-    moduli_wrappers.reserve(moduli_.size());
-    for (const Modulus &modulus : moduli_)
-      moduli_wrappers.push_back(modulus);
+    IModulus::vector moduli_wrappers(moduli_.begin(), moduli_.end());
     return moduli_wrappers;
   }
 } // namespace seal_backend
-
 } // namespace ufhe

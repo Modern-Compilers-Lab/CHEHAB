@@ -9,10 +9,8 @@ namespace ufhe
 class IDecryptor : public virtual Interface
 {
 public:
-  virtual void decrypt(const ICiphertext &encrypted, IPlaintext &destination) const = 0;
+  virtual void decrypt(const ICiphertext &encrypted, IPlaintext &destination) = 0;
 
-  virtual int invariant_noise_budget(const ICiphertext &encrypted) const = 0;
-
-  // virtual void init(const EncryptionContext &context, const SecretKey &secret_key) = 0;
+  virtual int invariant_noise_budget(const ICiphertext &encrypted) = 0;
 };
 } // namespace ufhe

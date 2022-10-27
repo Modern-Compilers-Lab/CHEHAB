@@ -1,8 +1,15 @@
 #pragma once
 
+#include "batchencoder.hpp"
+#include "ciphertext.hpp"
+#include "coeff_modulus.hpp"
+#include "decryptor.hpp"
 #include "encryptioncontext.hpp"
 #include "encryptionparameters.hpp"
+#include "encryptor.hpp"
+#include "evaluator.hpp"
 #include "keygenerator.hpp"
 #include "modulus.hpp"
+#include "plaintext.hpp"
 #include "publickey.hpp"
 #include "secretkey.hpp"

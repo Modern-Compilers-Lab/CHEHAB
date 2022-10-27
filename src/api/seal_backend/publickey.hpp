@@ -14,25 +14,10 @@ namespace seal_backend
     friend class Encryptor;
 
   public:
-    inline PublicKey() : PublicKey(new seal::PublicKey(), true) {}
-
-    inline PublicKey(const PublicKey &copy) : PublicKey(copy.underlying_, false) {}
-
-    PublicKey &operator=(const PublicKey &assign) = delete;
-
-    inline ~PublicKey()
-    {
-      if (is_owner_)
-        delete underlying_;
-    }
+    inline PublicKey() : underlying_(seal::PublicKey()) {}
 
   private:
-    inline PublicKey(seal::PublicKey *seal_pkey, bool is_owner) : underlying_(seal_pkey), is_owner_(is_owner) {}
-
-    inline seal::PublicKey &underlying() const { return *underlying_; }
-
-    seal::PublicKey *underlying_;
-    bool is_owner_;
+    seal::PublicKey underlying_;
   };
 } // namespace seal_backend
 } // namespace ufhe

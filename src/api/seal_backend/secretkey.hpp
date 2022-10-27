@@ -15,25 +15,12 @@ namespace seal_backend
     friend class Decryptor;
 
   public:
-    inline SecretKey() : SecretKey(new seal::SecretKey(), true) {}
-
-    inline SecretKey(const SecretKey &copy) : SecretKey(copy.underlying_, false) {}
-
-    SecretKey &operator=(const SecretKey &assign) = delete;
-
-    inline ~SecretKey()
-    {
-      if (is_owner_)
-        delete underlying_;
-    }
+    inline SecretKey() : underlying_(seal::SecretKey()) {}
 
   private:
-    inline SecretKey(seal::SecretKey *seal_skey, bool is_owner) : underlying_(seal_skey), is_owner_(is_owner) {}
+    inline SecretKey(seal::SecretKey seal_sk) : underlying_(seal_sk) {}
 
-    inline seal::SecretKey &underlying() const { return *underlying_; }
-
-    seal::SecretKey *underlying_;
-    bool is_owner_;
+    seal::SecretKey underlying_;
   };
 } // namespace seal_backend
 } // namespace ufhe

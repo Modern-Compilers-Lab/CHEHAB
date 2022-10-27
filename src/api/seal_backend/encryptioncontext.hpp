@@ -19,28 +19,10 @@ namespace seal_backend
     friend class Evaluator;
 
   public:
-    inline EncryptionContext(const EncryptionParameters &parms)
-      : EncryptionContext(new seal::SEALContext(parms.underlying()), true)
-    {}
-
-    EncryptionContext(const EncryptionContext &copy) : EncryptionContext(copy.underlying_, false) {}
-
-    EncryptionContext &operator=(const EncryptionContext &assign) = delete;
-
-    inline ~EncryptionContext()
-    {
-      if (is_owner_)
-        delete underlying_;
-    }
+    inline EncryptionContext(const EncryptionParameters &parms) : underlying_(seal::SEALContext(parms.underlying_)) {}
 
   private:
-    EncryptionContext(seal::SEALContext *seal_context, bool is_owner) : underlying_(seal_context), is_owner_(is_owner)
-    {}
-
-    inline seal::SEALContext &underlying() const { return *underlying_; }
-
-    seal::SEALContext *underlying_;
-    bool is_owner_;
+    seal::SEALContext underlying_;
   };
 
 } // namespace seal_backend
