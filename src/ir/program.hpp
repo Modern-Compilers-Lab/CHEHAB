@@ -24,7 +24,7 @@ struct ConstantTableEntry
     // to be extended in the future maybe
   };
 
-  using ScalarValue = std::variant<int64_t, double>;
+  using ScalarValue = std::variant<int64_t, double, uint64_t>;
 
   using VectorValue = std::variant<std::vector<int64_t>, std::vector<double>>;
 

@@ -97,6 +97,9 @@ INLINE const char *insert_object_instruction = "insert"; // instruction to inser
 INLINE std::unordered_map<ir::TermType, const char *> get_instruction_by_type = {
   {ir::plaintextType, "get_plaintext"}, {ir::ciphertextType, "get_ciphertext"}};
 
+INLINE std::unordered_map<ir::OpCode, const char *> get_other_args_by_opcode = {
+  {ir::OpCode::rotate, galois_keys_identifier}, {ir::OpCode::exponentiate, relin_keys_identifier}};
+
 /* general literals for C++ */
 INLINE const char *new_line = "\n";
 INLINE const char *end_of_command = ";";
@@ -192,13 +195,24 @@ public:
   Evaluator(const std::string &ctxt_id, const std::string eval_id) : context_id(ctxt_id), evaluator_id(eval_id) {}
 
   void write_binary_operation(
-    ir::TermType type, ir::OpCode opcode, std::string &destination, const std::string &lhs, const std::string &rhs,
-    std::ofstream &os) const
+    ir::TermType type, ir::OpCode opcode, const std::string &destination, const std::string &lhs,
+    const std::string &rhs, const std::string &other_args,
+    std::ofstream &os) const /* other_args is used in case of operations where we need to specify other parameters like
+                                keys (relin_keys and galois keys)*/
   {
     std::string object_type = types_map[type];
     std::string operator_identifier = ops_map[opcode];
     os << object_type << " " << destination << ";" << '\n';
-    os << evaluator_id << "." << operator_identifier << "(" << lhs << "," << rhs << "," << destination << ");" << '\n';
+    if (other_args.length() == 0)
+    {
+      os << evaluator_id << "." << operator_identifier << "(" << lhs << "," << rhs << "," << destination << ");"
+         << '\n';
+    }
+    else
+    {
+      os << evaluator_id << "." << operator_identifier << "(" << lhs << "," << rhs << "," << other_args << ","
+         << destination << ");" << '\n';
+    }
   }
 
   friend std::ostream &operator<<(std::ostream &o_stream, const Evaluator &evaluator);

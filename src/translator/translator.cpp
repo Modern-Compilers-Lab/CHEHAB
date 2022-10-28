@@ -111,12 +111,19 @@ void Translator::translate_binary_operation(
   const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
   std::ofstream &os, const Evaluator &evaluator) const
 {
+
+  std::string other_args(""); // this depends on the operation
+  auto it = get_other_args_by_opcode.find(term_ptr->get_opcode());
+
+  if (it != get_other_args_by_opcode.end())
+    other_args = it->second;
+
   std::string op_identifier = get_identifier(term_ptr);
   const std::vector<Ptr> &operands = *(term_ptr->get_operands());
   std::string lhs_identifier = get_identifier(operands[0]);
   std::string rhs_identifier = get_identifier(operands[1]);
   evaluator.write_binary_operation(
-    term_ptr->get_term_type(), term_ptr->get_opcode(), op_identifier, lhs_identifier, rhs_identifier, os);
+    term_ptr->get_term_type(), term_ptr->get_opcode(), op_identifier, lhs_identifier, rhs_identifier, other_args, os);
 }
 
 void Translator::translate_nary_operation(

@@ -156,6 +156,9 @@ inline bool is_tracked_object(const std::string &label)
 {
   auto table_entry = program->get_entry_form_constants_table(label);
 
+  if (table_entry == std::nullopt)
+    return false;
+
   ir::ConstantTableEntry lhs_table_entry_value = *table_entry;
 
   ir::ConstantTableEntry::EntryValue entry_value = lhs_table_entry_value.get_entry_value();
@@ -171,13 +174,61 @@ void operate_copy(const T &lhs, const T &t_copy, ir::TermType term_type)
 }
 
 template <typename T>
-void operate_move(const T &lhs, T &&t_move, ir::TermType term_type)
+void operate_move(T &lhs, T &&t_move, ir::TermType term_type)
 {
   if (is_tracked_object(lhs.get_label()))
   {
     auto move_node_ptr = program->insert_node_in_dataflow<T>(t_move);
     program->insert_operation_node_in_dataflow(ir::OpCode::assign, {move_node_ptr}, lhs.get_label(), term_type);
   }
+  else
+  {
+    lhs.set_label(t_move.get_label());
+  }
+}
+
+template <typename T>
+void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode opcode, ir::TermType term_type)
+{
+
+  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawDataType);
+  Ptr lhs_term = program->find_node_in_dataflow(lhs.get_label());
+
+  if (lhs_term == nullptr)
+    throw(" operand not defined, maybe it is a temporary and it is only declared \n");
+
+  std::string old_label = lhs.get_label();
+  lhs.set_new_label();
+  auto table_entry_opt = program->get_entry_form_constants_table(old_label);
+  if (table_entry_opt != std::nullopt)
+  {
+    ir::ConstantTableEntry &table_entry = *table_entry_opt;
+    bool is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
+    if (is_output || is_tracked_object(old_label))
+    {
+      if (is_output)
+        program->delete_node_from_outputs(old_label);
+
+      program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+    }
+  }
+  auto new_operation_node_ptr =
+    program->insert_operation_node_in_dataflow(opcode, {lhs_term, rhs_term}, lhs.get_label(), term_type);
+}
+
+template <typename T>
+T operate_with_raw(const T &lhs, datatype::rawData raw_data, ir::OpCode opcode, ir::TermType term_type)
+{
+
+  T new_T("");
+  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawDataType);
+  Ptr lhs_term = program->find_node_in_dataflow(lhs.get_label());
+  if (lhs_term == nullptr)
+    throw(" operand not defined, maybe it is a temporary and it is only declared \n");
+
+  program->insert_operation_node_in_dataflow(opcode, {lhs_term, rhs_term}, new_T.get_label(), term_type);
+
+  return new_T;
 }
 
 } // namespace datatype

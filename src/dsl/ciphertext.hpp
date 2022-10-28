@@ -33,7 +33,7 @@ public:
   Ciphertext(const Ciphertext &ct_copy);
   Ciphertext &operator=(const Ciphertext &ct_copy);
 
-  Ciphertext(Ciphertext &&ct_move) = default;
+  Ciphertext(Ciphertext &&ct_move);
   Ciphertext &operator=(Ciphertext &&ct_move);
 
   Ciphertext &operator+=(const Ciphertext &rhs);
@@ -42,11 +42,15 @@ public:
 
   Ciphertext &operator-=(const Ciphertext &rhs);
 
+  Ciphertext &operator<<=(int steps);
+
+  Ciphertext &operator>>=(int steps);
+
   Ciphertext &square(const Scalar &rhs);
 
-  Ciphertext &exponentiate(const Scalar &rhs);
+  Ciphertext &exponentiate(uint64_t rhs);
 
-  Ciphertext &rotate(const Scalar &rhs);
+  Ciphertext &rotate(int steps);
 
   Ciphertext operator-();
 
@@ -56,13 +60,17 @@ public:
 
   friend Ciphertext operator*(const Ciphertext &lhs, const Ciphertext &rhs);
 
+  friend Ciphertext operator<<(const Ciphertext &lhs, int steps);
+
+  friend Ciphertext operator>>(const Ciphertext &lhs, int steps);
+
   friend Ciphertext operator-(const Ciphertext &rhs);
 
-  friend Ciphertext exponentiate(const Ciphertext &lhs, const Scalar &rhs);
+  friend Ciphertext exponentiate(const Ciphertext &lhs, uint64_t rhs);
 
   friend Ciphertext square(const Ciphertext lhs, const Scalar &rhs);
 
-  friend Ciphertext rotate(const Ciphertext &rhs, const Scalar &lhs);
+  friend Ciphertext rotate(const Ciphertext &rhs, uint64_t steps);
 
   void reduce(std::uint64_t plaintext_modulus);
 

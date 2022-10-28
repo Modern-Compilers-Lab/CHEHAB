@@ -14,7 +14,7 @@ class Scalar
 {
 
 public:
-  using ScalarValueType = std::variant<int64_t, double>;
+  using ScalarValueType = std::variant<int64_t, double, uint64_t>;
 
 private:
   ScalarValueType data = 0;
@@ -26,6 +26,7 @@ private:
 public:
   Scalar();
   Scalar(int64_t _data);
+  Scalar(uint64_t _data);
   Scalar(double _data);
   Scalar(int _data) : Scalar((int64_t)_data) {}
   Scalar(const std::string &tag, VarType var_type = VarType::constant);

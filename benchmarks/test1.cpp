@@ -30,13 +30,29 @@ int main()
     // fhecompiler::Plaintext pt11(std::vector<int64_t>{1, 3, 4, 5});
 
     fhecompiler::Ciphertext ct1("ct1", VarType::input);
+
     fhecompiler::Plaintext pt1("pt1", VarType::input);
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
+    fhecompiler::Ciphertext output2("output2", VarType::output);
+
+    output2 = fhecompiler::Ciphertext::encrypt(pt1);
+
     output1 = (ct1 + pt1) * 2 + ct1 + ct1 + pt1;
 
     output1 += 1312;
+
+    fhecompiler::Ciphertext ct3_output = std::move(output1);
+
+    fhecompiler::Ciphertext output3("output3", VarType::output);
+
+    int rotation_steps = 12;
+
+    output3 = ct1 >> rotation_steps;
+
+    output3 <<= (int)5;
+
     /*
       {1, 3, 4}
 
@@ -45,6 +61,7 @@ int main()
       ct1 + ct1 -> {2, 6, 8}
       ct1 + ct1 + pt1 -> {3, 9, 12}
       (ct1 + pt1) * 2 + ct1 + ct1 + pt1 -> {7, 9, 12} final result
+      ((ct1 + pt1) * 2 + ct1 + ct1 + pt1) + 1312 -> {1319, 9, 12}
     */
 
     fhecompiler::compile("test1.hpp");

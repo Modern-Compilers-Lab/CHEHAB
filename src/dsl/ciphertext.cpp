@@ -15,6 +15,8 @@ size_t Ciphertext::ciphertext_id = 0;
 
 using Ptr = std::shared_ptr<ir::Term>;
 
+Ciphertext rotate(const Ciphertext &lhs, int steps);
+
 void Ciphertext::set_new_label()
 {
   this->set_label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++));
@@ -24,6 +26,11 @@ Ciphertext &Ciphertext::operator=(Ciphertext &&ct_move)
 {
   operate_move<Ciphertext>(*this, std::move(ct_move), ir::ciphertextType);
   return *this;
+}
+
+Ciphertext::Ciphertext(Ciphertext &&ct_move)
+{
+  operate_move<Ciphertext>(*this, std::move(ct_move), ir::ciphertextType);
 }
 
 Ciphertext Ciphertext::encrypt(const Plaintext &pt)
@@ -84,15 +91,15 @@ Ciphertext &Ciphertext::square(const Scalar &rhs)
   return *this;
 }
 
-Ciphertext &Ciphertext::exponentiate(const Scalar &rhs)
+Ciphertext &Ciphertext::exponentiate(uint64_t exponent)
 {
-  compound_operate<Ciphertext, Scalar>(*this, rhs, ir::OpCode::exponentiate, ir::ciphertextType);
+  compound_operate_with_raw<Ciphertext>(*this, std::to_string(exponent), ir::OpCode::exponentiate, ir::ciphertextType);
   return *this;
 }
 
-Ciphertext &Ciphertext::rotate(const Scalar &rhs)
+Ciphertext &Ciphertext::rotate(int steps)
 {
-  compound_operate<Ciphertext, Scalar>(*this, rhs, ir::OpCode::rotate, ir::ciphertextType);
+  compound_operate_with_raw<Ciphertext>(*this, std::to_string(steps), ir::OpCode::rotate, ir::ciphertextType);
   return *this;
 }
 
@@ -121,9 +128,9 @@ Ciphertext operator-(const Ciphertext &rhs)
   return operate_unary<Ciphertext, Ciphertext>(rhs, ir::OpCode::negate, ir::ciphertextType);
 }
 
-Ciphertext exponentiate(const Ciphertext &lhs, const Scalar &rhs)
+Ciphertext exponentiate(const Ciphertext &lhs, uint64_t exponent)
 {
-  return operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::exponentiate, ir::ciphertextType);
+  return operate_with_raw<Ciphertext>(lhs, std::to_string(exponent), ir::OpCode::exponentiate, ir::ciphertextType);
 }
 
 Ciphertext square(const Ciphertext &lhs, const Scalar &rhs)
@@ -131,9 +138,31 @@ Ciphertext square(const Ciphertext &lhs, const Scalar &rhs)
   return operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::square, ir::ciphertextType);
 }
 
-Ciphertext rotate(const Ciphertext &lhs, const Scalar &rhs)
+Ciphertext operator<<(const Ciphertext &lhs, int steps)
 {
-  return operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::rotate, ir::ciphertextType);
+  return rotate(lhs, steps);
+}
+
+Ciphertext operator>>(const Ciphertext &lhs, int steps)
+{
+  return rotate(lhs, -steps);
+}
+
+Ciphertext &Ciphertext::operator<<=(int steps)
+{
+  this->rotate(steps);
+  return *this;
+}
+
+Ciphertext &Ciphertext::operator>>=(int steps)
+{
+  this->rotate(-steps);
+  return *this;
+}
+
+Ciphertext rotate(const Ciphertext &lhs, int steps)
+{
+  return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), ir::OpCode::rotate, ir::ciphertextType);
 }
 
 std::string Ciphertext::get_term_tag()

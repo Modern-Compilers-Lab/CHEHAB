@@ -8,6 +8,7 @@ namespace ir
 
 enum TermType
 {
+  rawDataType,
   scalarType,
   ciphertextType,
   plaintextType

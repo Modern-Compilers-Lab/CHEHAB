@@ -44,9 +44,12 @@ public:
 
   Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::scalarType) {}
 
-  Term(OpCode _opcode, const std::vector<Ptr> &_operands, std::string label_value)
+  Term(OpCode _opcode, const std::vector<Ptr> &_operands, const std::string &label_value)
     : opcode(_opcode), operands(std::make_optional<std::vector<Ptr>>(std::move(_operands))), label(label_value)
   {}
+
+  // this constructure is useful in case of rawData where we store it in the lable as an int
+  Term(const std::string &symbol, TermType term_type) : label(symbol), type(term_type) {}
 
   bool merge_with_node(Ptr node_to_merge_with);
 
