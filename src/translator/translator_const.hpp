@@ -278,7 +278,7 @@ INLINE std::ostream &operator<<(std::ostream &os, const Encryptor &encryptor)
   }
   else
   {
-    os << encryptor_type_literal << " " << encoder_type_identifier << "(" << encryptor.context_id << ","
+    os << encryptor_type_literal << " " << encryptor_type_identifier << "(" << encryptor.context_id << ","
        << encryptor.public_key_id << ")";
   }
   return os;
