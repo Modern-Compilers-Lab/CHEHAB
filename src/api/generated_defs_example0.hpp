@@ -2,24 +2,24 @@
 #include <functional>
 #include <iomanip>
 #include <map>
+#include <memory.h>
 #include <string>
 #include <variant>
 #include <vector>
 
 // BFV scheme allows modular arithmetic
 using Scalar = uint64_t;
-using Inputs = std::map<std::string, std::reference_wrapper<ufhe::ICiphertext>>;
+using Inputs = std::unordered_map<std::string, std::unique_ptr<ufhe::ICiphertext>>;
 using Outputs = Inputs;
 
 void example0(
   const ufhe::IEvaluator &evaluator, const ufhe::IRelinKeys &relin_keys, const ufhe::IGaloisKeys &galois_keys,
   Inputs &inputs, Outputs &outputs)
 {
-  ufhe::ICiphertext &a = inputs["a"];
-  ufhe::ICiphertext &b = inputs["b"];
-  ufhe::ICiphertext &r = a;
-  evaluator.add_inplace(r, b);
-  outputs["r"] = r;
+  ufhe::ICiphertext &a = *inputs["a"];
+  ufhe::ICiphertext &b = *inputs["b"];
+  ufhe::ICiphertext &r = *outputs["r"];
+  evaluator.add(a, b, r);
 }
 
 /*

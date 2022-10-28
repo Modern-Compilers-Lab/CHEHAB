@@ -1,3 +1,4 @@
+#include "generated_defs_example0.hpp"
 #include "ufhe.hpp"
 #include <cstddef>
 #include <iomanip>
@@ -5,39 +6,6 @@
 
 using namespace ufhe::seal_backend;
 using namespace std;
-
-template <typename T>
-inline void print_matrix(std::vector<T> matrix, std::size_t row_size)
-{
-  /*
-  We're not going to print every column of the matrix (there are 2048).
-  Instead print this many slots from beginning and end of the matrix.
-  */
-  std::size_t print_size = 5;
-
-  std::cout << std::endl;
-  std::cout << "    [";
-  for (std::size_t i = 0; i < print_size; i++)
-  {
-    std::cout << std::setw(3) << std::right << matrix[i] << ",";
-  }
-  std::cout << std::setw(3) << " ...,";
-  for (std::size_t i = row_size - print_size; i < row_size; i++)
-  {
-    std::cout << std::setw(3) << matrix[i] << ((i != row_size - 1) ? "," : " ]\n");
-  }
-  std::cout << "    [";
-  for (std::size_t i = row_size; i < row_size + print_size; i++)
-  {
-    std::cout << std::setw(3) << matrix[i] << ",";
-  }
-  std::cout << std::setw(3) << " ...,";
-  for (std::size_t i = 2 * row_size - print_size; i < 2 * row_size; i++)
-  {
-    std::cout << std::setw(3) << matrix[i] << ((i != 2 * row_size - 1) ? "," : " ]\n");
-  }
-  std::cout << std::endl;
-}
 
 int main()
 {
@@ -77,15 +45,15 @@ int main()
   Ciphertext b_encrypted;
   encryptor.encrypt(b_plain, b_encrypted);
   // Evaluate
-  /*Inputs inputs{};
-  inputs["a"] = a_encrypted;
-  inputs["b"] = b_encrypted;
-  Outputs outputs{};*/
+  Inputs inputs{};
+  Outputs outputs{};
+  inputs["a"] = make_unique<Ciphertext>(a_encrypted);
+  inputs["b"] = make_unique<Ciphertext>(b_encrypted);
+  outputs["r"] = make_unique<Ciphertext>();
   Evaluator evaluator(context);
-  Ciphertext r_encrypted;
-  evaluator.add(a_encrypted, b_encrypted, r_encrypted);
-  // example0(evaluator, RelinKeys(), GaloisKeys(), inputs, outputs);
-  //  Decrypt
+  example0(evaluator, RelinKeys(), GaloisKeys(), inputs, outputs);
+  Ciphertext &r_encrypted = dynamic_cast<Ciphertext &>(*outputs["r"]);
+  // Decrypt
   const SecretKey &sk = dynamic_cast<const SecretKey &>(keygen.secret_key());
   Decryptor decryptor(context, sk);
   Plaintext r_plain;
