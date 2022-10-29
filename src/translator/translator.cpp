@@ -42,12 +42,15 @@ void Translator::translate_constant_table_entry(
       type_str = scalar_int;
     else if (scheme == fhecompiler::ckks)
     {
+      /*
       using ScalarValue = ir::ConstantTableEntry::ScalarValue;
       ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
       if (auto scalar_constant = std::get_if<int64_t>(&scalar_value))
       {
         type_str = scalar_int;
       }
+      */
+      type_str = scalar_float;
     }
     else
       throw("scheme not supported\n");
@@ -73,10 +76,13 @@ void Translator::translate_constant_table_entry(
       VectorValue vector_value = std::get<VectorValue>(*(entry_value.value));
       using VectorInt = std::vector<int64_t>;
       using VectorFloat = std::vector<double>;
+
+      type_str = (program->get_encryption_scheme() == fhecompiler::ckks ? scalar_float : scalar_int);
+
       if (auto _vector_value = std::get_if<VectorInt>(&vector_value))
-        encoding_writer.write_vector_encoding(os, tag, *_vector_value, scalar_int);
+        encoding_writer.write_vector_encoding(os, tag, *_vector_value, type_str);
       else if (auto vector_literal = std::get_if<VectorFloat>(&vector_value))
-        encoding_writer.write_vector_encoding(os, tag, *_vector_value, scalar_float);
+        encoding_writer.write_vector_encoding(os, tag, *_vector_value, type_str);
       else
         throw("unsupported data type by schemes\n");
     }
@@ -86,6 +92,20 @@ void Translator::translate_constant_table_entry(
       // don't forget to reduce
       using ScalarValue = ir::ConstantTableEntry::ScalarValue;
       ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
+
+      if (auto value = std::get_if<int64_t>(&scalar_value))
+      {
+        uint64_t casted_value = static_cast<uint64_t>(*value);
+        encoding_writer.write_scalar_encoding(
+          os, tag, std::to_string(casted_value), type_str, std::to_string(program->get_dimension()));
+      }
+      else
+      {
+        double e_value = std::get<double>(scalar_value);
+        encoding_writer.write_scalar_encoding(
+          os, tag, std::to_string(e_value), type_str, std::to_string(program->get_dimension()));
+      }
+      /*
       if (type_str == scalar_int)
       {
         // bfv/bgv
@@ -96,12 +116,13 @@ void Translator::translate_constant_table_entry(
       }
       else if (type_str == scalar_float)
       {
-        // ckks
+        // !
         // we call reduce
         double value = static_cast<double>(std::get<double>(scalar_value)); // later we change that
         encoding_writer.write_scalar_encoding(
           os, tag, std::to_string(value), type_str, std::to_string(program->get_dimension()));
       }
+      */
     }
     else
       throw("type not supported ");

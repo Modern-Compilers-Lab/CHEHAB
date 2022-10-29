@@ -263,6 +263,7 @@ public:
        << " " << vector_id << " = " << vector_value_str << ";" << '\n';
 
     // encoding
+    os << types_map[ir::plaintextType] << " " << plaintext_id << ";" << '\n';
     os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
        << '\n';
   }

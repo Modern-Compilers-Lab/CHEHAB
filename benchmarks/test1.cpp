@@ -25,7 +25,7 @@ int main()
 
   try
   {
-    fhecompiler::init("test1", 2 << 13, fhecompiler::Scheme::bfv);
+    fhecompiler::init("test1", 2 << 13, fhecompiler::Scheme::ckks);
 
     // fhecompiler::Plaintext pt11(std::vector<int64_t>{1, 3, 4, 5});
 
@@ -37,11 +37,17 @@ int main()
 
     fhecompiler::Ciphertext output2("output2", VarType::output);
 
+    fhecompiler::Plaintext pt2(std::vector<int64_t>({1, 2, 3, 4, 5, 6, 7, 5}));
+
+    fhecompiler::Plaintext pt2_output("pt2_output", VarType::output);
+
+    pt2_output = pt2;
+
     output2 = fhecompiler::Ciphertext::encrypt(pt1);
 
     output1 = (ct1 + pt1) * 2 + ct1 + ct1 + pt1;
 
-    output1 += 1312;
+    output1 -= 1312;
     /*
       {1, 3, 4}
 
@@ -52,7 +58,6 @@ int main()
       (ct1 + pt1) * 2 + ct1 + ct1 + pt1 -> {7, 9, 12} final result
       ((ct1 + pt1) * 2 + ct1 + ct1 + pt1) + 1312 -> {1319, 9, 12}
     */
-
     fhecompiler::compile("test1.hpp");
   }
   catch (const char *message)
