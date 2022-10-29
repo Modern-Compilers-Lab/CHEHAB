@@ -13,7 +13,6 @@
 
 namespace translator
 {
-inline std::string stringfy_string(const std::string &str);
 /* return types map, it maps IR types with corresponding literal for code generation that targets the API */
 INLINE std::unordered_map<ir::TermType, const char *> types_map = {
 
@@ -37,32 +36,10 @@ INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
   {ir::OpCode::sub_plain, "sub_plain"},
   {ir::OpCode::rescale, "rescale"},
   {ir::OpCode::square, "square"},
-  {ir::OpCode::rotate, "rotate"},
+  {ir::OpCode::rotate, "rotate_vector"},
   {ir::OpCode::relinearize, "relinearize"}
 
 };
-
-/*
-INLINE std::unordered_map<ir::TermType, const char *> inputs_map_by_type = {
-  {ir::TermType::scalarType, "ScalarInputs"},
-  {ir::TermType::plaintextType, "EncodedInputs"},
-  {ir::TermType::ciphertextType, "EncryptedInputs"}};
-
-INLINE std::unordered_map<ir::TermType, const char *> inputs_map_identifier_by_type = {
-  {ir::TermType::scalarType, "scalar_inputs"},
-  {ir::TermType::plaintextType, "plain_inputs"},
-  {ir::TermType::ciphertextType, "cipher_inputs"}};
-
-INLINE std::unordered_map<ir::TermType, const char *> outputs_map_identifier_by_type = {
-  {ir::TermType::scalarType, "scalar_outputs"},
-  {ir::TermType::plaintextType, "plain_outputs"},
-  {ir::TermType::ciphertextType, "cipher_outputs"}};
-
-INLINE std::unordered_map<ir::TermType, const char *> outputs_map_by_type = {
-  {ir::TermType::scalarType, "ScalarOutputs"},
-  {ir::TermType::plaintextType, "EncodedOutputs"},
-  {ir::TermType::ciphertextType, "EncryptedOutputs"}};
-*/
 
 /* literals related to api/backend */
 INLINE const char *outputs_class_identifier = "outputs";
@@ -110,34 +87,10 @@ INLINE const char *assign_literal = "=";
 INLINE const char *start_block = "{";
 INLINE const char *end_block = "}";
 
-// for containers
-INLINE const char *unordered_map_literal = "std::unorderded_map";
-INLINE const char *map_literal = "std::map";
-INLINE const char *vector_literal = "std::vector";
-
-enum class ContainerType
-{
-  vector,
-  map,
-  unorderedMap
-};
-
-INLINE std::vector<const char *> containers_map = {vector_literal, map_literal, unordered_map_literal};
-
 enum class AccessType
 {
   readOnly,
   readAndModify
-};
-
-struct CONTAINER_OF
-{
-  std::string operator()(ContainerType container_type, const char *type_literal)
-  {
-    std::string container_type_str(containers_map[static_cast<int>(container_type)]);
-    std::string type_literal_str(type_literal);
-    return container_type_str + "<" + type_literal_str + "> ";
-  }
 };
 
 struct ARGUMENT
@@ -176,153 +129,150 @@ public:
   }
 };
 
-struct MAP_ACCESSOR
-{
-  std::string operator()(const std::string &map_identifier, const std::string &key)
-  {
-    return map_identifier + "[" + key + "]";
-  }
-};
-
-struct Evaluator
-{
-
-private:
-  std::string context_id;
-  std::string evaluator_id;
-
-public:
-  Evaluator(const std::string &ctxt_id, const std::string eval_id) : context_id(ctxt_id), evaluator_id(eval_id) {}
-
-  void write_binary_operation(
-    ir::TermType type, ir::OpCode opcode, const std::string &destination, const std::string &lhs,
-    const std::string &rhs, const std::string &other_args,
-    std::ofstream &os) const /* other_args is used in case of operations where we need to specify other parameters like
-                                keys (relin_keys and galois keys)*/
-  {
-    std::string object_type = types_map[type];
-    std::string operator_identifier = ops_map[opcode];
-    os << object_type << " " << destination << ";" << '\n';
-    if (other_args.length() == 0)
-    {
-      os << evaluator_id << "." << operator_identifier << "(" << lhs << "," << rhs << "," << destination << ");"
-         << '\n';
-    }
-    else
-    {
-      os << evaluator_id << "." << operator_identifier << "(" << lhs << "," << rhs << "," << other_args << ","
-         << destination << ");" << '\n';
-    }
-  }
-
-  friend std::ostream &operator<<(std::ostream &o_stream, const Evaluator &evaluator);
-};
-
-template <typename T>
-inline void dump_vector(const std::vector<T> &v, std::string &vector_str)
-{
-  vector_str = '{';
-  for (size_t i = 0; i < v.size(); i++)
-  {
-    vector_str += std::to_string(v[i]);
-    if (i < v.size() - 1)
-      vector_str += ',';
-  }
-  vector_str += '}';
-}
-
-struct Encoder
+struct EncryptionWriter
 {
 private:
-  std::string context_id;
+  std::string public_key_identifier;
+  std::string context_identifier;
+  std::string encryptor_identifier;
+  std::string encryptor_type_literal;
+  std::string encrypt_instruction_literal;
+  bool is_init = false;
 
 public:
-  bool is_defined = false;
+  EncryptionWriter() = default;
 
-  Encoder(const std::string &ctxt_id) : context_id(ctxt_id) {}
+  EncryptionWriter(
+    const std::string &encryptor_type, const std::string &encryptor_id, const std::string &encrypt_instruction,
+    const std::string &pk_id, const std::string &ctxt_id)
+    : public_key_identifier(pk_id), context_identifier(ctxt_id), encryptor_identifier(encryptor_id),
+      encrypt_instruction_literal(encrypt_instruction), encryptor_type_literal(encryptor_type)
+  {}
+  ~EncryptionWriter() {}
 
-  template <typename T>
-  void write_encode(
-    const std::vector<T> &clear_message, const std::string &identifier, std::ostream &os,
-    const char *constant_type) const
+  void init(std::ostream &os)
   {
-    std::string vector_str;
-    dump_vector(clear_message, vector_str);
-    CONTAINER_OF container_of;
-    std::string vector_identifier = identifier + "_clear";
-    os << container_of(ContainerType::vector, constant_type) << " " << vector_identifier << " = " << vector_str << ";"
-       << '\n';
-    os << types_map[ir::plaintextType] << " " << identifier << ";" << '\n';
-    os << encoder_type_identifier << "." << encode_literal << "(" << vector_identifier << "," << identifier << ");"
-       << '\n';
+    is_init = true;
+    os << encryptor_type_literal << " " << encryptor_identifier << "(" << context_identifier << ","
+       << public_key_identifier << ");" << '\n';
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const Encoder &encoder);
+  void write_encryption(std::ostream &os, const std::string &plaintext_id, const std::string &destination_cipher) const
+  {
+    os << types_map[ir::ciphertextType] << " " << destination_cipher << ";" << '\n';
+    os << encryptor_identifier << "." << encrypt_instruction_literal << "(" << plaintext_id << "," << destination_cipher
+       << ");" << '\n';
+  }
+
+  bool is_initialized() const { return this->is_init; }
 };
 
-struct Encryptor
+struct EvaluationWriter
 {
 private:
-  std::string context_id;
-  std::string public_key_id;
-  std::optional<std::string> private_key_id;
+  std::string evaluator_identifier;
+  std::string context_identifier;
+  std::string evaluator_type_literal;
+  bool is_init = false;
 
 public:
-  bool is_defined = false;
-  Encryptor(const std::string &ctxt_id, const std::string &pbk_id, const std::optional<std::string> &pvk_id)
-    : context_id(ctxt_id), public_key_id(pbk_id), private_key_id(pvk_id)
+  EvaluationWriter() = default;
+
+  EvaluationWriter(const std::string &evaluator_type, const std::string &evaluator_id, const std::string &context_id)
+    : evaluator_identifier(evaluator_id), context_identifier(context_id), evaluator_type_literal(evaluator_type)
   {}
 
-  void write_encrypt(const std::string &cipher_dest_id, const std::string &plaintext_id, std::ostream &os)
+  ~EvaluationWriter() {}
+
+  void init(std::ostream &os)
   {
-    os << types_map[ir::ciphertextType] << " " << cipher_dest_id << end_of_command << '\n';
-    os << encryptor_type_identifier << "." << encrypt_literal << "(" << plaintext_id << "," << cipher_dest_id << ")"
-       << end_of_command << '\n';
+    is_init = true;
+    os << evaluator_type_literal << " " << evaluator_identifier << "(" << context_identifier << ");" << '\n';
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const Encryptor &encryptor);
+  void write_binary_operation(
+    std::ostream &os, ir::OpCode opcode, const std::string &destination_id, const std::string &lhs_id,
+    const std::string &rhs_id, ir::TermType type) const
+  {
+    os << types_map[type] << " " << destination_id << ";" << '\n';
+    os << evaluator_identifier << "." << ops_map[opcode] << "(" << lhs_id << "," << rhs_id << "," << destination_id
+       << ");" << '\n';
+  }
+
+  bool is_initialized() const { return this->is_init; }
 };
 
-INLINE std::ostream &operator<<(std::ostream &os, const Encryptor &encryptor)
+struct EncodingWriter
 {
-  if (encryptor.private_key_id != std::nullopt)
+private:
+  std::string encoder_type_literal;
+  std::string encoder_identifier;
+  std::string context_identifier;
+  std::string encoder_instruction_literal;
+  bool is_init = false;
+
+public:
+  EncodingWriter() = default;
+
+  EncodingWriter(
+    const std::string &encoder_type, const std::string &encoder_id, const std::string &ctxt_id,
+    const std::string &encode_inst_literal)
+    : encoder_type_literal(encoder_type), encoder_identifier(encoder_id), context_identifier(ctxt_id),
+      encoder_instruction_literal(encode_inst_literal)
+  {}
+  ~EncodingWriter() {}
+
+  void init(std::ostream &os)
   {
-    os << encryptor_type_literal << " " << encryptor_type_identifier << "(" << encryptor.context_id << ","
-       << encryptor.public_key_id << "," << *(encryptor.private_key_id) << ")";
+    is_init = true;
+    os << encoder_type_literal << " " << encoder_identifier << "(" << context_identifier << ");" << '\n';
   }
-  else
+
+  void write_scalar_encoding(
+    std::ostream &os, const std::string &plaintext_id, const std::string &scalar_value, const std::string &scalar_type,
+    const std::string &vector_size) const
   {
-    os << encryptor_type_literal << " " << encryptor_type_identifier << "(" << encryptor.context_id << ","
-       << encryptor.public_key_id << ")";
+    // create a vector
+    const std::string vector_id = plaintext_id + "_clear";
+    os << "vector<" << scalar_type << ">"
+       << " " << vector_id << "(" << vector_size << ");" << '\n';
+
+    os << "for(size_t i = 0; i < " << vector_size << "; i++)" << '\n'
+       << "{" << '\n'
+       << vector_id << "[i] = " << scalar_value << ";" << '\n'
+       << "}" << '\n';
+
+    os << types_map[ir::plaintextType] << " " << plaintext_id << ";" << '\n';
+    os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
+       << '\n';
   }
-  return os;
-}
 
-INLINE std::ostream &operator<<(std::ostream &os, const Evaluator &evaluator)
-{
-  os << evaluator_type_literal << " " << evaluator.evaluator_id << "(" << evaluator.context_id << ")";
-  return os;
-}
+  template <typename T>
+  void write_vector_encoding(
+    std::ostream &os, const std::string &plaintext_id, const std::vector<T> &vector_value,
+    const std::string &vector_type) const
+  {
+    // dump the vector
+    size_t vector_size = vector_value.size();
+    std::string vector_value_str("{");
+    for (size_t i = 0; i < vector_size; i++)
+    {
+      vector_value_str += std::to_string(vector_value[i]);
+      if (i < vector_size - 1)
+        vector_value_str += ",";
+    }
+    vector_value_str += "}";
+    const std::string vector_id = plaintext_id + "_clear";
+    os << "vector<" << vector_type << ">"
+       << " " << vector_id << " = " << vector_value_str << ";" << '\n';
 
-INLINE std::ostream &operator<<(std::ostream &os, const Encoder &encoder)
-{
-  os << encoder_type_literal << " " << encoder_type_identifier << "(" << encoder.context_id << ")";
-  return os;
-}
+    // encoding
+    os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
+       << '\n';
+  }
 
-inline void write_input(const std::string &input_identifier, ir::TermType type, std::ostream &os)
-{
-  // retrieve an input from object
-  os << types_map[type] << " " << input_identifier << " = " << inputs_class_identifier << "."
-     << get_instruction_by_type[type] << "(" << stringfy_string(input_identifier) << ")" << end_of_command << '\n';
-}
-
-inline void write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os)
-{
-  // insert output in object
-  os << outputs_class_identifier << "." << insert_object_instruction << "<" << types_map[type] << ">"
-     << "({" << stringfy_string(output_identifier) << "," << output_identifier << "})" << end_of_command << '\n';
-}
+  bool is_initialized() const { return this->is_init; }
+};
 
 inline std::string stringfy_string(const std::string &str)
 {

@@ -25,7 +25,7 @@ int main()
 
   try
   {
-    fhecompiler::init("test1", 1024, fhecompiler::Scheme::bfv);
+    fhecompiler::init("test1", 2 << 13, fhecompiler::Scheme::bfv);
 
     // fhecompiler::Plaintext pt11(std::vector<int64_t>{1, 3, 4, 5});
 
@@ -42,17 +42,6 @@ int main()
     output1 = (ct1 + pt1) * 2 + ct1 + ct1 + pt1;
 
     output1 += 1312;
-
-    fhecompiler::Ciphertext ct3_output = std::move(output1);
-
-    fhecompiler::Ciphertext output3("output3", VarType::output);
-
-    int rotation_steps = 12;
-
-    output3 = ct1 >> rotation_steps;
-
-    output3 <<= (int)5;
-
     /*
       {1, 3, 4}
 
