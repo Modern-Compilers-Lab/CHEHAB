@@ -194,7 +194,7 @@ void Translator::translate(std::ofstream &os)
 {
 
   generate_function_signature(os);
-  os << start_block << '\n';
+  os << "{" << '\n';
 
   const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes();
   for (auto &node_ptr : nodes_ptr)
@@ -205,12 +205,12 @@ void Translator::translate(std::ofstream &os)
   {
     write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
   }
-  os << end_block << '\n';
+  os << "}" << '\n';
 }
 
 void Translator::generate_function_signature(std::ofstream &os) const
 {
-  ARGUMENTS_LIST argument_list;
+  ArgumentList argument_list;
   os << "void " << program->get_program_tag()
      << argument_list(
           {{inputs_class_literal, inputs_class_identifier, AccessType::readAndModify},
@@ -226,14 +226,16 @@ void Translator::write_input(const std::string &input_identifier, ir::TermType t
 {
   // retrieve an input from object
   os << types_map[type] << " " << input_identifier << " = " << inputs_class_identifier << "."
-     << get_instruction_by_type[type] << "(" << stringfy_string(input_identifier) << ")" << end_of_command << '\n';
+     << get_instruction_by_type[type] << "(" << stringfy_string(input_identifier) << ")"
+     << ";" << '\n';
 }
 
 void Translator::write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os)
 {
   // insert output in object
   os << outputs_class_identifier << "." << insert_object_instruction << "<" << types_map[type] << ">"
-     << "({" << stringfy_string(output_identifier) << "," << output_identifier << "})" << end_of_command << '\n';
+     << "({" << stringfy_string(output_identifier) << "," << output_identifier << "})"
+     << ";" << '\n';
 }
 
 void Translator::write_assign_operation(

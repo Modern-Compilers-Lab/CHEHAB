@@ -77,39 +77,35 @@ INLINE std::unordered_map<ir::TermType, const char *> get_instruction_by_type = 
 INLINE std::unordered_map<ir::OpCode, const char *> get_other_args_by_opcode = {
   {ir::OpCode::rotate, galois_keys_identifier}, {ir::OpCode::exponentiate, relin_keys_identifier}};
 
-/* general literals for C++ */
-INLINE const char *new_line = "\n";
-INLINE const char *end_of_command = ";";
-INLINE const char *open_parantesis = "(";
-INLINE const char *close_parantesis = ")";
-INLINE const char *return_stmnt = "return ";
-INLINE const char *assign_literal = "=";
-INLINE const char *start_block = "{";
-INLINE const char *end_block = "}";
-
 enum class AccessType
 {
   readOnly,
   readAndModify
 };
 
-struct ARGUMENT
+struct Argument
 {
   const std::string arg_identifier;
   const std::string arg_type;
   AccessType access_type;
 
-  ~ARGUMENT() {}
+  Argument() = default;
 
-  ARGUMENT(const char *type, const char *identifier, AccessType _access_type)
+  ~Argument() {}
+
+  Argument(const char *type, const char *identifier, AccessType _access_type)
     : arg_type(type), arg_identifier(identifier), access_type(_access_type)
   {}
 };
 
-struct ARGUMENTS_LIST
+struct ArgumentList
 {
 public:
-  std::string operator()(const std::vector<ARGUMENT> &args)
+  ArgumentList() = default;
+
+  ~ArgumentList() {}
+
+  std::string operator()(const std::vector<Argument> &args)
   {
     std::string arguments_list_str("(");
     size_t n_arguments = args.size();
