@@ -66,13 +66,13 @@ namespace seal_backend
 
     inline std::size_t poly_modulus_degree() const override { return underlying_.poly_modulus_degree(); }
 
-    inline const api::ICoeffModulus &coeff_modulus() const override
+    inline const CoeffModulus &coeff_modulus() const override
     {
       *coeff_modulus_p_ = CoeffModulus(underlying_.coeff_modulus());
       return *coeff_modulus_p_;
     }
 
-    inline const api::IModulus &plain_modulus() const override
+    inline const Modulus &plain_modulus() const override
     {
       *plain_modulus_p_ = Modulus(underlying_.plain_modulus());
       return *plain_modulus_p_;

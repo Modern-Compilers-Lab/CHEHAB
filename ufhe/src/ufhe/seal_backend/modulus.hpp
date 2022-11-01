@@ -25,7 +25,7 @@ namespace seal_backend
 
     inline api::BackendType backend() const override { return api::BackendType::seal; }
 
-    inline api::IModulus &operator=(std::uint64_t value) override
+    inline Modulus &operator=(std::uint64_t value) override
     {
       underlying_ = value;
       return *this;

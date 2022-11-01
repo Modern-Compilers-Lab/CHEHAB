@@ -31,7 +31,7 @@ namespace seal_backend
 
     inline api::BackendType backend() const override { return api::BackendType::seal; }
 
-    inline const api::ISecretKey &secret_key() const override
+    inline const SecretKey &secret_key() const override
     {
       *secret_key_p_ = SecretKey(underlying_.secret_key());
       return *secret_key_p_;
