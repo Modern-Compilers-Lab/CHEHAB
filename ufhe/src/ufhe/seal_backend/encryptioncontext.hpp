@@ -20,7 +20,7 @@ namespace seal_backend
   public:
     inline EncryptionContext(const EncryptionParameters &parms) : underlying_(seal::SEALContext(parms.underlying_)) {}
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
   private:
     seal::SEALContext underlying_;

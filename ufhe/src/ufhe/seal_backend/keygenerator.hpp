@@ -29,7 +29,7 @@ namespace seal_backend
 
     inline ~KeyGenerator() { delete secret_key_p_; }
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline const SecretKey &secret_key() const override
     {

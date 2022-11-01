@@ -15,7 +15,7 @@ namespace seal_backend
   public:
     inline PublicKey() : underlying_(seal::PublicKey()) {}
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
   private:
     seal::PublicKey underlying_;

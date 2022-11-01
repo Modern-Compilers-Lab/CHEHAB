@@ -21,7 +21,7 @@ namespace seal_backend
 
     inline Plaintext(const std::string &hex_poly) : underlying_(seal::Plaintext(hex_poly)) {}
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline void resize(std::size_t coeff_count) override { underlying_.resize(coeff_count); }
 

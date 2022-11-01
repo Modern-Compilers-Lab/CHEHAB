@@ -19,7 +19,7 @@ namespace seal_backend
 
     inline Ciphertext(const EncryptionContext &context) : underlying_(seal::Ciphertext(context.underlying_)) {}
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline std::size_t coeff_modulus_size() const override { return underlying_.coeff_modulus_size(); }
 

@@ -10,11 +10,11 @@ class Config
 public:
   Config() = delete;
 
-  static inline void set_backend(BackendType backend) { backend_ = backend; }
+  static inline void set_backend(api::backend_type backend) { backend_ = backend; }
 
-  static inline BackendType backend() { return backend_; }
+  static inline api::backend_type backend() { return backend_; }
 
 private:
-  static BackendType backend_;
+  static api::backend_type backend_;
 };
 } // namespace ufhe

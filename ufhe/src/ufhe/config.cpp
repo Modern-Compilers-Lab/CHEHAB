@@ -2,5 +2,5 @@
 
 namespace ufhe
 {
-api::BackendType Config::backend_ = api::BackendType::seal;
+api::backend_type Config::backend_ = api::backend_type::seal;
 }

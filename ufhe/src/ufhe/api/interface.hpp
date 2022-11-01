@@ -11,7 +11,7 @@ namespace api
   public:
     virtual ~Interface() = default;
 
-    virtual BackendType backend() const = 0;
+    virtual backend_type backend() const = 0;
 
   protected:
     Interface() = default;

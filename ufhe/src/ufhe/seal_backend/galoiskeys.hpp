@@ -12,7 +12,7 @@ namespace seal_backend
   public:
     inline GaloisKeys() {}
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline std::size_t size() const override { return underlying_.size(); }
 

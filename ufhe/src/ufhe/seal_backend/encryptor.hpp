@@ -27,7 +27,7 @@ namespace seal_backend
       : underlying_(seal::Encryptor(context.underlying_, public_key.underlying_, secret_key.underlying_))
     {}
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline void encrypt(const api::IPlaintext &plain, api::ICiphertext &destination) const override
     {

@@ -16,7 +16,7 @@ namespace seal_backend
   public:
     inline SchemeType(std::uint8_t scheme_id) : SchemeType(static_cast<seal::scheme_type>(scheme_id)) {}
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
   private:
     inline SchemeType(seal::scheme_type seal_scheme) : underlying_(seal_scheme) {}
@@ -45,7 +45,7 @@ namespace seal_backend
       delete plain_modulus_p_;
     }
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline void set_poly_modulus_degree(std::size_t poly_modulus_degree) override
     {

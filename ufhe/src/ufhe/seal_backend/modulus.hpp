@@ -23,7 +23,7 @@ namespace seal_backend
       return Modulus(seal::PlainModulus::Batching(poly_modulus_degree, bit_size));
     }
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline Modulus &operator=(std::uint64_t value) override
     {

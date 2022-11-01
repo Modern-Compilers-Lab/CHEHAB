@@ -14,7 +14,7 @@ namespace seal_backend
   public:
     inline BatchEncoder(const EncryptionContext &context) : underlying_(seal::BatchEncoder(context.underlying_)) {}
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline std::size_t slot_count() override { return underlying_.slot_count(); }
 

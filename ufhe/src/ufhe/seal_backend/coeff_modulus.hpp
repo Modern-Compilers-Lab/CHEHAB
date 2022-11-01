@@ -22,7 +22,7 @@ namespace seal_backend
       return CoeffModulus(seal::CoeffModulus::BFVDefault(poly_modulus_degree));
     }
 
-    inline api::BackendType backend() const override { return api::BackendType::seal; }
+    inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     api::IModulus::vector value() const override;
 
