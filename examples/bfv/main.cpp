@@ -9,7 +9,7 @@ using namespace std;
 int main()
 {
   // Parameters
-  SchemeType scheme(1);
+  Scheme scheme(ufhe::api::scheme_type::bfv);
   EncryptionParameters params(scheme);
   size_t poly_modulus_degree = 8192;
   params.set_poly_modulus_degree(poly_modulus_degree);

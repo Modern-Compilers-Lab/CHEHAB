@@ -4,32 +4,18 @@
 #include "ufhe/api/iencryptionparameters.hpp"
 #include "ufhe/seal_backend/coeff_modulus.hpp"
 #include "ufhe/seal_backend/modulus.hpp"
+#include "ufhe/seal_backend/scheme.hpp"
 
 namespace ufhe
 {
 namespace seal_backend
 {
-  class SchemeType : public api::ISchemeType
-  {
-    friend class EncryptionParameters;
-
-  public:
-    inline SchemeType(std::uint8_t scheme_id) : SchemeType(static_cast<seal::scheme_type>(scheme_id)) {}
-
-    inline api::backend_type backend() const override { return api::backend_type::seal; }
-
-  private:
-    inline SchemeType(seal::scheme_type seal_scheme) : underlying_(seal_scheme) {}
-
-    seal::scheme_type underlying_;
-  };
-
   class EncryptionParameters : public api::IEncryptionParameters
   {
     friend class EncryptionContext;
 
   public:
-    inline EncryptionParameters(const SchemeType &scheme)
+    inline EncryptionParameters(const Scheme &scheme)
       : underlying_(seal::EncryptionParameters(scheme.underlying_)), scheme_(scheme),
         coeff_modulus_p_(new CoeffModulus(underlying_.coeff_modulus())),
         plain_modulus_p_(new Modulus(underlying_.plain_modulus()))
@@ -62,7 +48,7 @@ namespace seal_backend
       underlying_.set_plain_modulus(dynamic_cast<const Modulus &>(plain_modulus).underlying_);
     }
 
-    inline const api::ISchemeType &scheme() const override { return scheme_; }
+    inline const Scheme &scheme() const override { return scheme_; }
 
     inline std::size_t poly_modulus_degree() const override { return underlying_.poly_modulus_degree(); }
 
@@ -80,7 +66,7 @@ namespace seal_backend
 
   private:
     seal::EncryptionParameters underlying_;
-    SchemeType scheme_;
+    Scheme scheme_;
     CoeffModulus *coeff_modulus_p_;
     Modulus *plain_modulus_p_;
   };

@@ -2,7 +2,6 @@
 
 #include "ufhe/api/interface.hpp"
 #include <cstddef>
-#include <cstdint>
 
 namespace ufhe
 {
@@ -10,9 +9,7 @@ namespace api
 {
   class ICoeffModulus;
   class IModulus;
-
-  class ISchemeType : public Interface
-  {};
+  class IScheme;
 
   class IEncryptionParameters : public Interface
   {
@@ -25,7 +22,7 @@ namespace api
 
     // TODO: Virtual setter for the random number generator factory
 
-    virtual const ISchemeType &scheme() const = 0;
+    virtual const IScheme &scheme() const = 0;
 
     virtual std::size_t poly_modulus_degree() const = 0;
 
