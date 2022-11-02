@@ -1,24 +1,29 @@
 #pragma once
 
-#include "iencryptionparameters.hpp"
-#include "modulus.hpp"
-#include "seal_backend/encryptionparameters.hpp"
+#include "ufhe/api/iencryptionparameters.hpp"
+#include "ufhe/coeff_modulus.hpp"
+#include "ufhe/config.hpp"
+#include "ufhe/modulus.hpp"
+#include "ufhe/scheme.hpp"
+#include "ufhe/seal_backend/encryptionparameters.hpp"
 
 namespace ufhe
 {
-class SchemeType : public ISchemeType
+class EncryptionParameters : public api::IEncryptionParameters
 {
-  friend class EncryptionParameters;
-
 public:
-  inline SchemeType(Backend backend, std::uint8_t scheme_id)
+  EncryptionParameters(const Scheme &scheme)
+    : scheme_(scheme), coeff_modulus_(new CoeffModulus()), plain_modulus_(new Modulus())
   {
-    if (backend == Backend::none)
-      backend = API::default_backend();
-    switch (backend)
+    switch (Config::backend())
     {
-    case Backend::seal:
-      underlying_ = new seal_backend::SchemeType(scheme_id);
+    case api::backend_type::seal:
+      underlying_ =
+        new seal_backend::EncryptionParameters(dynamic_cast<const seal_backend::Scheme &>(scheme.underlying()));
+      break;
+
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
       break;
 
     default:
@@ -26,41 +31,6 @@ public:
       break;
     }
   }
-
-  inline SchemeType(std::uint8_t scheme_id) : SchemeType(Backend::none, scheme_id) {}
-
-  ~SchemeType() { delete underlying_; }
-
-  inline Backend backend() override { return underlying().backend(); }
-
-private:
-  inline ISchemeType &underlying() const { return *underlying_; }
-
-  ISchemeType *underlying_;
-};
-
-class EncryptionParameters : public IEncryptionParameters
-{
-  friend class EncryptionContext;
-
-public:
-  inline EncryptionParameters(Backend backend, const ufhe::ISchemeType &scheme)
-  {
-    if (backend == Backend::none)
-      backend = API::default_backend();
-    switch (backend)
-    {
-    case Backend::seal:
-      underlying_ = new seal_backend::EncryptionParameters(dynamic_cast<const SchemeType &>(scheme).underlying());
-      break;
-
-    default:
-      throw std::invalid_argument("unsupported backend");
-      break;
-    }
-  }
-
-  inline EncryptionParameters(const ufhe::ISchemeType &scheme) : EncryptionParameters(Backend::none, scheme) {}
 
   EncryptionParameters(const EncryptionParameters &copy) = delete;
 
@@ -68,31 +38,45 @@ public:
 
   ~EncryptionParameters() { delete underlying_; }
 
-  inline Backend backend() override { return underlying().backend(); }
+  inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline void set_poly_modulus_degree(std::size_t poly_modulus_degree) override
   {
     underlying().set_poly_modulus_degree(poly_modulus_degree);
   }
 
-  void set_coeff_modulus(const IModulus::vector &coeff_modulus) override;
+  void set_coeff_modulus(const api::ICoeffModulus &coeff_modulus) override
+  {
+    underlying().set_coeff_modulus(dynamic_cast<const CoeffModulus &>(coeff_modulus).underlying());
+  }
 
-  inline void set_plain_modulus(const IModulus &plain_modulus) override
+  inline void set_plain_modulus(const api::IModulus &plain_modulus) override
   {
     underlying().set_plain_modulus(dynamic_cast<const Modulus &>(plain_modulus).underlying());
   }
 
-  inline const ISchemeType &scheme() const override { return underlying().scheme(); }
+  inline const Scheme &scheme() const override { return scheme_; }
 
   inline std::size_t poly_modulus_degree() const override { return underlying().poly_modulus_degree(); }
 
-  inline IModulus::vector coeff_modulus() override { return underlying().coeff_modulus(); };
+  inline const CoeffModulus &coeff_modulus() const override
+  {
+    *coeff_modulus_ = CoeffModulus(underlying().coeff_modulus());
+    return *coeff_modulus_;
+  }
 
-  inline const IModulus &plain_modulus() const override { return underlying().plain_modulus(); }
+  inline const Modulus &plain_modulus() const override
+  {
+    *plain_modulus_ = Modulus(underlying().plain_modulus());
+    return *plain_modulus_;
+  }
 
 private:
   inline IEncryptionParameters &underlying() const { return *underlying_; }
 
   IEncryptionParameters *underlying_;
+  Scheme scheme_;
+  CoeffModulus *coeff_modulus_;
+  Modulus *plain_modulus_;
 };
 } // namespace ufhe

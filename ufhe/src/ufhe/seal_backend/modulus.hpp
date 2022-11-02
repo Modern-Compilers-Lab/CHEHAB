@@ -16,7 +16,7 @@ namespace seal_backend
     friend class EncryptionParameters;
 
   public:
-    inline Modulus(std::uint64_t value) : underlying_(seal::Modulus(value)) {}
+    inline Modulus(std::uint64_t value = 0) : underlying_(seal::Modulus(value)) {}
 
     static inline Modulus PlainModulus(std::size_t poly_modulus_degree, int bit_size)
     {

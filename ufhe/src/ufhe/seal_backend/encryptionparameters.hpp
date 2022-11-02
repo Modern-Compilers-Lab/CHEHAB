@@ -17,8 +17,7 @@ namespace seal_backend
   public:
     inline EncryptionParameters(const Scheme &scheme)
       : underlying_(seal::EncryptionParameters(scheme.underlying_)), scheme_(scheme),
-        coeff_modulus_(new CoeffModulus(underlying_.coeff_modulus())),
-        plain_modulus_(new Modulus(underlying_.plain_modulus()))
+        coeff_modulus_(new CoeffModulus()), plain_modulus_(new Modulus())
     {}
 
     EncryptionParameters(const EncryptionParameters &copy) = delete;

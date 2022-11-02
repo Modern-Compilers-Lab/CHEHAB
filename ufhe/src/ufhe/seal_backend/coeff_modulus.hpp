@@ -3,7 +3,7 @@
 #include "seal/seal.h"
 #include "ufhe/api/icoeff_modulus.hpp"
 #include "ufhe/seal_backend/modulus.hpp"
-#include <stddef.h>
+#include <cstddef>
 #include <vector>
 
 namespace ufhe
@@ -15,7 +15,7 @@ namespace seal_backend
     friend class EncryptionParameters;
 
   public:
-    CoeffModulus(const std::vector<Modulus> &moduli);
+    CoeffModulus(const std::vector<Modulus> &moduli = {});
 
     static inline CoeffModulus Default(size_t poly_modulus_degree)
     {

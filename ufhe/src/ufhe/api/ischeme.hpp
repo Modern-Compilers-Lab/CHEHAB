@@ -16,6 +16,7 @@ namespace api
 
   class IScheme : public Interface
   {
+  public:
     virtual api::scheme_type type() const = 0;
   };
 } // namespace api
