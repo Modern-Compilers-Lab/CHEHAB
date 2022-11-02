@@ -16,7 +16,7 @@ namespace seal_backend
 
   public:
     inline KeyGenerator(const EncryptionContext &context)
-      : underlying_(seal::KeyGenerator(context.underlying_)), secret_key_p_(new SecretKey(underlying_.secret_key()))
+      : underlying_(seal::KeyGenerator(context.underlying_)), secret_key_(new SecretKey(underlying_.secret_key()))
     {}
 
     inline KeyGenerator(const EncryptionContext &context, const SecretKey &secret_key)
@@ -27,14 +27,14 @@ namespace seal_backend
 
     KeyGenerator &operator=(const KeyGenerator &assign) = delete;
 
-    inline ~KeyGenerator() { delete secret_key_p_; }
+    inline ~KeyGenerator() { delete secret_key_; }
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline const SecretKey &secret_key() const override
     {
-      *secret_key_p_ = SecretKey(underlying_.secret_key());
-      return *secret_key_p_;
+      *secret_key_ = SecretKey(underlying_.secret_key());
+      return *secret_key_;
     }
 
     inline void create_public_key(api::IPublicKey &destination) const override
@@ -44,7 +44,7 @@ namespace seal_backend
 
   private:
     seal::KeyGenerator underlying_;
-    SecretKey *secret_key_p_;
+    SecretKey *secret_key_;
   };
 } // namespace seal_backend
 } // namespace ufhe

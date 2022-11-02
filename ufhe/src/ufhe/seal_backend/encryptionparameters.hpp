@@ -17,8 +17,8 @@ namespace seal_backend
   public:
     inline EncryptionParameters(const Scheme &scheme)
       : underlying_(seal::EncryptionParameters(scheme.underlying_)), scheme_(scheme),
-        coeff_modulus_p_(new CoeffModulus(underlying_.coeff_modulus())),
-        plain_modulus_p_(new Modulus(underlying_.plain_modulus()))
+        coeff_modulus_(new CoeffModulus(underlying_.coeff_modulus())),
+        plain_modulus_(new Modulus(underlying_.plain_modulus()))
     {}
 
     EncryptionParameters(const EncryptionParameters &copy) = delete;
@@ -27,8 +27,8 @@ namespace seal_backend
 
     inline ~EncryptionParameters()
     {
-      delete coeff_modulus_p_;
-      delete plain_modulus_p_;
+      delete coeff_modulus_;
+      delete plain_modulus_;
     }
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
@@ -54,21 +54,21 @@ namespace seal_backend
 
     inline const CoeffModulus &coeff_modulus() const override
     {
-      *coeff_modulus_p_ = CoeffModulus(underlying_.coeff_modulus());
-      return *coeff_modulus_p_;
+      *coeff_modulus_ = CoeffModulus(underlying_.coeff_modulus());
+      return *coeff_modulus_;
     }
 
     inline const Modulus &plain_modulus() const override
     {
-      *plain_modulus_p_ = Modulus(underlying_.plain_modulus());
-      return *plain_modulus_p_;
+      *plain_modulus_ = Modulus(underlying_.plain_modulus());
+      return *plain_modulus_;
     }
 
   private:
     seal::EncryptionParameters underlying_;
     Scheme scheme_;
-    CoeffModulus *coeff_modulus_p_;
-    Modulus *plain_modulus_p_;
+    CoeffModulus *coeff_modulus_;
+    Modulus *plain_modulus_;
   };
 } // namespace seal_backend
 } // namespace ufhe
