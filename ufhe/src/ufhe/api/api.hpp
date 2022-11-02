@@ -3,7 +3,7 @@
 #include "ufhe/api/backendtype.hpp"
 #include "ufhe/api/ibatchencoder.hpp"
 #include "ufhe/api/iciphertext.hpp"
-#include "ufhe/api/icoeff_modulus.hpp"
+#include "ufhe/api/icoeffmodulus.hpp"
 #include "ufhe/api/idecryptor.hpp"
 #include "ufhe/api/iencryptioncontext.hpp"
 #include "ufhe/api/iencryptionparameters.hpp"

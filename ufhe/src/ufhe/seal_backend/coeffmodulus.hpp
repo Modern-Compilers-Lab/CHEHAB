@@ -1,7 +1,7 @@
 #pragma once
 
 #include "seal/seal.h"
-#include "ufhe/api/icoeff_modulus.hpp"
+#include "ufhe/api/icoeffmodulus.hpp"
 #include "ufhe/seal_backend/modulus.hpp"
 #include <cstddef>
 #include <vector>

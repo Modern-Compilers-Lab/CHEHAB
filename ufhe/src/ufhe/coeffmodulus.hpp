@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ufhe/api/icoeff_modulus.hpp"
+#include "ufhe/api/icoeffmodulus.hpp"
 #include "ufhe/config.hpp"
 #include "ufhe/modulus.hpp"
-#include "ufhe/seal_backend/coeff_modulus.hpp"
+#include "ufhe/seal_backend/coeffmodulus.hpp"
 #include <vector>
 
 namespace ufhe

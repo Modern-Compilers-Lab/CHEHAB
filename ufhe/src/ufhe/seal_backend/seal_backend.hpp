@@ -2,7 +2,7 @@
 
 #include "ufhe/seal_backend/batchencoder.hpp"
 #include "ufhe/seal_backend/ciphertext.hpp"
-#include "ufhe/seal_backend/coeff_modulus.hpp"
+#include "ufhe/seal_backend/coeffmodulus.hpp"
 #include "ufhe/seal_backend/decryptor.hpp"
 #include "ufhe/seal_backend/encryptioncontext.hpp"
 #include "ufhe/seal_backend/encryptionparameters.hpp"

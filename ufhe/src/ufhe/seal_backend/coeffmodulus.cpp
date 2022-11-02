@@ -1,4 +1,4 @@
-#include "ufhe/seal_backend/coeff_modulus.hpp"
+#include "ufhe/seal_backend/coeffmodulus.hpp"
 
 namespace ufhe
 {

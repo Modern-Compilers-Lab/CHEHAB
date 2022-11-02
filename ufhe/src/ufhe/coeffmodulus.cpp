@@ -1,4 +1,4 @@
-#include "ufhe/coeff_modulus.hpp"
+#include "ufhe/coeffmodulus.hpp"
 
 namespace ufhe
 {

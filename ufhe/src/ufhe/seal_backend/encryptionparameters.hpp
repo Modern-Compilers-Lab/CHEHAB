@@ -2,7 +2,7 @@
 
 #include "seal/seal.h"
 #include "ufhe/api/iencryptionparameters.hpp"
-#include "ufhe/seal_backend/coeff_modulus.hpp"
+#include "ufhe/seal_backend/coeffmodulus.hpp"
 #include "ufhe/seal_backend/modulus.hpp"
 #include "ufhe/seal_backend/scheme.hpp"
 

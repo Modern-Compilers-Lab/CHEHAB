@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ufhe/api/iencryptionparameters.hpp"
-#include "ufhe/coeff_modulus.hpp"
+#include "ufhe/coeffmodulus.hpp"
 #include "ufhe/config.hpp"
 #include "ufhe/modulus.hpp"
 #include "ufhe/scheme.hpp"
