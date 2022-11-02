@@ -19,9 +19,11 @@ class Translator
 private:
   ir::Program *program;
   params_selector::EncryptionParameters *encryption_parameters;
+
   EncodingWriter encoding_writer;
   EncryptionWriter encryption_writer;
   EvaluationWriter evaluation_writer;
+  ContextWriter context_writer;
 
   void translate_binary_operation(
     const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
@@ -45,8 +47,10 @@ public:
       encoding_writer(encoder_type_literal, encoder_type_identifier, context_identifier, encode_literal),
       encryption_writer(
         encryptor_type_literal, encryptor_type_identifier, encrypt_literal, public_key_identifier, context_identifier),
-      evaluation_writer(evaluator_type_literal, evaluator_identifier, context_identifier)
+      evaluation_writer(evaluator_type_literal, evaluator_identifier, context_identifier),
+      context_writer(this->encryption_parameters, program->get_encryption_scheme())
   {}
+
   void generate_function_signature(std::ofstream &os) const;
   ~Translator() {}
 

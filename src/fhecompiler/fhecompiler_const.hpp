@@ -18,4 +18,13 @@ enum class VarType
   temp
 };
 
+enum class sec_level_type
+{
+  none,
+  tc128, // minimum according to he standard
+  tc192,
+  tc256
+};
+
+
 } // namespace fhecompiler

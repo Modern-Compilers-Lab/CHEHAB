@@ -19,17 +19,25 @@ ir::Program *program;
 namespace fhecompiler
 {
 
-void init(const std::string &program_name, size_t dim, Scheme program_scheme)
+static params_selector::EncryptionParameters params;
+
+void init(const std::string &program_name, size_t plaintext_modulus, Scheme program_scheme)
 {
-  static ir::Program program_object(program_name, dim);
+  static ir::Program program_object(program_name);
   program = &program_object;
   program->set_scheme(program_scheme);
 }
 
 void compile(const std::string &output_filename)
 {
+  /*
   params_selector::ParameterSelector parameters_selector(program);
   params_selector::EncryptionParameters params = parameters_selector.select_parameters();
+  */
+
+  params_selector::ParameterSelector parameters_selector(program);
+
+  parameters_selector.fix_parameters(params);
 
   translator::Translator tr(program, &params);
 

@@ -30,8 +30,10 @@ Plaintext::Plaintext(const std::vector<int64_t> &message)
   : label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++))
 {
 
+  /*
   if ((size_t)message.size() > program->get_dimension())
     throw("Number of messages in one vector is larger than the expcted value ");
+  */
 
   program->insert_node_in_dataflow<Plaintext>(*this);
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, message}}});

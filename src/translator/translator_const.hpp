@@ -1,5 +1,7 @@
 #pragma once
 
+#include "encryption_parameters.hpp"
+#include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
 #include <fstream>
 #include <iostream>
@@ -47,6 +49,8 @@ INLINE const char *outputs_class_literal = "Outputs";
 INLINE const char *inputs_class_identifier = "inputs";
 INLINE const char *inputs_class_literal = "Inputs";
 
+INLINE const char *params_type_literal = "EncryptionParameters";
+INLINE const char *params_identifier_literal = "params";
 INLINE const char *scalar_int = "uint64_t";
 INLINE const char *scalar_float = "double";
 INLINE const char *encode_literal = "encode";
@@ -70,6 +74,10 @@ INLINE const char *encoder_type_identifier = "encoder";
 INLINE const char *encryptor_type_literal = "Encryptor";
 INLINE const char *encryptor_type_identifier = "encryptor";
 INLINE const char *insert_object_instruction = "insert"; // instruction to insert inputs/outputs
+INLINE const char *context_function_name = "create_context";
+INLINE const char *set_plain_modulus_intruction = "set_plain_modulus";
+INLINE const char *set_coef_modulus_instruction = "set_coef_modulus";
+INLINE const char *set_poly_modulus_degree_instruction = "set_poly_modulus_degree";
 
 INLINE std::unordered_map<ir::TermType, const char *> get_instruction_by_type = {
   {ir::plaintextType, "get_plaintext"}, {ir::ciphertextType, "get_ciphertext"}};
@@ -191,8 +199,18 @@ public:
     const std::string &rhs_id, ir::TermType type) const
   {
     os << types_map[type] << " " << destination_id << ";" << '\n';
-    os << evaluator_identifier << "." << ops_map[opcode] << "(" << lhs_id << "," << rhs_id << "," << destination_id
-       << ");" << '\n';
+    std::string other_args("");
+    auto it = get_other_args_by_opcode.find(opcode);
+    if (it != get_other_args_by_opcode.end())
+    {
+      other_args = it->second;
+    }
+    os << evaluator_identifier << "." << ops_map[opcode] << "(" << lhs_id << "," << rhs_id;
+    if (other_args.length() > 0)
+    {
+      os << ", " << other_args;
+    }
+    os << "," << destination_id << ");" << '\n';
   }
 
   bool is_initialized() const { return this->is_init; }
@@ -269,6 +287,119 @@ public:
   }
 
   bool is_initialized() const { return this->is_init; }
+};
+
+struct ContextWriter
+{
+private:
+  params_selector::EncryptionParameters *params;
+  fhecompiler::Scheme scheme_type;
+
+  const std::vector<std::string> scheme_type_str = {"bfv", "bgv", "ckks"};
+  const std::vector<std::string> security_level_str = {
+    "sec_level_type::tc128", "sec_level_type::tc192", "sec_level_type::tc256"};
+
+public:
+  bool is_defined = false;
+
+  ContextWriter(params_selector::EncryptionParameters *_params, fhecompiler::Scheme scheme_t)
+    : params(_params), scheme_type(scheme_t)
+  {}
+
+  void write_plaintext_modulus(std::ostream &os)
+  {
+    os << params_identifier_literal << "." << set_plain_modulus_intruction << "(" << params->plaintext_modulus << ");"
+       << '\n';
+  }
+
+  void write_plaintext_modulus_bit_length(std::ostream &os)
+  {
+    if (params->poly_modulus_degree == 0)
+      throw("invalid plynomial modulus degree in write_plaintext_modulus_bit_length \n");
+
+    os << params_identifier_literal << "." << set_plain_modulus_intruction << "(PlainModulus::Batching("
+       << params->poly_modulus_degree << "," << params->plaintext_modulus_bit_length << "));" << '\n';
+  }
+
+  void write_user_defined_coefficient_modulus(std::ostream &os)
+  {
+    if (!params->coef_modulus.empty())
+    {
+      std::string coef_modulus_identifier = "coef_mod";
+      size_t coef_mod_size = params->coef_modulus.size();
+      os << "std::vector<int> " << coef_modulus_identifier << " = ";
+      os << "{";
+      for (size_t i = 0; i < params->coef_modulus.size(); i++)
+      {
+        os << params->coef_modulus[i];
+        if (i < params->coef_modulus.size() - 1)
+        {
+          os << ", ";
+        }
+      }
+      os << "};" << '\n';
+      os << params_identifier_literal << "." << set_coef_modulus_instruction << "(CoeffModulus::Create("
+         << params->poly_modulus_degree << "," << coef_modulus_identifier << "));" << '\n';
+    }
+    else
+      throw("coef moulus is not set by the user\n");
+  }
+
+  void write_default_coefficient_modulus_BFV(std::ostream &os)
+  {
+    if (scheme_type != fhecompiler::Scheme::bfv)
+    {
+      throw("default coef modulus is supported only for BFV\n");
+    }
+
+    os << params_identifier_literal << "." << set_coef_modulus_instruction << "(CoeffModulus::BFVDefault("
+       << params->poly_modulus_degree << "," << security_level_str[static_cast<int>(params->security_level)] << "));"
+       << '\n';
+  }
+
+  void write_polynomial_modulus_degree(std::ostream &os)
+  {
+    os << params_identifier_literal << "." << set_poly_modulus_degree_instruction << "(" << params->poly_modulus_degree
+       << ");" << '\n';
+  }
+
+  void write_parameters(std::ostream &os)
+  {
+
+    os << params_type_literal << " " << params_identifier_literal
+       << "(scheme_type::" << scheme_type_str[static_cast<int>(scheme_type)] << ");" << '\n';
+
+    write_polynomial_modulus_degree(os);
+    if (!params->coef_modulus.empty())
+    {
+      write_user_defined_coefficient_modulus(os);
+    }
+    else
+      write_default_coefficient_modulus_BFV(os);
+
+    if (params->plaintext_modulus_bit_length == 0)
+    {
+      write_plaintext_modulus(os);
+    }
+    else
+      write_plaintext_modulus_bit_length(os);
+  }
+
+  /**/
+
+  /*
+    a + b + c*k*z + .... +
+  */
+
+  void write_context(std::ostream &os)
+  {
+    os << context_type_literal << " " << context_function_name << "()"
+       << "{" << '\n';
+    write_parameters(os);
+    os << context_type_literal << " " << context_identifier << "(" << params_identifier_literal << ");" << '\n';
+    os << "return " << context_identifier << ";" << '\n';
+    os << "}" << '\n';
+  };
 };
 
 inline std::string stringfy_string(const std::string &str)

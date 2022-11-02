@@ -25,9 +25,7 @@ int main()
 
   try
   {
-    fhecompiler::init("test1", 2 << 13, fhecompiler::Scheme::ckks);
-
-    // fhecompiler::Plaintext pt11(std::vector<int64_t>{1, 3, 4, 5});
+    fhecompiler::init("test1", 2 << 14, fhecompiler::Scheme::bfv);
 
     fhecompiler::Ciphertext ct1("ct1", VarType::input);
 
@@ -35,29 +33,17 @@ int main()
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
-    fhecompiler::Ciphertext output2("output2", VarType::output);
+    // fhecompiler::params.set_coef_modulus({50, 50, 50});
+    fhecompiler::params.set_plaintext_modulus(786433);
+    // fhecompiler::params.set_plaintext_modulus_bit_length(20);
+    fhecompiler::params.set_polynomial_modulus_degree(2 << 14);
 
-    fhecompiler::Plaintext pt2(std::vector<int64_t>({1, 2, 3, 4, 5, 6, 7, 5}));
+    output1 = ct1 + pt1;
 
-    fhecompiler::Plaintext pt2_output("pt2_output", VarType::output);
+    output1 >>= 12;
 
-    pt2_output = pt2;
+    output1 *= 13244;
 
-    output2 = fhecompiler::Ciphertext::encrypt(pt1);
-
-    output1 = (ct1 + pt1) * 2 + ct1 + ct1 + pt1;
-
-    output1 -= 1312;
-    /*
-      {1, 3, 4}
-
-      ct1 + pt1 -> {2, 6, 8}
-      (ct1 + pt1) * 2 -> {4, 0, 0}
-      ct1 + ct1 -> {2, 6, 8}
-      ct1 + ct1 + pt1 -> {3, 9, 12}
-      (ct1 + pt1) * 2 + ct1 + ct1 + pt1 -> {7, 9, 12} final result
-      ((ct1 + pt1) * 2 + ct1 + ct1 + pt1) + 1312 -> {1319, 9, 12}
-    */
     fhecompiler::compile("test1.hpp");
   }
   catch (const char *message)
@@ -65,5 +51,6 @@ int main()
     std::cout << message << "\n";
   }
 
+  // initial noise_budget
   return 0;
 }

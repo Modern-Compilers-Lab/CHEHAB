@@ -97,13 +97,13 @@ void Translator::translate_constant_table_entry(
       {
         uint64_t casted_value = static_cast<uint64_t>(*value);
         encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(casted_value), type_str, std::to_string(program->get_dimension()));
+          os, tag, std::to_string(casted_value), type_str, std::to_string(encryption_parameters->poly_modulus_degree));
       }
       else
       {
         double e_value = std::get<double>(scalar_value);
         encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(e_value), type_str, std::to_string(program->get_dimension()));
+          os, tag, std::to_string(e_value), type_str, std::to_string(encryption_parameters->poly_modulus_degree));
       }
       /*
       if (type_str == scalar_int)
@@ -213,6 +213,8 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
 
 void Translator::translate(std::ofstream &os)
 {
+
+  context_writer.write_context(os);
 
   generate_function_signature(os);
   os << "{" << '\n';

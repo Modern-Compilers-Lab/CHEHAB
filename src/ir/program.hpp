@@ -91,17 +91,14 @@ private:
 
   fhecompiler::Scheme program_scheme;
 
-  size_t dimension;
+  // size_t dimension;
 
 public:
   using Ptr = std::shared_ptr<Term>;
 
   Program() = delete;
 
-  Program(const std::string &tag_value, size_t dim) : program_tag{tag_value}, dimension(dim)
-  {
-    data_flow = std::make_unique<DAG>();
-  }
+  Program(const std::string &tag_value) : program_tag{tag_value} { data_flow = std::make_unique<DAG>(); }
 
   ~Program() {}
 
@@ -139,7 +136,7 @@ public:
 
   ConstantTableEntryType type_of(const std::string &label);
 
-  size_t get_dimension() const { return this->dimension; }
+  // size_t get_dimension() const { return this->dimension; }
 
   void sort_dataflow();
 
