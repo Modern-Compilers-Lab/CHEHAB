@@ -9,12 +9,12 @@ namespace ufhe
 {
 class EncryptionContext : public api::EncryptionContext
 {
-  friend class KeyGenerator;
-  friend class Ciphertext;
-  friend class Evaluator;
   friend class BatchEncoder;
-  friend class Encryptor;
+  friend class Ciphertext;
   friend class Decryptor;
+  friend class Encryptor;
+  friend class Evaluator;
+  friend class KeyGenerator;
 
 public:
   EncryptionContext(const EncryptionParams &params);

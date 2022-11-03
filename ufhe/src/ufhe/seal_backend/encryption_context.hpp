@@ -11,11 +11,11 @@ namespace seal_backend
   class EncryptionContext : public api::EncryptionContext
   {
     friend class BatchEncoder;
-    friend class KeyGenerator;
-    friend class Encryptor;
     friend class Ciphertext;
     friend class Decryptor;
+    friend class Encryptor;
     friend class Evaluator;
+    friend class KeyGenerator;
 
   public:
     EncryptionContext(const EncryptionParams &params) : underlying_(seal::SEALContext(params.underlying_)) {}

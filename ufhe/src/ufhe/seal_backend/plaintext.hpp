@@ -10,8 +10,8 @@ namespace seal_backend
   class Plaintext : public api::Plaintext
   {
     friend class BatchEncoder;
-    friend class Encryptor;
     friend class Decryptor;
+    friend class Encryptor;
     friend class Evaluator;
 
   public:

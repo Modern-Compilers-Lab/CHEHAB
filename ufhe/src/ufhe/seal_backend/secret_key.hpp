@@ -9,9 +9,9 @@ namespace seal_backend
 {
   class SecretKey : public api::SecretKey
   {
-    friend class KeyGenerator;
     friend class Encryptor;
     friend class Decryptor;
+    friend class KeyGenerator;
 
   public:
     SecretKey() : underlying_(seal::SecretKey()) {}

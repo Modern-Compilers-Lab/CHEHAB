@@ -27,8 +27,6 @@ namespace api
     virtual double &scale() = 0;
 
     // TODO: Serialization support
-
-    // virtual void init(const EncryptionContext &context) = 0;
   };
 } // namespace api
 } // namespace ufhe

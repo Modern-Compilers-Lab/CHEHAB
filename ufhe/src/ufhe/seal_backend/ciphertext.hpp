@@ -10,9 +10,9 @@ namespace seal_backend
 {
   class Ciphertext : public api::Ciphertext
   {
-    friend class Evaluator;
-    friend class Encryptor;
     friend class Decryptor;
+    friend class Encryptor;
+    friend class Evaluator;
 
   public:
     Ciphertext() : underlying_(seal::Ciphertext()) {}

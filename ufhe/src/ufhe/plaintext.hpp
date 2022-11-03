@@ -8,10 +8,10 @@ namespace ufhe
 {
 class Plaintext : public api::Plaintext
 {
-  friend class Evaluator;
   friend class BatchEncoder;
-  friend class Encryptor;
   friend class Decryptor;
+  friend class Encryptor;
+  friend class Evaluator;
 
 public:
   Plaintext();
