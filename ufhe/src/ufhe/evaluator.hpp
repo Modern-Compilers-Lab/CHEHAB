@@ -36,7 +36,7 @@ public:
 
   ~Evaluator() { delete underlying_; }
 
-  inline api::backend_type backend() const override { return api::backend_type::seal; }
+  inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline void negate_inplace(api::ICiphertext &encrypted) const override
   {

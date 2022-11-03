@@ -38,7 +38,7 @@ public:
 
   ~CoeffModulus() { delete underlying_; }
 
-  inline api::backend_type backend() const override { return api::backend_type::seal; }
+  inline api::backend_type backend() const override { return underlying().backend(); }
 
   api::IModulus::vector value() const override;
 

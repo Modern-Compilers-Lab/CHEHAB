@@ -32,7 +32,7 @@ public:
     }
   }
 
-  Decryptor(const Encryptor &copy) = delete;
+  Decryptor(const Decryptor &copy) = delete;
 
   Decryptor &operator=(const Decryptor &assign) = delete;
 
