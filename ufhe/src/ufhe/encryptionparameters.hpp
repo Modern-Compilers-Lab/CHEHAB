@@ -11,6 +11,8 @@ namespace ufhe
 {
 class EncryptionParameters : public api::IEncryptionParameters
 {
+  friend class EncryptionContext;
+
 public:
   EncryptionParameters(const Scheme &scheme)
     : scheme_(scheme), coeff_modulus_(new CoeffModulus()), plain_modulus_(new Modulus())
@@ -36,7 +38,12 @@ public:
 
   EncryptionParameters &operator=(const EncryptionParameters &assign) = delete;
 
-  ~EncryptionParameters() { delete underlying_; }
+  ~EncryptionParameters()
+  {
+    delete underlying_;
+    delete coeff_modulus_;
+    delete plain_modulus_;
+  }
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 

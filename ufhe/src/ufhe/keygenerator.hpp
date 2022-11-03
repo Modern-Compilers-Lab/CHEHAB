@@ -1,24 +1,28 @@
 #pragma once
 
-#include "api.hpp"
-#include "encryptioncontext.hpp"
-#include "ikeygenerator.hpp"
 #include "seal_backend/keygenerator.hpp"
-#include "secretkey.hpp"
+#include "ufhe/api/ikeygenerator.hpp"
+#include "ufhe/encryptioncontext.hpp"
+#include "ufhe/publickey.hpp"
+#include "ufhe/secretkey.hpp"
 
 namespace ufhe
 {
-class KeyGenerator : public IKeyGenerator
+class KeyGenerator : public api::IKeyGenerator
 {
 public:
-  inline KeyGenerator(Backend backend, IEncryptionContext &context)
+  KeyGenerator(EncryptionContext &context)
   {
-    if (backend == Backend::none)
-      backend = API::default_backend();
-    switch (backend)
+    switch (Config::backend())
     {
-    case Backend::seal:
-      underlying_ = new seal_backend::KeyGenerator(dynamic_cast<const EncryptionContext &>(context).underlying());
+    case api::backend_type::seal:
+      underlying_ =
+        new seal_backend::KeyGenerator(dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
+      secret_key_ = new SecretKey(underlying().secret_key());
+      break;
+
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
       break;
 
     default:
@@ -27,16 +31,19 @@ public:
     }
   }
 
-  inline KeyGenerator(Backend backend, const IEncryptionContext &context, const ISecretKey &secret_key)
+  KeyGenerator(const EncryptionContext &context, const SecretKey &secret_key)
   {
-    if (backend == Backend::none)
-      backend = API::default_backend();
-    switch (backend)
+    secret_key_ = new SecretKey(secret_key);
+    switch (Config::backend())
     {
-    case Backend::seal:
+    case api::backend_type::seal:
       underlying_ = new seal_backend::KeyGenerator(
-        dynamic_cast<const EncryptionContext &>(context).underlying(),
-        dynamic_cast<const SecretKey &>(secret_key).underlying());
+        dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
+        dynamic_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
+      break;
+
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
       break;
 
     default:
@@ -45,17 +52,21 @@ public:
     }
   }
 
-  inline KeyGenerator(const KeyGenerator &copy) = delete;
+  KeyGenerator(const KeyGenerator &copy) = delete;
 
   KeyGenerator &operator=(const KeyGenerator &assign) = delete;
 
-  inline ~KeyGenerator() { delete underlying_; }
+  ~KeyGenerator()
+  {
+    delete underlying_;
+    delete secret_key_;
+  }
 
-  inline Backend backend() override { return underlying().backend(); }
+  inline api::backend_type backend() const override { return underlying().backend(); }
 
-  inline const ISecretKey &secret_key() const override { return underlying().secret_key(); }
+  inline const SecretKey &secret_key() const override { return *secret_key_; }
 
-  inline void create_public_key(IPublicKey &destination) const override
+  inline void create_public_key(api::IPublicKey &destination) const override
   {
     underlying().create_public_key(dynamic_cast<PublicKey &>(destination).underlying());
   }
@@ -64,5 +75,6 @@ private:
   inline IKeyGenerator &underlying() const { return *underlying_; }
 
   IKeyGenerator *underlying_;
+  SecretKey *secret_key_;
 };
 } // namespace ufhe

@@ -1,23 +1,26 @@
 #pragma once
 
-#include "ipublickey.hpp"
-#include "seal_backend/publickey.hpp"
+#include "ufhe/api/ipublickey.hpp"
+#include "ufhe/config.hpp"
+#include "ufhe/seal_backend/publickey.hpp"
 
 namespace ufhe
 {
-class PublicKey : public IPublicKey
+class PublicKey : public api::IPublicKey
 {
   friend class KeyGenerator;
 
 public:
-  inline PublicKey(Backend backend)
+  PublicKey()
   {
-    if (backend == Backend::none)
-      backend = API::default_backend();
-    switch (backend)
+    switch (Config::backend())
     {
-    case Backend::seal:
+    case api::backend_type::seal:
       underlying_ = new seal_backend::PublicKey();
+      break;
+
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
       break;
 
     default:
@@ -25,13 +28,13 @@ public:
       break;
     }
   }
-  inline PublicKey(const PublicKey &copy) = delete;
+  PublicKey(const PublicKey &copy) = delete;
 
   PublicKey &operator=(const PublicKey &assign) = delete;
 
-  inline ~PublicKey() { delete underlying_; }
+  ~PublicKey() { delete underlying_; }
 
-  inline Backend backend() override { return underlying().backend(); }
+  inline api::backend_type backend() const override { return underlying().backend(); }
 
 private:
   inline IPublicKey &underlying() const { return *underlying_; }

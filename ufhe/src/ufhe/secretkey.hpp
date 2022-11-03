@@ -1,23 +1,26 @@
 #pragma once
 
-#include "isecretkey.hpp"
-#include "seal_backend/secretkey.hpp"
+#include "ufhe/api/isecretkey.hpp"
+#include "ufhe/config.hpp"
+#include "ufhe/seal_backend/secretkey.hpp"
 
 namespace ufhe
 {
-class SecretKey : public ISecretKey
+class SecretKey : public api::ISecretKey
 {
   friend class KeyGenerator;
 
 public:
-  inline SecretKey(Backend backend)
+  SecretKey()
   {
-    if (backend == Backend::none)
-      backend = API::default_backend();
-    switch (backend)
+    switch (Config::backend())
     {
-    case Backend::seal:
+    case api::backend_type::seal:
       underlying_ = new seal_backend::SecretKey();
+      break;
+
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
       break;
 
     default:
@@ -25,15 +28,50 @@ public:
       break;
     }
   }
-  inline SecretKey(const SecretKey &copy) = delete;
+
+  SecretKey(const SecretKey &copy)
+  {
+    switch (copy.backend())
+    {
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::SecretKey(dynamic_cast<const seal_backend::SecretKey &>(copy.underlying()));
+      break;
+
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
+
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
   SecretKey &operator=(const SecretKey &assign) = delete;
 
-  inline ~SecretKey() { delete underlying_; }
+  ~SecretKey() { delete underlying_; }
 
-  inline Backend backend() override { return underlying().backend(); }
+  inline api::backend_type backend() const override { return underlying().backend(); }
 
 private:
+  SecretKey(const api::ISecretKey &isecret_key)
+  {
+    switch (isecret_key.backend())
+    {
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::SecretKey(dynamic_cast<const seal_backend::SecretKey &>(isecret_key));
+      break;
+
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
+
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
+
   inline ISecretKey &underlying() const { return *underlying_; }
 
   ISecretKey *underlying_;

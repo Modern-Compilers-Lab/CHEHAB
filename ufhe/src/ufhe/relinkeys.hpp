@@ -1,23 +1,46 @@
 #pragma once
 
-#include <cstddef>
+#include "ufhe/api/irelinkeys.hpp"
+#include "ufhe/config.hpp"
+#include "ufhe/seal_backend/relinkeys.hpp"
 
-namespace api
+namespace ufhe
 {
-class RelinKeys
+class RelinKeys : public api::IRelinKeys
 {
+  friend class KeyGenerator;
+
 public:
-  RelinKeys() { init(); }
+  RelinKeys()
+  {
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::RelinKeys();
+      break;
 
-  virtual ~RelinKeys() {}
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
 
-  virtual std::size_t size() const = 0;
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
+  RelinKeys(const RelinKeys &copy) = delete;
 
-  // TODO: Allow access to the keys parms_id
+  RelinKeys &operator=(const RelinKeys &assign) = delete;
 
-  // TODO: Serialization support
+  ~RelinKeys() { delete underlying_; }
+
+  inline api::backend_type backend() const override { return underlying().backend(); }
+
+  inline std::size_t size() const override { return underlying().size(); }
 
 private:
-  virtual void init() = 0;
+  inline IRelinKeys &underlying() const { return *underlying_; }
+
+  IRelinKeys *underlying_;
 };
-} // namespace api
+} // namespace ufhe

@@ -1,25 +1,28 @@
 #pragma once
 
-#include "api.hpp"
-#include "encryptionparameters.hpp"
-#include "iencryptioncontext.hpp"
-#include "seal_backend/encryptioncontext.hpp"
+#include "ufhe/api/iencryptioncontext.hpp"
+#include "ufhe/config.hpp"
+#include "ufhe/encryptionparameters.hpp"
+#include "ufhe/seal_backend/encryptioncontext.hpp"
 
 namespace ufhe
 {
-class EncryptionContext : public IEncryptionContext
+class EncryptionContext : public api::IEncryptionContext
 {
   friend class KeyGenerator;
 
 public:
-  inline EncryptionContext(Backend backend, const IEncryptionParameters &parms)
+  EncryptionContext(const EncryptionParameters &params)
   {
-    if (backend == Backend::none)
-      backend = API::default_backend();
-    switch (backend)
+    switch (Config::backend())
     {
-    case Backend::seal:
-      underlying_ = new seal_backend::EncryptionContext(dynamic_cast<const EncryptionParameters &>(parms).underlying());
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::EncryptionContext(
+        dynamic_cast<const seal_backend::EncryptionParameters &>(params.underlying()));
+      break;
+
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
       break;
 
     default:
@@ -28,20 +31,18 @@ public:
     }
   }
 
-  inline EncryptionContext(const IEncryptionParameters &parms) : EncryptionContext(Backend::none, parms) {}
-
   EncryptionContext(const EncryptionContext &copy) = delete;
 
   EncryptionContext &operator=(const EncryptionContext &assign) = delete;
 
-  inline ~EncryptionContext() { delete underlying_; }
+  ~EncryptionContext() { delete underlying_; }
 
-  inline Backend backend() { return underlying().backend(); }
+  inline api::backend_type backend() const override { return underlying().backend(); }
 
 private:
   inline IEncryptionContext &underlying() const { return *underlying_; }
 
-  IEncryptionContext *underlying_;
+  api::IEncryptionContext *underlying_;
 };
 
 } // namespace ufhe

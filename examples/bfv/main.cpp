@@ -20,5 +20,11 @@ int main()
   for (const ufhe::api::IModulus &e : params.coeff_modulus().value())
     cout << e.value() << " ";
   cout << endl;
+  EncryptionContext context(params);
+  KeyGenerator keygen(context);
+  SecretKey sk = keygen.secret_key();
+  PublicKey pk;
+  keygen.create_public_key(pk);
+  KeyGenerator keygen1(context, sk);
   return 0;
 }
