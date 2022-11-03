@@ -1,8 +1,45 @@
 #include "ufhe/ufhe.hpp"
+#include <iomanip>
 #include <iostream>
 
 using namespace ufhe;
 using namespace std;
+
+/*
+Helper function: Prints a matrix of values.
+*/
+template <typename T>
+inline void print_matrix(std::vector<T> matrix, std::size_t row_size)
+{
+  /*
+  We're not going to print every column of the matrix (there are 2048).
+  Instead print this many slots from beginning and end of the matrix.
+  */
+  std::size_t print_size = 5;
+
+  std::cout << std::endl;
+  std::cout << "    [";
+  for (std::size_t i = 0; i < print_size; i++)
+  {
+    std::cout << std::setw(3) << std::right << matrix[i] << ",";
+  }
+  std::cout << std::setw(3) << " ...,";
+  for (std::size_t i = row_size - print_size; i < row_size; i++)
+  {
+    std::cout << std::setw(3) << matrix[i] << ((i != row_size - 1) ? "," : " ]\n");
+  }
+  std::cout << "    [";
+  for (std::size_t i = row_size; i < row_size + print_size; i++)
+  {
+    std::cout << std::setw(3) << matrix[i] << ",";
+  }
+  std::cout << std::setw(3) << " ...,";
+  for (std::size_t i = 2 * row_size - print_size; i < 2 * row_size; i++)
+  {
+    std::cout << std::setw(3) << matrix[i] << ((i != 2 * row_size - 1) ? "," : " ]\n");
+  }
+  std::cout << std::endl;
+}
 
 int main()
 {
@@ -21,10 +58,47 @@ int main()
     cout << e.value() << " ";
   cout << endl;
   EncryptionContext context(params);
+
+  // Input preparation
+  BatchEncoder batch_encoder(context);
+  size_t slot_count = batch_encoder.slot_count();
+  cout << "slot_count " << slot_count << endl;
+  vector<uint64_t> a_clear(slot_count);
+  for (int i = 0; i < slot_count; i++)
+    a_clear[i] = i;
+  vector<uint64_t> b_clear(slot_count, 2);
+
+  // Encode
+  Plaintext a_plain;
+  batch_encoder.encode(a_clear, a_plain);
+  Plaintext b_plain;
+  batch_encoder.encode(b_clear, b_plain);
+
+  // Encrypt
   KeyGenerator keygen(context);
-  SecretKey sk = keygen.secret_key();
   PublicKey pk;
   keygen.create_public_key(pk);
-  KeyGenerator keygen1(context, sk);
+  Encryptor encryptor(context, pk);
+  Ciphertext a_encrypted;
+  encryptor.encrypt(a_plain, a_encrypted);
+  Ciphertext b_encrypted;
+  encryptor.encrypt(b_plain, b_encrypted);
+
+  // Evaluate
+  Ciphertext r_encrypted;
+  Evaluator evaluator(context);
+  evaluator.add(a_encrypted, b_encrypted, r_encrypted);
+  // Decrypt
+  const SecretKey &sk = keygen.secret_key();
+  Decryptor decryptor(context, sk);
+  Plaintext r_plain;
+  decryptor.decrypt(r_encrypted, r_plain);
+
+  // Decode
+  vector<uint64_t> r_clear;
+  batch_encoder.decode(r_plain, r_clear);
+
+  // Show results
+  print_matrix(r_clear, slot_count / 2);
   return 0;
 }
