@@ -1,47 +1,19 @@
 #pragma once
 
-#include "ufhe/api/ischeme.hpp"
+#include "ufhe/api/scheme.hpp"
 #include "ufhe/config.hpp"
 #include "ufhe/seal_backend/scheme.hpp"
 
 namespace ufhe
 {
-class Scheme : public api::IScheme
+class Scheme : public api::Scheme
 {
-  friend class EncryptionParameters;
+  friend class EncryptionParams;
 
 public:
-  Scheme(api::scheme_type scheme)
-  {
-    switch (Config::backend())
-    {
-    case api::backend_type::seal:
-      underlying_ = new seal_backend::Scheme(scheme);
-      break;
+  Scheme(api::scheme_type scheme);
 
-    case api::backend_type::none:
-      throw std::invalid_argument("no backend is selected");
-      break;
-
-    default:
-      throw std::invalid_argument("unsupported backend");
-      break;
-    }
-  }
-
-  Scheme(const Scheme &copy)
-  {
-    switch (copy.backend())
-    {
-    case api::backend_type::seal:
-      underlying_ = new seal_backend::Scheme(dynamic_cast<const seal_backend::Scheme &>(copy.underlying()));
-      break;
-
-    default:
-      throw std::logic_error("instance with unknown backend");
-      break;
-    }
-  }
+  Scheme(const Scheme &copy);
 
   Scheme &operator=(const Scheme &assign) = delete;
 
@@ -52,8 +24,8 @@ public:
   inline api::scheme_type type() const override { return underlying().type(); }
 
 private:
-  inline IScheme &underlying() const { return *underlying_; }
+  inline api::Scheme &underlying() const { return *underlying_; }
 
-  api::IScheme *underlying_;
+  api::Scheme *underlying_;
 };
 } // namespace ufhe

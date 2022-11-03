@@ -1,23 +1,23 @@
 #pragma once
 
 #include "seal/seal.h"
-#include "ufhe/api/iciphertext.hpp"
-#include "ufhe/seal_backend/encryptioncontext.hpp"
+#include "ufhe/api/ciphertext.hpp"
+#include "ufhe/seal_backend/encryption_context.hpp"
 
 namespace ufhe
 {
 namespace seal_backend
 {
-  class Ciphertext : public api::ICiphertext
+  class Ciphertext : public api::Ciphertext
   {
     friend class Evaluator;
     friend class Encryptor;
     friend class Decryptor;
 
   public:
-    inline Ciphertext() : underlying_(seal::Ciphertext()) {}
+    Ciphertext() : underlying_(seal::Ciphertext()) {}
 
-    inline Ciphertext(const EncryptionContext &context) : underlying_(seal::Ciphertext(context.underlying_)) {}
+    Ciphertext(const EncryptionContext &context) : underlying_(seal::Ciphertext(context.underlying_)) {}
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 

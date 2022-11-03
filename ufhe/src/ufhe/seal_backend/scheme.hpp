@@ -1,7 +1,7 @@
 #pragma once
 
 #include "seal/seal.h"
-#include "ufhe/api/ischeme.hpp"
+#include "ufhe/api/scheme.hpp"
 #include <stdexcept>
 
 namespace ufhe
@@ -9,12 +9,12 @@ namespace ufhe
 namespace seal_backend
 {
 
-  class Scheme : public api::IScheme
+  class Scheme : public api::Scheme
   {
-    friend class EncryptionParameters;
+    friend class EncryptionParams;
 
   public:
-    inline Scheme(api::scheme_type scheme)
+    Scheme(api::scheme_type scheme)
     {
       scheme_ = scheme;
       switch (scheme_)
@@ -46,7 +46,7 @@ namespace seal_backend
     inline api::scheme_type type() const override { return scheme_; }
 
   private:
-    inline Scheme(seal::scheme_type seal_scheme) : underlying_(seal_scheme) {}
+    Scheme(seal::scheme_type seal_scheme) : underlying_(seal_scheme) {}
 
     seal::scheme_type underlying_;
     api::scheme_type scheme_;

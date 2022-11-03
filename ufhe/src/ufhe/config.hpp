@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ufhe/api/backendtype.hpp"
+#include "ufhe/api/backend_type.hpp"
 #include <cstdint>
 
 namespace ufhe

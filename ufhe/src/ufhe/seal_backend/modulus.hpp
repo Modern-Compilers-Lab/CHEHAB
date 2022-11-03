@@ -1,7 +1,7 @@
 #pragma once
 
 #include "seal/seal.h"
-#include "ufhe/api/imodulus.hpp"
+#include "ufhe/api/modulus.hpp"
 #include <cstddef>
 
 namespace ufhe
@@ -10,13 +10,13 @@ class Modulus;
 
 namespace seal_backend
 {
-  class Modulus : public api::IModulus
+  class Modulus : public api::Modulus
   {
     friend class CoeffModulus;
-    friend class EncryptionParameters;
+    friend class EncryptionParams;
 
   public:
-    inline Modulus(std::uint64_t value = 0) : underlying_(seal::Modulus(value)) {}
+    Modulus(std::uint64_t value = 0) : underlying_(seal::Modulus(value)) {}
 
     static inline Modulus PlainModulus(std::size_t poly_modulus_degree, int bit_size)
     {
@@ -37,32 +37,32 @@ namespace seal_backend
 
     inline bool is_prime() const override { return underlying_.is_prime(); }
 
-    inline bool operator==(const api::IModulus &compare) const override
+    inline bool operator==(const api::Modulus &compare) const override
     {
       return underlying_ == dynamic_cast<const Modulus &>(compare).underlying_;
     }
 
-    inline bool operator!=(const api::IModulus &compare) const override
+    inline bool operator!=(const api::Modulus &compare) const override
     {
       return underlying_ != dynamic_cast<const Modulus &>(compare).underlying_;
     }
 
-    inline bool operator<(const api::IModulus &compare) const override
+    inline bool operator<(const api::Modulus &compare) const override
     {
       return underlying_ < dynamic_cast<const Modulus &>(compare).underlying_;
     }
 
-    inline bool operator<=(const api::IModulus &compare) const override
+    inline bool operator<=(const api::Modulus &compare) const override
     {
       return underlying_ <= dynamic_cast<const Modulus &>(compare).underlying_;
     }
 
-    inline bool operator>(const api::IModulus &compare) const override
+    inline bool operator>(const api::Modulus &compare) const override
     {
       return underlying_ > dynamic_cast<const Modulus &>(compare).underlying_;
     }
 
-    inline bool operator>=(const api::IModulus &compare) const override
+    inline bool operator>=(const api::Modulus &compare) const override
     {
       return underlying_ >= dynamic_cast<const Modulus &>(compare).underlying_;
     }
@@ -70,7 +70,7 @@ namespace seal_backend
     inline std::uint64_t reduce(std::uint64_t value) const override { return underlying_.reduce(value); }
 
   private:
-    inline Modulus(seal::Modulus seal_modulus) : underlying_(seal_modulus) {}
+    Modulus(seal::Modulus seal_modulus) : underlying_(seal_modulus) {}
 
     seal::Modulus underlying_;
   };

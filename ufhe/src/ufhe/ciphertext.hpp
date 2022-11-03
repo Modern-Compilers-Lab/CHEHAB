@@ -1,55 +1,22 @@
 #pragma once
 
-#include "ufhe/api/iciphertext.hpp"
+#include "ufhe/api/ciphertext.hpp"
 #include "ufhe/config.hpp"
-#include "ufhe/encryptioncontext.hpp"
+#include "ufhe/encryption_context.hpp"
 #include "ufhe/seal_backend/ciphertext.hpp"
 
 namespace ufhe
 {
-class Ciphertext : public api::ICiphertext
+class Ciphertext : public api::Ciphertext
 {
   friend class Evaluator;
   friend class Encryptor;
   friend class Decryptor;
 
 public:
-  Ciphertext()
-  {
-    switch (Config::backend())
-    {
-    case api::backend_type::seal:
-      underlying_ = new seal_backend::Ciphertext();
-      break;
+  Ciphertext();
 
-    case api::backend_type::none:
-      throw std::invalid_argument("no backend is selected");
-      break;
-
-    default:
-      throw std::invalid_argument("unsupported backend");
-      break;
-    }
-  }
-
-  Ciphertext(const EncryptionContext &context)
-  {
-    switch (Config::backend())
-    {
-    case api::backend_type::seal:
-      underlying_ =
-        new seal_backend::Ciphertext(dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
-      break;
-
-    case api::backend_type::none:
-      throw std::invalid_argument("no backend is selected");
-      break;
-
-    default:
-      throw std::invalid_argument("unsupported backend");
-      break;
-    }
-  }
+  Ciphertext(const EncryptionContext &context);
 
   Ciphertext(const Ciphertext &copy) = delete;
 
@@ -70,8 +37,8 @@ public:
   inline double &scale() override { return underlying().scale(); }
 
 private:
-  inline api::ICiphertext &underlying() const { return *underlying_; }
+  inline api::Ciphertext &underlying() const { return *underlying_; }
 
-  api::ICiphertext *underlying_;
+  api::Ciphertext *underlying_;
 };
 } // namespace ufhe

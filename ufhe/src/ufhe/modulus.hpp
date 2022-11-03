@@ -1,65 +1,23 @@
 #pragma once
 
-#include "ufhe/api/imodulus.hpp"
+#include "ufhe/api/modulus.hpp"
 #include "ufhe/config.hpp"
 #include "ufhe/seal_backend/modulus.hpp"
 #include <stdexcept>
 
 namespace ufhe
 {
-class Modulus : public api::IModulus
+class Modulus : public api::Modulus
 {
   friend class CoeffModulus;
-  friend class EncryptionParameters;
+  friend class EncryptionParams;
 
 public:
-  Modulus(std::uint64_t value = 0)
-  {
-    switch (Config::backend())
-    {
-    case api::backend_type::seal:
-      underlying_ = new seal_backend::Modulus(value);
-      break;
+  Modulus(std::uint64_t value = 0);
 
-    case api::backend_type::none:
-      throw std::invalid_argument("no backend is selected");
-      break;
+  Modulus(const Modulus &copy);
 
-    default:
-      throw std::invalid_argument("unsupported backend");
-      break;
-    }
-  }
-
-  Modulus(const Modulus &copy)
-  {
-    switch (copy.backend())
-    {
-    case api::backend_type::seal:
-      underlying_ = new seal_backend::Modulus(dynamic_cast<const seal_backend::Modulus &>(copy.underlying()));
-      break;
-
-    default:
-      throw std::logic_error("instance with unknown backend");
-      break;
-    }
-  }
-
-  Modulus &operator=(const Modulus &assign)
-  {
-    delete underlying_;
-    switch (assign.backend())
-    {
-    case api::backend_type::seal:
-      underlying_ = new seal_backend::Modulus(dynamic_cast<const seal_backend::Modulus &>(assign.underlying()));
-      break;
-
-    default:
-      throw std::logic_error("instance with unknown backend");
-      break;
-    }
-    return *this;
-  }
+  Modulus &operator=(const Modulus &assign);
 
   ~Modulus() { delete underlying_; }
 
@@ -77,32 +35,32 @@ public:
 
   inline bool is_prime() const override { return underlying().is_prime(); }
 
-  inline bool operator==(const IModulus &compare) const override
+  inline bool operator==(const api::Modulus &compare) const override
   {
     return underlying() == dynamic_cast<const Modulus &>(compare).underlying();
   }
 
-  inline bool operator!=(const IModulus &compare) const override
+  inline bool operator!=(const api::Modulus &compare) const override
   {
     return underlying() != dynamic_cast<const Modulus &>(compare).underlying();
   }
 
-  inline bool operator<(const IModulus &compare) const override
+  inline bool operator<(const api::Modulus &compare) const override
   {
     return underlying() < dynamic_cast<const Modulus &>(compare).underlying();
   }
 
-  inline bool operator<=(const IModulus &compare) const override
+  inline bool operator<=(const api::Modulus &compare) const override
   {
     return underlying() <= dynamic_cast<const Modulus &>(compare).underlying();
   }
 
-  inline bool operator>(const IModulus &compare) const override
+  inline bool operator>(const api::Modulus &compare) const override
   {
     return underlying() > dynamic_cast<const Modulus &>(compare).underlying();
   }
 
-  inline bool operator>=(const IModulus &compare) const override
+  inline bool operator>=(const api::Modulus &compare) const override
   {
     return underlying() >= dynamic_cast<const Modulus &>(compare).underlying();
   }
@@ -110,22 +68,10 @@ public:
   inline std::uint64_t reduce(std::uint64_t value) const override { return underlying().reduce(value); }
 
 private:
-  Modulus(const api::IModulus &imodulus)
-  {
-    switch (imodulus.backend())
-    {
-    case api::backend_type::seal:
-      underlying_ = new seal_backend::Modulus(dynamic_cast<const seal_backend::Modulus &>(imodulus));
-      break;
+  Modulus(const api::Modulus &imodulus);
 
-    default:
-      throw std::logic_error("instance with unknown backend");
-      break;
-    }
-  }
+  inline api::Modulus &underlying() const { return *underlying_; }
 
-  inline api::IModulus &underlying() const { return *underlying_; }
-
-  api::IModulus *underlying_;
+  api::Modulus *underlying_;
 };
 } // namespace ufhe

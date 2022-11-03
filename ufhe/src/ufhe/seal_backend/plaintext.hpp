@@ -1,13 +1,13 @@
 #pragma once
 
 #include "seal/seal.h"
-#include "ufhe/api/iplaintext.hpp"
+#include "ufhe/api/plaintext.hpp"
 
 namespace ufhe
 {
 namespace seal_backend
 {
-  class Plaintext : public api::IPlaintext
+  class Plaintext : public api::Plaintext
   {
     friend class BatchEncoder;
     friend class Encryptor;
@@ -15,11 +15,11 @@ namespace seal_backend
     friend class Evaluator;
 
   public:
-    inline Plaintext() : underlying_(seal::Plaintext()) {}
+    Plaintext() : underlying_(seal::Plaintext()) {}
 
-    inline Plaintext(std::size_t coeff_count) : underlying_(seal::Plaintext(coeff_count)) {}
+    Plaintext(std::size_t coeff_count) : underlying_(seal::Plaintext(coeff_count)) {}
 
-    inline Plaintext(const std::string &hex_poly) : underlying_(seal::Plaintext(hex_poly)) {}
+    Plaintext(const std::string &hex_poly) : underlying_(seal::Plaintext(hex_poly)) {}
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
@@ -36,12 +36,12 @@ namespace seal_backend
 
     inline std::string to_string() const override { return underlying_.to_string(); }
 
-    inline bool operator==(const api::IPlaintext &compare) const override
+    inline bool operator==(const api::Plaintext &compare) const override
     {
       return underlying_ == dynamic_cast<const Plaintext &>(compare).underlying_;
     }
 
-    inline bool operator!=(const api::IPlaintext &compare) const override
+    inline bool operator!=(const api::Plaintext &compare) const override
     {
       return underlying_ != dynamic_cast<const Plaintext &>(compare).underlying_;
     }
