@@ -8,7 +8,7 @@ namespace api
 {
   class IPublicKey : public Interface
   {
-    // TODO: Allow access to the key parms_id
+    // TODO: Allow access to the key params_id
 
     // TODO: Serialization support
   };

@@ -18,7 +18,7 @@ namespace seal_backend
     friend class Evaluator;
 
   public:
-    inline EncryptionContext(const EncryptionParameters &parms) : underlying_(seal::SEALContext(parms.underlying_)) {}
+    inline EncryptionContext(const EncryptionParameters &params) : underlying_(seal::SEALContext(params.underlying_)) {}
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 

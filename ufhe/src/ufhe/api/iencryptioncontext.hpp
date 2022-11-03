@@ -8,7 +8,7 @@ namespace api
 {
   class IEncryptionContext : public Interface
   {
-    // virtual const IEncryptionParameters &get_parms() const = 0;
+    // virtual const IEncryptionParameters &get_params() const = 0;
 
     // TODO: Virtual getters for context pre-computation data
   };

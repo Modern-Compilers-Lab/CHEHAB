@@ -10,7 +10,7 @@ namespace api
   class ICiphertext : public Interface
   {
   public:
-    // TODO: Constructor from context and a specefic parms_id_type from the modulus switching chain
+    // TODO: Constructor from context and a specefic params_id_type from the modulus switching chain
 
     // TODO: resize
 
