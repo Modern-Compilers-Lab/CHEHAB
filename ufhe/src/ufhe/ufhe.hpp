@@ -1,5 +1,8 @@
 #pragma once
 
+#include "ciphertext.hpp"
+#include "evaluator.hpp"
+#include "plaintext.hpp"
 #include "ufhe/api/api.hpp"
 #include "ufhe/coeffmodulus.hpp"
 #include "ufhe/encryptioncontext.hpp"

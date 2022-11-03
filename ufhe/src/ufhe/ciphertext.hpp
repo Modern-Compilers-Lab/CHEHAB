@@ -1,39 +1,75 @@
 #pragma once
 
-#include "encryptioncontext.hpp"
+#include "ufhe/api/iciphertext.hpp"
+#include "ufhe/config.hpp"
+#include "ufhe/encryptioncontext.hpp"
+#include "ufhe/seal_backend/ciphertext.hpp"
 
-namespace api
+namespace ufhe
 {
-class Ciphertext
+class Ciphertext : public api::ICiphertext
 {
+  friend class Evaluator;
+
 public:
-  Ciphertext() {}
+  Ciphertext()
+  {
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::Ciphertext();
+      break;
 
-  Ciphertext(const EncryptionContext &context) { init(context); }
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
 
-  virtual ~Ciphertext() {}
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  // TODO: Constructor from context and a specefic parms_id_type from the modulus switching chain
+  Ciphertext(const EncryptionContext &context)
+  {
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ =
+        new seal_backend::Ciphertext(dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
+      break;
 
-  // TODO: resize
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
 
-  // TODO: Allow access to a particular polynomial in the ciphertext data
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  virtual std::size_t coeff_modulus_size() const = 0;
+  Ciphertext(const Ciphertext &copy) = delete;
 
-  virtual std::size_t poly_modulus_degree() const = 0;
+  Ciphertext &operator=(const Ciphertext &assign) = delete;
 
-  virtual std::size_t size() const = 0;
+  ~Ciphertext() { delete underlying_; }
 
-  virtual bool is_transparent() const = 0;
+  inline api::backend_type backend() const override { return api::backend_type::seal; }
 
-  virtual std::uint64_t &correction_factor() const = 0;
+  inline std::size_t coeff_modulus_size() const override { return underlying().coeff_modulus_size(); }
 
-  virtual double &scale() const = 0;
+  inline std::size_t poly_modulus_degree() const override { return underlying().poly_modulus_degree(); }
 
-  // TODO: Serialization support
+  inline std::size_t size() const override { return underlying().size(); }
+
+  inline bool is_transparent() const override { return underlying().is_transparent(); }
+
+  inline double &scale() override { return underlying().scale(); }
 
 private:
-  virtual void init(const EncryptionContext &context) = 0;
+  inline api::ICiphertext &underlying() const { return *underlying_; }
+
+  api::ICiphertext *underlying_;
 };
-} // namespace api
+} // namespace ufhe

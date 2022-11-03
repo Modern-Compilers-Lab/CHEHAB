@@ -1,42 +1,104 @@
 #pragma once
 
-#include <cstddef>
-#include <string>
+#include "ufhe/api/iplaintext.hpp"
+#include "ufhe/config.hpp"
+#include "ufhe/seal_backend/plaintext.hpp"
 
-namespace api
+namespace ufhe
 {
-class Plaintext
+class Plaintext : public api::IPlaintext
 {
+  friend class Evaluator;
+
 public:
-  Plaintext() {}
+  Plaintext()
+  {
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::Plaintext();
+      break;
 
-  Plaintext(std::size_t coeff_count) {}
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
 
-  Plaintext(const std::string &hex_poly) { init(hex_poly); }
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  virtual ~Plaintext() {}
+  Plaintext(std::size_t coeff_count)
+  {
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::Plaintext(coeff_count);
+      break;
 
-  virtual void resize(std::size_t coeff_count) = 0;
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
 
-  virtual void set_zero(std::size_t start_coeff, std::size_t length) = 0;
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  virtual std::size_t capacity() const = 0;
+  Plaintext(const std::string &hex_poly)
+  {
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::Plaintext(hex_poly);
+      break;
 
-  virtual std::size_t coeff_count() const = 0;
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
 
-  virtual std::string to_string() const = 0;
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  virtual bool operator==(const Plaintext &compare) const = 0;
+  Plaintext(const Plaintext &copy) = delete;
 
-  virtual bool operator!=(const Plaintext &compare) const = 0;
+  Plaintext &operator=(const Plaintext &assign) = delete;
 
-  // TODO: Allow access to specific coefficient of the plaintext polynomial
+  ~Plaintext() { delete underlying_; }
 
-  // TODO: Serialization support
+  inline api::backend_type backend() const override { return api::backend_type::seal; }
+
+  inline void resize(std::size_t coeff_count) override { underlying().resize(coeff_count); }
+
+  inline void set_zero(std::size_t start_coeff, std::size_t length) override
+  {
+    underlying().set_zero(start_coeff, length);
+  }
+
+  inline std::size_t capacity() const override { return underlying().capacity(); }
+
+  inline std::size_t coeff_count() const override { return underlying().coeff_count(); }
+
+  inline std::string to_string() const override { return underlying().to_string(); }
+
+  inline bool operator==(const api::IPlaintext &compare) const override
+  {
+    return underlying() == dynamic_cast<const Plaintext &>(compare).underlying();
+  }
+
+  inline bool operator!=(const api::IPlaintext &compare) const override
+  {
+    return underlying() != dynamic_cast<const Plaintext &>(compare).underlying();
+  }
 
 private:
-  virtual void init(std::size_t coeff_count) = 0;
+  inline api::IPlaintext &underlying() const { return *underlying_; }
 
-  virtual void init(const std::string &hex_poly) = 0;
+  api::IPlaintext *underlying_;
 };
-} // namespace api
+} // namespace ufhe

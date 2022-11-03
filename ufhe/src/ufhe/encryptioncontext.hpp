@@ -10,6 +10,8 @@ namespace ufhe
 class EncryptionContext : public api::IEncryptionContext
 {
   friend class KeyGenerator;
+  friend class Ciphertext;
+  friend class Evaluator;
 
 public:
   EncryptionContext(const EncryptionParameters &params)

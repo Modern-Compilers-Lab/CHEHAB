@@ -1,101 +1,186 @@
 #pragma once
 
-#include "ciphertext.hpp"
-#include "encryptioncontext.hpp"
-#include "galoiskeys.hpp"
-#include "plaintext.hpp"
-#include "relinkeys.hpp"
+#include "ufhe/api/ievaluator.hpp"
+#include "ufhe/ciphertext.hpp"
+#include "ufhe/encryptioncontext.hpp"
+#include "ufhe/plaintext.hpp"
+#include "ufhe/seal_backend/evaluator.hpp"
 
-namespace api
+namespace ufhe
 {
-class Evaluator
+class Evaluator : public api::IEvaluator
 {
 public:
-  Evaluator(const EncryptionContext &context) { init(context); }
+  inline Evaluator(const EncryptionContext &context)
+  {
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ =
+        new seal_backend::Evaluator(dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
+      break;
 
-  virtual ~Evaluator() {}
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
 
-  virtual void negate_inplace(Ciphertext &encrypted) const = 0;
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  virtual void negate(const Ciphertext &encrypted, Ciphertext &destination) const = 0;
+  Evaluator(const Evaluator &copy) = delete;
 
-  virtual void add_inplace(Ciphertext &encypted1, const Ciphertext &encypted2) const = 0;
+  Evaluator &operator=(const Evaluator &assign) = delete;
 
-  virtual void add(const Ciphertext &encrypted1, const Ciphertext &encrypted2, Ciphertext &destination) const = 0;
+  ~Evaluator() { delete underlying_; }
 
-  virtual void add_many(const std::vector<Ciphertext> &encrypteds, Ciphertext &destination) const = 0;
+  inline api::backend_type backend() const override { return api::backend_type::seal; }
 
-  virtual void sub_inplace(Ciphertext &encrypted1, const Ciphertext &encrypted2) const = 0;
+  inline void negate_inplace(api::ICiphertext &encrypted) const override
+  {
+    underlying().negate_inplace(dynamic_cast<Ciphertext &>(encrypted).underlying());
+  }
 
-  virtual void sub(const Ciphertext &encrypted1, const Ciphertext &encrypted2, Ciphertext &destination) const = 0;
+  inline void negate(const api::ICiphertext &encrypted, api::ICiphertext &destination) const override
+  {
+    underlying().negate(
+      dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
-  virtual void multiply_inplace(Ciphertext &encrypted1, const Ciphertext &encrypted2) const = 0;
+  inline void add_inplace(api::ICiphertext &encrypted1, const api::ICiphertext &encrypted2) const override
+  {
+    underlying().add_inplace(
+      dynamic_cast<Ciphertext &>(encrypted1).underlying(), dynamic_cast<const Ciphertext &>(encrypted2).underlying());
+  }
 
-  virtual void multiply(const Ciphertext &encrypted1, const Ciphertext &encrypted2, Ciphertext &destination) const = 0;
+  inline void add(const api::ICiphertext &encrypted1, const api::ICiphertext &encrypted2, api::ICiphertext &destination)
+    const override
+  {
+    underlying().add(
+      dynamic_cast<const Ciphertext &>(encrypted1).underlying(),
+      dynamic_cast<const Ciphertext &>(encrypted2).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
-  virtual void multiply_many(
-    const std::vector<Ciphertext> &encrypteds, const RelinKeys &relin_keys, Ciphertext &destination);
+  inline void sub_inplace(api::ICiphertext &encrypted1, const api::ICiphertext &encrypted2) const override
+  {
+    underlying().sub_inplace(
+      dynamic_cast<Ciphertext &>(encrypted1).underlying(), dynamic_cast<const Ciphertext &>(encrypted2).underlying());
+  }
 
-  virtual void square_inplace(Ciphertext &encrypted) const = 0;
+  inline void sub(const api::ICiphertext &encrypted1, const api::ICiphertext &encrypted2, api::ICiphertext &destination)
+    const override
+  {
+    underlying().sub(
+      dynamic_cast<const Ciphertext &>(encrypted1).underlying(),
+      dynamic_cast<const Ciphertext &>(encrypted2).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
-  virtual void square(const Ciphertext &encrypted, Ciphertext &destination) const = 0;
+  inline void multiply_inplace(api::ICiphertext &encrypted1, const api::ICiphertext &encrypted2) const override
+  {
+    underlying().multiply_inplace(
+      dynamic_cast<Ciphertext &>(encrypted1).underlying(), dynamic_cast<const Ciphertext &>(encrypted2).underlying());
+  }
 
-  virtual void exponentiate_inplace(
-    Ciphertext &encrypted, std::uint64_t exponent, const RelinKeys &relin_keys) const = 0;
+  inline void multiply(
+    const api::ICiphertext &encrypted1, const api::ICiphertext &encrypted2,
+    api::ICiphertext &destination) const override
+  {
+    underlying().multiply(
+      dynamic_cast<const Ciphertext &>(encrypted1).underlying(),
+      dynamic_cast<const Ciphertext &>(encrypted2).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
-  virtual void exponentiate(
-    const Ciphertext &encrypted, std::uint64_t exponent, const RelinKeys &relin_keys,
-    Ciphertext &destination) const = 0;
+  inline void square_inplace(api::ICiphertext &encrypted) const override
+  {
+    underlying().square_inplace(dynamic_cast<Ciphertext &>(encrypted).underlying());
+  }
 
-  virtual void add_plain_inplace(Ciphertext &encrypted, const Plaintext &plain) const = 0;
+  inline void square(const api::ICiphertext &encrypted, api::ICiphertext &destination) const override
+  {
+    underlying().square(
+      dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
-  virtual void add_plain(const Ciphertext &encrypted, const Plaintext &plain, Ciphertext &destination) const = 0;
+  inline void add_plain_inplace(api::ICiphertext &encrypted, const api::IPlaintext &plain) const override
+  {
+    underlying().add_plain_inplace(
+      dynamic_cast<Ciphertext &>(encrypted).underlying(), dynamic_cast<const Plaintext &>(plain).underlying());
+  }
 
-  virtual void sub_plain_inplace(Ciphertext &encrypted, const Plaintext &plain) const = 0;
+  inline void add_plain(
+    const api::ICiphertext &encrypted, const api::IPlaintext &plain, api::ICiphertext &destination) const override
+  {
+    underlying().add_plain(
+      dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<const Plaintext &>(plain).underlying(),
+      dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
-  virtual void sub_plain(const Ciphertext &encrypted, const Plaintext &plain, Ciphertext &destination) const = 0;
+  inline void sub_plain_inplace(api::ICiphertext &encrypted, const api::IPlaintext &plain) const override
+  {
+    underlying().sub_plain_inplace(
+      dynamic_cast<Ciphertext &>(encrypted).underlying(), dynamic_cast<const Plaintext &>(plain).underlying());
+  }
 
-  virtual void multiply_plain_inplace(Ciphertext &encrypted, const Plaintext &plain) const = 0;
+  inline void sub_plain(
+    const api::ICiphertext &encrypted, const api::IPlaintext &plain, api::ICiphertext &destination) const override
+  {
+    underlying().sub_plain(
+      dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<const Plaintext &>(plain).underlying(),
+      dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
-  virtual void multiply_plain(const Ciphertext &encrypted, const Plaintext &plain, Ciphertext &destination) const = 0;
+  inline void multiply_plain_inplace(api::ICiphertext &encrypted, const api::IPlaintext &plain) const override
+  {
+    underlying().multiply_plain_inplace(
+      dynamic_cast<Ciphertext &>(encrypted).underlying(), dynamic_cast<const Plaintext &>(plain).underlying());
+  }
 
-  virtual void relinearize_inplace(Ciphertext &encrypted, const RelinKeys &relin_keys) const = 0;
+  inline void multiply_plain(
+    const api::ICiphertext &encrypted, const api::IPlaintext &plain, api::ICiphertext &destination) const override
+  {
+    underlying().multiply_plain(
+      dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<const Plaintext &>(plain).underlying(),
+      dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
-  virtual void relinearize(const Ciphertext &encrypted, const RelinKeys &relin_keys, Ciphertext &destination) const = 0;
+  inline void mod_switch_to_next_inplace(api::ICiphertext &encrypted) const override
+  {
+    underlying().mod_switch_to_next_inplace(dynamic_cast<Ciphertext &>(encrypted).underlying());
+  }
 
-  virtual void mod_switch_to_next_inplace(Ciphertext &encrypted) const = 0;
+  inline void mod_switch_to_next(const api::ICiphertext &encrypted, api::ICiphertext &destination) const override
+  {
+    underlying().mod_switch_to_next(
+      dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
-  virtual void mod_switch_to_next(const Ciphertext &encrypted, Ciphertext &destination) const = 0;
+  inline void mod_switch_to_next_inplace(api::IPlaintext &plain) const override
+  {
+    underlying().mod_switch_to_next_inplace(dynamic_cast<Plaintext &>(plain).underlying());
+  }
 
-  virtual void mod_switch_to_next_inplace(Plaintext &plain) const = 0;
+  inline void mod_switch_to_next(const api::IPlaintext &plain, api::IPlaintext &destination) const override
+  {
+    underlying().mod_switch_to_next(
+      dynamic_cast<const Plaintext &>(plain).underlying(), dynamic_cast<Plaintext &>(destination).underlying());
+  }
 
-  virtual void mod_switch_to_next(const Plaintext &plain, Plaintext &destination) const = 0;
+  inline void rescale_to_next(const api::ICiphertext &encrypted, api::ICiphertext &destination) const override
+  {
+    underlying().rescale_to_next(
+      dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
-  // TODO: mod_switch_to
-
-  virtual void rescale_to_next(const Ciphertext &encrypted, Ciphertext &destination) const = 0;
-
-  virtual void rescale_to_next_inplace(Ciphertext &encrypted) const = 0;
-
-  // TODO: rescale_to
-
-  // TODO: transform_to_ntt
-
-  // TODO: transform_from_ntt
-
-  // TODO: apply_galois
-
-  virtual void rotate_inplace(Ciphertext &encrypted, int steps, const GaloisKeys &galois_keys) const = 0;
-
-  virtual void rotate(
-    const Ciphertext &encrypted, int steps, const GaloisKeys &galois_keys, Ciphertext &destination) const = 0;
-
-  virtual void complex_conjugate_inplace(Ciphertext &encrypted, const GaloisKeys &galois_keys) const = 0;
-
-  virtual void complex_conjugate(
-    const Ciphertext &encrypted, const GaloisKeys &galois_keys, Ciphertext &destination) const = 0;
+  inline void rescale_to_next_inplace(api::ICiphertext &encrypted) const override
+  {
+    underlying().rescale_to_next_inplace(dynamic_cast<Ciphertext &>(encrypted).underlying());
+  }
 
 private:
-  virtual void init(const EncryptionContext &context) = 0;
+  inline api::IEvaluator &underlying() const { return *underlying_; }
+
+  api::IEvaluator *underlying_;
 };
-} // namespace api
+} // namespace ufhe
