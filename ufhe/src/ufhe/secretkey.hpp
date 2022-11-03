@@ -9,6 +9,8 @@ namespace ufhe
 class SecretKey : public api::ISecretKey
 {
   friend class KeyGenerator;
+  friend class Encryptor;
+  friend class Decryptor;
 
 public:
   SecretKey()

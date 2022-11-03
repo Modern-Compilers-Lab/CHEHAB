@@ -9,6 +9,7 @@ namespace ufhe
 class PublicKey : public api::IPublicKey
 {
   friend class KeyGenerator;
+  friend class Encryptor;
 
 public:
   PublicKey()

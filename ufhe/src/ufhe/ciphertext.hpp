@@ -10,6 +10,8 @@ namespace ufhe
 class Ciphertext : public api::ICiphertext
 {
   friend class Evaluator;
+  friend class Encryptor;
+  friend class Decryptor;
 
 public:
   Ciphertext()
@@ -55,7 +57,7 @@ public:
 
   ~Ciphertext() { delete underlying_; }
 
-  inline api::backend_type backend() const override { return api::backend_type::seal; }
+  inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline std::size_t coeff_modulus_size() const override { return underlying().coeff_modulus_size(); }
 

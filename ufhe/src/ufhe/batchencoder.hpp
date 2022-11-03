@@ -1,30 +1,67 @@
 #pragma once
 
-#include "encryptioncontext.hpp"
-#include "plaintext.hpp"
-#include <cstdint>
-#include <vector>
+#include "ufhe/api/ibatchencoder.hpp"
+#include "ufhe/encryptioncontext.hpp"
+#include "ufhe/plaintext.hpp"
+#include "ufhe/seal_backend/batchencoder.hpp"
 
-namespace api
+namespace ufhe
 {
-class BatchEncoder
+class BatchEncoder : public api::IBatchEncoder
 {
 public:
-  BatchEncoder(const EncryptionContext &context) { init(context); }
+  inline BatchEncoder(const EncryptionContext &context)
+  {
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ =
+        new seal_backend::BatchEncoder(dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
+      break;
 
-  virtual ~BatchEncoder() {}
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
 
-  virtual void encode(const std::vector<std::uint64_t> &values_vector, Plaintext &destination) = 0;
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
-  virtual void encode(const std::vector<std::int64_t> &values_vector, Plaintext &destination) = 0;
+  BatchEncoder(const BatchEncoder &copy) = delete;
 
-  virtual void decode(const Plaintext &plain, std::vector<std::uint64_t> &destination) = 0;
+  BatchEncoder &operator=(const BatchEncoder &assign) = delete;
 
-  virtual void decode(const Plaintext &plain, std::vector<std::int64_t> &destination) = 0;
+  ~BatchEncoder() { delete underlying_; }
 
-  // TODO: Handle CKKS
+  inline api::backend_type backend() const override { return underlying().backend(); }
+
+  inline std::size_t slot_count() override { return underlying().slot_count(); }
+
+  inline void encode(const std::vector<std::uint64_t> &values_vector, api::IPlaintext &destination) const override
+  {
+    underlying().encode(values_vector, dynamic_cast<Plaintext &>(destination).underlying());
+  }
+
+  inline void encode(const std::vector<std::int64_t> &values_vector, api::IPlaintext &destination) const override
+  {
+    underlying().encode(values_vector, dynamic_cast<Plaintext &>(destination).underlying());
+  }
+
+  inline void decode(const api::IPlaintext &plain, std::vector<std::uint64_t> &destination) const override
+  {
+    underlying().decode(dynamic_cast<const Plaintext &>(plain).underlying(), destination);
+  }
+
+  inline void decode(const api::IPlaintext &plain, std::vector<std::int64_t> &destination) const override
+  {
+    underlying().decode(dynamic_cast<const Plaintext &>(plain).underlying(), destination);
+  }
 
 private:
-  virtual void init(const EncryptionContext &context) = 0;
+  inline api::IBatchEncoder &underlying() const { return *underlying_; }
+
+  api::IBatchEncoder *underlying_;
 };
-} // namespace api
+} // namespace ufhe

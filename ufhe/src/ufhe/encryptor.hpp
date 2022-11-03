@@ -1,38 +1,102 @@
 #pragma once
 
-#include "ciphertext.hpp"
-#include "encryptioncontext.hpp"
-#include "plaintext.hpp"
-#include "publickey.hpp"
-#include "secretkey.hpp"
+#include "ufhe/api/iencryptor.hpp"
+#include "ufhe/ciphertext.hpp"
+#include "ufhe/encryptioncontext.hpp"
+#include "ufhe/plaintext.hpp"
+#include "ufhe/publickey.hpp"
+#include "ufhe/seal_backend/encryptor.hpp"
+#include "ufhe/secretkey.hpp"
 
-namespace api
+namespace ufhe
 {
-class Encryptor
+class Encryptor : public api::IEncryptor
 {
 public:
-  Encryptor(const EncryptionContext &context, const PublicKey &public_key) { init(context, public_key); }
+  Encryptor(const EncryptionContext &context, const PublicKey &public_key)
+  {
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::Encryptor(
+        dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
+        dynamic_cast<const seal_backend::PublicKey &>(public_key.underlying()));
+      break;
 
-  Encryptor(const EncryptionContext &context, const SecretKey &secret_key) { init(context, secret_key); }
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
+
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
+
+  inline Encryptor(const EncryptionContext &context, const SecretKey &secret_key)
+  {
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::Encryptor(
+        dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
+        dynamic_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
+      break;
+
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
+
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
+  }
 
   Encryptor(const EncryptionContext &context, const PublicKey &public_key, const SecretKey &secret_key)
   {
-    init(context, public_key, secret_key);
+    switch (Config::backend())
+    {
+    case api::backend_type::seal:
+      underlying_ = new seal_backend::Encryptor(
+        dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
+        dynamic_cast<const seal_backend::PublicKey &>(public_key.underlying()),
+        dynamic_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
+      break;
+
+    case api::backend_type::none:
+      throw std::invalid_argument("no backend is selected");
+      break;
+
+    default:
+      throw std::invalid_argument("unsupported backend");
+      break;
+    }
   }
 
-  virtual ~Encryptor() {}
+  Encryptor(const Encryptor &copy) = delete;
 
-  virtual void encrypt(const Plaintext &plain, Ciphertext &destination) const = 0;
+  Encryptor &operator=(const Encryptor &assign) = delete;
 
-  virtual void encrypt_symmetric(const Plaintext &plain, Ciphertext &destination) const = 0;
+  ~Encryptor() { delete underlying_; }
 
-  // TODO: allow creating seeded objects
+  inline api::backend_type backend() const override { return underlying().backend(); }
+
+  inline void encrypt(const api::IPlaintext &plain, api::ICiphertext &destination) const override
+  {
+    underlying().encrypt(
+      dynamic_cast<const Plaintext &>(plain).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+  }
+
+  inline void encrypt_symmetric(const api::IPlaintext &plain, api::ICiphertext &destination) const override
+  {
+    underlying().encrypt_symmetric(
+      dynamic_cast<const Plaintext &>(plain).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+  }
 
 private:
-  virtual void init(const EncryptionContext &context, const PublicKey &public_key) = 0;
+  inline api::IEncryptor &underlying() const { return *underlying_; }
 
-  virtual void init(const EncryptionContext &context, const SecretKey &secret_key) = 0;
-
-  virtual void init(const EncryptionContext &context, const PublicKey &public_key, const SecretKey &secret_key) = 0;
+  api::IEncryptor *underlying_;
 };
-} // namespace api
+} // namespace ufhe

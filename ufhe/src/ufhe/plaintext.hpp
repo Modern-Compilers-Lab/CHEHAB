@@ -9,6 +9,9 @@ namespace ufhe
 class Plaintext : public api::IPlaintext
 {
   friend class Evaluator;
+  friend class BatchEncoder;
+  friend class Encryptor;
+  friend class Decryptor;
 
 public:
   Plaintext()
@@ -71,7 +74,7 @@ public:
 
   ~Plaintext() { delete underlying_; }
 
-  inline api::backend_type backend() const override { return api::backend_type::seal; }
+  inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline void resize(std::size_t coeff_count) override { underlying().resize(coeff_count); }
 

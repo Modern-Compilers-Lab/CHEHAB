@@ -12,6 +12,9 @@ class EncryptionContext : public api::IEncryptionContext
   friend class KeyGenerator;
   friend class Ciphertext;
   friend class Evaluator;
+  friend class BatchEncoder;
+  friend class Encryptor;
+  friend class Decryptor;
 
 public:
   EncryptionContext(const EncryptionParameters &params)
