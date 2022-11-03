@@ -4,6 +4,7 @@
 #include "ufhe/ciphertext.hpp"
 #include "ufhe/encryption_context.hpp"
 #include "ufhe/plaintext.hpp"
+#include "ufhe/relin_keys.hpp"
 #include "ufhe/seal_backend/evaluator.hpp"
 
 namespace ufhe
@@ -85,6 +86,23 @@ public:
       dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
   }
 
+  inline void exponentiate_inplace(
+    api::Ciphertext &encrypted, std::uint64_t exponent, const api::RelinKeys &relin_keys) const override
+  {
+    underlying().exponentiate_inplace(
+      dynamic_cast<Ciphertext &>(encrypted).underlying(), exponent,
+      dynamic_cast<const RelinKeys &>(relin_keys).underlying());
+  }
+
+  inline void exponentiate(
+    const api::Ciphertext &encrypted, std::uint64_t exponent, const api::RelinKeys &relin_keys,
+    api::Ciphertext &destination) const override
+  {
+    underlying().exponentiate(
+      dynamic_cast<const Ciphertext &>(encrypted).underlying(), exponent,
+      dynamic_cast<const RelinKeys &>(relin_keys).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+  }
+
   inline void add_plain_inplace(api::Ciphertext &encrypted, const api::Plaintext &plain) const override
   {
     underlying().add_plain_inplace(
@@ -125,6 +143,20 @@ public:
     underlying().multiply_plain(
       dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<const Plaintext &>(plain).underlying(),
       dynamic_cast<Ciphertext &>(destination).underlying());
+  }
+
+  inline void relinearize_inplace(api::Ciphertext &encrypted, const api::RelinKeys &relin_keys) const override
+  {
+    underlying().relinearize_inplace(
+      dynamic_cast<Ciphertext &>(encrypted).underlying(), dynamic_cast<const RelinKeys &>(relin_keys).underlying());
+  }
+
+  inline void relinearize(
+    const api::Ciphertext &encrypted, const api::RelinKeys &relin_keys, api::Ciphertext &destination) const override
+  {
+    underlying().relinearize(
+      dynamic_cast<const Ciphertext &>(encrypted).underlying(),
+      dynamic_cast<const RelinKeys &>(relin_keys).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
   }
 
   inline void mod_switch_to_next_inplace(api::Ciphertext &encrypted) const override

@@ -8,6 +8,7 @@ namespace ufhe
 {
 class RelinKeys : public api::RelinKeys
 {
+  friend class Evaluator;
   friend class KeyGenerator;
 
 public:

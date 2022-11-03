@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ufhe/api/abstract_type.hpp"
+#include <cstdint>
 #include <vector>
 
 namespace ufhe
@@ -9,6 +10,7 @@ namespace api
 {
   class Ciphertext;
   class Plaintext;
+  class RelinKeys;
 
   class Evaluator : public AbstractType
   {
@@ -39,11 +41,12 @@ namespace api
 
     virtual void square(const Ciphertext &encrypted, Ciphertext &destination) const = 0;
 
-    // virtual void exponentiate_inplace(Ciphertext &encrypted, std::uint64_t exponent, const RelinKeys &relin_keys)
-    // const = 0;
+    virtual void exponentiate_inplace(
+      Ciphertext &encrypted, std::uint64_t exponent, const RelinKeys &relin_keys) const = 0;
 
-    // virtual void exponentiate(const Ciphertext &encrypted, std::uint64_t exponent, const RelinKeys &relin_keys,
-    // Ciphertext &destination) const = 0;
+    virtual void exponentiate(
+      const Ciphertext &encrypted, std::uint64_t exponent, const RelinKeys &relin_keys,
+      Ciphertext &destination) const = 0;
 
     virtual void add_plain_inplace(Ciphertext &encrypted, const Plaintext &plain) const = 0;
 
@@ -57,10 +60,10 @@ namespace api
 
     virtual void multiply_plain(const Ciphertext &encrypted, const Plaintext &plain, Ciphertext &destination) const = 0;
 
-    // virtual void relinearize_inplace(Ciphertext &encrypted, const RelinKeys &relin_keys) const = 0;
+    virtual void relinearize_inplace(Ciphertext &encrypted, const RelinKeys &relin_keys) const = 0;
 
-    // virtual void relinearize(const Ciphertext &encrypted, const RelinKeys &relin_keys, Ciphertext &destination)
-    // const = 0;
+    virtual void relinearize(
+      const Ciphertext &encrypted, const RelinKeys &relin_keys, Ciphertext &destination) const = 0;
 
     virtual void mod_switch_to_next_inplace(Ciphertext &encrypted) const = 0;
 

@@ -4,6 +4,7 @@
 #include "ufhe/api/key_generator.hpp"
 #include "ufhe/seal_backend/encryption_context.hpp"
 #include "ufhe/seal_backend/public_key.hpp"
+#include "ufhe/seal_backend/relin_keys.hpp"
 #include "ufhe/seal_backend/secret_key.hpp"
 
 namespace ufhe
@@ -30,6 +31,11 @@ namespace seal_backend
     inline void create_public_key(api::PublicKey &destination) const override
     {
       underlying_.create_public_key(dynamic_cast<PublicKey &>(destination).underlying_);
+    }
+
+    inline void create_relin_keys(api::RelinKeys &destination) override
+    {
+      underlying_.create_relin_keys(dynamic_cast<RelinKeys &>(destination).underlying_);
     }
 
   private:

@@ -4,6 +4,7 @@
 #include "ufhe/api/key_generator.hpp"
 #include "ufhe/encryption_context.hpp"
 #include "ufhe/public_key.hpp"
+#include "ufhe/relin_keys.hpp"
 #include "ufhe/secret_key.hpp"
 
 namespace ufhe
@@ -32,6 +33,11 @@ public:
   inline void create_public_key(api::PublicKey &destination) const override
   {
     underlying().create_public_key(dynamic_cast<PublicKey &>(destination).underlying());
+  }
+
+  inline void create_relin_keys(api::RelinKeys &destination) override
+  {
+    underlying().create_relin_keys(dynamic_cast<RelinKeys &>(destination).underlying());
   }
 
 private:

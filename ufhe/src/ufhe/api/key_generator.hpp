@@ -7,6 +7,7 @@ namespace ufhe
 namespace api
 {
   class PublicKey;
+  class RelinKeys;
   class SecretKey;
 
   class KeyGenerator : public AbstractType
@@ -17,6 +18,7 @@ namespace api
     virtual void create_public_key(PublicKey &destination) const = 0;
 
     // virtual void create_relin_keys(RelinKeys &destination) const = 0;
+    virtual void create_relin_keys(RelinKeys &destination) = 0;
 
     // virtual void create_galois_keys(const std::vector<std::uint32_t> &galois_elts, GaloisKeys &destination) const =
     // 0;
