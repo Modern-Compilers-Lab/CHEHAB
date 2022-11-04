@@ -20,7 +20,7 @@ public:
 
   Ciphertext(const Ciphertext &copy) = delete;
 
-  Ciphertext &operator=(const Ciphertext &assign) = delete;
+  Ciphertext &operator=(const Ciphertext &assign);
 
   ~Ciphertext() { delete underlying_; }
 

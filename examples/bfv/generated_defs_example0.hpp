@@ -1,25 +1,27 @@
 #include "ufhe/ufhe.hpp"
-#include <functional>
+#include <cstdint>
 #include <iomanip>
 #include <map>
-#include <memory.h>
 #include <string>
-#include <variant>
 #include <vector>
 
-// BFV scheme allows modular arithmetic
-using Scalar = uint64_t;
-using Inputs = std::unordered_map<std::string, std::unique_ptr<ufhe::api::ICiphertext>>;
-using Outputs = Inputs;
+using ClearInputs = std::unordered_map<std::string, std::vector<int64_t>>;
+using EncodedInputs = std::unordered_map<std::string, ufhe::Plaintext>;
+using EncryptedInputs = std::unordered_map<std::string, ufhe::Ciphertext>;
+using EncodedOutputs = EncodedInputs;
+using EncryptedOutputs = EncryptedInputs;
 
 void example0(
-  const ufhe::api::IEvaluator &evaluator, const ufhe::api::IRelinKeys &relin_keys,
-  const ufhe::api::IGaloisKeys &galois_keys, Inputs &inputs, Outputs &outputs)
+  const ufhe::EncryptionContext &context, EncryptedInputs &encrypted_inputs, const ufhe::RelinKeys &relin_keys,
+  const ufhe::GaloisKeys &galois_keys, EncryptedOutputs &encrypted_outputs)
 {
-  ufhe::api::ICiphertext &a = *inputs["a"];
-  ufhe::api::ICiphertext &b = *inputs["b"];
-  ufhe::api::ICiphertext &r = *outputs["r"];
+  ufhe::Evaluator evaluator(context);
+
+  ufhe::Ciphertext &a = encrypted_inputs["a"];
+  ufhe::Ciphertext &b = encrypted_inputs["b"];
+  ufhe::Ciphertext r;
   evaluator.add(a, b, r);
+  encrypted_outputs["r"] = r;
 }
 
 /*

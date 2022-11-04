@@ -63,8 +63,8 @@ int main()
   BatchEncoder batch_encoder(context);
   size_t slot_count = batch_encoder.slot_count();
   cout << "slot_count " << slot_count << endl;
-  vector<uint64_t> a_clear(slot_count, 3);
-  vector<uint64_t> b_clear(slot_count, 2);
+  vector<int64_t> a_clear(slot_count, 3);
+  vector<int64_t> b_clear(slot_count, 2);
 
   // Encode
   Plaintext a_plain;
@@ -93,7 +93,7 @@ int main()
   decryptor.decrypt(r_encrypted, r_plain);
 
   // Decode
-  vector<uint64_t> r_clear;
+  vector<int64_t> r_clear;
   batch_encoder.decode(r_plain, r_clear);
 
   // Show results
