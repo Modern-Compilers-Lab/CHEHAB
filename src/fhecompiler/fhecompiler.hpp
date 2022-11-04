@@ -3,6 +3,7 @@
 #include "ciphertext.hpp"
 #include "encryption_parameters.hpp"
 #include "fhecompiler_const.hpp"
+#include "noise_simulator.hpp"
 #include "ops_overloads.hpp"
 #include "params_selector.hpp"
 #include "plaintext.hpp"
@@ -39,8 +40,11 @@ void compile(const std::string &output_filename)
 
   parameters_selector.fix_parameters(params);
 
-  translator::Translator tr(program, &params);
+  // noise_simulator::BGVSimulator bgv_simulator(8192, 786433, 700);
 
+  // bgv_simulator.simulate_noise_growth(program);
+
+  translator::Translator tr(program, &params);
   {
     std::ofstream translation_os(output_filename);
 

@@ -34,15 +34,30 @@ int main()
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
     // fhecompiler::params.set_coef_modulus({50, 50, 50});
+    // a good value for t, 786433
     fhecompiler::params.set_plaintext_modulus(786433);
     // fhecompiler::params.set_plaintext_modulus_bit_length(20);
-    fhecompiler::params.set_polynomial_modulus_degree(2 << 14);
+    fhecompiler::params.set_polynomial_modulus_degree(2 << 15);
 
-    output1 = ct1 + pt1;
+    fhecompiler::Ciphertext ct2 = fhecompiler::Ciphertext::encrypt(pt1);
 
+    output1 = ct1 * ct2 * ct1;
+
+    /*
+    fhecompiler::Ciphertext output2("output2", VarType::output);
+
+    output2 = output1 * output1;
+
+    output2 *= output2;
+    */
+
+    // output1 += ct1;
+
+    /*
     output1 >>= 12;
 
     output1 *= 13244;
+    */
 
     fhecompiler::compile("test1.hpp");
   }

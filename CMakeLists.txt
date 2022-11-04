@@ -19,4 +19,5 @@ target_link_libraries(${PROJECT_NAME} dsl)
 target_link_libraries(${PROJECT_NAME} ir)
 target_link_libraries(${PROJECT_NAME} params_selector)
 target_link_libraries(${PROJECT_NAME} translator)
-
+set(CMAKE_SOURCE_DIR "/usr/local/lib")
+target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/libntl.a m gmp)

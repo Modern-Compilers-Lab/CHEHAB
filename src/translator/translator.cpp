@@ -236,8 +236,10 @@ void Translator::generate_function_signature(std::ofstream &os) const
   ArgumentList argument_list;
   os << "void " << program->get_program_tag()
      << argument_list(
-          {{inputs_class_literal, inputs_class_identifier, AccessType::readAndModify},
-           {outputs_class_literal, outputs_class_identifier, AccessType::readAndModify},
+          {{encrypted_inputs_class_literal, inputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
+           {encoded_inputs_class_literal, inputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
+           {encrypted_outputs_class_literal, outputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
+           {encoded_outputs_class_literal, outputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
            {context_type_literal, context_identifier, AccessType::readOnly},
            {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
            {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
@@ -248,16 +250,15 @@ void Translator::generate_function_signature(std::ofstream &os) const
 void Translator::write_input(const std::string &input_identifier, ir::TermType type, std::ostream &os)
 {
   // retrieve an input from object
-  os << types_map[type] << " " << input_identifier << " = " << inputs_class_identifier << "."
-     << get_instruction_by_type[type] << "(" << stringfy_string(input_identifier) << ")"
-     << ";" << '\n';
+  os << types_map[type] << " " << input_identifier << " = " << inputs_class_identifier[type] << "["
+     << stringfy_string(input_identifier) << "];" << '\n';
 }
 
 void Translator::write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os)
 {
   // insert output in object
-  os << outputs_class_identifier << "." << insert_object_instruction << "<" << types_map[type] << ">"
-     << "({" << stringfy_string(output_identifier) << "," << output_identifier << "})"
+  os << outputs_class_identifier[type] << "." << insert_object_instruction << "({" << stringfy_string(output_identifier)
+     << "," << output_identifier << "})"
      << ";" << '\n';
 }
 

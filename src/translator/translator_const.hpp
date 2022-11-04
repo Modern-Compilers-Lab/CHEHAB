@@ -44,11 +44,6 @@ INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
 };
 
 /* literals related to api/backend */
-INLINE const char *outputs_class_identifier = "outputs";
-INLINE const char *outputs_class_literal = "Outputs";
-INLINE const char *inputs_class_identifier = "inputs";
-INLINE const char *inputs_class_literal = "Inputs";
-
 INLINE const char *params_type_literal = "EncryptionParameters";
 INLINE const char *params_identifier_literal = "params";
 INLINE const char *scalar_int = "uint64_t";
@@ -76,11 +71,18 @@ INLINE const char *encryptor_type_identifier = "encryptor";
 INLINE const char *insert_object_instruction = "insert"; // instruction to insert inputs/outputs
 INLINE const char *context_function_name = "create_context";
 INLINE const char *set_plain_modulus_intruction = "set_plain_modulus";
-INLINE const char *set_coef_modulus_instruction = "set_coef_modulus";
+INLINE const char *set_coef_modulus_instruction = "set_coeff_modulus";
 INLINE const char *set_poly_modulus_degree_instruction = "set_poly_modulus_degree";
+INLINE const char *encrypted_inputs_class_literal = "EncryptedInputs";
+INLINE const char *encoded_inputs_class_literal = "EncodedInputs";
+INLINE const char *encoded_outputs_class_literal = "EncodedOutputs";
+INLINE const char *encrypted_outputs_class_literal = "EncryptedOutputs";
 
-INLINE std::unordered_map<ir::TermType, const char *> get_instruction_by_type = {
-  {ir::plaintextType, "get_plaintext"}, {ir::ciphertextType, "get_ciphertext"}};
+INLINE std::unordered_map<ir::TermType, const char *> outputs_class_identifier = {
+  {ir::plaintextType, "encoded_outputs"}, {ir::ciphertextType, "encrypted_outputs"}};
+
+INLINE std::unordered_map<ir::TermType, const char *> inputs_class_identifier = {
+  {ir::plaintextType, "encoded_inputs"}, {ir::ciphertextType, "encrypted_inputs"}};
 
 INLINE std::unordered_map<ir::OpCode, const char *> get_other_args_by_opcode = {
   {ir::OpCode::rotate, galois_keys_identifier}, {ir::OpCode::exponentiate, relin_keys_identifier}};
