@@ -10,6 +10,7 @@ namespace api
 {
   class Ciphertext;
   class Plaintext;
+  class GaloisKeys;
   class RelinKeys;
 
   class Evaluator : public AbstractType
@@ -87,10 +88,10 @@ namespace api
 
     // TODO: apply_galois
 
-    // virtual void rotate_inplace(Ciphertext &encrypted, int steps, const GaloisKeys &galois_keys) const = 0;
+    virtual void rotate_inplace(Ciphertext &encrypted, int steps, const GaloisKeys &galois_keys) const = 0;
 
-    // virtual void rotate(const Ciphertext &encrypted, int steps, const GaloisKeys &galois_keys, Ciphertext
-    // &destination) const = 0;
+    virtual void rotate(
+      const Ciphertext &encrypted, int steps, const GaloisKeys &galois_keys, Ciphertext &destination) const = 0;
 
     // virtual void complex_conjugate_inplace(Ciphertext &encrypted, const GaloisKeys &galois_keys) const = 0;
 

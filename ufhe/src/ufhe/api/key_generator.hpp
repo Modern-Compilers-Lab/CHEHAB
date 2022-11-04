@@ -7,6 +7,7 @@ namespace ufhe
 namespace api
 {
   class PublicKey;
+  class GaloisKeys;
   class RelinKeys;
   class SecretKey;
 
@@ -26,6 +27,7 @@ namespace api
     // virtual void create_galois_keys(const std::vector<int> &steps, GaloisKeys &destination) const = 0;
 
     // virtual void create_galois_keys(GaloisKeys &destination) const = 0;
+    virtual void create_galois_keys(GaloisKeys &destination) = 0;
 
     // TODO: allow creating seeded objects
   };

@@ -3,6 +3,7 @@
 #include "seal_backend/key_generator.hpp"
 #include "ufhe/api/key_generator.hpp"
 #include "ufhe/encryption_context.hpp"
+#include "ufhe/galois_keys.hpp"
 #include "ufhe/public_key.hpp"
 #include "ufhe/relin_keys.hpp"
 #include "ufhe/secret_key.hpp"
@@ -38,6 +39,11 @@ public:
   inline void create_relin_keys(api::RelinKeys &destination) override
   {
     underlying().create_relin_keys(dynamic_cast<RelinKeys &>(destination).underlying());
+  }
+
+  inline void create_galois_keys(api::GaloisKeys &destination) override
+  {
+    underlying().create_galois_keys(dynamic_cast<GaloisKeys &>(destination).underlying());
   }
 
 private:

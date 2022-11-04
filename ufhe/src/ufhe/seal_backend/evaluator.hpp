@@ -4,8 +4,12 @@
 #include "ufhe/api/evaluator.hpp"
 #include "ufhe/seal_backend/ciphertext.hpp"
 #include "ufhe/seal_backend/encryption_context.hpp"
+#include "ufhe/seal_backend/galois_keys.hpp"
 #include "ufhe/seal_backend/plaintext.hpp"
 #include "ufhe/seal_backend/relin_keys.hpp"
+#include <cstddef>
+#include <stdexcept>
+#include <vector>
 
 namespace ufhe
 {
@@ -14,7 +18,8 @@ namespace seal_backend
   class Evaluator : public api::Evaluator
   {
   public:
-    Evaluator(const EncryptionContext &context) : underlying_(seal::Evaluator(context.underlying_)) {}
+    Evaluator(const EncryptionContext &context) : underlying_(seal::Evaluator(context.underlying_)), context_(context)
+    {}
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
@@ -188,8 +193,59 @@ namespace seal_backend
       underlying_.rescale_to_next_inplace(dynamic_cast<Ciphertext &>(encrypted).underlying_);
     }
 
+    inline void rotate_inplace(api::Ciphertext &encrypted, int steps, const api::GaloisKeys &galois_keys) const override
+    {
+      seal::Ciphertext &seal_encrypted = dynamic_cast<Ciphertext &>(encrypted).underlying_;
+      const seal::GaloisKeys &seal_galois_keys = dynamic_cast<const GaloisKeys &>(galois_keys).underlying_;
+      std::size_t coeff_count = seal_encrypted.poly_modulus_degree();
+      std::size_t row_size = coeff_count >> 1;
+      if (steps > row_size)
+      {
+        underlying_.rotate_columns_inplace(seal_encrypted, seal_galois_keys);
+        return rotate_inplace(encrypted, steps % row_size, galois_keys);
+      }
+      underlying_.rotate_rows_inplace(seal_encrypted, steps, seal_galois_keys);
+      seal::Plaintext mask_right;
+      seal::Plaintext mask_left;
+      gen_symmetric_mask(coeff_count, 0, row_size - steps, mask_left, mask_right);
+      seal::Ciphertext right_part;
+      underlying_.multiply_plain(seal_encrypted, mask_left, right_part);
+      underlying_.rotate_columns_inplace(right_part, seal_galois_keys);
+      underlying_.multiply_plain_inplace(seal_encrypted, mask_right);
+      underlying_.add_inplace(seal_encrypted, right_part);
+    }
+
+    inline void rotate(
+      const api::Ciphertext &encrypted, int steps, const api::GaloisKeys &galois_keys,
+      api::Ciphertext &destination) const override
+    {
+      underlying_.rotate_rows(
+        dynamic_cast<const Ciphertext &>(encrypted).underlying_, steps,
+        dynamic_cast<const GaloisKeys &>(galois_keys).underlying_, dynamic_cast<Ciphertext &>(destination).underlying_);
+    }
+
   private:
+    void gen_symmetric_mask(
+      std::size_t coeff_count, std::size_t start_coeff, std::size_t length, seal::Plaintext &mask,
+      seal::Plaintext &mask_inverse) const
+    {
+      std::size_t row_size = coeff_count >> 1;
+      if (length > row_size)
+        throw std::invalid_argument("length too large");
+      std::vector<std::uint64_t> clear_mask(coeff_count, 1);
+      std::vector<std::uint64_t> clear_mask_inverse(coeff_count, 0);
+      for (int i = start_coeff; i < length; i++)
+      {
+        clear_mask[i] = clear_mask[row_size + i] = 0;
+        clear_mask_inverse[i] = clear_mask_inverse[row_size + i] = 1;
+      }
+      seal::BatchEncoder encoder(context_.underlying_);
+      encoder.encode(clear_mask, mask);
+      encoder.encode(clear_mask_inverse, mask_inverse);
+    }
+
     seal::Evaluator underlying_;
+    EncryptionContext context_;
   };
 } // namespace seal_backend
 } // namespace ufhe

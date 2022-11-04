@@ -9,6 +9,9 @@ namespace seal_backend
 {
   class GaloisKeys : public api::GaloisKeys
   {
+    friend class Evaluator;
+    friend class KeyGenerator;
+
   public:
     GaloisKeys() {}
 

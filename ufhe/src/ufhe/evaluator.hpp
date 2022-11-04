@@ -3,6 +3,7 @@
 #include "ufhe/api/evaluator.hpp"
 #include "ufhe/ciphertext.hpp"
 #include "ufhe/encryption_context.hpp"
+#include "ufhe/galois_keys.hpp"
 #include "ufhe/plaintext.hpp"
 #include "ufhe/relin_keys.hpp"
 #include "ufhe/seal_backend/evaluator.hpp"
@@ -190,6 +191,22 @@ public:
   inline void rescale_to_next_inplace(api::Ciphertext &encrypted) const override
   {
     underlying().rescale_to_next_inplace(dynamic_cast<Ciphertext &>(encrypted).underlying());
+  }
+
+  inline void rotate_inplace(api::Ciphertext &encrypted, int steps, const api::GaloisKeys &galois_keys) const override
+  {
+    underlying().rotate_inplace(
+      dynamic_cast<Ciphertext &>(encrypted).underlying(), steps,
+      dynamic_cast<const GaloisKeys &>(galois_keys).underlying());
+  }
+
+  inline void rotate(
+    const api::Ciphertext &encrypted, int steps, const api::GaloisKeys &galois_keys,
+    api::Ciphertext &destination) const override
+  {
+    underlying().rotate(
+      dynamic_cast<const Ciphertext &>(encrypted).underlying(), steps,
+      dynamic_cast<const GaloisKeys &>(galois_keys).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
   }
 
 private:
