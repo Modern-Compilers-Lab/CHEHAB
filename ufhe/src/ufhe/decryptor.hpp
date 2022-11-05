@@ -22,13 +22,13 @@ public:
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
-  inline void decrypt(const api::Ciphertext &encrypted, api::Plaintext &destination) override
+  inline void decrypt(const api::Ciphertext &encrypted, api::Plaintext &destination) const override
   {
     underlying().decrypt(
       dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<Plaintext &>(destination).underlying());
   }
 
-  inline int invariant_noise_budget(const api::Ciphertext &encrypted) override
+  inline int invariant_noise_budget(const api::Ciphertext &encrypted) const override
   {
     return underlying().invariant_noise_budget(dynamic_cast<const Ciphertext &>(encrypted).underlying());
   }

@@ -14,7 +14,7 @@ namespace api
   class BatchEncoder : public AbstractType
   {
   public:
-    virtual std::size_t slot_count() = 0;
+    virtual std::size_t slot_count() const = 0;
 
     virtual void encode(const std::vector<std::uint64_t> &values_vector, Plaintext &destination) const = 0;
 

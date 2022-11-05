@@ -3,6 +3,7 @@
 #include "seal/seal.h"
 #include "ufhe/api/modulus.hpp"
 #include <cstddef>
+#include <memory>
 
 namespace ufhe
 {
@@ -12,67 +13,57 @@ namespace seal_backend
 {
   class Modulus : public api::Modulus
   {
-    friend class CoeffModulus;
-    friend class EncryptionParams;
-
   public:
-    Modulus(std::uint64_t value = 0) : underlying_(seal::Modulus(value)) {}
+    Modulus(std::uint64_t value) : underlying_(std::make_shared<seal::Modulus>(value)) {}
 
-    static inline Modulus PlainModulus(std::size_t poly_modulus_degree, int bit_size)
-    {
-      return Modulus(seal::PlainModulus::Batching(poly_modulus_degree, bit_size));
-    }
+    Modulus(const seal::Modulus &seal_modulus)
+      : underlying_(std::shared_ptr<seal::Modulus>(&const_cast<seal::Modulus &>(seal_modulus), [](seal::Modulus *) {}))
+    {}
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
-    inline Modulus &operator=(std::uint64_t value) override
-    {
-      underlying_ = value;
-      return *this;
-    }
+    inline int bit_count() const override { return underlying().bit_count(); }
 
-    inline int bit_count() const override { return underlying_.bit_count(); }
+    inline std::uint64_t value() const override { return underlying().value(); }
 
-    inline std::uint64_t value() const override { return underlying_.value(); }
-
-    inline bool is_prime() const override { return underlying_.is_prime(); }
+    inline bool is_prime() const override { return underlying().is_prime(); }
 
     inline bool operator==(const api::Modulus &compare) const override
     {
-      return underlying_ == dynamic_cast<const Modulus &>(compare).underlying_;
+      return underlying() == dynamic_cast<const Modulus &>(compare).underlying();
     }
 
     inline bool operator!=(const api::Modulus &compare) const override
     {
-      return underlying_ != dynamic_cast<const Modulus &>(compare).underlying_;
+      return underlying() != dynamic_cast<const Modulus &>(compare).underlying();
     }
 
     inline bool operator<(const api::Modulus &compare) const override
     {
-      return underlying_ < dynamic_cast<const Modulus &>(compare).underlying_;
+      return underlying() < dynamic_cast<const Modulus &>(compare).underlying();
     }
 
     inline bool operator<=(const api::Modulus &compare) const override
     {
-      return underlying_ <= dynamic_cast<const Modulus &>(compare).underlying_;
+      return underlying() <= dynamic_cast<const Modulus &>(compare).underlying();
     }
 
     inline bool operator>(const api::Modulus &compare) const override
     {
-      return underlying_ > dynamic_cast<const Modulus &>(compare).underlying_;
+      return underlying() > dynamic_cast<const Modulus &>(compare).underlying();
     }
 
     inline bool operator>=(const api::Modulus &compare) const override
     {
-      return underlying_ >= dynamic_cast<const Modulus &>(compare).underlying_;
+      return underlying() >= dynamic_cast<const Modulus &>(compare).underlying();
     }
 
-    inline std::uint64_t reduce(std::uint64_t value) const override { return underlying_.reduce(value); }
+    inline std::uint64_t reduce(std::uint64_t value) const override { return underlying().reduce(value); }
+
+    inline const seal::Modulus &underlying() const { return *underlying_; }
 
   private:
-    Modulus(seal::Modulus seal_modulus) : underlying_(seal_modulus) {}
-
-    seal::Modulus underlying_;
+    std::shared_ptr<seal::Modulus> underlying_;
   };
 } // namespace seal_backend
 } // namespace ufhe

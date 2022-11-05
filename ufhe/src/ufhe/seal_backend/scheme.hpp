@@ -8,7 +8,6 @@ namespace ufhe
 {
 namespace seal_backend
 {
-
   class Scheme : public api::Scheme
   {
     friend class EncryptionParams;
@@ -45,8 +44,10 @@ namespace seal_backend
 
     inline api::scheme_type type() const override { return scheme_; }
 
+    inline const seal::scheme_type &underlying() const { return underlying_; }
+
   private:
-    Scheme(seal::scheme_type seal_scheme) : underlying_(seal_scheme) {}
+    // Scheme(seal::scheme_type seal_scheme) : underlying_(seal_scheme) {}
 
     seal::scheme_type underlying_;
     api::scheme_type scheme_;

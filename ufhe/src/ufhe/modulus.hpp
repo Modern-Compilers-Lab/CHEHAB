@@ -23,12 +23,6 @@ public:
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
-  inline Modulus &operator=(std::uint64_t value) override
-  {
-    underlying() = value;
-    return *this;
-  }
-
   inline int bit_count() const override { return underlying().bit_count(); }
 
   inline std::uint64_t value() const override { return underlying().value(); }

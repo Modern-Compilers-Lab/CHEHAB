@@ -24,7 +24,7 @@ namespace api
 
     virtual bool is_transparent() const = 0;
 
-    virtual double &scale() = 0;
+    virtual double &scale() const = 0;
 
     // TODO: Serialization support
   };

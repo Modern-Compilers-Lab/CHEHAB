@@ -3,6 +3,7 @@
 #include "seal/seal.h"
 #include "ufhe/api/encryption_context.hpp"
 #include "ufhe/seal_backend/encryption_params.hpp"
+#include <memory>
 
 namespace ufhe
 {
@@ -10,20 +11,17 @@ namespace seal_backend
 {
   class EncryptionContext : public api::EncryptionContext
   {
-    friend class BatchEncoder;
-    friend class Ciphertext;
-    friend class Decryptor;
-    friend class Encryptor;
-    friend class Evaluator;
-    friend class KeyGenerator;
-
   public:
-    EncryptionContext(const EncryptionParams &params) : underlying_(seal::SEALContext(params.underlying_)) {}
+    EncryptionContext(const EncryptionParams &params)
+      : underlying_(std::make_shared<seal::SEALContext>(params.underlying()))
+    {}
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
+    inline const seal::SEALContext &underlying() const { return *underlying_; }
+
   private:
-    seal::SEALContext underlying_;
+    std::shared_ptr<seal::SEALContext> underlying_;
   };
 
 } // namespace seal_backend

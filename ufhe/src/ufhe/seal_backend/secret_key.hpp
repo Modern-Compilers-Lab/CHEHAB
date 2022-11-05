@@ -2,6 +2,7 @@
 
 #include "seal/seal.h"
 #include "ufhe/api/secret_key.hpp"
+#include <memory>
 
 namespace ufhe
 {
@@ -9,19 +10,19 @@ namespace seal_backend
 {
   class SecretKey : public api::SecretKey
   {
-    friend class Encryptor;
-    friend class Decryptor;
-    friend class KeyGenerator;
-
   public:
-    SecretKey() : underlying_(seal::SecretKey()) {}
+    SecretKey() : underlying_(std::make_shared<seal::SecretKey>()) {}
+
+    SecretKey(const seal::SecretKey &seal_sk)
+      : underlying_(std::shared_ptr<seal::SecretKey>(&const_cast<seal::SecretKey &>(seal_sk), [](seal::SecretKey *) {}))
+    {}
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
-  private:
-    SecretKey(seal::SecretKey seal_sk) : underlying_(seal_sk) {}
+    inline const seal::SecretKey &underlying() const { return *underlying_; }
 
-    seal::SecretKey underlying_;
+  private:
+    std::shared_ptr<seal::SecretKey> underlying_;
   };
 } // namespace seal_backend
 } // namespace ufhe

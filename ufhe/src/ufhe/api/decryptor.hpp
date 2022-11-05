@@ -12,9 +12,9 @@ namespace api
   class Decryptor : public AbstractType
   {
   public:
-    virtual void decrypt(const Ciphertext &encrypted, Plaintext &destination) = 0;
+    virtual void decrypt(const Ciphertext &encrypted, Plaintext &destination) const = 0;
 
-    virtual int invariant_noise_budget(const Ciphertext &encrypted) = 0;
+    virtual int invariant_noise_budget(const Ciphertext &encrypted) const = 0;
   };
 } // namespace api
 } // namespace ufhe

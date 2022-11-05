@@ -14,8 +14,6 @@ namespace api
   public:
     using vector = std::vector<std::reference_wrapper<const Modulus>>;
 
-    virtual Modulus &operator=(std::uint64_t value) = 0;
-
     virtual int bit_count() const = 0;
 
     virtual std::uint64_t value() const = 0;

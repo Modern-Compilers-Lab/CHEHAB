@@ -2,6 +2,7 @@
 
 #include "seal/seal.h"
 #include "ufhe/api/galois_keys.hpp"
+#include <memory>
 
 namespace ufhe
 {
@@ -9,18 +10,19 @@ namespace seal_backend
 {
   class GaloisKeys : public api::GaloisKeys
   {
-    friend class Evaluator;
     friend class KeyGenerator;
 
   public:
-    GaloisKeys() {}
+    GaloisKeys() : underlying_(std::make_shared<seal::GaloisKeys>()) {}
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
-    inline std::size_t size() const override { return underlying_.size(); }
+    inline std::size_t size() const override { return underlying().size(); }
+
+    inline const seal::GaloisKeys &underlying() const { return *underlying_; }
 
   private:
-    seal::GaloisKeys underlying_;
+    std::shared_ptr<seal::GaloisKeys> underlying_;
   };
 } // namespace seal_backend
 } // namespace ufhe

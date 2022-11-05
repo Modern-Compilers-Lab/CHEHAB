@@ -36,12 +36,12 @@ public:
     underlying().create_public_key(dynamic_cast<PublicKey &>(destination).underlying());
   }
 
-  inline void create_relin_keys(api::RelinKeys &destination) override
+  inline void create_relin_keys(api::RelinKeys &destination) const override
   {
     underlying().create_relin_keys(dynamic_cast<RelinKeys &>(destination).underlying());
   }
 
-  inline void create_galois_keys(api::GaloisKeys &destination) override
+  inline void create_galois_keys(api::GaloisKeys &destination) const override
   {
     underlying().create_galois_keys(dynamic_cast<GaloisKeys &>(destination).underlying());
   }

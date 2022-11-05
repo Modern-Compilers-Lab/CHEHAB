@@ -34,7 +34,7 @@ public:
 
   inline bool is_transparent() const override { return underlying().is_transparent(); }
 
-  inline double &scale() override { return underlying().scale(); }
+  inline double &scale() const override { return underlying().scale(); }
 
 private:
   inline api::Ciphertext &underlying() const { return *underlying_; }

@@ -4,16 +4,21 @@ namespace ufhe
 {
 namespace seal_backend
 {
-  CoeffModulus::CoeffModulus(const std::vector<Modulus> &moduli) : moduli_(moduli)
+  CoeffModulus::CoeffModulus(const std::vector<Modulus> &moduli)
+    : underlying_(std::make_shared<std::vector<seal::Modulus>>()), moduli_(moduli)
   {
+    underlying_->reserve(moduli_.size());
     for (const Modulus &modulus : moduli)
-      underlying_.push_back(modulus.underlying_);
+      underlying_->push_back(modulus.underlying());
   }
 
-  CoeffModulus::CoeffModulus(std::vector<seal::Modulus> seal_moduli) : underlying_(seal_moduli), moduli_()
+  CoeffModulus::CoeffModulus(const std::vector<seal::Modulus> &seal_moduli)
+    : underlying_(std::shared_ptr<std::vector<seal::Modulus>>(
+        &const_cast<std::vector<seal::Modulus> &>(seal_moduli), [](std::vector<seal::Modulus> *) {})),
+      moduli_()
   {
-    moduli_.reserve(underlying_.size());
-    for (const seal::Modulus &seal_modulus : underlying_)
+    moduli_.reserve(underlying_->size());
+    for (const seal::Modulus &seal_modulus : *underlying_)
       moduli_.push_back(Modulus(seal_modulus));
   }
 

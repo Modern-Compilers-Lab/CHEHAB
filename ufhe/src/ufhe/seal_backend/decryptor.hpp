@@ -6,6 +6,7 @@
 #include "ufhe/seal_backend/encryption_context.hpp"
 #include "ufhe/seal_backend/plaintext.hpp"
 #include "ufhe/seal_backend/secret_key.hpp"
+#include <memory>
 
 namespace ufhe
 {
@@ -15,24 +16,26 @@ namespace seal_backend
   {
   public:
     Decryptor(const EncryptionContext &context, const SecretKey &secret_key)
-      : underlying_(seal::Decryptor(context.underlying_, secret_key.underlying_))
+      : underlying_(std::make_shared<seal::Decryptor>(context.underlying(), secret_key.underlying()))
     {}
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
-    inline void decrypt(const api::Ciphertext &encrypted, api::Plaintext &destination) override
+    inline void decrypt(const api::Ciphertext &encrypted, api::Plaintext &destination) const override
     {
-      underlying_.decrypt(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying_, dynamic_cast<Plaintext &>(destination).underlying_);
+      underlying_->decrypt(
+        dynamic_cast<const Ciphertext &>(encrypted).underlying(), *dynamic_cast<Plaintext &>(destination).underlying_);
     }
 
-    inline int invariant_noise_budget(const api::Ciphertext &encrypted) override
+    inline int invariant_noise_budget(const api::Ciphertext &encrypted) const override
     {
-      return underlying_.invariant_noise_budget(dynamic_cast<const Ciphertext &>(encrypted).underlying_);
+      return underlying_->invariant_noise_budget(dynamic_cast<const Ciphertext &>(encrypted).underlying());
     }
+
+    inline const seal::Decryptor &underlying() const { return *underlying_; }
 
   private:
-    seal::Decryptor underlying_;
+    std::shared_ptr<seal::Decryptor> underlying_;
   };
 } // namespace seal_backend
 } // namespace ufhe
