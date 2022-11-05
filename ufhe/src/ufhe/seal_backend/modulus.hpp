@@ -13,12 +13,11 @@ namespace seal_backend
 {
   class Modulus : public api::Modulus
   {
+    friend class CoeffModulus;
+    friend class EncryptionParams;
+
   public:
     Modulus(std::uint64_t value) : underlying_(std::make_shared<seal::Modulus>(value)) {}
-
-    Modulus(const seal::Modulus &seal_modulus)
-      : underlying_(std::shared_ptr<seal::Modulus>(&const_cast<seal::Modulus &>(seal_modulus), [](seal::Modulus *) {}))
-    {}
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
@@ -63,6 +62,10 @@ namespace seal_backend
     inline const seal::Modulus &underlying() const { return *underlying_; }
 
   private:
+    Modulus(const seal::Modulus &seal_modulus)
+      : underlying_(std::shared_ptr<seal::Modulus>(&const_cast<seal::Modulus &>(seal_modulus), [](seal::Modulus *) {}))
+    {}
+
     std::shared_ptr<seal::Modulus> underlying_;
   };
 } // namespace seal_backend
