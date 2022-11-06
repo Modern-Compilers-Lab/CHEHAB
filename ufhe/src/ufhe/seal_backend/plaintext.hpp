@@ -21,6 +21,14 @@ namespace seal_backend
 
     Plaintext(const std::string &hex_poly) : underlying_(std::make_shared<seal::Plaintext>(hex_poly)) {}
 
+    Plaintext(const Plaintext &copy) : underlying_(std::make_shared<seal::Plaintext>(copy.underlying())) {}
+
+    Plaintext &operator=(const Plaintext &assign)
+    {
+      underlying_ = std::make_shared<seal::Plaintext>(assign.underlying());
+      return *this;
+    }
+
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline void resize(std::size_t coeff_count) override { underlying_->resize(coeff_count); }

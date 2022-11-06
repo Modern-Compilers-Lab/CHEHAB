@@ -20,6 +20,10 @@ public:
 
   Plaintext(const std::string &hex_poly);
 
+  Plaintext(const Plaintext &copy);
+
+  Plaintext &operator=(const Plaintext &assign);
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline void resize(std::size_t coeff_count) override { underlying_->resize(coeff_count); }

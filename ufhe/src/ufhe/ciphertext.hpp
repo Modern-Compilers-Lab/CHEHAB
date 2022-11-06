@@ -18,6 +18,10 @@ public:
 
   Ciphertext(const EncryptionContext &context);
 
+  Ciphertext(const Ciphertext &copy);
+
+  Ciphertext &operator=(const Ciphertext &assign);
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline std::size_t coeff_modulus_size() const override { return underlying().coeff_modulus_size(); }

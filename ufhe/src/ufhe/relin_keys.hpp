@@ -14,6 +14,10 @@ class RelinKeys : public api::RelinKeys
 public:
   RelinKeys();
 
+  RelinKeys(const RelinKeys &copy);
+
+  RelinKeys &operator=(const RelinKeys &assign);
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline std::size_t size() const override { return underlying().size(); }

@@ -20,6 +20,14 @@ namespace seal_backend
     Ciphertext(const EncryptionContext &context) : underlying_(std::make_shared<seal::Ciphertext>(context.underlying()))
     {}
 
+    Ciphertext(const Ciphertext &copy) : underlying_(std::make_shared<seal::Ciphertext>(copy.underlying())) {}
+
+    Ciphertext &operator=(const Ciphertext &assign)
+    {
+      underlying_ = std::make_shared<seal::Ciphertext>(assign.underlying());
+      return *this;
+    }
+
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline std::size_t coeff_modulus_size() const override { return underlying().coeff_modulus_size(); }

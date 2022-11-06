@@ -15,6 +15,14 @@ namespace seal_backend
   public:
     RelinKeys() : underlying_(std::make_shared<seal::RelinKeys>()) {}
 
+    RelinKeys(const RelinKeys &copy) : underlying_(std::make_shared<seal::RelinKeys>(copy.underlying())) {}
+
+    RelinKeys &operator=(const RelinKeys &assign)
+    {
+      underlying_ = std::make_shared<seal::RelinKeys>(assign.underlying());
+      return *this;
+    }
+
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline std::size_t size() const override { return underlying().size(); }

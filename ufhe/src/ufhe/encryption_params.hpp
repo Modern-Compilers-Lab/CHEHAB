@@ -17,6 +17,10 @@ class EncryptionParams : public api::EncryptionParams
 public:
   EncryptionParams(const Scheme &scheme);
 
+  EncryptionParams(const EncryptionParams &copy);
+
+  EncryptionParams &operator=(const EncryptionParams &assign);
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline void set_poly_modulus_degree(std::size_t poly_modulus_degree) override

@@ -14,6 +14,10 @@ class SecretKey : public api::SecretKey
 public:
   SecretKey();
 
+  SecretKey(const SecretKey &copy);
+
+  SecretKey &operator=(const SecretKey &assign);
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline const api::SecretKey &underlying() const { return *underlying_; }

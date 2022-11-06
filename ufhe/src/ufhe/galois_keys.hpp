@@ -14,6 +14,10 @@ class GaloisKeys : public api::GaloisKeys
 public:
   GaloisKeys();
 
+  GaloisKeys(const GaloisKeys &copy);
+
+  GaloisKeys &operator=(const GaloisKeys &assign);
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline std::size_t size() const override { return underlying().size(); }

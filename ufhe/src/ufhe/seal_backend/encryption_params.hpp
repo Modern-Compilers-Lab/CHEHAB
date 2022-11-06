@@ -19,6 +19,20 @@ namespace seal_backend
         coeff_modulus_(underlying().coeff_modulus()), plain_modulus_(underlying().plain_modulus())
     {}
 
+    EncryptionParams(const EncryptionParams &copy)
+      : underlying_(std::make_shared<seal::EncryptionParameters>(copy.underlying())), scheme_(copy.scheme_),
+        coeff_modulus_(underlying().coeff_modulus()), plain_modulus_(underlying().plain_modulus())
+    {}
+
+    EncryptionParams &operator=(const EncryptionParams &assign)
+    {
+      underlying_ = std::make_shared<seal::EncryptionParameters>(assign.underlying());
+      scheme_ = Scheme(assign.scheme_);
+      coeff_modulus_ = CoeffModulus(underlying().coeff_modulus());
+      plain_modulus_ = Modulus(underlying().plain_modulus());
+      return *this;
+    }
+
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline void set_poly_modulus_degree(std::size_t poly_modulus_degree) override

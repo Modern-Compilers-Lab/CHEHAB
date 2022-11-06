@@ -15,6 +15,14 @@ namespace seal_backend
   public:
     SecretKey() : underlying_(std::make_shared<seal::SecretKey>()) {}
 
+    SecretKey(const SecretKey &copy) : underlying_(std::make_shared<seal::SecretKey>(copy.underlying())) {}
+
+    SecretKey &operator=(const SecretKey &assign)
+    {
+      underlying_ = std::make_shared<seal::SecretKey>(assign.underlying());
+      return *this;
+    }
+
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline const seal::SecretKey &underlying() const { return *underlying_; }

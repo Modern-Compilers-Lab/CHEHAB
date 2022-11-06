@@ -15,6 +15,14 @@ namespace seal_backend
   public:
     PublicKey() : underlying_(std::make_shared<seal::PublicKey>()) {}
 
+    PublicKey(const PublicKey &copy) : underlying_(std::make_shared<seal::PublicKey>(copy.underlying())) {}
+
+    PublicKey &operator=(const PublicKey &assign)
+    {
+      underlying_ = std::make_shared<seal::PublicKey>(assign.underlying());
+      return *this;
+    }
+
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline const seal::PublicKey &underlying() const { return *underlying_; }

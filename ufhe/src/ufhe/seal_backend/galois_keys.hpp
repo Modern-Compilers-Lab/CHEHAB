@@ -15,6 +15,14 @@ namespace seal_backend
   public:
     GaloisKeys() : underlying_(std::make_shared<seal::GaloisKeys>()) {}
 
+    GaloisKeys(const GaloisKeys &copy) : underlying_(std::make_shared<seal::GaloisKeys>(copy.underlying())) {}
+
+    GaloisKeys &operator=(const GaloisKeys &assign)
+    {
+      underlying_ = std::make_shared<seal::GaloisKeys>(assign.underlying());
+      return *this;
+    }
+
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline std::size_t size() const override { return underlying().size(); }

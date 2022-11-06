@@ -14,6 +14,10 @@ class PublicKey : public api::PublicKey
 public:
   PublicKey();
 
+  PublicKey(const PublicKey &copy);
+
+  PublicKey &operator=(const PublicKey &assign);
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline const api::PublicKey &underlying() const { return *underlying_; }
