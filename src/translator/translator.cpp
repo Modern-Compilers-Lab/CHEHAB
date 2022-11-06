@@ -224,7 +224,7 @@ void Translator::translate(std::ofstream &os)
   const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes();
   for (auto &node_ptr : nodes_ptr)
   {
-    std::cout << node_ptr->get_parents_labels().size() << "\n";
+    // std::cout << node_ptr->get_parents_labels().size() << "\n";
     translate_term(node_ptr, os);
   }
   for (auto &output_node : program->get_outputs_nodes())

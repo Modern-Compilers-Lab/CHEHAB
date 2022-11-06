@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <utility>
 
@@ -11,7 +12,7 @@ namespace utils
 
 Insertion : O(1)
 Deletion : O(1)
-Access : O(1) amortized
+Access and Search with key : O(1) amortized
 
 */
 
@@ -208,6 +209,17 @@ public:
     }
 
     return head->entry;
+  }
+
+  /* Retrieve data stored in entry (second element) using key */
+  std::optional<T2> get(const T1 &key)
+  {
+    auto it = pointers_map.find(key);
+
+    if (it == pointers_map.end())
+      return std::nullopt;
+
+    return (*it).second->get_entry().second;
   }
 
   /* Returns pointer to the front node */

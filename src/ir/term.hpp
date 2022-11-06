@@ -42,7 +42,7 @@ public:
   ~Term()
   {
     if (operands != std::nullopt)
-      (*operands).clear(); /* Term is the owner of the operands list */
+      (*operands).clear(); /* Term is the owner of operands list */
   }
 
   Term(const Term &term_copy) = default;
