@@ -26,6 +26,8 @@ public:
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
+  inline api::implementation_level level() const override { return api::implementation_level::high_level; }
+
   inline void resize(std::size_t coeff_count) override { underlying_->resize(coeff_count); }
 
   inline void set_zero(std::size_t start_coeff, std::size_t length) override

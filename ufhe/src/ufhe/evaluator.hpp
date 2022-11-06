@@ -18,6 +18,8 @@ public:
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
+  inline api::implementation_level level() const override { return api::implementation_level::high_level; }
+
   inline void negate_inplace(api::Ciphertext &encrypted) const override
   {
     underlying().negate_inplace(*dynamic_cast<Ciphertext &>(encrypted).underlying_);

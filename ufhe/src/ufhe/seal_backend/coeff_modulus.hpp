@@ -20,6 +20,8 @@ namespace seal_backend
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
+    inline api::implementation_level level() const override { return api::implementation_level::low_level; }
+
     api::Modulus::vector value() const override;
 
     inline const std::vector<seal::Modulus> &underlying() const { return *underlying_; }

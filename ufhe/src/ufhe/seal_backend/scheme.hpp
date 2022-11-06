@@ -40,6 +40,8 @@ namespace seal_backend
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
+    inline api::implementation_level level() const override { return api::implementation_level::low_level; }
+
     inline api::scheme_type type() const override { return scheme_; }
 
     inline const seal::scheme_type &underlying() const { return underlying_; }

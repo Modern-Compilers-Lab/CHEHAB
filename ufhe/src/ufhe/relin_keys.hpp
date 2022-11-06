@@ -20,6 +20,8 @@ public:
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
+  inline api::implementation_level level() const override { return api::implementation_level::high_level; }
+
   inline std::size_t size() const override { return underlying().size(); }
 
   inline const api::RelinKeys &underlying() const { return *underlying_; }

@@ -18,6 +18,8 @@ public:
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
+  inline api::implementation_level level() const override { return api::implementation_level::high_level; }
+
   api::Modulus::vector value() const override;
 
   inline const api::CoeffModulus &underlying() const { return *underlying_; }

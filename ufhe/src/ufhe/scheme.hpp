@@ -14,6 +14,8 @@ public:
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
+  inline api::implementation_level level() const override { return api::implementation_level::high_level; }
+
   inline api::scheme_type type() const override { return underlying().type(); }
 
   inline const api::Scheme &underlying() const { return *underlying_; }

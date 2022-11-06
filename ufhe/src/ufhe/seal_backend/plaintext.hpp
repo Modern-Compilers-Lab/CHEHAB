@@ -31,6 +31,8 @@ namespace seal_backend
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
+    inline api::implementation_level level() const override { return api::implementation_level::low_level; }
+
     inline void resize(std::size_t coeff_count) override { underlying_->resize(coeff_count); }
 
     inline void set_zero(std::size_t start_coeff, std::size_t length) override

@@ -21,6 +21,8 @@ namespace seal_backend
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
+    inline api::implementation_level level() const override { return api::implementation_level::low_level; }
+
     inline int bit_count() const override { return underlying().bit_count(); }
 
     inline std::uint64_t value() const override { return underlying().value(); }

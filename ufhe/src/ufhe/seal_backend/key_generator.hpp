@@ -28,6 +28,8 @@ namespace seal_backend
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
+    inline api::implementation_level level() const override { return api::implementation_level::low_level; }
+
     inline const SecretKey &secret_key() const override { return secret_key_; }
 
     inline void create_public_key(api::PublicKey &destination) const override

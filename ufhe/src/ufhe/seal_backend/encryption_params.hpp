@@ -35,6 +35,8 @@ namespace seal_backend
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
+    inline api::implementation_level level() const override { return api::implementation_level::low_level; }
+
     inline void set_poly_modulus_degree(std::size_t poly_modulus_degree) override
     {
       underlying_->set_poly_modulus_degree(poly_modulus_degree);

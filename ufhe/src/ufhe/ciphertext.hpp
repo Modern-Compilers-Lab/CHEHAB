@@ -24,6 +24,8 @@ public:
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
+  inline api::implementation_level level() const override { return api::implementation_level::high_level; }
+
   inline std::size_t coeff_modulus_size() const override { return underlying().coeff_modulus_size(); }
 
   inline std::size_t poly_modulus_degree() const override { return underlying().poly_modulus_degree(); }

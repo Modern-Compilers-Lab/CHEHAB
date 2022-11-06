@@ -18,6 +18,8 @@ public:
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
+  inline api::implementation_level level() const override { return api::implementation_level::high_level; }
+
   inline int bit_count() const override { return underlying().bit_count(); }
 
   inline std::uint64_t value() const override { return underlying().value(); }

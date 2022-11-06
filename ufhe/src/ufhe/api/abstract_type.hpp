@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ufhe/api/backend_type.hpp"
+#include "ufhe/api/implementation_level.hpp"
 
 namespace ufhe
 {
@@ -12,6 +13,8 @@ namespace api
     virtual ~AbstractType() = default;
 
     virtual backend_type backend() const = 0;
+
+    virtual implementation_level level() const = 0;
 
   protected:
     AbstractType() = default;
