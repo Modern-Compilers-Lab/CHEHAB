@@ -13,11 +13,11 @@ class BGVSimulator
 {
 private:
   /*
-    X standard deviation sigma , X is used to sample random polynomials that serves as error in ecnryption and
+    X's standard deviation sigma , X is used to sample random polynomials that serves as error in ecnryption and
     generating keys, X is a discrete gaussian distribution
   */
 
-  NTL::RR standard_deviation; /* 3.2 is the value recommended by HE standard*/
+  NTL::RR standard_deviation; /* 3.2 is the value recommended by HE standard, sometimes it is 3.19 */
 
   const double sigma_value = 3.2;
 
@@ -26,9 +26,10 @@ private:
     embedding is bounded by variance of v, main idea is based on the inequality : canonical_norm(v) <= 6 * sqrt(n *
     V(v)) where V(v) is the variance of v. Distributions used in sampling random polynomials in schemes are usually well
     known ones with well defined parameters (mean, standard deviation, and standard deviation bound) namely gaussian and
-    uniform. this method is heuristic and it underestimate noise budget (for more https://eprint.iacr.org/2019/493.pdf).
-    in the paper refered previously they don't provide a bound for add_plain and mul_plain but we can follow the same
-    pattern in order to get bounds on noise growth for these operations.
+    uniform. this method is heuristic and it underestimates noise budget (for more details
+    https://eprint.iacr.org/2019/493.pdf). In the paper refered previously they don't provide a bound for add_plain and
+    mul_plain but we can follow the same pattern in order to get bounds on noise growth for these operations. All bounds
+    are valid with a high probability
   */
 
   std::unordered_map<std::string, NTL::RR>
@@ -101,6 +102,7 @@ public:
 
   void simulate_noise_growth(ir::Program *program)
   {
+
     using Ptr = std::shared_ptr<ir::Term>;
     const std::vector<Ptr> &sorted_nodes = program->get_dataflow_sorted_nodes();
     for (auto &node_ptr : sorted_nodes)
@@ -108,16 +110,19 @@ public:
       auto operands_opt = node_ptr->get_operands();
       if (operands_opt != std::nullopt)
       {
-        const std::vector<Ptr> &operands = *operands_opt;
+        const utils::MapedDoublyLinkedList<std::string, Ptr> &operands = *operands_opt;
         if (operands.size() == 1)
         {
           if (node_ptr->get_opcode() == ir::OpCode::assign)
           {
-            noise_budget[node_ptr->get_label()] = noise_budget[operands[0]->get_label()];
-            noise_norm_bound[node_ptr->get_label()] = noise_norm_bound[operands[0]->get_label()];
+            auto list_pointer = operands.front_pointer();
+            noise_budget[node_ptr->get_label()] = noise_budget[list_pointer->get_entry().second->get_label()];
+            // list_pointer = list_pointer->get_next();
+            noise_norm_bound[node_ptr->get_label()] = noise_norm_bound[list_pointer->get_entry().second->get_label()];
           }
           else if (node_ptr->get_opcode() == ir::OpCode::encrypt)
           {
+
             noise_norm_bound[node_ptr->get_label()] = encrypt();
             noise_budget[node_ptr->get_label()] = estimate_noise_budget(noise_norm_bound[node_ptr->get_label()]);
             std::cout << "freshly encrypted noise budget : " << noise_budget[node_ptr->get_label()] << '\n';
@@ -128,16 +133,31 @@ public:
         }
         else if (operands.size() == 2)
         {
-          const auto &lhs = operands[0];
-          const auto &rhs = operands[1];
+
+          auto list_pointer = operands.front_pointer();
+          auto &lhs = list_pointer->get_entry().second;
+          list_pointer = list_pointer->get_next();
+          auto &rhs = list_pointer->get_entry().second;
+
           ir::OpCode opcode = node_ptr->get_opcode();
+
           if (opcode == ir::OpCode::add)
           {
             noise_norm_bound[node_ptr->get_label()] = add(lhs->get_label(), rhs->get_label());
+
+            noise_budget[node_ptr->get_label()] = estimate_noise_budget(noise_norm_bound[node_ptr->get_label()]);
+            std::cout << "noise budget of" << node_ptr->get_label()
+                      << " left after add : " << noise_budget[node_ptr->get_label()] << "\n";
+            std::cout << "-------------------------------------------------\n";
           }
           else if (opcode == ir::OpCode::add_plain)
           {
             noise_norm_bound[node_ptr->get_label()] = add_plain(lhs->get_label());
+
+            noise_budget[node_ptr->get_label()] = estimate_noise_budget(noise_norm_bound[node_ptr->get_label()]);
+            std::cout << "noise budget of" << node_ptr->get_label()
+                      << " left after add_plain : " << noise_budget[node_ptr->get_label()] << "\n";
+            std::cout << "-------------------------------------------------\n";
           }
           else if (opcode == ir::OpCode::mul)
           {
@@ -145,7 +165,8 @@ public:
             std::cout << log_base2(noise_norm_bound[node_ptr->get_label()]) << "\n";
 
             noise_budget[node_ptr->get_label()] = estimate_noise_budget(noise_norm_bound[node_ptr->get_label()]);
-            std::cout << "noise budget left after mul : " << noise_budget[node_ptr->get_label()] << "\n";
+            std::cout << "noise budget of" << node_ptr->get_label()
+                      << " left after mul : " << noise_budget[node_ptr->get_label()] << "\n";
             std::cout << "-------------------------------------------------\n";
           }
           else if (opcode == ir::OpCode::mul_plain)
@@ -154,9 +175,10 @@ public:
             std::cout << log_base2(noise_norm_bound[node_ptr->get_label()]) << "\n";
 
             noise_budget[node_ptr->get_label()] = estimate_noise_budget(noise_norm_bound[node_ptr->get_label()]);
-            std::cout << "noise budget left after mul : " << noise_budget[node_ptr->get_label()] << "\n";
+            std::cout << "noise budget left after mul_plain : " << noise_budget[node_ptr->get_label()] << "\n";
             std::cout << "-------------------------------------------------\n";
           }
+          /* there bounds for relinearize and modulus switching as well */
         }
         else
           throw("yet to treat case \n");

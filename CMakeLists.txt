@@ -7,7 +7,7 @@ project(FHECO_PROJECT LANGUAGES C CXX)
 
 add_executable(${PROJECT_NAME} benchmarks/test1.cpp)
 
-include_directories(${PROJECT_NAME} src/ir src/dsl src/fhecompiler src/params_selector src/translator)
+include_directories(${PROJECT_NAME} src/ir src/dsl src/fhecompiler src/params_selector src/translator src/utils)
 
 add_library(dsl src/dsl/ciphertext.cpp src/dsl/plaintext.cpp src/dsl/scalar.cpp) 
 add_library(ir src/ir/program.cpp src/ir/term.cpp src/ir/dag.cpp)

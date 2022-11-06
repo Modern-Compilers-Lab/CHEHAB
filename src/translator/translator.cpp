@@ -144,9 +144,11 @@ void Translator::translate_binary_operation(
     other_args = it->second;
 
   std::string op_identifier = get_identifier(term_ptr);
-  const std::vector<Ptr> &operands = *(term_ptr->get_operands());
-  std::string lhs_identifier = get_identifier(operands[0]);
-  std::string rhs_identifier = get_identifier(operands[1]);
+  const utils::MapedDoublyLinkedList<std::string, Ptr> &operands = *(term_ptr->get_operands());
+  auto ptr = operands.front_pointer();
+  std::string lhs_identifier = get_identifier(ptr->get_entry().second);
+  ptr = ptr->get_next();
+  std::string rhs_identifier = get_identifier(ptr->get_entry().second);
   evaluation_writer.write_binary_operation(
     os, term_ptr->get_opcode(), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
 }
@@ -161,7 +163,7 @@ void Translator::translate_unary_operation(
   std::ofstream &os)
 {
   std::string op_identifier = get_identifier(term_ptr);
-  std::string rhs_identifier = get_identifier((*term_ptr->get_operands())[0]);
+  std::string rhs_identifier = get_identifier((*term_ptr->get_operands()).front_entry().second);
   // os << op_type << " " << op_identifier << ops_map[term_ptr->get_opcode()] << rhs_identifier << end_of_command <<
   // '\n';
   if (term_ptr->get_opcode() == ir::OpCode::assign)
@@ -178,7 +180,7 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
   // we need to tranlsate the operation node
   if (term->get_operands() != std::nullopt)
   {
-    const std::vector<Ptr> &operands = *(term->get_operands());
+    auto &operands = *(term->get_operands());
 
     if (operands.size() == 1)
     {
@@ -188,7 +190,7 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
         {
           encryption_writer.init(os);
         }
-        const std::string &plaintext_id = get_identifier((*term->get_operands())[0]);
+        const std::string &plaintext_id = get_identifier((*term->get_operands()).front_entry().second);
         const std::string &destination_cipher = get_identifier(term);
         encryption_writer.write_encryption(os, plaintext_id, destination_cipher);
       }
@@ -222,6 +224,7 @@ void Translator::translate(std::ofstream &os)
   const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes();
   for (auto &node_ptr : nodes_ptr)
   {
+    std::cout << node_ptr->get_parents_labels().size() << "\n";
     translate_term(node_ptr, os);
   }
   for (auto &output_node : program->get_outputs_nodes())

@@ -4,9 +4,16 @@
 namespace ir
 {
 
+void Term::delete_operand_term(const std::string &term_label) {}
+
+void Term::insert_parent_label(const std::string &label)
+{
+  parents_labels.insert(label);
+}
+
 void Term::add_operand(const Ptr &operand)
 {
-  (*this->operands).push_back(operand);
+  (*this->operands).push_back({operand->get_label(), operand});
 }
 
 /*
@@ -63,6 +70,11 @@ bool Term::merge_with_node(Ptr node_to_merge_with)
   /*
     at this point we need to merge, but we first we need to decide how and when we merge also if there is any specific
     data structure is needed for performance
+  */
+
+  /*
+    if (is_possible_to_merge_with(node_to_merge_with))
+    {}
   */
 
   return true; // everything went well, life is good !

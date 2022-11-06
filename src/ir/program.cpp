@@ -9,8 +9,18 @@ using Ptr = std::shared_ptr<Term>;
 Ptr Program::insert_operation_node_in_dataflow(
   OpCode opcode, const std::vector<Ptr> &operands, std::string label, TermType term_type)
 {
-  Ptr new_term = std::make_shared<Term>(opcode, operands, label);
+
+  utils::MapedDoublyLinkedList<std::string, Ptr> operands_list;
+
+  for (auto &operand_ptr : operands)
+    operands_list.push_back({operand_ptr->get_label(), operand_ptr});
+
+  Ptr new_term = std::make_shared<Term>(opcode, operands_list, label);
   new_term->set_term_type(term_type);
+
+  for (auto &operand : operands)
+    operand->insert_parent_label(label);
+
   this->data_flow->insert_node(new_term, this->type_of(new_term->get_label()) == ConstantTableEntryType::output);
   return new_term;
 }
@@ -69,8 +79,10 @@ bool Program::insert_new_entry_from_existing_with_delete(std::string new_entry_k
 {
 
   bool is_inserted = insert_new_entry_from_existing(new_entry_key, exsisting_entry_key);
+
   if (!is_inserted)
     return false;
+
   delete_entry_from_constants_table(exsisting_entry_key);
   return true;
 }

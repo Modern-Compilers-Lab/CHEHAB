@@ -43,6 +43,14 @@ int main()
 
     output1 = ct1 * ct2 * ct1;
 
+    Ciphertext ct3 = output1 + output1;
+
+    Ciphertext ct4 = output1 + ct1 + ct1 + ct1 + ct1 * ct2 * ct2 * ct2 + ct3 + 12312;
+
+    Ciphertext ct4_output("ct4_output", VarType::output);
+
+    ct4_output = ct4;
+
     /*
     fhecompiler::Ciphertext output2("output2", VarType::output);
 

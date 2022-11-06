@@ -39,10 +39,11 @@ void compile(const std::string &output_filename)
   params_selector::ParameterSelector parameters_selector(program);
 
   parameters_selector.fix_parameters(params);
+  /*
+  noise_simulator::BGVSimulator bgv_simulator(8192, 786433, 700);
 
-  // noise_simulator::BGVSimulator bgv_simulator(8192, 786433, 700);
-
-  // bgv_simulator.simulate_noise_growth(program);
+  bgv_simulator.simulate_noise_growth(program);
+  */
 
   translator::Translator tr(program, &params);
   {
