@@ -86,17 +86,24 @@ int main()
   Ciphertext r_encrypted;
   Evaluator evaluator(context);
   evaluator.add(a_encrypted, b_encrypted, r_encrypted);
+  Ciphertext r_copy = r_encrypted;
+  evaluator.negate_inplace(r_copy);
   // Decrypt
   const SecretKey &sk = keygen.secret_key();
   Decryptor decryptor(context, sk);
   Plaintext r_plain;
   decryptor.decrypt(r_encrypted, r_plain);
+  Plaintext r_copy_plain;
+  decryptor.decrypt(r_copy, r_copy_plain);
 
   // Decode
   vector<int64_t> r_clear;
   batch_encoder.decode(r_plain, r_clear);
+  vector<int64_t> r_copy_clear;
+  batch_encoder.decode(r_copy_plain, r_copy_clear);
 
   // Show results
   print_matrix(r_clear, slot_count / 2);
+  print_matrix(r_copy_clear, slot_count / 2);
   return 0;
 }
