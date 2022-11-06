@@ -76,9 +76,9 @@ namespace api
 
     // TODO: mod_switch_to
 
-    virtual void rescale_to_next(const Ciphertext &encrypted, Ciphertext &destination) const = 0;
-
     virtual void rescale_to_next_inplace(Ciphertext &encrypted) const = 0;
+
+    virtual void rescale_to_next(const Ciphertext &encrypted, Ciphertext &destination) const = 0;
 
     // TODO: rescale_to
 

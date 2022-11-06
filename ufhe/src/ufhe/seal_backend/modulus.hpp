@@ -62,8 +62,8 @@ namespace seal_backend
     inline const seal::Modulus &underlying() const { return *underlying_; }
 
   private:
-    Modulus(const seal::Modulus &seal_modulus)
-      : underlying_(std::shared_ptr<seal::Modulus>(&const_cast<seal::Modulus &>(seal_modulus), [](seal::Modulus *) {}))
+    explicit Modulus(const seal::Modulus &modulus)
+      : underlying_(std::shared_ptr<seal::Modulus>(&const_cast<seal::Modulus &>(modulus), [](seal::Modulus *) {}))
     {}
 
     std::shared_ptr<seal::Modulus> underlying_;

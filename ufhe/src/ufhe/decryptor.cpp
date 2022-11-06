@@ -7,7 +7,7 @@ Decryptor::Decryptor(const EncryptionContext &context, const SecretKey &secret_k
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::Decryptor(
+    underlying_ = std::make_shared<seal_backend::Decryptor>(
       dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
       dynamic_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
     break;

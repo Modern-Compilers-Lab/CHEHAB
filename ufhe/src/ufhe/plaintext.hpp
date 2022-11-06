@@ -3,6 +3,7 @@
 #include "ufhe/api/plaintext.hpp"
 #include "ufhe/config.hpp"
 #include "ufhe/seal_backend/plaintext.hpp"
+#include <memory>
 
 namespace ufhe
 {
@@ -10,7 +11,6 @@ class Plaintext : public api::Plaintext
 {
   friend class BatchEncoder;
   friend class Decryptor;
-  friend class Encryptor;
   friend class Evaluator;
 
 public:
@@ -20,19 +20,13 @@ public:
 
   Plaintext(const std::string &hex_poly);
 
-  Plaintext(const Plaintext &copy) = delete;
-
-  Plaintext &operator=(const Plaintext &assign) = delete;
-
-  ~Plaintext() { delete underlying_; }
-
   inline api::backend_type backend() const override { return underlying().backend(); }
 
-  inline void resize(std::size_t coeff_count) override { underlying().resize(coeff_count); }
+  inline void resize(std::size_t coeff_count) override { underlying_->resize(coeff_count); }
 
   inline void set_zero(std::size_t start_coeff, std::size_t length) override
   {
-    underlying().set_zero(start_coeff, length);
+    underlying_->set_zero(start_coeff, length);
   }
 
   inline std::size_t capacity() const override { return underlying().capacity(); }
@@ -51,9 +45,9 @@ public:
     return underlying() != dynamic_cast<const Plaintext &>(compare).underlying();
   }
 
-private:
-  inline api::Plaintext &underlying() const { return *underlying_; }
+  inline const api::Plaintext &underlying() const { return *underlying_; }
 
-  api::Plaintext *underlying_;
+private:
+  std::shared_ptr<api::Plaintext> underlying_;
 };
 } // namespace ufhe

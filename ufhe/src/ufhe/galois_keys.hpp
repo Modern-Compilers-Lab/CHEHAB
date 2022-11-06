@@ -3,30 +3,24 @@
 #include "ufhe/api/galois_keys.hpp"
 #include "ufhe/config.hpp"
 #include "ufhe/seal_backend/galois_keys.hpp"
+#include <memory>
 
 namespace ufhe
 {
 class GaloisKeys : public api::GaloisKeys
 {
-  friend class Evaluator;
   friend class KeyGenerator;
 
 public:
   GaloisKeys();
 
-  GaloisKeys(const GaloisKeys &copy) = delete;
-
-  GaloisKeys &operator=(const GaloisKeys &assign) = delete;
-
-  ~GaloisKeys() { delete underlying_; }
-
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline std::size_t size() const override { return underlying().size(); }
 
-private:
-  inline api::GaloisKeys &underlying() const { return *underlying_; }
+  inline const api::GaloisKeys &underlying() const { return *underlying_; }
 
-  api::GaloisKeys *underlying_;
+private:
+  std::shared_ptr<api::GaloisKeys> underlying_;
 };
 } // namespace ufhe

@@ -7,8 +7,8 @@ BatchEncoder::BatchEncoder(const EncryptionContext &context)
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ =
-      new seal_backend::BatchEncoder(dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
+    underlying_ = std::make_shared<seal_backend::BatchEncoder>(
+      dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
     break;
 
   case api::backend_type::none:

@@ -12,9 +12,9 @@ namespace seal_backend
       underlying_->push_back(modulus.underlying());
   }
 
-  CoeffModulus::CoeffModulus(const std::vector<seal::Modulus> &seal_moduli)
+  CoeffModulus::CoeffModulus(const std::vector<seal::Modulus> &moduli)
     : underlying_(std::shared_ptr<std::vector<seal::Modulus>>(
-        &const_cast<std::vector<seal::Modulus> &>(seal_moduli), [](std::vector<seal::Modulus> *) {})),
+        &const_cast<std::vector<seal::Modulus> &>(moduli), [](std::vector<seal::Modulus> *) {})),
       moduli_()
   {
     moduli_.reserve(underlying_->size());

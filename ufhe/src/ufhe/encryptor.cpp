@@ -7,7 +7,7 @@ Encryptor::Encryptor(const EncryptionContext &context, const PublicKey &public_k
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::Encryptor(
+    underlying_ = std::make_shared<seal_backend::Encryptor>(
       dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
       dynamic_cast<const seal_backend::PublicKey &>(public_key.underlying()));
     break;
@@ -27,7 +27,7 @@ Encryptor::Encryptor(const EncryptionContext &context, const SecretKey &secret_k
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::Encryptor(
+    underlying_ = std::make_shared<seal_backend::Encryptor>(
       dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
       dynamic_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
     break;
@@ -47,7 +47,7 @@ Encryptor::Encryptor(const EncryptionContext &context, const PublicKey &public_k
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::Encryptor(
+    underlying_ = std::make_shared<seal_backend::Encryptor>(
       dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
       dynamic_cast<const seal_backend::PublicKey &>(public_key.underlying()),
       dynamic_cast<const seal_backend::SecretKey &>(secret_key.underlying()));

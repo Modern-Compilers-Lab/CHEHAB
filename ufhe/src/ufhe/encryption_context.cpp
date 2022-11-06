@@ -7,8 +7,8 @@ EncryptionContext::EncryptionContext(const EncryptionParams &params)
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ =
-      new seal_backend::EncryptionContext(dynamic_cast<const seal_backend::EncryptionParams &>(params.underlying()));
+    underlying_ = std::make_shared<seal_backend::EncryptionContext>(
+      dynamic_cast<const seal_backend::EncryptionParams &>(params.underlying()));
     break;
 
   case api::backend_type::none:

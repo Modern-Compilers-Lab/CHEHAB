@@ -7,7 +7,7 @@ GaloisKeys::GaloisKeys()
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::GaloisKeys();
+    underlying_ = std::make_shared<seal_backend::GaloisKeys>();
     break;
 
   case api::backend_type::none:

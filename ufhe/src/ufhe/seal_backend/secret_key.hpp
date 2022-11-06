@@ -20,8 +20,9 @@ namespace seal_backend
     inline const seal::SecretKey &underlying() const { return *underlying_; }
 
   private:
-    SecretKey(const seal::SecretKey &seal_sk)
-      : underlying_(std::shared_ptr<seal::SecretKey>(&const_cast<seal::SecretKey &>(seal_sk), [](seal::SecretKey *) {}))
+    explicit SecretKey(const seal::SecretKey &secret_key)
+      : underlying_(
+          std::shared_ptr<seal::SecretKey>(&const_cast<seal::SecretKey &>(secret_key), [](seal::SecretKey *) {}))
     {}
 
     std::shared_ptr<seal::SecretKey> underlying_;

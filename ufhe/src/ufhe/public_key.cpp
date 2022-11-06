@@ -7,7 +7,7 @@ PublicKey::PublicKey()
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::PublicKey();
+    underlying_ = std::make_shared<seal_backend::PublicKey>();
     break;
 
   case api::backend_type::none:

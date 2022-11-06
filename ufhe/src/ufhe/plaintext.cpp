@@ -7,7 +7,7 @@ Plaintext::Plaintext()
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::Plaintext();
+    underlying_ = std::make_shared<seal_backend::Plaintext>();
     break;
 
   case api::backend_type::none:
@@ -25,7 +25,7 @@ Plaintext::Plaintext(std::size_t coeff_count)
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::Plaintext(coeff_count);
+    underlying_ = std::make_shared<seal_backend::Plaintext>(coeff_count);
     break;
 
   case api::backend_type::none:
@@ -43,7 +43,7 @@ Plaintext::Plaintext(const std::string &hex_poly)
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::Plaintext(hex_poly);
+    underlying_ = std::make_shared<seal_backend::Plaintext>(hex_poly);
     break;
 
   case api::backend_type::none:

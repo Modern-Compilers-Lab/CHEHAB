@@ -7,7 +7,7 @@ RelinKeys::RelinKeys()
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::RelinKeys();
+    underlying_ = std::make_shared<seal_backend::RelinKeys>();
     break;
 
   case api::backend_type::none:

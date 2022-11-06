@@ -25,7 +25,7 @@ namespace seal_backend
     inline const std::vector<seal::Modulus> &underlying() const { return *underlying_; }
 
   private:
-    CoeffModulus(const std::vector<seal::Modulus> &seal_moduli);
+    explicit CoeffModulus(const std::vector<seal::Modulus> &moduli);
 
     std::shared_ptr<std::vector<seal::Modulus>> underlying_;
     std::vector<Modulus> moduli_;

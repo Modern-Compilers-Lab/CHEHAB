@@ -10,8 +10,6 @@ namespace seal_backend
 {
   class Scheme : public api::Scheme
   {
-    friend class EncryptionParams;
-
   public:
     Scheme(api::scheme_type scheme)
     {
@@ -47,8 +45,6 @@ namespace seal_backend
     inline const seal::scheme_type &underlying() const { return underlying_; }
 
   private:
-    // Scheme(seal::scheme_type seal_scheme) : underlying_(seal_scheme) {}
-
     seal::scheme_type underlying_;
     api::scheme_type scheme_;
   };

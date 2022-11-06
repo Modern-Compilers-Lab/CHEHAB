@@ -3,6 +3,7 @@
 #include "ufhe/api/modulus.hpp"
 #include "ufhe/config.hpp"
 #include "ufhe/seal_backend/modulus.hpp"
+#include <memory>
 #include <stdexcept>
 
 namespace ufhe
@@ -13,13 +14,7 @@ class Modulus : public api::Modulus
   friend class EncryptionParams;
 
 public:
-  Modulus(std::uint64_t value = 0);
-
-  Modulus(const Modulus &copy);
-
-  Modulus &operator=(const Modulus &assign);
-
-  ~Modulus() { delete underlying_; }
+  Modulus(std::uint64_t value);
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
@@ -61,11 +56,13 @@ public:
 
   inline std::uint64_t reduce(std::uint64_t value) const override { return underlying().reduce(value); }
 
+  inline const api::Modulus &underlying() const { return *underlying_; }
+
 private:
-  Modulus(const api::Modulus &imodulus);
+  Modulus() = default;
 
-  inline api::Modulus &underlying() const { return *underlying_; }
+  explicit Modulus(const api::Modulus &modulus);
 
-  api::Modulus *underlying_;
+  std::shared_ptr<api::Modulus> underlying_;
 };
 } // namespace ufhe

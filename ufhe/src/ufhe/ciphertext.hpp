@@ -4,12 +4,12 @@
 #include "ufhe/config.hpp"
 #include "ufhe/encryption_context.hpp"
 #include "ufhe/seal_backend/ciphertext.hpp"
+#include <memory>
 
 namespace ufhe
 {
 class Ciphertext : public api::Ciphertext
 {
-  friend class Decryptor;
   friend class Encryptor;
   friend class Evaluator;
 
@@ -17,12 +17,6 @@ public:
   Ciphertext();
 
   Ciphertext(const EncryptionContext &context);
-
-  Ciphertext(const Ciphertext &copy) = delete;
-
-  Ciphertext &operator=(const Ciphertext &assign);
-
-  ~Ciphertext() { delete underlying_; }
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
@@ -36,9 +30,9 @@ public:
 
   inline double &scale() const override { return underlying().scale(); }
 
-private:
-  inline api::Ciphertext &underlying() const { return *underlying_; }
+  inline const api::Ciphertext &underlying() const { return *underlying_; }
 
-  api::Ciphertext *underlying_;
+private:
+  std::shared_ptr<api::Ciphertext> underlying_;
 };
 } // namespace ufhe

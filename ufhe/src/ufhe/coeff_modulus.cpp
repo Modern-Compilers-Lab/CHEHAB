@@ -4,16 +4,17 @@ namespace ufhe
 {
 CoeffModulus::CoeffModulus(const std::vector<Modulus> &moduli) : moduli_(moduli)
 {
-  std::vector<seal_backend::Modulus> underlying_moduli;
-  underlying_moduli.reserve(moduli_.size());
-  for (const Modulus &modulus : moduli)
-    underlying_moduli.push_back(dynamic_cast<const seal_backend::Modulus &>(modulus.underlying()));
-
   switch (Config::backend())
   {
   case api::backend_type::seal:
-    underlying_ = new seal_backend::CoeffModulus(underlying_moduli);
+  {
+    std::vector<seal_backend::Modulus> underlying_moduli;
+    underlying_moduli.reserve(moduli_.size());
+    for (const Modulus &modulus : moduli)
+      underlying_moduli.push_back(dynamic_cast<const seal_backend::Modulus &>(modulus.underlying()));
+    underlying_ = std::make_shared<seal_backend::CoeffModulus>(underlying_moduli);
     break;
+  }
 
   case api::backend_type::none:
     throw std::invalid_argument("no backend is selected");
@@ -25,41 +26,15 @@ CoeffModulus::CoeffModulus(const std::vector<Modulus> &moduli) : moduli_(moduli)
   }
 }
 
-CoeffModulus &CoeffModulus::operator=(const CoeffModulus &assign)
+CoeffModulus::CoeffModulus(const api::CoeffModulus &coeff_modulus)
+  : underlying_(
+      std::shared_ptr<api::CoeffModulus>(&const_cast<api::CoeffModulus &>(coeff_modulus), [](api::CoeffModulus *) {})),
+    moduli_({})
 {
-  delete underlying_;
-  moduli_ = assign.moduli_;
-
-  switch (assign.backend())
-  {
-  case api::backend_type::seal:
-    underlying_ = new seal_backend::CoeffModulus(dynamic_cast<const seal_backend::CoeffModulus &>(assign.underlying()));
-    break;
-
-  default:
-    throw std::logic_error("instance with unknown backend");
-    break;
-  }
-  return *this;
-}
-
-CoeffModulus::CoeffModulus(const api::CoeffModulus &coeff_modulus) : moduli_({})
-{
-  api::Modulus::vector imoduli = coeff_modulus.value();
-  moduli_.reserve(imoduli.size());
-  for (const api::Modulus &imodulus : imoduli)
-    moduli_.push_back(Modulus(imodulus));
-
-  switch (coeff_modulus.backend())
-  {
-  case api::backend_type::seal:
-    underlying_ = new seal_backend::CoeffModulus(dynamic_cast<const seal_backend::CoeffModulus &>(coeff_modulus));
-    break;
-
-  default:
-    throw std::logic_error("instance with unknown backend");
-    break;
-  }
+  api::Modulus::vector underlying_moduli(underlying().value());
+  moduli_.reserve(underlying_moduli.size());
+  for (const api::Modulus &modulus : underlying_moduli)
+    moduli_.push_back(Modulus(modulus));
 }
 
 api::Modulus::vector CoeffModulus::value() const

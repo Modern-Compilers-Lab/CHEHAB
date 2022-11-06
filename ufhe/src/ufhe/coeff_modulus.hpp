@@ -4,6 +4,7 @@
 #include "ufhe/config.hpp"
 #include "ufhe/modulus.hpp"
 #include "ufhe/seal_backend/coeff_modulus.hpp"
+#include <memory>
 #include <vector>
 
 namespace ufhe
@@ -13,24 +14,20 @@ class CoeffModulus : public api::CoeffModulus
   friend class EncryptionParams;
 
 public:
-  CoeffModulus(const std::vector<Modulus> &moduli = {});
-
-  CoeffModulus(const CoeffModulus &copy) = delete;
-
-  CoeffModulus &operator=(const CoeffModulus &assign);
-
-  ~CoeffModulus() { delete underlying_; }
+  CoeffModulus(const std::vector<Modulus> &moduli);
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   api::Modulus::vector value() const override;
 
+  inline const api::CoeffModulus &underlying() const { return *underlying_; }
+
 private:
-  CoeffModulus(const api::CoeffModulus &coeff_modulus);
+  CoeffModulus() : moduli_({}) {}
 
-  inline api::CoeffModulus &underlying() const { return *underlying_; }
+  explicit CoeffModulus(const api::CoeffModulus &coeff_modulus);
 
-  api::CoeffModulus *underlying_;
+  std::shared_ptr<api::CoeffModulus> underlying_;
   std::vector<Modulus> moduli_;
 };
 } // namespace ufhe

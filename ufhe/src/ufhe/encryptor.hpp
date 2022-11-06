@@ -7,6 +7,7 @@
 #include "ufhe/public_key.hpp"
 #include "ufhe/seal_backend/encryptor.hpp"
 #include "ufhe/secret_key.hpp"
+#include <memory>
 
 namespace ufhe
 {
@@ -19,29 +20,23 @@ public:
 
   Encryptor(const EncryptionContext &context, const PublicKey &public_key, const SecretKey &secret_key);
 
-  Encryptor(const Encryptor &copy) = delete;
-
-  Encryptor &operator=(const Encryptor &assign) = delete;
-
-  ~Encryptor() { delete underlying_; }
-
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline void encrypt(const api::Plaintext &plain, api::Ciphertext &destination) const override
   {
     underlying().encrypt(
-      dynamic_cast<const Plaintext &>(plain).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+      dynamic_cast<const Plaintext &>(plain).underlying(), *dynamic_cast<Ciphertext &>(destination).underlying_);
   }
 
   inline void encrypt_symmetric(const api::Plaintext &plain, api::Ciphertext &destination) const override
   {
     underlying().encrypt_symmetric(
-      dynamic_cast<const Plaintext &>(plain).underlying(), dynamic_cast<Ciphertext &>(destination).underlying());
+      dynamic_cast<const Plaintext &>(plain).underlying(), *dynamic_cast<Ciphertext &>(destination).underlying_);
   }
 
-private:
-  inline api::Encryptor &underlying() const { return *underlying_; }
+  inline const api::Encryptor &underlying() const { return *underlying_; }
 
-  api::Encryptor *underlying_;
+private:
+  std::shared_ptr<api::Encryptor> underlying_;
 };
 } // namespace ufhe
