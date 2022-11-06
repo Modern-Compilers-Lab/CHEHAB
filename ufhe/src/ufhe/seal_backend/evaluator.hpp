@@ -29,181 +29,235 @@ namespace seal_backend
 
     inline void negate_inplace(api::Ciphertext &encrypted) const override
     {
-      underlying().negate_inplace(*dynamic_cast<Ciphertext &>(encrypted).underlying_);
+      check_strict_compatibility(encrypted);
+      underlying().negate_inplace(*static_cast<Ciphertext &>(encrypted).underlying_);
     }
 
     inline void negate(const api::Ciphertext &encrypted, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(destination);
       underlying().negate(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void add_inplace(api::Ciphertext &encrypted1, const api::Ciphertext &encrypted2) const override
     {
+      check_strict_compatibility(encrypted1);
+      check_strict_compatibility(encrypted2);
       underlying().add_inplace(
-        *dynamic_cast<Ciphertext &>(encrypted1).underlying_, dynamic_cast<const Ciphertext &>(encrypted2).underlying());
+        *static_cast<Ciphertext &>(encrypted1).underlying_, static_cast<const Ciphertext &>(encrypted2).underlying());
     }
 
     inline void add(
       const api::Ciphertext &encrypted1, const api::Ciphertext &encrypted2, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted1);
+      check_strict_compatibility(encrypted2);
+      check_strict_compatibility(destination);
       underlying().add(
-        dynamic_cast<const Ciphertext &>(encrypted1).underlying(),
-        dynamic_cast<const Ciphertext &>(encrypted2).underlying(),
-        *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted1).underlying(),
+        static_cast<const Ciphertext &>(encrypted2).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void sub_inplace(api::Ciphertext &encrypted1, const api::Ciphertext &encrypted2) const override
     {
+      check_strict_compatibility(encrypted1);
+      check_strict_compatibility(encrypted2);
       underlying().sub_inplace(
-        *dynamic_cast<Ciphertext &>(encrypted1).underlying_, dynamic_cast<const Ciphertext &>(encrypted2).underlying());
+        *static_cast<Ciphertext &>(encrypted1).underlying_, static_cast<const Ciphertext &>(encrypted2).underlying());
     }
 
     inline void sub(
       const api::Ciphertext &encrypted1, const api::Ciphertext &encrypted2, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted1);
+      check_strict_compatibility(encrypted2);
+      check_strict_compatibility(destination);
       underlying().sub(
-        dynamic_cast<const Ciphertext &>(encrypted1).underlying(),
-        dynamic_cast<const Ciphertext &>(encrypted2).underlying(),
-        *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted1).underlying(),
+        static_cast<const Ciphertext &>(encrypted2).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void multiply_inplace(api::Ciphertext &encrypted1, const api::Ciphertext &encrypted2) const override
     {
+      check_strict_compatibility(encrypted1);
+      check_strict_compatibility(encrypted2);
       underlying().multiply_inplace(
-        *dynamic_cast<Ciphertext &>(encrypted1).underlying_, dynamic_cast<const Ciphertext &>(encrypted2).underlying());
+        *static_cast<Ciphertext &>(encrypted1).underlying_, static_cast<const Ciphertext &>(encrypted2).underlying());
     }
 
     inline void multiply(
       const api::Ciphertext &encrypted1, const api::Ciphertext &encrypted2, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted1);
+      check_strict_compatibility(encrypted2);
+      check_strict_compatibility(destination);
       underlying().multiply(
-        dynamic_cast<const Ciphertext &>(encrypted1).underlying(),
-        dynamic_cast<const Ciphertext &>(encrypted2).underlying(),
-        *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted1).underlying(),
+        static_cast<const Ciphertext &>(encrypted2).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void square_inplace(api::Ciphertext &encrypted) const override
     {
-      underlying().square_inplace(*dynamic_cast<Ciphertext &>(encrypted).underlying_);
+      check_strict_compatibility(encrypted);
+      underlying().square_inplace(*static_cast<Ciphertext &>(encrypted).underlying_);
     }
 
     inline void square(const api::Ciphertext &encrypted, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(destination);
       underlying().square(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void exponentiate_inplace(
       api::Ciphertext &encrypted, std::uint64_t exponent, const api::RelinKeys &relin_keys) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(relin_keys);
       underlying().exponentiate_inplace(
-        *dynamic_cast<Ciphertext &>(encrypted).underlying_, exponent,
-        dynamic_cast<const RelinKeys &>(relin_keys).underlying());
+        *static_cast<Ciphertext &>(encrypted).underlying_, exponent,
+        static_cast<const RelinKeys &>(relin_keys).underlying());
     }
 
     inline void exponentiate(
       const api::Ciphertext &encrypted, std::uint64_t exponent, const api::RelinKeys &relin_keys,
       api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(relin_keys);
+      check_strict_compatibility(destination);
       underlying().exponentiate(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), exponent,
-        dynamic_cast<const RelinKeys &>(relin_keys).underlying(), *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(), exponent,
+        static_cast<const RelinKeys &>(relin_keys).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void add_plain_inplace(api::Ciphertext &encrypted, const api::Plaintext &plain) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(plain);
       underlying().add_plain_inplace(
-        *dynamic_cast<Ciphertext &>(encrypted).underlying_, dynamic_cast<const Plaintext &>(plain).underlying());
+        *static_cast<Ciphertext &>(encrypted).underlying_, static_cast<const Plaintext &>(plain).underlying());
     }
 
     inline void add_plain(
       const api::Ciphertext &encrypted, const api::Plaintext &plain, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(plain);
+      check_strict_compatibility(destination);
       underlying().add_plain(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<const Plaintext &>(plain).underlying(),
-        *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(), static_cast<const Plaintext &>(plain).underlying(),
+        *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void sub_plain_inplace(api::Ciphertext &encrypted, const api::Plaintext &plain) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(plain);
       underlying().sub_plain_inplace(
-        *dynamic_cast<Ciphertext &>(encrypted).underlying_, dynamic_cast<const Plaintext &>(plain).underlying());
+        *static_cast<Ciphertext &>(encrypted).underlying_, static_cast<const Plaintext &>(plain).underlying());
     }
 
     inline void sub_plain(
       const api::Ciphertext &encrypted, const api::Plaintext &plain, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(plain);
+      check_strict_compatibility(destination);
       underlying().sub_plain(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<const Plaintext &>(plain).underlying(),
-        *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(), static_cast<const Plaintext &>(plain).underlying(),
+        *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void multiply_plain_inplace(api::Ciphertext &encrypted, const api::Plaintext &plain) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(plain);
       underlying().multiply_plain_inplace(
-        *dynamic_cast<Ciphertext &>(encrypted).underlying_, dynamic_cast<const Plaintext &>(plain).underlying());
+        *static_cast<Ciphertext &>(encrypted).underlying_, static_cast<const Plaintext &>(plain).underlying());
     }
 
     inline void multiply_plain(
       const api::Ciphertext &encrypted, const api::Plaintext &plain, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(plain);
+      check_strict_compatibility(destination);
       underlying().multiply_plain(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), dynamic_cast<const Plaintext &>(plain).underlying(),
-        *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(), static_cast<const Plaintext &>(plain).underlying(),
+        *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void relinearize_inplace(api::Ciphertext &encrypted, const api::RelinKeys &relin_keys) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(relin_keys);
       underlying().relinearize_inplace(
-        *dynamic_cast<Ciphertext &>(encrypted).underlying_, dynamic_cast<const RelinKeys &>(relin_keys).underlying());
+        *static_cast<Ciphertext &>(encrypted).underlying_, static_cast<const RelinKeys &>(relin_keys).underlying());
     }
 
     inline void relinearize(
       const api::Ciphertext &encrypted, const api::RelinKeys &relin_keys, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(relin_keys);
+      check_strict_compatibility(destination);
       underlying().relinearize(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(),
-        dynamic_cast<const RelinKeys &>(relin_keys).underlying(), *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(),
+        static_cast<const RelinKeys &>(relin_keys).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void mod_switch_to_next_inplace(api::Ciphertext &encrypted) const override
     {
-      underlying().mod_switch_to_next_inplace(*dynamic_cast<Ciphertext &>(encrypted).underlying_);
+      check_strict_compatibility(encrypted);
+      underlying().mod_switch_to_next_inplace(*static_cast<Ciphertext &>(encrypted).underlying_);
     }
 
     inline void mod_switch_to_next(const api::Ciphertext &encrypted, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(destination);
       underlying().mod_switch_to_next(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void mod_switch_to_next_inplace(api::Plaintext &plain) const override
     {
-      underlying().mod_switch_to_next_inplace(*dynamic_cast<Plaintext &>(plain).underlying_);
+      check_strict_compatibility(plain);
+      underlying().mod_switch_to_next_inplace(*static_cast<Plaintext &>(plain).underlying_);
     }
 
     inline void mod_switch_to_next(const api::Plaintext &plain, api::Plaintext &destination) const override
     {
+      check_strict_compatibility(plain);
+      check_strict_compatibility(destination);
       underlying().mod_switch_to_next(
-        dynamic_cast<const Plaintext &>(plain).underlying(), *dynamic_cast<Plaintext &>(destination).underlying_);
+        static_cast<const Plaintext &>(plain).underlying(), *static_cast<Plaintext &>(destination).underlying_);
     }
 
     inline void rescale_to_next_inplace(api::Ciphertext &encrypted) const override
     {
-      underlying().rescale_to_next_inplace(*dynamic_cast<Ciphertext &>(encrypted).underlying_);
+      check_strict_compatibility(encrypted);
+      underlying().rescale_to_next_inplace(*static_cast<Ciphertext &>(encrypted).underlying_);
     }
 
     inline void rescale_to_next(const api::Ciphertext &encrypted, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(destination);
       underlying().rescale_to_next(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void rotate_inplace(api::Ciphertext &encrypted, int steps, const api::GaloisKeys &galois_keys) const override
     {
-      seal::Ciphertext &seal_encrypted = *dynamic_cast<Ciphertext &>(encrypted).underlying_;
-      const seal::GaloisKeys &seal_galois_keys = dynamic_cast<const GaloisKeys &>(galois_keys).underlying();
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(galois_keys);
+      seal::Ciphertext &seal_encrypted = *static_cast<Ciphertext &>(encrypted).underlying_;
+      const seal::GaloisKeys &seal_galois_keys = static_cast<const GaloisKeys &>(galois_keys).underlying();
       std::size_t coeff_count = seal_encrypted.poly_modulus_degree();
       std::size_t row_size = coeff_count >> 1;
       if (steps > row_size)
@@ -226,10 +280,12 @@ namespace seal_backend
       const api::Ciphertext &encrypted, int steps, const api::GaloisKeys &galois_keys,
       api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(galois_keys);
+      check_strict_compatibility(destination);
       underlying().rotate_rows(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), steps,
-        dynamic_cast<const GaloisKeys &>(galois_keys).underlying(),
-        *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(), steps,
+        static_cast<const GaloisKeys &>(galois_keys).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline const seal::Evaluator &underlying() const { return *underlying_; }

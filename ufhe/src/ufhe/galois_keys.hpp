@@ -12,7 +12,7 @@ class GaloisKeys : public api::GaloisKeys
   friend class KeyGenerator;
 
 public:
-  GaloisKeys();
+  GaloisKeys(api::backend_type backend = Config::backend());
 
   GaloisKeys(const GaloisKeys &copy);
 

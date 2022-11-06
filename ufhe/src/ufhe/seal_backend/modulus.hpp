@@ -31,32 +31,38 @@ namespace seal_backend
 
     inline bool operator==(const api::Modulus &compare) const override
     {
-      return underlying() == dynamic_cast<const Modulus &>(compare).underlying();
+      check_strict_compatibility(compare);
+      return underlying() == static_cast<const Modulus &>(compare).underlying();
     }
 
     inline bool operator!=(const api::Modulus &compare) const override
     {
-      return underlying() != dynamic_cast<const Modulus &>(compare).underlying();
+      check_strict_compatibility(compare);
+      return underlying() != static_cast<const Modulus &>(compare).underlying();
     }
 
     inline bool operator<(const api::Modulus &compare) const override
     {
-      return underlying() < dynamic_cast<const Modulus &>(compare).underlying();
+      check_strict_compatibility(compare);
+      return underlying() < static_cast<const Modulus &>(compare).underlying();
     }
 
     inline bool operator<=(const api::Modulus &compare) const override
     {
-      return underlying() <= dynamic_cast<const Modulus &>(compare).underlying();
+      check_strict_compatibility(compare);
+      return underlying() <= static_cast<const Modulus &>(compare).underlying();
     }
 
     inline bool operator>(const api::Modulus &compare) const override
     {
-      return underlying() > dynamic_cast<const Modulus &>(compare).underlying();
+      check_strict_compatibility(compare);
+      return underlying() > static_cast<const Modulus &>(compare).underlying();
     }
 
     inline bool operator>=(const api::Modulus &compare) const override
     {
-      return underlying() >= dynamic_cast<const Modulus &>(compare).underlying();
+      check_strict_compatibility(compare);
+      return underlying() >= static_cast<const Modulus &>(compare).underlying();
     }
 
     inline std::uint64_t reduce(std::uint64_t value) const override { return underlying().reduce(value); }

@@ -14,7 +14,9 @@ class Modulus : public api::Modulus
   friend class EncryptionParams;
 
 public:
-  Modulus(std::uint64_t value);
+  Modulus(api::backend_type backend, std::uint64_t value);
+
+  Modulus(std::uint64_t value) : Modulus(Config::backend(), value) {}
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
@@ -28,32 +30,38 @@ public:
 
   inline bool operator==(const api::Modulus &compare) const override
   {
-    return underlying() == dynamic_cast<const Modulus &>(compare).underlying();
+    check_strict_compatibility(compare);
+    return underlying() == static_cast<const Modulus &>(compare).underlying();
   }
 
   inline bool operator!=(const api::Modulus &compare) const override
   {
-    return underlying() != dynamic_cast<const Modulus &>(compare).underlying();
+    check_strict_compatibility(compare);
+    return underlying() != static_cast<const Modulus &>(compare).underlying();
   }
 
   inline bool operator<(const api::Modulus &compare) const override
   {
-    return underlying() < dynamic_cast<const Modulus &>(compare).underlying();
+    check_strict_compatibility(compare);
+    return underlying() < static_cast<const Modulus &>(compare).underlying();
   }
 
   inline bool operator<=(const api::Modulus &compare) const override
   {
-    return underlying() <= dynamic_cast<const Modulus &>(compare).underlying();
+    check_strict_compatibility(compare);
+    return underlying() <= static_cast<const Modulus &>(compare).underlying();
   }
 
   inline bool operator>(const api::Modulus &compare) const override
   {
-    return underlying() > dynamic_cast<const Modulus &>(compare).underlying();
+    check_strict_compatibility(compare);
+    return underlying() > static_cast<const Modulus &>(compare).underlying();
   }
 
   inline bool operator>=(const api::Modulus &compare) const override
   {
-    return underlying() >= dynamic_cast<const Modulus &>(compare).underlying();
+    check_strict_compatibility(compare);
+    return underlying() >= static_cast<const Modulus &>(compare).underlying();
   }
 
   inline std::uint64_t reduce(std::uint64_t value) const override { return underlying().reduce(value); }

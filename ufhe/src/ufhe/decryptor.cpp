@@ -4,12 +4,15 @@ namespace ufhe
 {
 Decryptor::Decryptor(const EncryptionContext &context, const SecretKey &secret_key)
 {
-  switch (Config::backend())
+  if (context.backend() != secret_key.backend())
+    throw std::invalid_argument("backend ambiguity, arguments must have the same backend");
+
+  switch (context.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Decryptor>(
-      dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
-      dynamic_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
+      static_cast<const seal_backend::EncryptionContext &>(context.underlying()),
+      static_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
     break;
 
   case api::backend_type::none:

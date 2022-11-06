@@ -2,6 +2,7 @@
 
 #include "ufhe/api/backend_type.hpp"
 #include "ufhe/api/implementation_level.hpp"
+#include <stdexcept>
 
 namespace ufhe
 {
@@ -26,6 +27,15 @@ namespace api
     AbstractType(AbstractType &&source) = default;
 
     AbstractType &operator=(AbstractType &&assign) = default;
+
+    template <class T>
+    inline void check_strict_compatibility(const T &t) const
+    {
+      if (backend() != t.backend())
+        throw std::invalid_argument("argument with different backend");
+      if (level() != t.level())
+        throw std::invalid_argument("argument with different implementation level");
+    }
   };
 } // namespace api
 } // namespace ufhe

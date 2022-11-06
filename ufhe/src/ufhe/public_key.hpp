@@ -12,7 +12,7 @@ class PublicKey : public api::PublicKey
   friend class KeyGenerator;
 
 public:
-  PublicKey();
+  PublicKey(api::backend_type backend=Config::backend());
 
   PublicKey(const PublicKey &copy);
 

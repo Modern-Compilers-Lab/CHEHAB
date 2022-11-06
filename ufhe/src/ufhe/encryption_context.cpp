@@ -4,11 +4,11 @@ namespace ufhe
 {
 EncryptionContext::EncryptionContext(const EncryptionParams &params)
 {
-  switch (Config::backend())
+  switch (params.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::EncryptionContext>(
-      dynamic_cast<const seal_backend::EncryptionParams &>(params.underlying()));
+      static_cast<const seal_backend::EncryptionParams &>(params.underlying()));
     break;
 
   case api::backend_type::none:

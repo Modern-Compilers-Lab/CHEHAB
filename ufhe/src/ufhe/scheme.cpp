@@ -2,9 +2,9 @@
 
 namespace ufhe
 {
-Scheme::Scheme(api::scheme_type scheme)
+Scheme::Scheme(api::backend_type backend, api::scheme_type scheme)
 {
-  switch (Config::backend())
+  switch (backend)
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Scheme>(scheme);

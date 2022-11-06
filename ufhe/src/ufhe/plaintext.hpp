@@ -14,11 +14,15 @@ class Plaintext : public api::Plaintext
   friend class Evaluator;
 
 public:
-  Plaintext();
+  Plaintext(api::backend_type backend = Config::backend());
 
-  Plaintext(std::size_t coeff_count);
+  Plaintext(api::backend_type backend, std::size_t coeff_count);
 
-  Plaintext(const std::string &hex_poly);
+  Plaintext(std::size_t coeff_count) : Plaintext(Config::backend(), coeff_count) {}
+
+  Plaintext(api::backend_type backend, const std::string &hex_poly);
+
+  Plaintext(const std::string &hex_poly) : Plaintext(Config::backend(), hex_poly) {}
 
   Plaintext(const Plaintext &copy);
 
@@ -43,12 +47,14 @@ public:
 
   inline bool operator==(const api::Plaintext &compare) const override
   {
-    return underlying() == dynamic_cast<const Plaintext &>(compare).underlying();
+    check_strict_compatibility(compare);
+    return underlying() == static_cast<const Plaintext &>(compare).underlying();
   }
 
   inline bool operator!=(const api::Plaintext &compare) const override
   {
-    return underlying() != dynamic_cast<const Plaintext &>(compare).underlying();
+    check_strict_compatibility(compare);
+    return underlying() != static_cast<const Plaintext &>(compare).underlying();
   }
 
   inline const api::Plaintext &underlying() const { return *underlying_; }

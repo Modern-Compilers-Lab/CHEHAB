@@ -2,9 +2,9 @@
 
 namespace ufhe
 {
-SecretKey::SecretKey()
+SecretKey::SecretKey(api::backend_type backend)
 {
-  switch (Config::backend())
+  switch (backend)
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::SecretKey>();
@@ -22,11 +22,11 @@ SecretKey::SecretKey()
 
 SecretKey::SecretKey(const SecretKey &copy)
 {
-  switch (Config::backend())
+  switch (copy.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::SecretKey>(dynamic_cast<const seal_backend::SecretKey &>(copy.underlying()));
+      std::make_shared<seal_backend::SecretKey>(static_cast<const seal_backend::SecretKey &>(copy.underlying()));
     break;
 
   case api::backend_type::none:
@@ -42,11 +42,11 @@ SecretKey::SecretKey(const SecretKey &copy)
 SecretKey &SecretKey::operator=(const SecretKey &assign)
 {
 
-  switch (Config::backend())
+  switch (assign.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::SecretKey>(dynamic_cast<const seal_backend::SecretKey &>(assign.underlying()));
+      std::make_shared<seal_backend::SecretKey>(static_cast<const seal_backend::SecretKey &>(assign.underlying()));
     return *this;
     break;
 

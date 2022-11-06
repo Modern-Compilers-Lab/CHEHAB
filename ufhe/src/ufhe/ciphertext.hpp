@@ -14,7 +14,7 @@ class Ciphertext : public api::Ciphertext
   friend class Evaluator;
 
 public:
-  Ciphertext();
+  Ciphertext(api::backend_type backend = Config::backend());
 
   Ciphertext(const EncryptionContext &context);
 

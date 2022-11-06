@@ -10,7 +10,9 @@ namespace ufhe
 class Scheme : public api::Scheme
 {
 public:
-  Scheme(api::scheme_type scheme);
+  Scheme(api::backend_type backend, api::scheme_type scheme);
+
+  Scheme(api::scheme_type scheme): Scheme(Config::backend(), scheme){}
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 

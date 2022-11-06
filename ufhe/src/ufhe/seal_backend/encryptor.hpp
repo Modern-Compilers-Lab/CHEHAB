@@ -35,14 +35,18 @@ namespace seal_backend
 
     inline void encrypt(const api::Plaintext &plain, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(plain);
+      check_strict_compatibility(destination);
       underlying().encrypt(
-        dynamic_cast<const Plaintext &>(plain).underlying(), *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Plaintext &>(plain).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline void encrypt_symmetric(const api::Plaintext &plain, api::Ciphertext &destination) const override
     {
+      check_strict_compatibility(plain);
+      check_strict_compatibility(destination);
       underlying().encrypt_symmetric(
-        dynamic_cast<const Plaintext &>(plain).underlying(), *dynamic_cast<Ciphertext &>(destination).underlying_);
+        static_cast<const Plaintext &>(plain).underlying(), *static_cast<Ciphertext &>(destination).underlying_);
     }
 
     inline const seal::Encryptor &underlying() const { return *underlying_; }

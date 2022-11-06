@@ -4,12 +4,15 @@ namespace ufhe
 {
 Encryptor::Encryptor(const EncryptionContext &context, const PublicKey &public_key)
 {
-  switch (Config::backend())
+  if (context.backend() != public_key.backend())
+    throw std::invalid_argument("backend ambiguity, arguments must have the same backend");
+
+  switch (context.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Encryptor>(
-      dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
-      dynamic_cast<const seal_backend::PublicKey &>(public_key.underlying()));
+      static_cast<const seal_backend::EncryptionContext &>(context.underlying()),
+      static_cast<const seal_backend::PublicKey &>(public_key.underlying()));
     break;
 
   case api::backend_type::none:
@@ -24,12 +27,15 @@ Encryptor::Encryptor(const EncryptionContext &context, const PublicKey &public_k
 
 Encryptor::Encryptor(const EncryptionContext &context, const SecretKey &secret_key)
 {
-  switch (Config::backend())
+  if (context.backend() != secret_key.backend())
+    throw std::invalid_argument("backend ambiguity, arguments must have the same backend");
+
+  switch (context.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Encryptor>(
-      dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
-      dynamic_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
+      static_cast<const seal_backend::EncryptionContext &>(context.underlying()),
+      static_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
     break;
 
   case api::backend_type::none:
@@ -44,13 +50,16 @@ Encryptor::Encryptor(const EncryptionContext &context, const SecretKey &secret_k
 
 Encryptor::Encryptor(const EncryptionContext &context, const PublicKey &public_key, const SecretKey &secret_key)
 {
-  switch (Config::backend())
+  if (context.backend() != public_key.backend() || context.backend() != secret_key.backend())
+    throw std::invalid_argument("backend ambiguity, arguments must have the same backend");
+
+  switch (context.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Encryptor>(
-      dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
-      dynamic_cast<const seal_backend::PublicKey &>(public_key.underlying()),
-      dynamic_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
+      static_cast<const seal_backend::EncryptionContext &>(context.underlying()),
+      static_cast<const seal_backend::PublicKey &>(public_key.underlying()),
+      static_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
     break;
 
   case api::backend_type::none:

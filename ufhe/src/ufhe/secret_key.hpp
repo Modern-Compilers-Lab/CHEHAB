@@ -12,7 +12,7 @@ class SecretKey : public api::SecretKey
   friend class KeyGenerator;
 
 public:
-  SecretKey();
+  SecretKey(api::backend_type backend = Config::backend());
 
   SecretKey(const SecretKey &copy);
 

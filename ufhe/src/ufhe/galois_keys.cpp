@@ -2,9 +2,9 @@
 
 namespace ufhe
 {
-GaloisKeys::GaloisKeys()
+GaloisKeys::GaloisKeys(api::backend_type backend)
 {
-  switch (Config::backend())
+  switch (backend)
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::GaloisKeys>();
@@ -22,11 +22,11 @@ GaloisKeys::GaloisKeys()
 
 GaloisKeys::GaloisKeys(const GaloisKeys &copy)
 {
-  switch (Config::backend())
+  switch (copy.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::GaloisKeys>(dynamic_cast<const seal_backend::GaloisKeys &>(copy.underlying()));
+      std::make_shared<seal_backend::GaloisKeys>(static_cast<const seal_backend::GaloisKeys &>(copy.underlying()));
     break;
 
   case api::backend_type::none:
@@ -41,12 +41,11 @@ GaloisKeys::GaloisKeys(const GaloisKeys &copy)
 
 GaloisKeys &GaloisKeys::operator=(const GaloisKeys &assign)
 {
-
-  switch (Config::backend())
+  switch (assign.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::GaloisKeys>(dynamic_cast<const seal_backend::GaloisKeys &>(assign.underlying()));
+      std::make_shared<seal_backend::GaloisKeys>(static_cast<const seal_backend::GaloisKeys &>(assign.underlying()));
     return *this;
     break;
 

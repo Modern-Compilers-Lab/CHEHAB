@@ -48,12 +48,14 @@ namespace seal_backend
 
     inline bool operator==(const api::Plaintext &compare) const override
     {
-      return underlying() == dynamic_cast<const Plaintext &>(compare).underlying();
+      check_strict_compatibility(compare);
+      return underlying() == static_cast<const Plaintext &>(compare).underlying();
     }
 
     inline bool operator!=(const api::Plaintext &compare) const override
     {
-      return underlying() != dynamic_cast<const Plaintext &>(compare).underlying();
+      check_strict_compatibility(compare);
+      return underlying() != static_cast<const Plaintext &>(compare).underlying();
     }
 
     inline const seal::Plaintext &underlying() const { return *underlying_; }

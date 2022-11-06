@@ -26,17 +26,20 @@ public:
 
   inline void create_public_key(api::PublicKey &destination) const override
   {
-    underlying().create_public_key(*dynamic_cast<PublicKey &>(destination).underlying_);
+    check_strict_compatibility(destination);
+    underlying().create_public_key(*static_cast<PublicKey &>(destination).underlying_);
   }
 
   inline void create_relin_keys(api::RelinKeys &destination) const override
   {
-    underlying().create_relin_keys(*dynamic_cast<RelinKeys &>(destination).underlying_);
+    check_strict_compatibility(destination);
+    underlying().create_relin_keys(*static_cast<RelinKeys &>(destination).underlying_);
   }
 
   inline void create_galois_keys(api::GaloisKeys &destination) const override
   {
-    underlying().create_galois_keys(*dynamic_cast<GaloisKeys &>(destination).underlying_);
+    check_strict_compatibility(destination);
+    underlying().create_galois_keys(*static_cast<GaloisKeys &>(destination).underlying_);
   }
 
   inline const api::KeyGenerator &underlying() const { return *underlying_; }

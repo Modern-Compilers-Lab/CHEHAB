@@ -4,11 +4,11 @@ namespace ufhe
 {
 Evaluator::Evaluator(const EncryptionContext &context)
 {
-  switch (Config::backend())
+  switch (context.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Evaluator>(
-      dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
+      static_cast<const seal_backend::EncryptionContext &>(context.underlying()));
     break;
 
   case api::backend_type::none:

@@ -12,7 +12,7 @@ class RelinKeys : public api::RelinKeys
   friend class KeyGenerator;
 
 public:
-  RelinKeys();
+  RelinKeys(api::backend_type backend = Config::backend());
 
   RelinKeys(const RelinKeys &copy);
 

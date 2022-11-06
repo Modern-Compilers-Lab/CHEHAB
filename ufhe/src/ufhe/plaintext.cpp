@@ -2,9 +2,9 @@
 
 namespace ufhe
 {
-Plaintext::Plaintext()
+Plaintext::Plaintext(api::backend_type backend)
 {
-  switch (Config::backend())
+  switch (backend)
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Plaintext>();
@@ -20,9 +20,9 @@ Plaintext::Plaintext()
   }
 }
 
-Plaintext::Plaintext(std::size_t coeff_count)
+Plaintext::Plaintext(api::backend_type backend, std::size_t coeff_count)
 {
-  switch (Config::backend())
+  switch (backend)
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Plaintext>(coeff_count);
@@ -38,9 +38,9 @@ Plaintext::Plaintext(std::size_t coeff_count)
   }
 }
 
-Plaintext::Plaintext(const std::string &hex_poly)
+Plaintext::Plaintext(api::backend_type backend, const std::string &hex_poly)
 {
-  switch (Config::backend())
+  switch (backend)
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Plaintext>(hex_poly);
@@ -58,11 +58,11 @@ Plaintext::Plaintext(const std::string &hex_poly)
 
 Plaintext::Plaintext(const Plaintext &copy)
 {
-  switch (Config::backend())
+  switch (copy.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::Plaintext>(dynamic_cast<const seal_backend::Plaintext &>(copy.underlying()));
+      std::make_shared<seal_backend::Plaintext>(static_cast<const seal_backend::Plaintext &>(copy.underlying()));
     break;
 
   case api::backend_type::none:
@@ -78,11 +78,11 @@ Plaintext::Plaintext(const Plaintext &copy)
 Plaintext &Plaintext::operator=(const Plaintext &assign)
 {
 
-  switch (Config::backend())
+  switch (assign.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::Plaintext>(dynamic_cast<const seal_backend::Plaintext &>(assign.underlying()));
+      std::make_shared<seal_backend::Plaintext>(static_cast<const seal_backend::Plaintext &>(assign.underlying()));
     return *this;
     break;
 

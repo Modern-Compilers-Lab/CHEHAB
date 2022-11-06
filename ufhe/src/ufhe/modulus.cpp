@@ -2,9 +2,9 @@
 
 namespace ufhe
 {
-Modulus::Modulus(std::uint64_t value)
+Modulus::Modulus(api::backend_type backend, std::uint64_t value)
 {
-  switch (Config::backend())
+  switch (backend)
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Modulus>(value);

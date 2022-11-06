@@ -2,9 +2,9 @@
 
 namespace ufhe
 {
-Ciphertext::Ciphertext()
+Ciphertext::Ciphertext(api::backend_type backend)
 {
-  switch (Config::backend())
+  switch (backend)
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Ciphertext>();
@@ -22,11 +22,11 @@ Ciphertext::Ciphertext()
 
 Ciphertext::Ciphertext(const EncryptionContext &context) : underlying_()
 {
-  switch (Config::backend())
+  switch (context.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::Ciphertext>(
-      dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
+      static_cast<const seal_backend::EncryptionContext &>(context.underlying()));
     break;
 
   case api::backend_type::none:
@@ -41,11 +41,11 @@ Ciphertext::Ciphertext(const EncryptionContext &context) : underlying_()
 
 Ciphertext::Ciphertext(const Ciphertext &copy)
 {
-  switch (Config::backend())
+  switch (copy.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::Ciphertext>(dynamic_cast<const seal_backend::Ciphertext &>(copy.underlying()));
+      std::make_shared<seal_backend::Ciphertext>(static_cast<const seal_backend::Ciphertext &>(copy.underlying()));
     break;
 
   case api::backend_type::none:
@@ -61,11 +61,11 @@ Ciphertext::Ciphertext(const Ciphertext &copy)
 Ciphertext &Ciphertext::operator=(const Ciphertext &assign)
 {
 
-  switch (Config::backend())
+  switch (assign.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::Ciphertext>(dynamic_cast<const seal_backend::Ciphertext &>(assign.underlying()));
+      std::make_shared<seal_backend::Ciphertext>(static_cast<const seal_backend::Ciphertext &>(assign.underlying()));
     return *this;
     break;
 

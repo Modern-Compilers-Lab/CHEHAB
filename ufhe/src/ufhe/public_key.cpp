@@ -2,9 +2,9 @@
 
 namespace ufhe
 {
-PublicKey::PublicKey()
+PublicKey::PublicKey(api::backend_type backend)
 {
-  switch (Config::backend())
+  switch (backend)
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::PublicKey>();
@@ -22,11 +22,11 @@ PublicKey::PublicKey()
 
 PublicKey::PublicKey(const PublicKey &copy)
 {
-  switch (Config::backend())
+  switch (copy.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::PublicKey>(dynamic_cast<const seal_backend::PublicKey &>(copy.underlying()));
+      std::make_shared<seal_backend::PublicKey>(static_cast<const seal_backend::PublicKey &>(copy.underlying()));
     break;
 
   case api::backend_type::none:
@@ -42,11 +42,11 @@ PublicKey::PublicKey(const PublicKey &copy)
 PublicKey &PublicKey::operator=(const PublicKey &assign)
 {
 
-  switch (Config::backend())
+  switch (assign.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::PublicKey>(dynamic_cast<const seal_backend::PublicKey &>(assign.underlying()));
+      std::make_shared<seal_backend::PublicKey>(static_cast<const seal_backend::PublicKey &>(assign.underlying()));
     return *this;
     break;
 

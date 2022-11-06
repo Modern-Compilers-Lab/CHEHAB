@@ -32,12 +32,14 @@ public:
 
   inline void set_coeff_modulus(const api::CoeffModulus &coeff_modulus) override
   {
-    underlying_->set_coeff_modulus(dynamic_cast<const CoeffModulus &>(coeff_modulus).underlying());
+    check_strict_compatibility(coeff_modulus);
+    underlying_->set_coeff_modulus(static_cast<const CoeffModulus &>(coeff_modulus).underlying());
   }
 
   inline void set_plain_modulus(const api::Modulus &plain_modulus) override
   {
-    underlying_->set_plain_modulus(dynamic_cast<const Modulus &>(plain_modulus).underlying());
+    check_strict_compatibility(plain_modulus);
+    underlying_->set_plain_modulus(static_cast<const Modulus &>(plain_modulus).underlying());
   }
 
   inline const Scheme &scheme() const override { return scheme_; }

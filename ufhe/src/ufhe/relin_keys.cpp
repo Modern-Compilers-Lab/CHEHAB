@@ -2,9 +2,9 @@
 
 namespace ufhe
 {
-RelinKeys::RelinKeys()
+RelinKeys::RelinKeys(api::backend_type backend)
 {
-  switch (Config::backend())
+  switch (backend)
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::RelinKeys>();
@@ -22,11 +22,11 @@ RelinKeys::RelinKeys()
 
 RelinKeys::RelinKeys(const RelinKeys &copy)
 {
-  switch (Config::backend())
+  switch (copy.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::RelinKeys>(dynamic_cast<const seal_backend::RelinKeys &>(copy.underlying()));
+      std::make_shared<seal_backend::RelinKeys>(static_cast<const seal_backend::RelinKeys &>(copy.underlying()));
     break;
 
   case api::backend_type::none:
@@ -42,11 +42,11 @@ RelinKeys::RelinKeys(const RelinKeys &copy)
 RelinKeys &RelinKeys::operator=(const RelinKeys &assign)
 {
 
-  switch (Config::backend())
+  switch (assign.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::RelinKeys>(dynamic_cast<const seal_backend::RelinKeys &>(assign.underlying()));
+      std::make_shared<seal_backend::RelinKeys>(static_cast<const seal_backend::RelinKeys &>(assign.underlying()));
     return *this;
     break;
 

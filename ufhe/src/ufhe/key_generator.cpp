@@ -4,11 +4,11 @@ namespace ufhe
 {
 KeyGenerator::KeyGenerator(EncryptionContext &context)
 {
-  switch (Config::backend())
+  switch (context.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::KeyGenerator>(
-      dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
+      static_cast<const seal_backend::EncryptionContext &>(context.underlying()));
     secret_key_ = SecretKey(underlying().secret_key());
     break;
 
@@ -24,12 +24,15 @@ KeyGenerator::KeyGenerator(EncryptionContext &context)
 
 KeyGenerator::KeyGenerator(const EncryptionContext &context, const SecretKey &secret_key)
 {
-  switch (Config::backend())
+  if (context.backend() != secret_key.backend())
+    throw std::invalid_argument("backend ambiguity, arguments must have the same backend");
+
+  switch (context.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::KeyGenerator>(
-      dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()),
-      dynamic_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
+      static_cast<const seal_backend::EncryptionContext &>(context.underlying()),
+      static_cast<const seal_backend::SecretKey &>(secret_key.underlying()));
     break;
 
   case api::backend_type::none:

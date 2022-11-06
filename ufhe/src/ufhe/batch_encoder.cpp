@@ -4,11 +4,11 @@ namespace ufhe
 {
 BatchEncoder::BatchEncoder(const EncryptionContext &context)
 {
-  switch (Config::backend())
+  switch (context.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::BatchEncoder>(
-      dynamic_cast<const seal_backend::EncryptionContext &>(context.underlying()));
+      static_cast<const seal_backend::EncryptionContext &>(context.underlying()));
     break;
 
   case api::backend_type::none:

@@ -4,11 +4,11 @@ namespace ufhe
 {
 EncryptionParams::EncryptionParams(const Scheme &scheme) : scheme_(scheme)
 {
-  switch (Config::backend())
+  switch (scheme.backend())
   {
   case api::backend_type::seal:
     underlying_ =
-      std::make_shared<seal_backend::EncryptionParams>(dynamic_cast<const seal_backend::Scheme &>(scheme.underlying()));
+      std::make_shared<seal_backend::EncryptionParams>(static_cast<const seal_backend::Scheme &>(scheme.underlying()));
     break;
 
   case api::backend_type::none:
@@ -25,11 +25,11 @@ EncryptionParams::EncryptionParams(const Scheme &scheme) : scheme_(scheme)
 
 EncryptionParams::EncryptionParams(const EncryptionParams &copy) : underlying_(), scheme_(copy.scheme_)
 {
-  switch (Config::backend())
+  switch (copy.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::EncryptionParams>(
-      dynamic_cast<const seal_backend::EncryptionParams &>(copy.underlying()));
+      static_cast<const seal_backend::EncryptionParams &>(copy.underlying()));
     break;
 
   case api::backend_type::none:
@@ -46,11 +46,11 @@ EncryptionParams::EncryptionParams(const EncryptionParams &copy) : underlying_()
 
 EncryptionParams &EncryptionParams::operator=(const EncryptionParams &assign)
 {
-  switch (Config::backend())
+  switch (assign.backend())
   {
   case api::backend_type::seal:
     underlying_ = std::make_shared<seal_backend::EncryptionParams>(
-      dynamic_cast<const seal_backend::EncryptionParams &>(assign.underlying()));
+      static_cast<const seal_backend::EncryptionParams &>(assign.underlying()));
     break;
 
   case api::backend_type::none:

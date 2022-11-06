@@ -25,13 +25,16 @@ namespace seal_backend
 
     inline void decrypt(const api::Ciphertext &encrypted, api::Plaintext &destination) const override
     {
+      check_strict_compatibility(encrypted);
+      check_strict_compatibility(destination);
       underlying_->decrypt(
-        dynamic_cast<const Ciphertext &>(encrypted).underlying(), *dynamic_cast<Plaintext &>(destination).underlying_);
+        static_cast<const Ciphertext &>(encrypted).underlying(), *static_cast<Plaintext &>(destination).underlying_);
     }
 
     inline int invariant_noise_budget(const api::Ciphertext &encrypted) const override
     {
-      return underlying_->invariant_noise_budget(dynamic_cast<const Ciphertext &>(encrypted).underlying());
+      check_strict_compatibility(encrypted);
+      return underlying_->invariant_noise_budget(static_cast<const Ciphertext &>(encrypted).underlying());
     }
 
     inline const seal::Decryptor &underlying() const { return *underlying_; }

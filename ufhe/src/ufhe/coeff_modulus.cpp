@@ -4,14 +4,19 @@ namespace ufhe
 {
 CoeffModulus::CoeffModulus(const std::vector<Modulus> &moduli) : moduli_(moduli)
 {
-  switch (Config::backend())
+  switch (moduli.front().backend())
   {
   case api::backend_type::seal:
   {
     std::vector<seal_backend::Modulus> underlying_moduli;
     underlying_moduli.reserve(moduli_.size());
     for (const Modulus &modulus : moduli)
-      underlying_moduli.push_back(dynamic_cast<const seal_backend::Modulus &>(modulus.underlying()));
+    {
+      if (modulus.backend() != api::backend_type::seal)
+        throw std::invalid_argument("backend ambiguity, objects of container argument must have the same backend");
+
+      underlying_moduli.push_back(static_cast<const seal_backend::Modulus &>(modulus.underlying()));
+    }
     underlying_ = std::make_shared<seal_backend::CoeffModulus>(underlying_moduli);
     break;
   }

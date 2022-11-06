@@ -25,22 +25,26 @@ namespace seal_backend
 
     inline void encode(const std::vector<std::uint64_t> &values_vector, api::Plaintext &destination) const override
     {
-      underlying().encode(values_vector, *dynamic_cast<Plaintext &>(destination).underlying_);
+      check_strict_compatibility(destination);
+      underlying().encode(values_vector, *static_cast<Plaintext &>(destination).underlying_);
     }
 
     inline void encode(const std::vector<std::int64_t> &values_vector, api::Plaintext &destination) const override
     {
-      underlying().encode(values_vector, *dynamic_cast<Plaintext &>(destination).underlying_);
+      check_strict_compatibility(destination);
+      underlying().encode(values_vector, *static_cast<Plaintext &>(destination).underlying_);
     }
 
     inline void decode(const api::Plaintext &plain, std::vector<std::uint64_t> &destination) const override
     {
-      underlying().decode(dynamic_cast<const Plaintext &>(plain).underlying(), destination);
+      check_strict_compatibility(plain);
+      underlying().decode(static_cast<const Plaintext &>(plain).underlying(), destination);
     }
 
     inline void decode(const api::Plaintext &plain, std::vector<std::int64_t> &destination) const override
     {
-      underlying().decode(dynamic_cast<const Plaintext &>(plain).underlying(), destination);
+      check_strict_compatibility(plain);
+      underlying().decode(static_cast<const Plaintext &>(plain).underlying(), destination);
     }
 
     inline const seal::BatchEncoder &underlying() const { return *underlying_; }
