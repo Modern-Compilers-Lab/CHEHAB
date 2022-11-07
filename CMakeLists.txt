@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22.1)
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_CXX_FLAGS "-g" )
 
 project(FHECO_PROJECT LANGUAGES C CXX)
 

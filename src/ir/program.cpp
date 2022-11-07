@@ -1,6 +1,5 @@
 #include "program.hpp"
 #include <unordered_set>
-
 namespace ir
 {
 
@@ -9,13 +8,7 @@ using Ptr = std::shared_ptr<Term>;
 Ptr Program::insert_operation_node_in_dataflow(
   OpCode opcode, const std::vector<Ptr> &operands, std::string label, TermType term_type)
 {
-
-  utils::MapedDoublyLinkedList<std::string, Ptr> operands_list;
-
-  for (auto &operand_ptr : operands)
-    operands_list.push_back({operand_ptr->get_label(), operand_ptr});
-
-  Ptr new_term = std::make_shared<Term>(opcode, operands_list, label);
+  Ptr new_term = std::make_shared<Term>(opcode, operands, label);
   new_term->set_term_type(term_type);
 
   for (auto &operand : operands)
@@ -24,6 +17,8 @@ Ptr Program::insert_operation_node_in_dataflow(
   this->data_flow->insert_node(new_term, this->type_of(new_term->get_label()) == ConstantTableEntryType::output);
   return new_term;
 }
+
+/* This function deletes only if it is posssible */
 
 Ptr Program::find_node_in_dataflow(const std::string &label) const
 {

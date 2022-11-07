@@ -37,19 +37,12 @@ int main()
     // a good value for t, 786433
     fhecompiler::params.set_plaintext_modulus(786433);
     // fhecompiler::params.set_plaintext_modulus_bit_length(20);
-    fhecompiler::params.set_polynomial_modulus_degree(2 << 15);
+    fhecompiler::params.set_polynomial_modulus_degree(1 << 15);
 
     fhecompiler::Ciphertext ct2 = fhecompiler::Ciphertext::encrypt(pt1);
+    fhecompiler::Ciphertext ct3 = fhecompiler::Ciphertext::encrypt(pt1);
 
-    output1 = ct1 * ct2 * ct1;
-
-    Ciphertext ct3 = output1 + output1;
-
-    Ciphertext ct4 = output1 + ct1 + ct1 + ct1 + ct1 * ct2 * ct2 * ct2 + ct3 + 12312;
-
-    Ciphertext ct4_output("ct4_output", VarType::output);
-
-    ct4_output = ct4;
+    output1 = ct1 * ct2 * ct3;
 
     /*
     fhecompiler::Ciphertext output2("output2", VarType::output);

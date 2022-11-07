@@ -2,7 +2,6 @@
 
 #include "ciphertext.hpp"
 #include "ir_const.hpp"
-#include "maped_list.hpp"
 #include "plaintext.hpp"
 #include "scalar.hpp"
 #include <list>
@@ -30,7 +29,7 @@ private:
 
   OpCode opcode;
 
-  std::optional<utils::MapedDoublyLinkedList<std::string, Ptr>> operands;
+  std::optional<std::vector<Ptr>> operands;
 
   std::unordered_set<std::string> parents_labels;
 
@@ -39,11 +38,7 @@ private:
 public:
   Term() = delete;
 
-  ~Term()
-  {
-    if (operands != std::nullopt)
-      (*operands).clear(); /* Term is the owner of operands list */
-  }
+  ~Term() {}
 
   Term(const Term &term_copy) = default;
   Term &operator=(const Term &term_copy) = default;
@@ -57,10 +52,8 @@ public:
 
   Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::scalarType) {}
 
-  Term(OpCode _opcode, const utils::MapedDoublyLinkedList<std::string, Ptr> &_operands, const std::string &label_value)
-    : opcode(_opcode),
-      operands(std::make_optional<utils::MapedDoublyLinkedList<std::string, Ptr>>(std::move(_operands))),
-      label(label_value)
+  Term(OpCode _opcode, const std::vector<Ptr> &_operands, const std::string &label_value)
+    : opcode(_opcode), operands(std::make_optional<std::vector<Ptr>>(_operands)), label(label_value)
   {}
 
   // this constructure is useful in case of rawData where we store it in the lable as an int
@@ -70,7 +63,7 @@ public:
 
   bool merge_with_node(Ptr node_to_merge_with);
 
-  const std::optional<utils::MapedDoublyLinkedList<std::string, Ptr>> &get_operands() const { return this->operands; }
+  const std::optional<std::vector<Ptr>> &get_operands() const { return this->operands; }
 
   const std::unordered_set<std::string> &get_parents_labels() { return this->parents_labels; }
 

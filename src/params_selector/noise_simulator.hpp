@@ -110,15 +110,14 @@ public:
       auto operands_opt = node_ptr->get_operands();
       if (operands_opt != std::nullopt)
       {
-        const utils::MapedDoublyLinkedList<std::string, Ptr> &operands = *operands_opt;
+        auto &operands = *operands_opt;
         if (operands.size() == 1)
         {
           if (node_ptr->get_opcode() == ir::OpCode::assign)
           {
-            auto list_pointer = operands.front_pointer();
-            noise_budget[node_ptr->get_label()] = noise_budget[list_pointer->get_entry().second->get_label()];
+            noise_budget[node_ptr->get_label()] = noise_budget[operands[0]->get_label()];
             // list_pointer = list_pointer->get_next();
-            noise_norm_bound[node_ptr->get_label()] = noise_norm_bound[list_pointer->get_entry().second->get_label()];
+            noise_norm_bound[node_ptr->get_label()] = noise_norm_bound[operands[0]->get_label()];
           }
           else if (node_ptr->get_opcode() == ir::OpCode::encrypt)
           {
@@ -134,10 +133,8 @@ public:
         else if (operands.size() == 2)
         {
 
-          auto list_pointer = operands.front_pointer();
-          auto &lhs = list_pointer->get_entry().second;
-          list_pointer = list_pointer->get_next();
-          auto &rhs = list_pointer->get_entry().second;
+          auto &lhs = operands[0];
+          auto &rhs = operands[1];
 
           ir::OpCode opcode = node_ptr->get_opcode();
 

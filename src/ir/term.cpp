@@ -13,7 +13,7 @@ void Term::insert_parent_label(const std::string &label)
 
 void Term::add_operand(const Ptr &operand)
 {
-  (*this->operands).push_back({operand->get_label(), operand});
+  (*this->operands).push_back(operand);
 }
 
 /*
@@ -64,20 +64,35 @@ bool Term::merge_with_node(Ptr node_to_merge_with)
   /*
     two nodes must have same operation code, except for case of assign for the node to merge
   */
-  if (this->opcode != node_to_merge_with->get_opcode() && this->opcode != ir::OpCode::assign)
+  if (this->opcode != node_to_merge_with->get_opcode())
     return false;
+
+  /*
+    we dont merge outputs
+  */
 
   /*
     at this point we need to merge, but we first we need to decide how and when we merge also if there is any specific
     data structure is needed for performance
   */
 
-  /*
-    if (is_possible_to_merge_with(node_to_merge_with))
-    {}
-  */
+  auto mergening_condition = [&](const Ptr &term_ptr) -> bool {
+    // this condition will have an impact on the quality of optimizations
+    return term_ptr->get_parents_labels().size() == 1;
+  };
 
-  return true; // everything went well, life is good !
+  if (mergening_condition(node_to_merge_with))
+  {
+    /*
+      Mergening steps are simple. Having two nodes n1 and n2 where we want to merge them, in that n1 will contain
+      operands of n2 and n2 will be deleted. mergening is done from lower to higher level.
+    */
+    auto operands_to_merge_with_list = *(node_to_merge_with->get_operands());
+    auto &operands_list = *operands;
+    // operands_list.replace_node_with_list(node_to_merge_with->get_label(), operands_to_merge_with_list);
+  }
+
+  return true;
 }
 
 } // namespace ir

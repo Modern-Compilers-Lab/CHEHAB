@@ -1,5 +1,4 @@
 #include "dag.hpp"
-#include "maped_list.hpp"
 #include <algorithm>
 #include <optional>
 #include <stack>
@@ -72,11 +71,10 @@ void DAG::apply_topological_sort()
       if (top_node.second->get_operands() != std::nullopt)
       {
         // const std::vector<Ptr> &operands = *(top_node.second)->get_operands();
-        const utils::MapedDoublyLinkedList<std::string, Ptr> &operands = *(top_node.second)->get_operands();
+        auto &operands = *(top_node.second)->get_operands();
 
-        for (auto ptr = operands.front_pointer(); ptr; ptr = ptr->get_next())
+        for (auto &operand_ptr : operands)
         {
-          auto &operand_ptr = ptr->get_entry().second;
           if (visited_labels.find(operand_ptr->get_label()) == visited_labels.end())
           {
             traversal_stack.push(std::make_pair(false, operand_ptr));
