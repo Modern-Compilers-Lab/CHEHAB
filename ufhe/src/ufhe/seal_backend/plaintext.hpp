@@ -1,8 +1,12 @@
 #pragma once
 
-#include "seal/seal.h"
 #include "ufhe/api/plaintext.hpp"
 #include <memory>
+
+namespace seal
+{
+class Plaintext;
+} // namespace seal
 
 namespace ufhe
 {
@@ -15,48 +19,37 @@ namespace seal_backend
     friend class Evaluator;
 
   public:
-    Plaintext() : underlying_(std::make_shared<seal::Plaintext>()) {}
+    Plaintext();
 
-    Plaintext(std::size_t coeff_count) : underlying_(std::make_shared<seal::Plaintext>(coeff_count)) {}
+    explicit Plaintext(std::size_t coeff_count);
 
-    Plaintext(const std::string &hex_poly) : underlying_(std::make_shared<seal::Plaintext>(hex_poly)) {}
+    explicit Plaintext(const std::string &hex_poly);
 
-    Plaintext(const Plaintext &copy) : underlying_(std::make_shared<seal::Plaintext>(copy.underlying())) {}
+    Plaintext(const Plaintext &copy);
 
-    Plaintext &operator=(const Plaintext &assign)
-    {
-      underlying_ = std::make_shared<seal::Plaintext>(assign.underlying());
-      return *this;
-    }
+    Plaintext &operator=(const Plaintext &assign);
+
+    Plaintext(Plaintext &&source) = default;
+
+    Plaintext &operator=(Plaintext &&assign) = default;
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline api::implementation_level level() const override { return api::implementation_level::low_level; }
 
-    inline void resize(std::size_t coeff_count) override { underlying_->resize(coeff_count); }
+    void resize(std::size_t coeff_count) override;
 
-    inline void set_zero(std::size_t start_coeff, std::size_t length) override
-    {
-      underlying_->set_zero(start_coeff, length);
-    }
+    void set_zero(std::size_t start_coeff, std::size_t length) override;
 
-    inline std::size_t capacity() const override { return underlying().capacity(); }
+    std::size_t capacity() const override;
 
-    inline std::size_t coeff_count() const override { return underlying().coeff_count(); }
+    std::size_t coeff_count() const override;
 
-    inline std::string to_string() const override { return underlying().to_string(); }
+    std::string to_string() const override;
 
-    inline bool operator==(const api::Plaintext &compare) const override
-    {
-      check_strict_compatibility(compare);
-      return underlying() == static_cast<const Plaintext &>(compare).underlying();
-    }
+    bool operator==(const api::Plaintext &compare) const override;
 
-    inline bool operator!=(const api::Plaintext &compare) const override
-    {
-      check_strict_compatibility(compare);
-      return underlying() != static_cast<const Plaintext &>(compare).underlying();
-    }
+    bool operator!=(const api::Plaintext &compare) const override;
 
     inline const seal::Plaintext &underlying() const { return *underlying_; }
 

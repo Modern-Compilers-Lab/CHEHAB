@@ -2,7 +2,6 @@
 
 #include "ufhe/api/public_key.hpp"
 #include "ufhe/config.hpp"
-#include "ufhe/seal_backend/public_key.hpp"
 #include <memory>
 
 namespace ufhe
@@ -12,11 +11,15 @@ class PublicKey : public api::PublicKey
   friend class KeyGenerator;
 
 public:
-  PublicKey(api::backend_type backend=Config::backend());
+  explicit PublicKey(api::backend_type backend = Config::backend());
 
   PublicKey(const PublicKey &copy);
 
   PublicKey &operator=(const PublicKey &assign);
+
+  PublicKey(PublicKey &&source) = default;
+
+  PublicKey &operator=(PublicKey &&assign) = default;
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 

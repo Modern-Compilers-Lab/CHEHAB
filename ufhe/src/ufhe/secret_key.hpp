@@ -2,7 +2,6 @@
 
 #include "ufhe/api/secret_key.hpp"
 #include "ufhe/config.hpp"
-#include "ufhe/seal_backend/secret_key.hpp"
 #include <memory>
 
 namespace ufhe
@@ -12,11 +11,15 @@ class SecretKey : public api::SecretKey
   friend class KeyGenerator;
 
 public:
-  SecretKey(api::backend_type backend = Config::backend());
+  explicit SecretKey(api::backend_type backend = Config::backend());
 
   SecretKey(const SecretKey &copy);
 
   SecretKey &operator=(const SecretKey &assign);
+
+  SecretKey(SecretKey &&source) = default;
+
+  SecretKey &operator=(SecretKey &&assign) = default;
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 

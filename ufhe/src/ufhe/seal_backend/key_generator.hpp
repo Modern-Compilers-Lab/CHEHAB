@@ -1,60 +1,52 @@
 #pragma once
 
-#include "seal/seal.h"
 #include "ufhe/api/key_generator.hpp"
-#include "ufhe/seal_backend/encryption_context.hpp"
-#include "ufhe/seal_backend/galois_keys.hpp"
-#include "ufhe/seal_backend/public_key.hpp"
-#include "ufhe/seal_backend/relin_keys.hpp"
 #include "ufhe/seal_backend/secret_key.hpp"
 #include <memory>
+
+namespace seal
+{
+class KeyGenerator;
+} // namespace seal
 
 namespace ufhe
 {
 namespace seal_backend
 {
+  class EncryptionContext;
+
   class KeyGenerator : public api::KeyGenerator
   {
   public:
-    KeyGenerator(const EncryptionContext &context)
-      : underlying_(std::make_shared<seal::KeyGenerator>(context.underlying())),
-        secret_key_(SecretKey(underlying().secret_key()))
-    {}
+    explicit KeyGenerator(const EncryptionContext &context);
 
-    KeyGenerator(const EncryptionContext &context, const SecretKey &secret_key)
-      : underlying_(std::make_shared<seal::KeyGenerator>(context.underlying(), secret_key.underlying())),
-        secret_key_(SecretKey(underlying().secret_key()))
-    {}
+    KeyGenerator(const EncryptionContext &context, const SecretKey &secret_key);
+
+    KeyGenerator(const KeyGenerator &copy) = default;
+
+    KeyGenerator &operator=(const KeyGenerator &assign) = default;
+
+    KeyGenerator(KeyGenerator &&source) = default;
+
+    KeyGenerator &operator=(KeyGenerator &&assign) = default;
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline api::implementation_level level() const override { return api::implementation_level::low_level; }
 
-    inline const SecretKey &secret_key() const override { return secret_key_; }
+    const SecretKey &secret_key() const override;
 
-    inline void create_public_key(api::PublicKey &destination) const override
-    {
-      check_strict_compatibility(destination);
-      underlying().create_public_key(*static_cast<PublicKey &>(destination).underlying_);
-    }
+    void create_public_key(api::PublicKey &destination) const override;
 
-    inline void create_relin_keys(api::RelinKeys &destination) const override
-    {
-      check_strict_compatibility(destination);
-      underlying_->create_relin_keys(*static_cast<RelinKeys &>(destination).underlying_);
-    }
+    void create_relin_keys(api::RelinKeys &destination) const override;
 
-    inline void create_galois_keys(api::GaloisKeys &destination) const override
-    {
-      check_strict_compatibility(destination);
-      underlying_->create_galois_keys(*static_cast<GaloisKeys &>(destination).underlying_);
-    }
+    void create_galois_keys(api::GaloisKeys &destination) const override;
 
     inline const seal::KeyGenerator &underlying() const { return *underlying_; }
 
   private:
-    std::shared_ptr<seal::KeyGenerator> underlying_;
-    SecretKey secret_key_;
+    std::shared_ptr<seal::KeyGenerator> underlying_; // ORDER DEPENDENCY
+    SecretKey secret_key_; // ORDER DEPENDENCY
   };
 } // namespace seal_backend
 } // namespace ufhe

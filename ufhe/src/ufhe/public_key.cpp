@@ -1,4 +1,5 @@
 #include "ufhe/public_key.hpp"
+#include "ufhe/seal_backend/public_key.hpp"
 
 namespace ufhe
 {
@@ -41,7 +42,6 @@ PublicKey::PublicKey(const PublicKey &copy)
 
 PublicKey &PublicKey::operator=(const PublicKey &assign)
 {
-
   switch (assign.backend())
   {
   case api::backend_type::seal:

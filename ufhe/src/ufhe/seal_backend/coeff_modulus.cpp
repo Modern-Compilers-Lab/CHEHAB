@@ -1,4 +1,5 @@
 #include "ufhe/seal_backend/coeff_modulus.hpp"
+#include "seal/modulus.h"
 
 namespace ufhe
 {
@@ -12,6 +13,12 @@ namespace seal_backend
       underlying_->push_back(modulus.underlying());
   }
 
+  api::Modulus::vector CoeffModulus::value() const
+  {
+    api::Modulus::vector moduli_wrappers(moduli_.begin(), moduli_.end());
+    return moduli_wrappers;
+  }
+
   CoeffModulus::CoeffModulus(const std::vector<seal::Modulus> &moduli)
     : underlying_(std::shared_ptr<std::vector<seal::Modulus>>(
         &const_cast<std::vector<seal::Modulus> &>(moduli), [](std::vector<seal::Modulus> *) {})),
@@ -20,12 +27,6 @@ namespace seal_backend
     moduli_.reserve(underlying_->size());
     for (const seal::Modulus &seal_modulus : *underlying_)
       moduli_.push_back(Modulus(seal_modulus));
-  }
-
-  api::Modulus::vector CoeffModulus::value() const
-  {
-    api::Modulus::vector moduli_wrappers(moduli_.begin(), moduli_.end());
-    return moduli_wrappers;
   }
 } // namespace seal_backend
 } // namespace ufhe

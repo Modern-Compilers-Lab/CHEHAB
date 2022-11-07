@@ -1,4 +1,13 @@
 #include "ufhe/encryptor.hpp"
+#include "ufhe/ciphertext.hpp"
+#include "ufhe/encryption_context.hpp"
+#include "ufhe/plaintext.hpp"
+#include "ufhe/public_key.hpp"
+#include "ufhe/seal_backend/encryption_context.hpp"
+#include "ufhe/seal_backend/encryptor.hpp"
+#include "ufhe/seal_backend/public_key.hpp"
+#include "ufhe/seal_backend/secret_key.hpp"
+#include "ufhe/secret_key.hpp"
 
 namespace ufhe
 {
@@ -70,5 +79,17 @@ Encryptor::Encryptor(const EncryptionContext &context, const PublicKey &public_k
     throw std::invalid_argument("unsupported backend");
     break;
   }
+}
+
+void Encryptor::encrypt(const api::Plaintext &plain, api::Ciphertext &destination) const
+{
+  underlying().encrypt(
+    safe_static_cast<const Plaintext &>(plain).underlying(), *safe_static_cast<Ciphertext &>(destination).underlying_);
+}
+
+void Encryptor::encrypt_symmetric(const api::Plaintext &plain, api::Ciphertext &destination) const
+{
+  underlying().encrypt_symmetric(
+    safe_static_cast<const Plaintext &>(plain).underlying(), *safe_static_cast<Ciphertext &>(destination).underlying_);
 }
 } // namespace ufhe

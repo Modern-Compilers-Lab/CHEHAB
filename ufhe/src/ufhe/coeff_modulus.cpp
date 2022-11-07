@@ -1,8 +1,9 @@
 #include "ufhe/coeff_modulus.hpp"
+#include "ufhe/seal_backend/coeff_modulus.hpp"
 
 namespace ufhe
 {
-CoeffModulus::CoeffModulus(const std::vector<Modulus> &moduli) : moduli_(moduli)
+CoeffModulus::CoeffModulus(const std::vector<Modulus> &moduli) : moduli_{moduli}
 {
   switch (moduli.front().backend())
   {
@@ -31,6 +32,14 @@ CoeffModulus::CoeffModulus(const std::vector<Modulus> &moduli) : moduli_(moduli)
   }
 }
 
+api::Modulus::vector CoeffModulus::value() const
+{
+  api::Modulus::vector moduli_wrappers(moduli_.begin(), moduli_.end());
+  return moduli_wrappers;
+}
+
+CoeffModulus::CoeffModulus() : moduli_{} {}
+
 CoeffModulus::CoeffModulus(const api::CoeffModulus &coeff_modulus)
   : underlying_(
       std::shared_ptr<api::CoeffModulus>(&const_cast<api::CoeffModulus &>(coeff_modulus), [](api::CoeffModulus *) {})),
@@ -41,11 +50,4 @@ CoeffModulus::CoeffModulus(const api::CoeffModulus &coeff_modulus)
   for (const api::Modulus &modulus : underlying_moduli)
     moduli_.push_back(Modulus(modulus));
 }
-
-api::Modulus::vector CoeffModulus::value() const
-{
-  api::Modulus::vector moduli_wrappers(moduli_.begin(), moduli_.end());
-  return moduli_wrappers;
-}
-
 } // namespace ufhe

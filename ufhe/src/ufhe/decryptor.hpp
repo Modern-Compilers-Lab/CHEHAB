@@ -1,37 +1,33 @@
 #pragma once
 
 #include "ufhe/api/decryptor.hpp"
-#include "ufhe/ciphertext.hpp"
-#include "ufhe/encryption_context.hpp"
-#include "ufhe/plaintext.hpp"
-#include "ufhe/seal_backend/decryptor.hpp"
-#include "ufhe/secret_key.hpp"
 #include <memory>
 
 namespace ufhe
 {
+class EncryptionContext;
+class SecretKey;
+
 class Decryptor : public api::Decryptor
 {
 public:
   Decryptor(const EncryptionContext &context, const SecretKey &secret_key);
 
+  Decryptor(const Decryptor &copy);
+
+  Decryptor &operator=(const Decryptor &assign);
+
+  Decryptor(Decryptor &&source) = default;
+
+  Decryptor &operator=(Decryptor &&assign) = default;
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline api::implementation_level level() const override { return api::implementation_level::high_level; }
 
-  inline void decrypt(const api::Ciphertext &encrypted, api::Plaintext &destination) const override
-  {
-    check_strict_compatibility(encrypted);
-    check_strict_compatibility(destination);
-    underlying().decrypt(
-      static_cast<const Ciphertext &>(encrypted).underlying(), *static_cast<Plaintext &>(destination).underlying_);
-  }
+  void decrypt(const api::Ciphertext &encrypted, api::Plaintext &destination) const override;
 
-  inline int invariant_noise_budget(const api::Ciphertext &encrypted) const override
-  {
-    check_strict_compatibility(encrypted);
-    return underlying().invariant_noise_budget(static_cast<const Ciphertext &>(encrypted).underlying());
-  }
+  int invariant_noise_budget(const api::Ciphertext &encrypted) const override;
 
   inline const api::Decryptor &underlying() const { return *underlying_; }
 

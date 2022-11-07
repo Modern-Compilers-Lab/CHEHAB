@@ -2,7 +2,6 @@
 
 #include "ufhe/api/plaintext.hpp"
 #include "ufhe/config.hpp"
-#include "ufhe/seal_backend/plaintext.hpp"
 #include <memory>
 
 namespace ufhe
@@ -14,48 +13,41 @@ class Plaintext : public api::Plaintext
   friend class Evaluator;
 
 public:
-  Plaintext(api::backend_type backend = Config::backend());
+  explicit Plaintext(api::backend_type backend = Config::backend());
 
   Plaintext(api::backend_type backend, std::size_t coeff_count);
 
-  Plaintext(std::size_t coeff_count) : Plaintext(Config::backend(), coeff_count) {}
+  Plaintext(std::size_t coeff_count);
 
   Plaintext(api::backend_type backend, const std::string &hex_poly);
 
-  Plaintext(const std::string &hex_poly) : Plaintext(Config::backend(), hex_poly) {}
+  Plaintext(const std::string &hex_poly);
 
   Plaintext(const Plaintext &copy);
 
   Plaintext &operator=(const Plaintext &assign);
 
+  Plaintext(Plaintext &&source) = default;
+
+  Plaintext &operator=(Plaintext &&assign) = default;
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline api::implementation_level level() const override { return api::implementation_level::high_level; }
 
-  inline void resize(std::size_t coeff_count) override { underlying_->resize(coeff_count); }
+  void resize(std::size_t coeff_count) override;
 
-  inline void set_zero(std::size_t start_coeff, std::size_t length) override
-  {
-    underlying_->set_zero(start_coeff, length);
-  }
+  void set_zero(std::size_t start_coeff, std::size_t length) override;
 
-  inline std::size_t capacity() const override { return underlying().capacity(); }
+  std::size_t capacity() const override;
 
-  inline std::size_t coeff_count() const override { return underlying().coeff_count(); }
+  std::size_t coeff_count() const override;
 
-  inline std::string to_string() const override { return underlying().to_string(); }
+  std::string to_string() const override;
 
-  inline bool operator==(const api::Plaintext &compare) const override
-  {
-    check_strict_compatibility(compare);
-    return underlying() == static_cast<const Plaintext &>(compare).underlying();
-  }
+  bool operator==(const api::Plaintext &compare) const override;
 
-  inline bool operator!=(const api::Plaintext &compare) const override
-  {
-    check_strict_compatibility(compare);
-    return underlying() != static_cast<const Plaintext &>(compare).underlying();
-  }
+  bool operator!=(const api::Plaintext &compare) const override;
 
   inline const api::Plaintext &underlying() const { return *underlying_; }
 

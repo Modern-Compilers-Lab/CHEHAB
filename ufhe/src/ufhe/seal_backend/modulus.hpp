@@ -1,9 +1,12 @@
 #pragma once
 
-#include "seal/seal.h"
 #include "ufhe/api/modulus.hpp"
-#include <cstddef>
 #include <memory>
+
+namespace seal
+{
+class Modulus;
+} // namespace seal
 
 namespace ufhe
 {
@@ -17,62 +20,44 @@ namespace seal_backend
     friend class EncryptionParams;
 
   public:
-    Modulus(std::uint64_t value) : underlying_(std::make_shared<seal::Modulus>(value)) {}
+    explicit Modulus(std::uint64_t value);
+
+    Modulus(const Modulus &copy) = default;
+
+    Modulus &operator=(const Modulus &assign) = default;
+
+    Modulus(Modulus &&source) = default;
+
+    Modulus &operator=(Modulus &&assign) = default;
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline api::implementation_level level() const override { return api::implementation_level::low_level; }
 
-    inline int bit_count() const override { return underlying().bit_count(); }
+    int bit_count() const override;
 
-    inline std::uint64_t value() const override { return underlying().value(); }
+    std::uint64_t value() const override;
 
-    inline bool is_prime() const override { return underlying().is_prime(); }
+    bool is_prime() const override;
 
-    inline bool operator==(const api::Modulus &compare) const override
-    {
-      check_strict_compatibility(compare);
-      return underlying() == static_cast<const Modulus &>(compare).underlying();
-    }
+    bool operator==(const api::Modulus &compare) const override;
 
-    inline bool operator!=(const api::Modulus &compare) const override
-    {
-      check_strict_compatibility(compare);
-      return underlying() != static_cast<const Modulus &>(compare).underlying();
-    }
+    bool operator!=(const api::Modulus &compare) const override;
 
-    inline bool operator<(const api::Modulus &compare) const override
-    {
-      check_strict_compatibility(compare);
-      return underlying() < static_cast<const Modulus &>(compare).underlying();
-    }
+    bool operator<(const api::Modulus &compare) const override;
 
-    inline bool operator<=(const api::Modulus &compare) const override
-    {
-      check_strict_compatibility(compare);
-      return underlying() <= static_cast<const Modulus &>(compare).underlying();
-    }
+    bool operator<=(const api::Modulus &compare) const override;
 
-    inline bool operator>(const api::Modulus &compare) const override
-    {
-      check_strict_compatibility(compare);
-      return underlying() > static_cast<const Modulus &>(compare).underlying();
-    }
+    bool operator>(const api::Modulus &compare) const override;
 
-    inline bool operator>=(const api::Modulus &compare) const override
-    {
-      check_strict_compatibility(compare);
-      return underlying() >= static_cast<const Modulus &>(compare).underlying();
-    }
+    bool operator>=(const api::Modulus &compare) const override;
 
-    inline std::uint64_t reduce(std::uint64_t value) const override { return underlying().reduce(value); }
+    std::uint64_t reduce(std::uint64_t value) const override;
 
     inline const seal::Modulus &underlying() const { return *underlying_; }
 
   private:
-    explicit Modulus(const seal::Modulus &modulus)
-      : underlying_(std::shared_ptr<seal::Modulus>(&const_cast<seal::Modulus &>(modulus), [](seal::Modulus *) {}))
-    {}
+    explicit Modulus(const seal::Modulus &modulus);
 
     std::shared_ptr<seal::Modulus> underlying_;
   };

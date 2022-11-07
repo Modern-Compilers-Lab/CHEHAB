@@ -1,4 +1,5 @@
 #include "ufhe/secret_key.hpp"
+#include "ufhe/seal_backend/secret_key.hpp"
 
 namespace ufhe
 {

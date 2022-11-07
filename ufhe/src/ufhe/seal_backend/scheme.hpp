@@ -1,8 +1,7 @@
 #pragma once
 
-#include "seal/seal.h"
+#include "seal/encryptionparams.h"
 #include "ufhe/api/scheme.hpp"
-#include <stdexcept>
 
 namespace ufhe
 {
@@ -11,38 +10,21 @@ namespace seal_backend
   class Scheme : public api::Scheme
   {
   public:
-    Scheme(api::scheme_type scheme)
-    {
-      scheme_ = scheme;
-      switch (scheme_)
-      {
-      case api::scheme_type::none:
-        underlying_ = seal::scheme_type::none;
-        break;
+    explicit Scheme(api::scheme_type scheme);
 
-      case api::scheme_type::bfv:
-        underlying_ = seal::scheme_type::bfv;
-        break;
+    Scheme(const Scheme &copy) = default;
 
-      case api::scheme_type::bgv:
-        underlying_ = seal::scheme_type::bgv;
-        break;
+    Scheme &operator=(const Scheme &assign) = default;
 
-      case api::scheme_type::ckks:
-        underlying_ = seal::scheme_type::ckks;
-        break;
+    Scheme(Scheme &&source) = default;
 
-      default:
-        throw std::invalid_argument("unsupported scheme");
-        break;
-      }
-    }
+    Scheme &operator=(Scheme &&assign) = default;
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline api::implementation_level level() const override { return api::implementation_level::low_level; }
 
-    inline api::scheme_type type() const override { return scheme_; }
+    api::scheme_type type() const override;
 
     inline const seal::scheme_type &underlying() const { return underlying_; }
 

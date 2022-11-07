@@ -1,4 +1,5 @@
 #include "ufhe/relin_keys.hpp"
+#include "ufhe/seal_backend/relin_keys.hpp"
 
 namespace ufhe
 {
@@ -41,7 +42,6 @@ RelinKeys::RelinKeys(const RelinKeys &copy)
 
 RelinKeys &RelinKeys::operator=(const RelinKeys &assign)
 {
-
   switch (assign.backend())
   {
   case api::backend_type::seal:
@@ -60,4 +60,8 @@ RelinKeys &RelinKeys::operator=(const RelinKeys &assign)
   }
 }
 
+std::size_t RelinKeys::size() const
+{
+  return underlying().size();
+}
 } // namespace ufhe

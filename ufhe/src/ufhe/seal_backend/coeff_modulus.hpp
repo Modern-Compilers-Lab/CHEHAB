@@ -1,11 +1,14 @@
 #pragma once
 
-#include "seal/seal.h"
 #include "ufhe/api/coeff_modulus.hpp"
 #include "ufhe/seal_backend/modulus.hpp"
-#include <cstddef>
 #include <memory>
 #include <vector>
+
+namespace seal
+{
+class Modulus;
+} // namespace seal
 
 namespace ufhe
 {
@@ -16,7 +19,15 @@ namespace seal_backend
     friend class EncryptionParams;
 
   public:
-    CoeffModulus(const std::vector<Modulus> &moduli);
+    explicit CoeffModulus(const std::vector<Modulus> &moduli);
+
+    CoeffModulus(const CoeffModulus &copy) = default;
+
+    CoeffModulus &operator=(const CoeffModulus &assign) = default;
+
+    CoeffModulus(CoeffModulus &&source) = default;
+
+    CoeffModulus &operator=(CoeffModulus &&assign) = default;
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 

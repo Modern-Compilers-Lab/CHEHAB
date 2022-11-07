@@ -1,51 +1,45 @@
 #pragma once
 
-#include "seal/seal.h"
 #include "ufhe/api/batch_encoder.hpp"
-#include "ufhe/seal_backend/encryption_context.hpp"
-#include "ufhe/seal_backend/plaintext.hpp"
 #include <memory>
+
+namespace seal
+{
+class BatchEncoder;
+} // namespace seal
 
 namespace ufhe
 {
 namespace seal_backend
 {
+  class EncryptionContext;
+
   class BatchEncoder : public api::BatchEncoder
   {
   public:
-    BatchEncoder(const EncryptionContext &context)
-      : underlying_(std::make_shared<seal::BatchEncoder>(context.underlying()))
-    {}
+    explicit BatchEncoder(const EncryptionContext &context);
+
+    BatchEncoder(const BatchEncoder &copy) = default;
+
+    BatchEncoder &operator=(const BatchEncoder &assign) = default;
+
+    BatchEncoder(BatchEncoder &&source) = default;
+
+    BatchEncoder &operator=(BatchEncoder &&assign) = default;
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline api::implementation_level level() const override { return api::implementation_level::low_level; }
 
-    inline std::size_t slot_count() const override { return underlying().slot_count(); }
+    std::size_t slot_count() const override;
 
-    inline void encode(const std::vector<std::uint64_t> &values_vector, api::Plaintext &destination) const override
-    {
-      check_strict_compatibility(destination);
-      underlying().encode(values_vector, *static_cast<Plaintext &>(destination).underlying_);
-    }
+    void encode(const std::vector<std::uint64_t> &values_vector, api::Plaintext &destination) const override;
 
-    inline void encode(const std::vector<std::int64_t> &values_vector, api::Plaintext &destination) const override
-    {
-      check_strict_compatibility(destination);
-      underlying().encode(values_vector, *static_cast<Plaintext &>(destination).underlying_);
-    }
+    void encode(const std::vector<std::int64_t> &values_vector, api::Plaintext &destination) const override;
 
-    inline void decode(const api::Plaintext &plain, std::vector<std::uint64_t> &destination) const override
-    {
-      check_strict_compatibility(plain);
-      underlying().decode(static_cast<const Plaintext &>(plain).underlying(), destination);
-    }
+    void decode(const api::Plaintext &plain, std::vector<std::uint64_t> &destination) const override;
 
-    inline void decode(const api::Plaintext &plain, std::vector<std::int64_t> &destination) const override
-    {
-      check_strict_compatibility(plain);
-      underlying().decode(static_cast<const Plaintext &>(plain).underlying(), destination);
-    }
+    void decode(const api::Plaintext &plain, std::vector<std::int64_t> &destination) const override;
 
     inline const seal::BatchEncoder &underlying() const { return *underlying_; }
 

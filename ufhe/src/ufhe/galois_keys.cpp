@@ -1,4 +1,5 @@
 #include "ufhe/galois_keys.hpp"
+#include "ufhe/seal_backend/galois_keys.hpp"
 
 namespace ufhe
 {
@@ -57,5 +58,10 @@ GaloisKeys &GaloisKeys::operator=(const GaloisKeys &assign)
     throw std::invalid_argument("unsupported backend");
     break;
   }
+}
+
+std::size_t GaloisKeys::size() const
+{
+  return underlying().size();
 }
 } // namespace ufhe

@@ -1,4 +1,7 @@
 #include "ufhe/encryption_context.hpp"
+#include "ufhe/encryption_params.hpp"
+#include "ufhe/seal_backend/encryption_context.hpp"
+#include "ufhe/seal_backend/encryption_params.hpp"
 
 namespace ufhe
 {

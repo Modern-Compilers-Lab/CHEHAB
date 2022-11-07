@@ -28,13 +28,24 @@ namespace api
 
     AbstractType &operator=(AbstractType &&assign) = default;
 
-    template <class T>
-    inline void check_strict_compatibility(const T &t) const
+    template <class TConcrete, class TAbstract>
+    const TConcrete &safe_static_cast(const TAbstract &arg) const
     {
-      if (backend() != t.backend())
+      if (backend() != arg.backend())
         throw std::invalid_argument("argument with different backend");
-      if (level() != t.level())
+      if (level() != arg.level())
         throw std::invalid_argument("argument with different implementation level");
+      return static_cast<const TConcrete &>(arg);
+    }
+
+    template <class TConcrete, class TAbstract>
+    TConcrete &safe_static_cast(TAbstract &arg) const
+    {
+      if (backend() != arg.backend())
+        throw std::invalid_argument("argument with different backend");
+      if (level() != arg.level())
+        throw std::invalid_argument("argument with different implementation level");
+      return static_cast<TConcrete &>(arg);
     }
   };
 } // namespace api

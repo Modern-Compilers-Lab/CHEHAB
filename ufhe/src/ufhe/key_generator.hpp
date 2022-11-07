@@ -1,46 +1,39 @@
 #pragma once
 
-#include "seal_backend/key_generator.hpp"
 #include "ufhe/api/key_generator.hpp"
-#include "ufhe/encryption_context.hpp"
-#include "ufhe/galois_keys.hpp"
-#include "ufhe/public_key.hpp"
-#include "ufhe/relin_keys.hpp"
 #include "ufhe/secret_key.hpp"
 #include <memory>
 
 namespace ufhe
 {
+class EncryptionContext;
+
 class KeyGenerator : public api::KeyGenerator
 {
 public:
-  KeyGenerator(EncryptionContext &context);
+  explicit KeyGenerator(EncryptionContext &context);
 
   KeyGenerator(const EncryptionContext &context, const SecretKey &secret_key);
+
+  KeyGenerator(const KeyGenerator &copy);
+
+  KeyGenerator &operator=(const KeyGenerator &assign);
+
+  KeyGenerator(KeyGenerator &&source) = default;
+
+  KeyGenerator &operator=(KeyGenerator &&assign) = default;
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline api::implementation_level level() const override { return api::implementation_level::high_level; }
 
-  inline const SecretKey &secret_key() const override { return secret_key_; }
+  const SecretKey &secret_key() const override;
 
-  inline void create_public_key(api::PublicKey &destination) const override
-  {
-    check_strict_compatibility(destination);
-    underlying().create_public_key(*static_cast<PublicKey &>(destination).underlying_);
-  }
+  void create_public_key(api::PublicKey &destination) const override;
 
-  inline void create_relin_keys(api::RelinKeys &destination) const override
-  {
-    check_strict_compatibility(destination);
-    underlying().create_relin_keys(*static_cast<RelinKeys &>(destination).underlying_);
-  }
+  void create_relin_keys(api::RelinKeys &destination) const override;
 
-  inline void create_galois_keys(api::GaloisKeys &destination) const override
-  {
-    check_strict_compatibility(destination);
-    underlying().create_galois_keys(*static_cast<GaloisKeys &>(destination).underlying_);
-  }
+  void create_galois_keys(api::GaloisKeys &destination) const override;
 
   inline const api::KeyGenerator &underlying() const { return *underlying_; }
 

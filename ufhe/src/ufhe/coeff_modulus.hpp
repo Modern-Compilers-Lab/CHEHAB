@@ -1,9 +1,7 @@
 #pragma once
 
 #include "ufhe/api/coeff_modulus.hpp"
-#include "ufhe/config.hpp"
 #include "ufhe/modulus.hpp"
-#include "ufhe/seal_backend/coeff_modulus.hpp"
 #include <memory>
 #include <vector>
 
@@ -14,7 +12,15 @@ class CoeffModulus : public api::CoeffModulus
   friend class EncryptionParams;
 
 public:
-  CoeffModulus(const std::vector<Modulus> &moduli);
+  explicit CoeffModulus(const std::vector<Modulus> &moduli);
+
+  CoeffModulus(const CoeffModulus &copy);
+
+  CoeffModulus &operator=(const CoeffModulus &assign);
+
+  CoeffModulus(CoeffModulus &&source) = default;
+
+  CoeffModulus &operator=(CoeffModulus &&assign) = default;
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
@@ -25,7 +31,7 @@ public:
   inline const api::CoeffModulus &underlying() const { return *underlying_; }
 
 private:
-  CoeffModulus() : moduli_({}) {}
+  CoeffModulus();
 
   explicit CoeffModulus(const api::CoeffModulus &coeff_modulus);
 

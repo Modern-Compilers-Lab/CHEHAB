@@ -2,32 +2,17 @@ cmake_minimum_required(VERSION 3.13)
 
 project (UFHE VERSION 1.0 LANGUAGES CXX)
 
-add_library(${PROJECT_NAME}
-    ${PROJECT_SOURCE_DIR}/src/ufhe/seal_backend/coeff_modulus.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/coeff_modulus.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/batch_encoder.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/ciphertext.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/coeff_modulus.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/config.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/decryptor.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/encryption_context.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/encryption_params.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/encryptor.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/evaluator.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/galois_keys.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/key_generator.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/modulus.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/plaintext.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/public_key.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/relin_keys.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/scheme.cpp
-    ${PROJECT_SOURCE_DIR}/src/ufhe/secret_key.cpp
-)
+set(UFHE_SOURCE_FILES "")
 
-target_include_directories(${PROJECT_NAME} PUBLIC src)
+add_subdirectory(src/ufhe/seal_backend)
+add_subdirectory(src/ufhe)
+
+add_library(ufhe STATIC ${UFHE_SOURCE_FILES})
+
+target_include_directories(ufhe PUBLIC src)
 
 find_package(SEAL 4.0.0 EXACT REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC SEAL::seal)
+target_link_libraries(ufhe PUBLIC SEAL::seal)
 
 add_subdirectory(examples/rotations)
 add_subdirectory(examples/simple_addition)

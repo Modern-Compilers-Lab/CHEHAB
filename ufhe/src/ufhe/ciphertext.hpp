@@ -2,39 +2,43 @@
 
 #include "ufhe/api/ciphertext.hpp"
 #include "ufhe/config.hpp"
-#include "ufhe/encryption_context.hpp"
-#include "ufhe/seal_backend/ciphertext.hpp"
 #include <memory>
 
 namespace ufhe
 {
+class EncryptionContext;
+
 class Ciphertext : public api::Ciphertext
 {
   friend class Encryptor;
   friend class Evaluator;
 
 public:
-  Ciphertext(api::backend_type backend = Config::backend());
+  explicit Ciphertext(api::backend_type backend = Config::backend());
 
-  Ciphertext(const EncryptionContext &context);
+  explicit Ciphertext(const EncryptionContext &context);
 
   Ciphertext(const Ciphertext &copy);
 
   Ciphertext &operator=(const Ciphertext &assign);
 
+  Ciphertext(Ciphertext &&source) = default;
+
+  Ciphertext &operator=(Ciphertext &&assign) = default;
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline api::implementation_level level() const override { return api::implementation_level::high_level; }
 
-  inline std::size_t coeff_modulus_size() const override { return underlying().coeff_modulus_size(); }
+  std::size_t coeff_modulus_size() const override;
 
-  inline std::size_t poly_modulus_degree() const override { return underlying().poly_modulus_degree(); }
+  std::size_t poly_modulus_degree() const override;
 
-  inline std::size_t size() const override { return underlying().size(); }
+  std::size_t size() const override;
 
-  inline bool is_transparent() const override { return underlying().is_transparent(); }
+  bool is_transparent() const override;
 
-  inline double &scale() const override { return underlying().scale(); }
+  double &scale() const override;
 
   inline const api::Ciphertext &underlying() const { return *underlying_; }
 

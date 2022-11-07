@@ -1,8 +1,6 @@
 #pragma once
 
 #include "ufhe/api/scheme.hpp"
-#include "ufhe/config.hpp"
-#include "ufhe/seal_backend/scheme.hpp"
 #include <memory>
 
 namespace ufhe
@@ -12,13 +10,21 @@ class Scheme : public api::Scheme
 public:
   Scheme(api::backend_type backend, api::scheme_type scheme);
 
-  Scheme(api::scheme_type scheme): Scheme(Config::backend(), scheme){}
+  explicit Scheme(api::scheme_type scheme);
+
+  Scheme(const Scheme &copy) = default;
+
+  Scheme &operator=(const Scheme &assign) = default;
+
+  Scheme(Scheme &&source) = default;
+
+  Scheme &operator=(Scheme &&assign) = default;
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline api::implementation_level level() const override { return api::implementation_level::high_level; }
 
-  inline api::scheme_type type() const override { return underlying().type(); }
+  api::scheme_type type() const override;
 
   inline const api::Scheme &underlying() const { return *underlying_; }
 

@@ -1,8 +1,12 @@
 #pragma once
 
-#include "seal/seal.h"
 #include "ufhe/api/public_key.hpp"
 #include <memory>
+
+namespace seal
+{
+class PublicKey;
+} // namespace seal
 
 namespace ufhe
 {
@@ -13,15 +17,15 @@ namespace seal_backend
     friend class KeyGenerator;
 
   public:
-    PublicKey() : underlying_(std::make_shared<seal::PublicKey>()) {}
+    PublicKey();
 
-    PublicKey(const PublicKey &copy) : underlying_(std::make_shared<seal::PublicKey>(copy.underlying())) {}
+    PublicKey(const PublicKey &copy);
 
-    PublicKey &operator=(const PublicKey &assign)
-    {
-      underlying_ = std::make_shared<seal::PublicKey>(assign.underlying());
-      return *this;
-    }
+    PublicKey &operator=(const PublicKey &assign);
+
+    PublicKey(PublicKey &&source) = default;
+
+    PublicKey &operator=(PublicKey &&assign) = default;
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 

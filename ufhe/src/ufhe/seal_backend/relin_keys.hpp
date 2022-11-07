@@ -1,8 +1,12 @@
 #pragma once
 
-#include "seal/seal.h"
 #include "ufhe/api/relin_keys.hpp"
 #include <memory>
+
+namespace seal
+{
+class RelinKeys;
+} // namespace seal
 
 namespace ufhe
 {
@@ -13,21 +17,21 @@ namespace seal_backend
     friend class KeyGenerator;
 
   public:
-    RelinKeys() : underlying_(std::make_shared<seal::RelinKeys>()) {}
+    RelinKeys();
 
-    RelinKeys(const RelinKeys &copy) : underlying_(std::make_shared<seal::RelinKeys>(copy.underlying())) {}
+    RelinKeys(const RelinKeys &copy);
 
-    RelinKeys &operator=(const RelinKeys &assign)
-    {
-      underlying_ = std::make_shared<seal::RelinKeys>(assign.underlying());
-      return *this;
-    }
+    RelinKeys &operator=(const RelinKeys &assign);
+
+    RelinKeys(RelinKeys &&source) = default;
+
+    RelinKeys &operator=(RelinKeys &&assign) = default;
 
     inline api::backend_type backend() const override { return api::backend_type::seal; }
 
     inline api::implementation_level level() const override { return api::implementation_level::low_level; }
 
-    inline std::size_t size() const override { return underlying().size(); }
+    std::size_t size() const override;
 
     inline const seal::RelinKeys &underlying() const { return *underlying_; }
 

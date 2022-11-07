@@ -1,10 +1,7 @@
 #pragma once
 
 #include "ufhe/api/modulus.hpp"
-#include "ufhe/config.hpp"
-#include "ufhe/seal_backend/modulus.hpp"
 #include <memory>
-#include <stdexcept>
 
 namespace ufhe
 {
@@ -16,55 +13,31 @@ class Modulus : public api::Modulus
 public:
   Modulus(api::backend_type backend, std::uint64_t value);
 
-  Modulus(std::uint64_t value) : Modulus(Config::backend(), value) {}
+  Modulus(std::uint64_t value);
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline api::implementation_level level() const override { return api::implementation_level::high_level; }
 
-  inline int bit_count() const override { return underlying().bit_count(); }
+  int bit_count() const override;
 
-  inline std::uint64_t value() const override { return underlying().value(); }
+  std::uint64_t value() const override;
 
-  inline bool is_prime() const override { return underlying().is_prime(); }
+  bool is_prime() const override;
 
-  inline bool operator==(const api::Modulus &compare) const override
-  {
-    check_strict_compatibility(compare);
-    return underlying() == static_cast<const Modulus &>(compare).underlying();
-  }
+  bool operator==(const api::Modulus &compare) const override;
 
-  inline bool operator!=(const api::Modulus &compare) const override
-  {
-    check_strict_compatibility(compare);
-    return underlying() != static_cast<const Modulus &>(compare).underlying();
-  }
+  bool operator!=(const api::Modulus &compare) const override;
 
-  inline bool operator<(const api::Modulus &compare) const override
-  {
-    check_strict_compatibility(compare);
-    return underlying() < static_cast<const Modulus &>(compare).underlying();
-  }
+  bool operator<(const api::Modulus &compare) const override;
 
-  inline bool operator<=(const api::Modulus &compare) const override
-  {
-    check_strict_compatibility(compare);
-    return underlying() <= static_cast<const Modulus &>(compare).underlying();
-  }
+  bool operator<=(const api::Modulus &compare) const override;
 
-  inline bool operator>(const api::Modulus &compare) const override
-  {
-    check_strict_compatibility(compare);
-    return underlying() > static_cast<const Modulus &>(compare).underlying();
-  }
+  bool operator>(const api::Modulus &compare) const override;
 
-  inline bool operator>=(const api::Modulus &compare) const override
-  {
-    check_strict_compatibility(compare);
-    return underlying() >= static_cast<const Modulus &>(compare).underlying();
-  }
+  bool operator>=(const api::Modulus &compare) const override;
 
-  inline std::uint64_t reduce(std::uint64_t value) const override { return underlying().reduce(value); }
+  std::uint64_t reduce(std::uint64_t value) const override;
 
   inline const api::Modulus &underlying() const { return *underlying_; }
 

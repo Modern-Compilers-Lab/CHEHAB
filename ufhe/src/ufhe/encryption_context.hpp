@@ -1,17 +1,24 @@
 #pragma once
 
 #include "ufhe/api/encryption_context.hpp"
-#include "ufhe/config.hpp"
-#include "ufhe/encryption_params.hpp"
-#include "ufhe/seal_backend/encryption_context.hpp"
 #include <memory>
 
 namespace ufhe
 {
+class EncryptionParams;
+
 class EncryptionContext : public api::EncryptionContext
 {
 public:
-  EncryptionContext(const EncryptionParams &params);
+  explicit EncryptionContext(const EncryptionParams &params);
+
+  EncryptionContext(const EncryptionContext &copy);
+
+  EncryptionContext &operator=(const EncryptionContext &assign);
+
+  EncryptionContext(EncryptionContext &&source) = default;
+
+  EncryptionContext &operator=(EncryptionContext &&assign) = default;
 
   inline api::backend_type backend() const override { return underlying().backend(); }
 
@@ -22,5 +29,4 @@ public:
 private:
   std::shared_ptr<api::EncryptionContext> underlying_;
 };
-
 } // namespace ufhe

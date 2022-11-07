@@ -2,7 +2,6 @@
 
 #include "ufhe/api/galois_keys.hpp"
 #include "ufhe/config.hpp"
-#include "ufhe/seal_backend/galois_keys.hpp"
 #include <memory>
 
 namespace ufhe
@@ -12,17 +11,21 @@ class GaloisKeys : public api::GaloisKeys
   friend class KeyGenerator;
 
 public:
-  GaloisKeys(api::backend_type backend = Config::backend());
+  explicit GaloisKeys(api::backend_type backend = Config::backend());
 
   GaloisKeys(const GaloisKeys &copy);
 
   GaloisKeys &operator=(const GaloisKeys &assign);
 
+  GaloisKeys(GaloisKeys &&source) = default;
+
+  GaloisKeys &operator=(GaloisKeys &&assign) = default;
+
   inline api::backend_type backend() const override { return underlying().backend(); }
 
   inline api::implementation_level level() const override { return api::implementation_level::high_level; }
 
-  inline std::size_t size() const override { return underlying().size(); }
+  std::size_t size() const override;
 
   inline const api::GaloisKeys &underlying() const { return *underlying_; }
 

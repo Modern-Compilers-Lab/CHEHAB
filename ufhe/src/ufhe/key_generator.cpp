@@ -1,4 +1,10 @@
 #include "ufhe/key_generator.hpp"
+#include "ufhe/encryption_context.hpp"
+#include "ufhe/galois_keys.hpp"
+#include "ufhe/public_key.hpp"
+#include "ufhe/relin_keys.hpp"
+#include "ufhe/seal_backend/encryption_context.hpp"
+#include "ufhe/seal_backend/key_generator.hpp"
 
 namespace ufhe
 {
@@ -44,5 +50,25 @@ KeyGenerator::KeyGenerator(const EncryptionContext &context, const SecretKey &se
     break;
   }
   secret_key_ = SecretKey(secret_key.underlying());
+}
+
+const SecretKey &KeyGenerator::secret_key() const
+{
+  return secret_key_;
+}
+
+void KeyGenerator::create_public_key(api::PublicKey &destination) const
+{
+  underlying().create_public_key(*safe_static_cast<PublicKey &>(destination).underlying_);
+}
+
+void KeyGenerator::create_relin_keys(api::RelinKeys &destination) const
+{
+  underlying().create_relin_keys(*safe_static_cast<RelinKeys &>(destination).underlying_);
+}
+
+void KeyGenerator::create_galois_keys(api::GaloisKeys &destination) const
+{
+  underlying().create_galois_keys(*safe_static_cast<GaloisKeys &>(destination).underlying_);
 }
 } // namespace ufhe
