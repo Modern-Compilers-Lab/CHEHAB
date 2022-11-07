@@ -170,6 +170,11 @@ void Translator::translate_unary_operation(
   {
     write_assign_operation(os, op_identifier, rhs_identifier, term_ptr->get_term_type());
   }
+  else if (term_ptr->get_opcode() == ir::OpCode::negate)
+  {
+    os << "Ciphertext " << term_ptr->get_label() << ";\n";
+    os << "negate(" << term_ptr->get_label() << "," << (*term_ptr->get_operands())[0]->get_label() << ");\n";
+  }
 }
 
 void Translator::translate_term(const Ptr &term, std::ofstream &os)
@@ -223,7 +228,7 @@ void Translator::translate(std::ofstream &os)
   os << "{" << '\n';
 
   const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes();
-  /*
+
   for (auto &node_ptr : nodes_ptr)
   {
     // std::cout << node_ptr->get_parents_labels().size() << "\n";
@@ -233,7 +238,7 @@ void Translator::translate(std::ofstream &os)
   {
     write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
   }
-  */
+
   os << "}" << '\n';
 }
 

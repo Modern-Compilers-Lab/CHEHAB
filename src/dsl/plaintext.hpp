@@ -42,7 +42,7 @@ public:
 
   Plaintext &operator-=(const Plaintext &rhs);
 
-  Plaintext operator-();
+  // Plaintext operator-();
 
   friend Plaintext operator+(const Plaintext &lhs, const Plaintext &rhs);
 
@@ -50,7 +50,7 @@ public:
 
   friend Plaintext operator*(const Plaintext &lhs, const Plaintext &rhs);
 
-  friend Plaintext operator-(const Plaintext &rhs);
+  // friend Plaintext operator-(const Plaintext &rhs);
 
   void reduce(std::uint64_t plaintext_modulus);
 

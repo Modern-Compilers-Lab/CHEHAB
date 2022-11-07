@@ -106,10 +106,12 @@ Plaintext &Plaintext::operator-=(const Plaintext &rhs)
     throw(datatype::eval_not_supported);
 }
 
+/*
 Plaintext Plaintext::operator-()
 {
   return operate_unary<Plaintext, Plaintext>(*this, ir::OpCode::negate, ir::plaintextType);
 }
+*/
 
 Plaintext operator+(const Plaintext &lhs, const Plaintext &rhs)
 {
@@ -141,9 +143,11 @@ Plaintext operator-(const Plaintext &lhs, const Plaintext &rhs)
     throw(datatype::eval_not_supported);
 }
 
+/*
 Plaintext operator-(Plaintext &rhs)
 {
   return operate_unary<Plaintext, Plaintext>(rhs, ir::OpCode::negate, ir::plaintextType);
 }
+*/
 
 } // namespace fhecompiler

@@ -25,6 +25,11 @@ int main()
 
   try
   {
+
+    /*
+      Scalars as inputs (yes or no ?)
+    */
+
     fhecompiler::init("test1", 2 << 14, fhecompiler::Scheme::bfv);
 
     fhecompiler::Ciphertext ct1("ct1", VarType::input);
@@ -40,15 +45,18 @@ int main()
     fhecompiler::params.set_polynomial_modulus_degree(1 << 15);
 
     fhecompiler::Ciphertext ct2 = fhecompiler::Ciphertext::encrypt(pt1);
+
     fhecompiler::Ciphertext ct3 = fhecompiler::Ciphertext::encrypt(pt1);
 
-    output1 = ct1 * ct2 * ct3;
+    output1 = ct2 * 2;
+
+    /*
+      User
+    */
 
     /*
     fhecompiler::Ciphertext output2("output2", VarType::output);
-
     output2 = output1 * output1;
-
     output2 *= output2;
     */
 

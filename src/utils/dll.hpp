@@ -51,6 +51,12 @@ private:
 
     DoublyLinkedListNode &operator=(DoublyLinkedListNode &&move_node) = default;
 
+    DoublyLinkedListNode(const std::vector<T> &v)
+    {
+      for (auto &e : v)
+        push_back(e);
+    }
+
     const T &get_data() const { return data; }
 
     /* returns next node pointer if it exist, otherwise it return nullptr */

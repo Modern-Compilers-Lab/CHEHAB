@@ -73,10 +73,10 @@ INLINE const char *context_function_name = "create_context";
 INLINE const char *set_plain_modulus_intruction = "set_plain_modulus";
 INLINE const char *set_coef_modulus_instruction = "set_coeff_modulus";
 INLINE const char *set_poly_modulus_degree_instruction = "set_poly_modulus_degree";
-INLINE const char *encrypted_inputs_class_literal = "EncryptedInputs";
-INLINE const char *encoded_inputs_class_literal = "EncodedInputs";
-INLINE const char *encoded_outputs_class_literal = "EncodedOutputs";
-INLINE const char *encrypted_outputs_class_literal = "EncryptedOutputs";
+INLINE const char *encrypted_inputs_class_literal = "std::unordered_map<std::string, Ciphertext>";
+INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::string, Plaintext>";
+INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, Plaintext>";
+INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, Ciphertext>";
 
 INLINE std::unordered_map<ir::TermType, const char *> outputs_class_identifier = {
   {ir::plaintextType, "encoded_outputs"}, {ir::ciphertextType, "encrypted_outputs"}};
