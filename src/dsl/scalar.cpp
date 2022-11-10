@@ -44,12 +44,11 @@ Scalar::Scalar() : label(datatype::sc_label_prefix + std::to_string(Scalar::scal
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, this->data}}});
 }
 
-Scalar::Scalar(const std::string &tag, VarType var_type)
-  : label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
+Scalar::Scalar(const std::string &tag) : label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
 
   // we are expecting from the user to provide a tag for input
-  operate_in_constants_table(this->label, tag, var_type);
+  operate_in_constants_table(this->label, tag, VarType::constant);
 }
 
 Scalar &Scalar::operator=(const Scalar &sc_copy)
@@ -64,7 +63,7 @@ Scalar::Scalar(const Scalar &sc_copy) : label(datatype::sc_label_prefix + std::t
   program->insert_operation_node_in_dataflow(ir::OpCode::assign, {sc_copy_node_ptr}, this->label, ir::scalarType);
   // std::cout << this->label << " = " << sc_copy.get_label() << "\n";
 }
-
+/*
 Scalar &Scalar::operator+=(const Scalar &rhs)
 {
 
@@ -83,11 +82,14 @@ Scalar &Scalar::operator-=(const Scalar &rhs)
   compound_operate<Scalar, Scalar>(*this, rhs, ir::OpCode::sub, ir::scalarType);
   return *this;
 }
+*/
 
 Scalar Scalar::operator-()
 {
   return operate_unary<Scalar, Scalar>(*this, ir::OpCode::negate, ir::scalarType);
 }
+
+/*
 
 Scalar operator+(const Scalar &lhs, const Scalar &rhs)
 {
@@ -104,6 +106,8 @@ Scalar operator-(const Scalar &lhs, const Scalar &rhs)
 
   return operate_binary<Scalar, Scalar, Scalar>(lhs, rhs, ir::OpCode::sub, ir::scalarType);
 }
+
+*/
 
 Scalar operator-(const Scalar &rhs)
 {

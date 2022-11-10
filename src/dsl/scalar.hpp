@@ -29,7 +29,7 @@ public:
   Scalar(uint64_t _data);
   Scalar(double _data);
   Scalar(int _data) : Scalar((int64_t)_data) {}
-  Scalar(const std::string &tag, VarType var_type = VarType::constant);
+  Scalar(const std::string &tag);
 
   Scalar(const Scalar &sc_copy);
   Scalar &operator=(const Scalar &sc_copy);
@@ -37,21 +37,21 @@ public:
   Scalar(Scalar &&sc_move) = default;
   Scalar &operator=(Scalar &&sc_move) = default;
 
-  Scalar &operator+=(const Scalar &rhs);
+  // Scalar &operator+=(const Scalar &rhs);
 
-  Scalar &operator*=(const Scalar &rhs);
+  // Scalar &operator*=(const Scalar &rhs);
 
-  Scalar &operator-=(const Scalar &rhs);
+  // Scalar &operator-=(const Scalar &rhs);
 
   Scalar operator-();
 
-  friend Scalar operator+(const Scalar &lhs, const Scalar &rhs);
+  // friend Scalar operator+(const Scalar &lhs, const Scalar &rhs);
 
-  friend Scalar operator-(const Scalar &lhs, const Scalar &rhs);
+  // friend Scalar operator-(const Scalar &lhs, const Scalar &rhs);
 
-  friend Scalar operator*(const Scalar &lhs, const Scalar &rhs);
+  // friend Scalar operator*(const Scalar &lhs, const Scalar &rhs);
 
-  friend Scalar operator-(const Scalar &rhs);
+  // friend Scalar operator-(const Scalar &rhs);
 
   void reduce(std::uint64_t plaintext_modulus);
 
