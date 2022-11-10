@@ -32,10 +32,6 @@ int main()
 
     fhecompiler::init("test1", 2 << 14, fhecompiler::Scheme::bfv);
 
-    fhecompiler::Ciphertext ct1("ct1", VarType::input);
-
-    fhecompiler::Plaintext pt1("pt1", VarType::input);
-
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
     // fhecompiler::params.set_coef_modulus({50, 50, 50});
@@ -44,29 +40,18 @@ int main()
     // fhecompiler::params.set_plaintext_modulus_bit_length(20);
     fhecompiler::params.set_polynomial_modulus_degree(1 << 15);
 
-    fhecompiler::Ciphertext ct2 = fhecompiler::Ciphertext::encrypt(pt1);
+    fhecompiler::Plaintext pt1(std::vector<int64_t>({10}));
 
-    fhecompiler::Ciphertext ct3 = fhecompiler::Ciphertext::encrypt(pt1);
+    fhecompiler::Plaintext pt2(std::vector<int64_t>({11}));
 
-    output1 = ct2 * 2;
+    fhecompiler::Ciphertext x = fhecompiler::Ciphertext::encrypt(pt1);
+    fhecompiler::Ciphertext y = fhecompiler::Ciphertext::encrypt(pt2);
 
-    /*
-      User
-    */
+    // 4x^4 + 8x^3 + 8x^2 + 8x + 4
 
-    /*
-    fhecompiler::Ciphertext output2("output2", VarType::output);
-    output2 = output1 * output1;
-    output2 *= output2;
-    */
+    // Answer: The expansion of (x-y)3 is x3 - y3 - 3x2y + 3xy2
 
-    // output1 += ct1;
-
-    /*
-    output1 >>= 12;
-
-    output1 *= 13244;
-    */
+    output1 = exponentiate(exponentiate(x, 3) - exponentiate(y, 3) - 3 * square(x) * y + 3 * x * square(y), 3);
 
     fhecompiler::compile("test1.hpp");
   }

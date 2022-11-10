@@ -46,7 +46,7 @@ INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
 /* literals related to api/backend */
 INLINE const char *params_type_literal = "EncryptionParameters";
 INLINE const char *params_identifier_literal = "params";
-INLINE const char *scalar_int = "uint64_t";
+INLINE const char *scalar_int = "int64_t";
 INLINE const char *scalar_float = "double";
 INLINE const char *encode_literal = "encode";
 INLINE const char *decode_literal = "decode";
@@ -194,6 +194,13 @@ public:
   {
     is_init = true;
     os << evaluator_type_literal << " " << evaluator_identifier << "(" << context_identifier << ");" << '\n';
+  }
+
+  void write_square_operation(
+    std::ostream &os, ir::OpCode opcode, std::string &destination_id, const std::string &lhs_id, ir::TermType type)
+  {
+    os << types_map[ir::ciphertextType] << " " << destination_id << ";";
+    os << evaluator_identifier << "." << ops_map[opcode] << "(" << lhs_id << ", " << destination_id << ");";
   }
 
   void write_binary_operation(

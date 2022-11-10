@@ -85,9 +85,9 @@ Ciphertext &Ciphertext::operator-=(const Ciphertext &rhs)
   return *this;
 }
 
-Ciphertext &Ciphertext::square(const Scalar &rhs)
+Ciphertext &Ciphertext::square()
 {
-  compound_operate<Ciphertext, Scalar>(*this, rhs, ir::OpCode::square, ir::ciphertextType);
+  compound_operate_unary<Ciphertext, Ciphertext>(*this, ir::OpCode::square, ir::ciphertextType);
   return *this;
 }
 
@@ -133,9 +133,9 @@ Ciphertext exponentiate(const Ciphertext &lhs, uint64_t exponent)
   return operate_with_raw<Ciphertext>(lhs, std::to_string(exponent), ir::OpCode::exponentiate, ir::ciphertextType);
 }
 
-Ciphertext square(const Ciphertext &lhs, const Scalar &rhs)
+Ciphertext square(const Ciphertext &lhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::square, ir::ciphertextType);
+  return operate_unary<Ciphertext, Ciphertext>(lhs, ir::OpCode::square, ir::ciphertextType);
 }
 
 Ciphertext operator<<(const Ciphertext &lhs, int steps)

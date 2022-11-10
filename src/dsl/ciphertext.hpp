@@ -46,7 +46,7 @@ public:
 
   Ciphertext &operator>>=(int steps);
 
-  Ciphertext &square(const Scalar &rhs);
+  Ciphertext &square();
 
   Ciphertext &exponentiate(uint64_t rhs);
 
@@ -68,7 +68,7 @@ public:
 
   friend Ciphertext exponentiate(const Ciphertext &lhs, uint64_t rhs);
 
-  friend Ciphertext square(const Ciphertext lhs, const Scalar &rhs);
+  friend Ciphertext square(const Ciphertext &lhs);
 
   friend Ciphertext rotate(const Ciphertext &rhs, uint64_t steps);
 

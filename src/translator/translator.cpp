@@ -95,7 +95,7 @@ void Translator::translate_constant_table_entry(
 
       if (auto value = std::get_if<int64_t>(&scalar_value))
       {
-        uint64_t casted_value = static_cast<uint64_t>(*value);
+        int64_t casted_value = static_cast<int64_t>(*value);
         encoding_writer.write_scalar_encoding(
           os, tag, std::to_string(casted_value), type_str, std::to_string(encryption_parameters->poly_modulus_degree));
       }
@@ -174,6 +174,16 @@ void Translator::translate_unary_operation(
   {
     os << "Ciphertext " << term_ptr->get_label() << ";\n";
     os << "negate(" << term_ptr->get_label() << "," << (*term_ptr->get_operands())[0]->get_label() << ");\n";
+  }
+  else if (term_ptr->get_opcode() == ir::OpCode::square)
+  {
+
+    if (!evaluation_writer.is_initialized())
+      evaluation_writer.init(os);
+
+    std::string term_label = term_ptr->get_label();
+    evaluation_writer.write_square_operation(
+      os, ir::OpCode::square, term_label, (*term_ptr->get_operands())[0]->get_label(), ir::ciphertextType);
   }
 }
 

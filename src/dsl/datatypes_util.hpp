@@ -79,6 +79,17 @@ T1 operate_unary(const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
   return operate<T1>(opcode, {rhs_node_ptr}, term_type);
 }
 
+template <typename T1, typename T2>
+void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
+{
+  auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
+  if (rhs_node_ptr == nullptr)
+  {
+    throw("operand is not defined, maybe it was only declared\n");
+  }
+  rhs.set_label(operate<T1>(opcode, {rhs_node_ptr}, term_type).get_label());
+}
+
 template <typename T>
 T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 {
