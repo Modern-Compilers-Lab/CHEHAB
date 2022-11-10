@@ -52,6 +52,10 @@ public:
 
   Ciphertext &rotate(int steps);
 
+  Ciphertext &rotate_rows(int steps);
+
+  Ciphertext &rotate_columns();
+
   Ciphertext operator-();
 
   friend Ciphertext operator+(const Ciphertext &lhs, const Ciphertext &rhs);
@@ -71,6 +75,10 @@ public:
   friend Ciphertext square(const Ciphertext &lhs);
 
   friend Ciphertext rotate(const Ciphertext &rhs, uint64_t steps);
+
+  friend Ciphertext rotate_rows(const Ciphertext &lhs, int steps);
+
+  friend Ciphertext rotate_columns(const Ciphertext &lhs);
 
   void reduce(std::uint64_t plaintext_modulus);
 

@@ -59,6 +59,10 @@ public:
   // this constructure is useful in case of rawData where we store it in the lable as an int
   Term(const std::string &symbol, TermType term_type) : label(symbol), type(term_type) {}
 
+  void clear_operands() { operands = std::nullopt; }
+
+  void set_operands(const std::vector<Ptr> &_operands) { operands = _operands; }
+
   void insert_parent_label(const std::string &label);
 
   bool merge_with_node(Ptr node_to_merge_with);

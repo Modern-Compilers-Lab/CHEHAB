@@ -18,6 +18,13 @@ enum class VarType
   temp
 };
 
+enum class Backend
+{
+  SEAL,
+  HELib,
+  OpenFHE
+};
+
 enum class sec_level_type
 {
   none,
@@ -25,6 +32,5 @@ enum class sec_level_type
   tc192,
   tc256
 };
-
 
 } // namespace fhecompiler

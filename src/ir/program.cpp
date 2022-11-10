@@ -20,6 +20,15 @@ Ptr Program::insert_operation_node_in_dataflow(
 
 /* This function deletes only if it is posssible */
 
+void Program::set_node_operands(const std::string &node_label, const std::vector<Ptr> &new_operands)
+{
+  auto node_ptr = find_node_in_dataflow(node_label);
+  if (node_ptr == nullptr)
+    return;
+
+  node_ptr->set_operands(new_operands);
+}
+
 Ptr Program::find_node_in_dataflow(const std::string &label) const
 {
   return this->data_flow->find_node(label);

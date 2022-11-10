@@ -39,6 +39,8 @@ INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
   {ir::OpCode::rescale, "rescale"},
   {ir::OpCode::square, "square"},
   {ir::OpCode::rotate, "rotate_vector"},
+  {ir::OpCode::rotate_rows, "rotate_rows"},
+  {ir::OpCode::rotate_columns, "rotate_columns"},
   {ir::OpCode::relinearize, "relinearize"}
 
 };
@@ -85,7 +87,10 @@ INLINE std::unordered_map<ir::TermType, const char *> inputs_class_identifier = 
   {ir::plaintextType, "encoded_inputs"}, {ir::ciphertextType, "encrypted_inputs"}};
 
 INLINE std::unordered_map<ir::OpCode, const char *> get_other_args_by_opcode = {
-  {ir::OpCode::rotate, galois_keys_identifier}, {ir::OpCode::exponentiate, relin_keys_identifier}};
+  {ir::OpCode::rotate, galois_keys_identifier},
+  {ir::OpCode::exponentiate, relin_keys_identifier},
+  {ir::OpCode::rotate_rows, galois_keys_identifier},
+  {ir::OpCode::rotate_columns, galois_keys_identifier}};
 
 enum class AccessType
 {
@@ -196,17 +201,40 @@ public:
     os << evaluator_type_literal << " " << evaluator_identifier << "(" << context_identifier << ");" << '\n';
   }
 
-  void write_square_operation(
-    std::ostream &os, ir::OpCode opcode, std::string &destination_id, const std::string &lhs_id, ir::TermType type)
+  void write_unary_operation(
+    std::ostream &os, ir::OpCode opcode, const std::string &destination_id, const std::string &lhs_id,
+    ir::TermType type)
   {
-    os << types_map[ir::ciphertextType] << " " << destination_id << ";";
-    os << evaluator_identifier << "." << ops_map[opcode] << "(" << lhs_id << ", " << destination_id << ");";
+    if (is_init == false)
+      init(os);
+
+    std::string other_args("");
+    auto it = get_other_args_by_opcode.find(opcode);
+    if (it != get_other_args_by_opcode.end())
+    {
+      other_args = it->second;
+    }
+
+    os << types_map[type] << " " << destination_id << ";";
+    if (other_args.length() == 0)
+    {
+      os << evaluator_identifier << "." << ops_map[opcode] << "(" << lhs_id << "," << destination_id << ");";
+    }
+    else
+    {
+      os << evaluator_identifier << "." << ops_map[opcode] << "(" << lhs_id << "," << other_args << ","
+         << destination_id << ");";
+    }
   }
 
   void write_binary_operation(
     std::ostream &os, ir::OpCode opcode, const std::string &destination_id, const std::string &lhs_id,
-    const std::string &rhs_id, ir::TermType type) const
+    const std::string &rhs_id, ir::TermType type)
   {
+
+    if (is_init == false)
+      init(os);
+
     os << types_map[type] << " " << destination_id << ";" << '\n';
     std::string other_args("");
     auto it = get_other_args_by_opcode.find(opcode);

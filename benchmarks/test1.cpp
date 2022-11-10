@@ -49,9 +49,12 @@ int main()
 
     // 4x^4 + 8x^3 + 8x^2 + 8x + 4
 
-    // Answer: The expansion of (x-y)3 is x3 - y3 - 3x2y + 3xy2
+    // (x-y)3 = x3 - y3 - 3x2y + 3xy2
 
-    output1 = exponentiate(exponentiate(x, 3) - exponentiate(y, 3) - 3 * square(x) * y + 3 * x * square(y), 3);
+    // output1 = exponentiate(exponentiate(x, 3) - exponentiate(y, 3) - 3 * square(x) * y + 3 * x * square(y), 3);
+
+    output1 = x + y;
+    // output1 = y;
 
     fhecompiler::compile("test1.hpp");
   }

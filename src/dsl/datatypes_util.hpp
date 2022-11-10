@@ -112,6 +112,7 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     std::string old_label = lhs.get_label();
     lhs.set_new_label();
     program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+    program->delete_node_from_outputs(old_label);
     auto new_assign_operation =
       program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
   }

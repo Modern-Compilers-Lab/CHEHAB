@@ -97,10 +97,49 @@ Ciphertext &Ciphertext::exponentiate(uint64_t exponent)
   return *this;
 }
 
+Ciphertext &Ciphertext::rotate_rows(int steps)
+{
+
+  ir::OpCode opcode;
+
+  if (program->get_targeted_backend() != fhecompiler::Backend::SEAL)
+  {
+    opcode = ir::OpCode::rotate;
+  }
+  else
+    opcode = ir::OpCode::rotate_rows;
+
+  compound_operate_with_raw<Ciphertext>(*this, std::to_string(steps), opcode, ir::ciphertextType);
+
+  return *this;
+}
+
 Ciphertext &Ciphertext::rotate(int steps)
 {
-  compound_operate_with_raw<Ciphertext>(*this, std::to_string(steps), ir::OpCode::rotate, ir::ciphertextType);
+
+  ir::OpCode opcode;
+
+  if (program->get_targeted_backend() == fhecompiler::Backend::SEAL)
+  {
+    opcode = ir::OpCode::rotate_rows;
+  }
+  else
+    opcode = ir::OpCode::rotate;
+
+  compound_operate_with_raw<Ciphertext>(*this, std::to_string(steps), opcode, ir::ciphertextType);
+
   return *this;
+}
+
+Ciphertext &Ciphertext::rotate_columns()
+{
+  if (program->get_targeted_backend() != Backend::SEAL)
+    return *this;
+  else
+  {
+    compound_operate_unary<Ciphertext, Ciphertext>(*this, ir::OpCode::rotate_columns, ir::ciphertextType);
+    return *this;
+  }
 }
 
 Ciphertext Ciphertext::operator-()
@@ -162,7 +201,39 @@ Ciphertext &Ciphertext::operator>>=(int steps)
 
 Ciphertext rotate(const Ciphertext &lhs, int steps)
 {
-  return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), ir::OpCode::rotate, ir::ciphertextType);
+
+  ir::OpCode opcode;
+
+  if (program->get_targeted_backend() == Backend::SEAL)
+  {
+    opcode = ir::OpCode::rotate_rows;
+  }
+  else
+    opcode = ir::OpCode::rotate;
+
+  return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), opcode, ir::ciphertextType);
+}
+
+Ciphertext rotate_rows(const Ciphertext &lhs, int steps)
+{
+  ir::OpCode opcode;
+
+  if (program->get_targeted_backend() != Backend::SEAL)
+  {
+    opcode = ir::OpCode::rotate;
+  }
+  else
+    opcode = ir::OpCode::rotate_rows;
+
+  return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), opcode, ir::ciphertextType);
+}
+
+Ciphertext rotate_columns(const Ciphertext &lhs)
+{
+  if (program->get_targeted_backend() != Backend::SEAL)
+    return lhs;
+
+  return operate_unary<Ciphertext, Ciphertext>(lhs, ir::OpCode::rotate_columns, ir::ciphertextType);
 }
 
 std::string Ciphertext::get_term_tag()

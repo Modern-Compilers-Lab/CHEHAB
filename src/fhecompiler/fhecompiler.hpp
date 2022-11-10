@@ -22,11 +22,13 @@ namespace fhecompiler
 
 static params_selector::EncryptionParameters params;
 
-void init(const std::string &program_name, size_t plaintext_modulus, Scheme program_scheme)
+void init(
+  const std::string &program_name, size_t plaintext_modulus, Scheme program_scheme, Backend backend = Backend::SEAL)
 {
   static ir::Program program_object(program_name);
   program = &program_object;
   program->set_scheme(program_scheme);
+  program->set_targeted_backed(backend);
 }
 
 void compile(const std::string &output_filename)

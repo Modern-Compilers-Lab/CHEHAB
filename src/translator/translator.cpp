@@ -133,10 +133,6 @@ void Translator::translate_binary_operation(
   const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
   std::ofstream &os)
 {
-
-  if (!evaluation_writer.is_initialized())
-    evaluation_writer.init(os);
-
   std::string other_args(""); // this depends on the operation
   auto it = get_other_args_by_opcode.find(term_ptr->get_opcode());
 
@@ -170,20 +166,10 @@ void Translator::translate_unary_operation(
   {
     write_assign_operation(os, op_identifier, rhs_identifier, term_ptr->get_term_type());
   }
-  else if (term_ptr->get_opcode() == ir::OpCode::negate)
+  else
   {
-    os << "Ciphertext " << term_ptr->get_label() << ";\n";
-    os << "negate(" << term_ptr->get_label() << "," << (*term_ptr->get_operands())[0]->get_label() << ");\n";
-  }
-  else if (term_ptr->get_opcode() == ir::OpCode::square)
-  {
-
-    if (!evaluation_writer.is_initialized())
-      evaluation_writer.init(os);
-
-    std::string term_label = term_ptr->get_label();
-    evaluation_writer.write_square_operation(
-      os, ir::OpCode::square, term_label, (*term_ptr->get_operands())[0]->get_label(), ir::ciphertextType);
+    evaluation_writer.write_unary_operation(
+      os, term_ptr->get_opcode(), op_identifier, rhs_identifier, term_ptr->get_term_type());
   }
 }
 

@@ -91,6 +91,8 @@ private:
 
   fhecompiler::Scheme program_scheme;
 
+  fhecompiler::Backend target_backed;
+
   // size_t dimension;
 
 public:
@@ -101,6 +103,10 @@ public:
   Program(const std::string &tag_value) : program_tag{tag_value} { data_flow = std::make_unique<DAG>(); }
 
   ~Program() {}
+
+  void set_targeted_backed(fhecompiler::Backend backend) { target_backed = backend; }
+
+  fhecompiler::Backend get_targeted_backend() { return this->target_backed; }
 
   Ptr insert_operation_node_in_dataflow(
     OpCode _opcode, const std::vector<Ptr> &_operands, std::string label, TermType term_type);
@@ -121,6 +127,8 @@ public:
     this->data_flow->insert_node(new_term, this->type_of(new_term->get_label()) == ConstantTableEntryType::output);
     return new_term;
   }
+
+  void set_node_operands(const std::string &node_label, const std::vector<Ptr> &new_opreands);
 
   void set_scheme(fhecompiler::Scheme program_scheme_value) { program_scheme = program_scheme_value; }
 

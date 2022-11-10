@@ -26,6 +26,8 @@ enum class OpCode
   sub,
   sub_plain,
   rotate,
+  rotate_rows,
+  rotate_columns,
   square,
   negate,
   exponentiate,
