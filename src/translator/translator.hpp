@@ -41,6 +41,8 @@ private:
 
   std::string get_identifier(const Ptr &term_ptr) const;
 
+  void convert_operation_to_inplace(const ir::Term::Ptr &node_ptr);
+
 public:
   Translator(ir::Program *prgm, params_selector::EncryptionParameters *params)
     : program(prgm), encryption_parameters(params),

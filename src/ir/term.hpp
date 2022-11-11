@@ -29,6 +29,8 @@ private:
 
   OpCode opcode;
 
+  bool _is_inplace = false; // true if the term represents an inplace instruction
+
   std::optional<std::vector<Ptr>> operands;
 
   std::unordered_set<std::string> parents_labels;
@@ -63,9 +65,17 @@ public:
 
   void set_operands(const std::vector<Ptr> &_operands) { operands = _operands; }
 
+  bool is_inplace() const { return _is_inplace; }
+
   void insert_parent_label(const std::string &label);
 
   bool merge_with_node(Ptr node_to_merge_with);
+
+  void set_opcode(ir::OpCode _opcode) { opcode = _opcode; }
+
+  void set_label(const std::string &_label) { label = _label; }
+
+  void set_inplace() { _is_inplace = true; }
 
   void replace_with(const ir::Term &rhs) { *this = rhs; /* calling copy assignement operator*/ }
 

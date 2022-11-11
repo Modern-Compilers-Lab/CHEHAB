@@ -18,6 +18,56 @@ std::string Translator::get_identifier(const Ptr &term_ptr) const
     return term_ptr->get_label();
 }
 
+void Translator::convert_operation_to_inplace(const ir::Term::Ptr &node_ptr)
+{
+  if (node_ptr->get_operands() == std::nullopt)
+    return;
+
+  auto &operands = *node_ptr->get_operands();
+
+  if (operands.size() == 0)
+    throw("unexpected size of operands, 0 operands");
+
+  std::unordered_set<ir::OpCode> instructions_to_be_converted = {
+    ir::OpCode::relinearize, ir::OpCode::modswitch}; /* these instructions needs to be converted since those  are
+                                                        usually applied directly on a ciphertext */
+
+  bool conversion_condition =
+    (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end()) ||
+    node_ptr->is_inplace();
+
+  if (operands.size() == 1)
+  {
+    auto &operand_ptr = operands[0];
+    ir::OpCode opcode = node_ptr->get_opcode();
+
+    if (opcode == ir::OpCode::assign || opcode == ir::OpCode::encrypt)
+      return;
+    else
+    {
+      // to not lose inputs, since we don't if know if the wants to
+      if (program->type_of(operand_ptr->get_label()) == ir::ConstantTableEntryType::input && !node_ptr->is_inplace())
+        return;
+
+      if (conversion_condition)
+        node_ptr->set_label(operand_ptr->get_label());
+    }
+  }
+  else if (operands.size() == 2)
+  {
+    auto &lhs_ptr = operands[0];
+    auto &rhs_ptr = operands[1];
+
+    if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input)
+      return;
+
+    if (conversion_condition)
+      node_ptr->set_label(lhs_ptr->get_label());
+  }
+  else
+    throw("unexpected size of operands, more than 2");
+}
+
 void Translator::translate_constant_table_entry(
   ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os)
 {
@@ -218,16 +268,18 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
 void Translator::translate(std::ofstream &os)
 {
 
+  const std::vector<Ptr> &nodes_ptr =
+    program->get_dataflow_sorted_nodes(true); /* the flag passed to the function needs to be true to make sure that
+                                                 order is updated after different compiler passes */
+
   context_writer.write_context(os);
 
   generate_function_signature(os);
   os << "{" << '\n';
 
-  const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
-
   for (auto &node_ptr : nodes_ptr)
   {
-    // std::cout << node_ptr->get_parents_labels().size() << "\n";
+    convert_operation_to_inplace(node_ptr); /* it converts only if it is possible */
     translate_term(node_ptr, os);
   }
   for (auto &output_node : program->get_outputs_nodes())

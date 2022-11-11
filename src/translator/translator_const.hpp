@@ -45,6 +45,35 @@ INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
 
 };
 
+INLINE std::unordered_map<ir::OpCode, const char *> ops_map_inplace = {
+
+  {ir::OpCode::encrypt, "encrypt"},
+  {ir::OpCode::add, "add_inplace"},
+  {ir::OpCode::add_plain, "add_plain_inplace"},
+  {ir::OpCode::assign, "="},
+  {ir::OpCode::exponentiate, "exponentiate_inplace"},
+  {ir::OpCode::negate, "negate_inplace"},
+  {ir::OpCode::modswitch, "modswitch_inplace"},
+  {ir::OpCode::mul, "multiply_inplace"},
+  {ir::OpCode::mul_plain, "multiply_plain_inplace"},
+  {ir::OpCode::sub, "sub_inplace"},
+  {ir::OpCode::sub_plain, "sub_plain_inplace"},
+  {ir::OpCode::rescale, "rescale_inplace"},
+  {ir::OpCode::square, "square_inplace"},
+  {ir::OpCode::rotate, "rotate_vector_inplace"},
+  {ir::OpCode::rotate_rows, "rotate_rows_inplace"},
+  {ir::OpCode::rotate_columns, "rotate_columns_inplace"},
+  {ir::OpCode::relinearize, "relinearize_inplace"}
+
+};
+
+INLINE std::unordered_set<ir::OpCode> inplace_instructions = {
+  ir::OpCode::add,          ir::OpCode::add_plain, ir::OpCode::sub,
+  ir::OpCode::sub_plain,    ir::OpCode::mul,       ir::OpCode::mul_plain,
+  ir::OpCode::negate,       ir::OpCode::rotate,    ir::OpCode::rotate_columns,
+  ir::OpCode::rotate_rows,  ir::OpCode::modswitch, ir::OpCode::relinearize,
+  ir::OpCode::exponentiate, ir::OpCode::square};
+
 /* literals related to api/backend */
 INLINE const char *params_type_literal = "EncryptionParameters";
 INLINE const char *params_identifier_literal = "params";
@@ -209,22 +238,40 @@ public:
     if (is_init == false)
       init(os);
 
+    // if destination_id == lhs_id then the instruction is inplace
+
+    bool is_inplace = destination_id == lhs_id;
+
     std::string other_args("");
     auto it = get_other_args_by_opcode.find(opcode);
+
+    std::string instruction_code = (is_inplace ? ops_map_inplace[opcode] : ops_map[opcode]);
+
     if (it != get_other_args_by_opcode.end())
     {
       other_args = it->second;
     }
 
-    os << types_map[type] << " " << destination_id << ";";
+    if (!is_inplace)
+      os << types_map[type] << " " << destination_id << ";";
+
     if (other_args.length() == 0)
     {
-      os << evaluator_identifier << "." << ops_map[opcode] << "(" << lhs_id << "," << destination_id << ");";
+      os << evaluator_identifier << "." << instruction_code << "(" << lhs_id;
+      if (!is_inplace)
+      {
+        os << "," << destination_id << ");";
+      }
+      else
+        os << ");";
     }
     else
     {
-      os << evaluator_identifier << "." << ops_map[opcode] << "(" << lhs_id << "," << other_args << ","
-         << destination_id << ");";
+      os << evaluator_identifier << "." << instruction_code << "(" << lhs_id << "," << other_args;
+      if (!is_inplace)
+        os << "," << destination_id << ");";
+      else
+        os << ");";
     }
   }
 
@@ -232,23 +279,32 @@ public:
     std::ostream &os, ir::OpCode opcode, const std::string &destination_id, const std::string &lhs_id,
     const std::string &rhs_id, ir::TermType type)
   {
-
+    // if destination_id == lhs_id then it is an inplace instruction
     if (is_init == false)
       init(os);
 
-    os << types_map[type] << " " << destination_id << ";" << '\n';
+    bool is_inplace = destination_id == lhs_id;
+
+    if (!is_inplace)
+      os << types_map[type] << " " << destination_id << ";" << '\n';
+
+    std::string instruction_code = (is_inplace ? ops_map_inplace[opcode] : ops_map[opcode]);
     std::string other_args("");
     auto it = get_other_args_by_opcode.find(opcode);
+
     if (it != get_other_args_by_opcode.end())
     {
       other_args = it->second;
     }
-    os << evaluator_identifier << "." << ops_map[opcode] << "(" << lhs_id << "," << rhs_id;
+    os << evaluator_identifier << "." << instruction_code << "(" << lhs_id << "," << rhs_id;
     if (other_args.length() > 0)
     {
       os << ", " << other_args;
     }
-    os << "," << destination_id << ");" << '\n';
+    if (!is_inplace)
+      os << "," << destination_id << ");" << '\n';
+    else
+      os << ");";
   }
 
   bool is_initialized() const { return this->is_init; }

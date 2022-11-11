@@ -30,6 +30,9 @@ void RelinPass::simple_relinearize()
       continue;
 
     /*rewrite, where rule is a * b -> relinearize(a*b) . a and b are ciphertexts */
+    /*
+      cipher1 = cipher0 * cipher0
+    */
     std::string relin_inst_tag = node_ptr->get_label() + inst_keyword + std::to_string(relin_instruction_id++);
     ir::Term current_term_copy = *node_ptr.get(); /* call copy constructor */
     std::shared_ptr<ir::Term> copy_term = std::make_shared<ir::Term>(current_term_copy);

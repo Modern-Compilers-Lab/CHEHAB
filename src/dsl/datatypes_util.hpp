@@ -57,6 +57,7 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
   }
   auto new_operation_node_ptr =
     program->insert_operation_node_in_dataflow(opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), term_type);
+  new_operation_node_ptr->set_inplace();
 }
 
 template <typename T1, typename T2, typename T3>
@@ -91,6 +92,10 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
     throw("operand is not defined, maybe it was only declared\n");
   }
   rhs.set_label(operate<T1>(opcode, {rhs_node_ptr}, term_type).get_label());
+  auto new_rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
+  if (new_rhs_node_ptr == nullptr)
+    throw("term supposed to be inserted \n");
+  new_rhs_node_ptr->set_inplace();
 }
 
 template <typename T>
@@ -232,6 +237,7 @@ void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode op
   }
   auto new_operation_node_ptr =
     program->insert_operation_node_in_dataflow(opcode, {lhs_term, rhs_term}, lhs.get_label(), term_type);
+  new_operation_node_ptr->set_inplace();
 }
 
 template <typename T>
