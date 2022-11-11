@@ -67,6 +67,10 @@ public:
 
   bool merge_with_node(Ptr node_to_merge_with);
 
+  void replace_with(const ir::Term &rhs) { *this = rhs; /* calling copy assignement operator*/ }
+
+  void replace_with(const Ptr &rhs) { *this = *(rhs.get()); /* calling copy assignement operatorr*/ }
+
   const std::optional<std::vector<Ptr>> &get_operands() const { return this->operands; }
 
   const std::unordered_set<std::string> &get_parents_labels() { return this->parents_labels; }

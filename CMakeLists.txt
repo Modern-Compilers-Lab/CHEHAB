@@ -8,17 +8,21 @@ project(FHECO_PROJECT LANGUAGES C CXX)
 
 add_executable(${PROJECT_NAME} benchmarks/test1.cpp)
 
-include_directories(${PROJECT_NAME} src/ir src/dsl src/fhecompiler src/params_selector src/translator src/utils)
+include_directories(${PROJECT_NAME} src/ir src/dsl src/optimizer src/fhecompiler src/params_selector src/translator src/utils)
 
 add_library(dsl src/dsl/ciphertext.cpp src/dsl/plaintext.cpp src/dsl/scalar.cpp) 
 add_library(ir src/ir/program.cpp src/ir/term.cpp src/ir/dag.cpp)
 add_library(params_selector src/params_selector/params_selector.cpp)
 add_library(translator src/translator/translator.cpp)
+add_library(relinpass src/optimizer/relin_pass.cpp)
+
 
 
 target_link_libraries(${PROJECT_NAME} dsl)
 target_link_libraries(${PROJECT_NAME} ir)
 target_link_libraries(${PROJECT_NAME} params_selector)
 target_link_libraries(${PROJECT_NAME} translator)
+target_link_libraries(${PROJECT_NAME} relinpass)
+
 set(CMAKE_SOURCE_DIR "/usr/local/lib")
 target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/libntl.a m gmp)

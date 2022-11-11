@@ -90,7 +90,8 @@ INLINE std::unordered_map<ir::OpCode, const char *> get_other_args_by_opcode = {
   {ir::OpCode::rotate, galois_keys_identifier},
   {ir::OpCode::exponentiate, relin_keys_identifier},
   {ir::OpCode::rotate_rows, galois_keys_identifier},
-  {ir::OpCode::rotate_columns, galois_keys_identifier}};
+  {ir::OpCode::rotate_columns, galois_keys_identifier},
+  {ir::OpCode::relinearize, relin_keys_identifier}};
 
 enum class AccessType
 {

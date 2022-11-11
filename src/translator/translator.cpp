@@ -223,7 +223,7 @@ void Translator::translate(std::ofstream &os)
   generate_function_signature(os);
   os << "{" << '\n';
 
-  const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes();
+  const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
 
   for (auto &node_ptr : nodes_ptr)
   {

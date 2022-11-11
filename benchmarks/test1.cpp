@@ -47,15 +47,15 @@ int main()
     fhecompiler::Ciphertext x = fhecompiler::Ciphertext::encrypt(pt1);
     fhecompiler::Ciphertext y = fhecompiler::Ciphertext::encrypt(pt2);
 
+    fhecompiler::Ciphertext z("z");
+
     // 4x^4 + 8x^3 + 8x^2 + 8x + 4
 
     // (x-y)3 = x3 - y3 - 3x2y + 3xy2
 
-    // output1 = exponentiate(exponentiate(x, 3) - exponentiate(y, 3) - 3 * square(x) * y + 3 * x * square(y), 3);
-
-    output1 = x + y;
-    // output1 = y;
-
+    z = x * y;
+    // output1 = exponentiate(z, 3);
+    output1 = z;
     fhecompiler::compile("test1.hpp");
   }
   catch (const char *message)

@@ -24,8 +24,11 @@ void Ciphertext::set_new_label()
 
 Ciphertext &Ciphertext::operator=(Ciphertext &&ct_move)
 {
+  return operate_assignement<Ciphertext>(*this, ct_move, ir::ciphertextType);
+  /*
   operate_move<Ciphertext>(*this, std::move(ct_move), ir::ciphertextType);
   return *this;
+  */
 }
 
 Ciphertext::Ciphertext(Ciphertext &&ct_move)

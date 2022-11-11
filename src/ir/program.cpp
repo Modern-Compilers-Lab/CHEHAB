@@ -34,6 +34,11 @@ Ptr Program::find_node_in_dataflow(const std::string &label) const
   return this->data_flow->find_node(label);
 }
 
+void Program::delete_node_from_dataflow(const std::string &node_label)
+{
+  data_flow->delete_node(node_label);
+}
+
 void Program::insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry)
 {
   this->constants_table.insert(table_entry);
@@ -106,9 +111,9 @@ const std::unordered_map<std::string, Ptr> &Program::get_outputs_nodes() const
   return this->data_flow->get_outputs_nodes();
 }
 
-const std::vector<Ptr> &Program::get_dataflow_sorted_nodes() const
+const std::vector<Ptr> &Program::get_dataflow_sorted_nodes(bool clear_existing_order) const
 {
-  this->data_flow->apply_topological_sort();
+  this->data_flow->apply_topological_sort(clear_existing_order);
   return this->data_flow->get_outputs_nodes_topsorted();
 }
 

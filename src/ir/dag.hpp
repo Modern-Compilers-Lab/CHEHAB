@@ -29,11 +29,11 @@ public:
 
   void insert_node(Ptr node_ptr, bool is_output = false);
 
-  void delete_node(Ptr node_ptr);
+  void delete_node(const std::string &node_label);
 
-  void apply_topological_sort();
+  void apply_topological_sort(bool clear_existing_order);
 
-  Ptr find_node(std::string node_label) const;
+  Ptr find_node(const std::string &node_label) const;
 
   void delete_node_from_outputs(const std::string &key);
 

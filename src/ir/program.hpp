@@ -115,6 +115,8 @@ public:
 
   void set_symbol_as_output(const std::string &label, const std::string &tag);
 
+  void delete_node_from_dataflow(const std::string &node_label);
+
   template <typename T>
   Ptr insert_node_in_dataflow(const T &operand)
   {
@@ -148,7 +150,7 @@ public:
 
   void sort_dataflow();
 
-  const std::vector<Ptr> &get_dataflow_sorted_nodes() const;
+  const std::vector<Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order=false) const;
 
   const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const;
 

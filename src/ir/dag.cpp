@@ -17,12 +17,20 @@ void DAG::insert_node(Ptr node, bool is_output)
   this->node_ptr_from_label[node->get_label()] = node;
 }
 
-Ptr DAG::find_node(std::string node_label) const
+Ptr DAG::find_node(const std::string &node_label) const
 {
   auto it = node_ptr_from_label.find(node_label);
   if (it != node_ptr_from_label.end())
     return (*it).second;
   return nullptr;
+}
+
+void DAG::delete_node(const std::string &node_label)
+{
+  auto it = node_ptr_from_label.find(node_label);
+  if (it == node_ptr_from_label.end())
+    return;
+  node_ptr_from_label.erase(it);
 }
 
 void DAG::delete_node_from_outputs(const std::string &key)
@@ -34,11 +42,13 @@ void DAG::delete_node_from_outputs(const std::string &key)
   }
 }
 
-void DAG::apply_topological_sort()
+void DAG::apply_topological_sort(bool clear_existing_order)
 {
 
-  if (outputs_nodes_topsorted.size())
+  if (outputs_nodes_topsorted.size() && clear_existing_order == false)
     return;
+
+  outputs_nodes_topsorted.clear();
 
   std::stack<std::pair<bool, Ptr>> traversal_stack;
 

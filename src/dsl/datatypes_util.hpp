@@ -47,8 +47,11 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
     if (is_output || is_tracked_object(old_label))
     {
       if (is_output)
+      {
         program->delete_node_from_outputs(old_label);
+      }
 
+      program->delete_node_from_dataflow(old_label);
       program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
     }
   }
@@ -113,6 +116,7 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     lhs.set_new_label();
     program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
     program->delete_node_from_outputs(old_label);
+    program->delete_node_from_dataflow(old_label);
     auto new_assign_operation =
       program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
   }
@@ -125,7 +129,9 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     }
 
     else
+    {
       lhs.set_label(rhs.get_label());
+    }
   }
 
   return lhs;
