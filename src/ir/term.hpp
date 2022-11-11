@@ -27,11 +27,22 @@ private:
 
   TermType type;
 
-  OpCode opcode;
+  struct OperationAttribute
+  {
 
-  bool _is_inplace = false; // true if the term represents an inplace instruction
+    OpCode opcode;
 
-  std::optional<std::vector<Ptr>> operands;
+    bool is_inplace = false; // true if the term represents an inplace instruction
+
+    std::vector<Ptr> operands;
+
+    OperationAttribute() = default;
+    ~OperationAttribute() {}
+
+    OperationAttribute(OpCode _opcode, const std::vector<Ptr> &_operands) : opcode(_opcode), operands(_operands) {}
+  };
+
+  std::optional<OperationAttribute> operation_attribute;
 
   std::unordered_set<std::string> parents_labels;
 
@@ -55,33 +66,46 @@ public:
   Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::scalarType) {}
 
   Term(OpCode _opcode, const std::vector<Ptr> &_operands, const std::string &label_value)
-    : opcode(_opcode), operands(std::make_optional<std::vector<Ptr>>(_operands)), label(label_value)
+    : operation_attribute({_opcode, _operands}), label(label_value)
   {}
 
   // this constructure is useful in case of rawData where we store it in the lable as an int
   Term(const std::string &symbol, TermType term_type) : label(symbol), type(term_type) {}
 
-  void clear_operands() { operands = std::nullopt; }
+  void clear_operands()
+  {
+    if (operation_attribute == std::nullopt)
+      return;
+    (*operation_attribute).operands.clear();
+  }
 
-  void set_operands(const std::vector<Ptr> &_operands) { operands = _operands; }
+  void set_operands(const std::vector<Ptr> &_operands)
+  {
+    if (operation_attribute == std::nullopt)
+      return;
 
-  bool is_inplace() const { return _is_inplace; }
+    (*operation_attribute).operands = _operands;
+  }
+
+  bool is_inplace() const { return (*operation_attribute).is_inplace; }
 
   void insert_parent_label(const std::string &label);
 
   bool merge_with_node(Ptr node_to_merge_with);
 
-  void set_opcode(ir::OpCode _opcode) { opcode = _opcode; }
+  void set_opcode(ir::OpCode _opcode) { (*operation_attribute).opcode = _opcode; }
 
   void set_label(const std::string &_label) { label = _label; }
 
-  void set_inplace() { _is_inplace = true; }
+  void set_inplace() { (*operation_attribute).is_inplace = true; }
 
   void replace_with(const ir::Term &rhs) { *this = rhs; /* calling copy assignement operator*/ }
 
   void replace_with(const Ptr &rhs) { *this = *(rhs.get()); /* calling copy assignement operatorr*/ }
 
-  const std::optional<std::vector<Ptr>> &get_operands() const { return this->operands; }
+  bool is_operation_node() const { return operation_attribute != std::nullopt; }
+
+  const std::vector<Ptr> &get_operands() const { return operation_attribute->operands; }
 
   const std::unordered_set<std::string> &get_parents_labels() { return this->parents_labels; }
 
@@ -89,7 +113,7 @@ public:
 
   std::shared_ptr<Ptr> make_copy_ptr();
 
-  OpCode get_opcode() const { return this->opcode; }
+  OpCode get_opcode() const { return (*operation_attribute).opcode; }
 
   void add_operand(const Ptr &operand);
 

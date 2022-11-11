@@ -150,7 +150,7 @@ public:
 
   void sort_dataflow();
 
-  const std::vector<Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order=false) const;
+  const std::vector<Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
 
   const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const;
 

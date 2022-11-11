@@ -78,10 +78,10 @@ void DAG::apply_topological_sort(bool clear_existing_order)
 
       visited_labels.insert(top_node.second->get_label());
       traversal_stack.push(std::make_pair(true, top_node.second));
-      if (top_node.second->get_operands() != std::nullopt)
+      if (top_node.second->is_operation_node())
       {
         // const std::vector<Ptr> &operands = *(top_node.second)->get_operands();
-        auto &operands = *(top_node.second)->get_operands();
+        auto &operands = top_node.second->get_operands();
 
         for (auto &operand_ptr : operands)
         {

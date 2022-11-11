@@ -107,10 +107,9 @@ public:
     const std::vector<Ptr> &sorted_nodes = program->get_dataflow_sorted_nodes();
     for (auto &node_ptr : sorted_nodes)
     {
-      auto operands_opt = node_ptr->get_operands();
-      if (operands_opt != std::nullopt)
+      if (node_ptr->is_operation_node())
       {
-        auto &operands = *operands_opt;
+        auto &operands = node_ptr->get_operands();
         if (operands.size() == 1)
         {
           if (node_ptr->get_opcode() == ir::OpCode::assign)

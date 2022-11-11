@@ -13,7 +13,7 @@ void Term::insert_parent_label(const std::string &label)
 
 void Term::add_operand(const Ptr &operand)
 {
-  (*this->operands).push_back(operand);
+  (*operation_attribute).operands.push_back(operand);
 }
 
 /*
@@ -41,13 +41,13 @@ bool Term::merge_with_node(Ptr node_to_merge_with)
     node to merge with is not an operation node
   */
 
-  if (node_to_merge_with->get_operands() == std::nullopt)
+  if (!node_to_merge_with->is_operation_node())
     return false;
 
   /*
     a constant node cant be merged with any other node
   */
-  if (this->operands == std::nullopt)
+  if (operation_attribute == std::nullopt)
     return false;
 
   /*
@@ -64,7 +64,7 @@ bool Term::merge_with_node(Ptr node_to_merge_with)
   /*
     two nodes must have same operation code, except for case of assign for the node to merge
   */
-  if (this->opcode != node_to_merge_with->get_opcode())
+  if ((*operation_attribute).opcode != node_to_merge_with->get_opcode())
     return false;
 
   /*
@@ -87,8 +87,8 @@ bool Term::merge_with_node(Ptr node_to_merge_with)
       Mergening steps are simple. Having two nodes n1 and n2 where we want to merge them, in that n1 will contain
       operands of n2 and n2 will be deleted. mergening is done from lower to higher level.
     */
-    auto operands_to_merge_with_list = *(node_to_merge_with->get_operands());
-    auto &operands_list = *operands;
+    auto operands_to_merge_with_list = node_to_merge_with->get_operands();
+    auto &operands_list = (*operation_attribute).operands;
     // operands_list.replace_node_with_list(node_to_merge_with->get_label(), operands_to_merge_with_list);
   }
 
