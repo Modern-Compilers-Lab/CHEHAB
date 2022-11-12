@@ -42,10 +42,10 @@ int main()
 
     fhecompiler::Plaintext pt1(std::vector<int64_t>({6}));
 
-    // fhecompiler::Plaintext pt2(std::vector<int64_t>({11}));
+    fhecompiler::Plaintext pt2(std::vector<int64_t>({11}));
 
     fhecompiler::Ciphertext x = fhecompiler::Ciphertext::encrypt(pt1);
-    // fhecompiler::Ciphertext y = fhecompiler::Ciphertext::encrypt(pt2);
+    fhecompiler::Ciphertext y = fhecompiler::Ciphertext::encrypt(pt2);
 
     // fhecompiler::Ciphertext z("z");
 
@@ -55,7 +55,9 @@ int main()
 
     // 4(x^2+1)(x+1)^2
 
-    output1 = 4 * exponentiate(x, 4) + 8 * exponentiate(x, 3) + 8 * square(x) + 8 * x + 4;
+    output1 = x + y + x;
+    // y += x
+    // x += y
     fhecompiler::compile("test1.hpp");
   }
   catch (const char *message)

@@ -76,7 +76,10 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
         return;
 
       /* an additional condition to convert to inplace implicitly */
-      conversion_condition = conversion_condition || (operand_ptr->get_parents_labels().size() <= 1);
+
+      bool dependency_condition = operand_ptr->get_parents_labels().size() <= 1;
+
+      conversion_condition = conversion_condition || dependency_condition;
 
       if (conversion_condition)
         node_ptr->set_label(operand_ptr->get_label());
@@ -86,12 +89,28 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
   {
     auto &lhs_ptr = operands[0];
     auto &rhs_ptr = operands[1];
+    ir::OpCode opcode = node_ptr->get_opcode();
 
     if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input)
       return;
 
     /* an additional condition to convert to inplace implicitly */
-    conversion_condition = conversion_condition || (lhs_ptr->get_parents_labels().size() <= 1);
+
+    bool dependency_condition = lhs_ptr->get_parents_labels().size() <= 1;
+
+    if (
+      dependency_condition == false && (opcode == ir::OpCode::add || opcode == ir::OpCode::mul) &&
+      lhs_ptr->get_term_type() == ir::ciphertextType && rhs_ptr->get_term_type() == ir::ciphertextType)
+    {
+      dependency_condition = rhs_ptr->get_parents_labels().size() <= 1;
+      if (dependency_condition)
+      {
+        // then swap the operands
+        node_ptr->reverse_operands();
+      }
+    }
+
+    conversion_condition = conversion_condition || dependency_condition;
 
     if (conversion_condition)
       node_ptr->set_label(lhs_ptr->get_label());
