@@ -55,8 +55,9 @@ int main()
 
     // 4(x^2+1)(x+1)^2
 
-    output1 = 4 * (square(x) + 1) * square(x + 1);
+    x *= x;
 
+    output1 = x;
     fhecompiler::compile("test1.hpp");
   }
   catch (const char *message)

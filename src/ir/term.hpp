@@ -101,7 +101,7 @@ public:
 
   void replace_with(const ir::Term &rhs) { *this = rhs; /* calling copy assignement operator*/ }
 
-  void replace_with(const Ptr &rhs) { *this = *(rhs.get()); /* calling copy assignement operatorr*/ }
+  void replace_with(const Ptr &rhs) { *this = *(rhs.get()); /* calling copy assignement operator*/ }
 
   bool is_operation_node() const { return operation_attribute != std::nullopt; }
 

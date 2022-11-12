@@ -18,6 +18,32 @@ std::string Translator::get_identifier(const Ptr &term_ptr) const
     return term_ptr->get_label();
 }
 
+void Translator::convert_to_square(const ir::Term::Ptr &node_ptr)
+{
+  /* this function converts mul operation to square operation when it is possible */
+  if (!node_ptr->is_operation_node())
+    return;
+
+  ir::OpCode opcode = node_ptr->get_opcode();
+
+  if (opcode == ir::OpCode::mul)
+  {
+    auto &operands = node_ptr->get_operands();
+    if (operands.size() != 2)
+      throw("got an unexpcted number of operands, expected number is 2");
+
+    auto &lhs_ptr = operands[0];
+    auto &rhs_ptr = operands[1];
+    if (lhs_ptr->get_label() == rhs_ptr->get_label())
+    {
+      // convert to square
+      node_ptr->set_opcode(ir::OpCode::square);
+      node_ptr->clear_operands();
+      node_ptr->add_operand(lhs_ptr);
+    }
+  }
+}
+
 void Translator::convert_operation_to_inplace(const ir::Term::Ptr &node_ptr)
 {
   if (!node_ptr->is_operation_node())
@@ -279,6 +305,7 @@ void Translator::translate(std::ofstream &os)
 
   for (auto &node_ptr : nodes_ptr)
   {
+    convert_to_square(node_ptr); /* it converts only if it is possible */
     convert_operation_to_inplace(node_ptr); /* it converts only if it is possible */
     translate_term(node_ptr, os);
   }
