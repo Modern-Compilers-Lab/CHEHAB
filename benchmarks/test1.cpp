@@ -55,9 +55,7 @@ int main()
 
     // 4(x^2+1)(x+1)^2
 
-    x *= x;
-
-    output1 = x;
+    output1 = 4 * exponentiate(x, 4) + 8 * exponentiate(x, 3) + 8 * square(x) + 8 * x + 4;
     fhecompiler::compile("test1.hpp");
   }
   catch (const char *message)

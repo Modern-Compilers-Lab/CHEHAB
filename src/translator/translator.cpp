@@ -44,7 +44,7 @@ void Translator::convert_to_square(const ir::Term::Ptr &node_ptr)
   }
 }
 
-void Translator::convert_operation_to_inplace(const ir::Term::Ptr &node_ptr)
+void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
 {
   if (!node_ptr->is_operation_node())
     return;
@@ -75,6 +75,9 @@ void Translator::convert_operation_to_inplace(const ir::Term::Ptr &node_ptr)
       if (program->type_of(operand_ptr->get_label()) == ir::ConstantTableEntryType::input && !node_ptr->is_inplace())
         return;
 
+      /* an additional condition to convert to inplace implicitly */
+      conversion_condition = conversion_condition || (operand_ptr->get_parents_labels().size() <= 1);
+
       if (conversion_condition)
         node_ptr->set_label(operand_ptr->get_label());
     }
@@ -86,6 +89,9 @@ void Translator::convert_operation_to_inplace(const ir::Term::Ptr &node_ptr)
 
     if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input)
       return;
+
+    /* an additional condition to convert to inplace implicitly */
+    conversion_condition = conversion_condition || (lhs_ptr->get_parents_labels().size() <= 1);
 
     if (conversion_condition)
       node_ptr->set_label(lhs_ptr->get_label());
@@ -305,10 +311,14 @@ void Translator::translate(std::ofstream &os)
 
   for (auto &node_ptr : nodes_ptr)
   {
+
     convert_to_square(node_ptr); /* it converts only if it is possible */
-    convert_operation_to_inplace(node_ptr); /* it converts only if it is possible */
+
+    convert_to_inplace(node_ptr); /* it converts only if it is possible */
+
     translate_term(node_ptr, os);
   }
+
   for (auto &output_node : program->get_outputs_nodes())
   {
     write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
