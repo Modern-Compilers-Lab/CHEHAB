@@ -119,6 +119,8 @@ public:
 
   void delete_operand_term(const std::string &term_label);
 
+  void delete_parent(const std::string &parent_label);
+
   std::shared_ptr<Ptr> make_copy_ptr();
 
   OpCode get_opcode() const { return (*operation_attribute).opcode; }

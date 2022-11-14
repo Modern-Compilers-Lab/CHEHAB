@@ -101,22 +101,25 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 template <typename T>
 T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 {
-  auto lhs_entry = program->get_entry_form_constants_table(lhs.get_label());
-
-  if (lhs_entry == std::nullopt)
-    throw(" object node doesnt exist in dataflow when trying to overload assign operator for Ciphertext ");
+  auto lhs_node_ptr = program->find_node_in_dataflow(lhs.get_label());
 
   auto copy_node_ptr = program->find_node_in_dataflow(rhs.get_label());
-
-  if (copy_node_ptr == nullptr)
-  {
-    throw("operand is not defined, maybe it was only declared\n");
-  }
 
   if ((program->type_of(lhs.get_label()) == ir::ConstantTableEntryType::output))
   {
     // inserting new output in data flow as assignement, and in the constatns_table but this time we insert it as a
     // symbol with tag
+
+    /*
+    if (lhs_node_ptr == nullptr)
+      throw("object node doesnt exist in dataflow when trying to overload assign operator");
+    */
+
+    if (copy_node_ptr == nullptr)
+    {
+      throw("operand is not defined, maybe it was only declared\n");
+    }
+
     std::string old_label = lhs.get_label();
     lhs.set_new_label();
     program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
@@ -129,6 +132,12 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
   {
     if (is_tracked_object(lhs.get_label()))
     {
+
+      if (copy_node_ptr == nullptr)
+      {
+        throw("operand is not defined, maybe it was only declared\n");
+      }
+
       auto new_assign_operation =
         program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
     }

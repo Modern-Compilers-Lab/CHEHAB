@@ -67,6 +67,8 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     auto &operand_ptr = operands[0];
     ir::OpCode opcode = node_ptr->get_opcode();
 
+    operand_ptr->delete_parent(node_ptr->get_label());
+
     if (opcode == ir::OpCode::assign || opcode == ir::OpCode::encrypt)
       return;
     else
@@ -77,7 +79,7 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
 
       /* an additional condition to convert to inplace implicitly */
 
-      bool dependency_condition = operand_ptr->get_parents_labels().size() <= 1;
+      bool dependency_condition = operand_ptr->get_parents_labels().size() == 0;
 
       conversion_condition = conversion_condition || dependency_condition;
 
@@ -91,24 +93,22 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     auto &rhs_ptr = operands[1];
     ir::OpCode opcode = node_ptr->get_opcode();
 
+    lhs_ptr->delete_parent(node_ptr->get_label());
+    rhs_ptr->delete_parent(node_ptr->get_label());
+
     if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input)
       return;
 
     /* an additional condition to convert to inplace implicitly */
 
-    bool dependency_condition = lhs_ptr->get_parents_labels().size() <= 1;
-
     if (
-      dependency_condition == false && (opcode == ir::OpCode::add || opcode == ir::OpCode::mul) &&
-      lhs_ptr->get_term_type() == ir::ciphertextType && rhs_ptr->get_term_type() == ir::ciphertextType)
+      operands[0]->get_term_type() == ir::ciphertextType && operands[1]->get_term_type() == ir::ciphertextType &&
+      operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size())
     {
-      dependency_condition = rhs_ptr->get_parents_labels().size() <= 1;
-      if (dependency_condition)
-      {
-        // then swap the operands
-        node_ptr->reverse_operands();
-      }
+      node_ptr->reverse_operands();
     }
+
+    bool dependency_condition = lhs_ptr->get_parents_labels().size() == 0;
 
     conversion_condition = conversion_condition || dependency_condition;
 

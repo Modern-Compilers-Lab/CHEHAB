@@ -40,9 +40,9 @@ int main()
     // fhecompiler::params.set_plaintext_modulus_bit_length(20);
     fhecompiler::params.set_polynomial_modulus_degree(1 << 15);
 
-    fhecompiler::Plaintext pt1(std::vector<int64_t>({6}));
+    fhecompiler::Plaintext pt1(std::vector<int64_t>({0}));
 
-    fhecompiler::Plaintext pt2(std::vector<int64_t>({11}));
+    fhecompiler::Plaintext pt2(std::vector<int64_t>({1}));
 
     fhecompiler::Ciphertext x = fhecompiler::Ciphertext::encrypt(pt1);
     fhecompiler::Ciphertext y = fhecompiler::Ciphertext::encrypt(pt2);
@@ -54,8 +54,19 @@ int main()
     // (x-y)3 = x3 - y3 - 3x2y + 3xy2
 
     // 4(x^2+1)(x+1)^2
+    // let's compute fibonacci
+    size_t n = 20;
+    fhecompiler::Ciphertext ct1 = y;
+    fhecompiler::Ciphertext ct2 = x + y;
+    n -= 2;
+    while (n--)
+    {
+      Ciphertext ct3 = ct1 + ct2;
+      ct1 = ct2;
+      ct2 = ct3;
+    }
 
-    output1 = x + y + x;
+    output1 = ct2;
     // y += x
     // x += y
     fhecompiler::compile("test1.hpp");

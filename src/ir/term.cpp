@@ -23,6 +23,14 @@ void Term::add_operand(const Ptr &operand)
 
 */
 
+void Term::delete_parent(const std::string &parent_label)
+{
+  auto it = parents_labels.find(parent_label);
+  if (it == parents_labels.end())
+    return;
+  parents_labels.erase(it);
+}
+
 bool Term::merge_with_node(Ptr node_to_merge_with)
 {
   /*
