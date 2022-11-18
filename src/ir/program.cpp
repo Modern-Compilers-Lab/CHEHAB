@@ -41,7 +41,17 @@ void Program::delete_node_from_dataflow(const std::string &node_label)
 
 void Program::insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry)
 {
-  this->constants_table.insert(table_entry);
+  // if the entry already exists in the table then it will make an update, otherwise it inserts
+  auto it = this->constants_table.find(table_entry.first);
+
+  if (it == this->constants_table.end())
+  {
+    this->constants_table.insert(table_entry);
+  }
+  else
+  {
+    it->second = table_entry.second;
+  }
 }
 
 void Program::delete_node_from_outputs(const std::string &key)

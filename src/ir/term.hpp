@@ -45,7 +45,7 @@ private:
 
   std::optional<OperationAttribute> operation_attribute;
 
-  std::unordered_set<std::string> parents_labels;
+  std::unordered_multiset<std::string> parents_labels;
 
   std::string label;
 
@@ -115,7 +115,7 @@ public:
 
   const std::vector<Ptr> &get_operands() const { return operation_attribute->operands; }
 
-  const std::unordered_set<std::string> &get_parents_labels() { return this->parents_labels; }
+  const std::unordered_multiset<std::string> &get_parents_labels() { return this->parents_labels; }
 
   void delete_operand_term(const std::string &term_label);
 

@@ -42,17 +42,19 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
   auto table_entry_opt = program->get_entry_form_constants_table(old_label);
   if (table_entry_opt != std::nullopt)
   {
+
     ir::ConstantTableEntry &table_entry = *table_entry_opt;
     bool is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
     if (is_output || is_tracked_object(old_label))
     {
+      // program->delete_node_from_dataflow(old_label);
+      program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+
       if (is_output)
       {
         program->delete_node_from_outputs(old_label);
       }
-
-      program->delete_node_from_dataflow(old_label);
-      program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+      auto table_entry_opt2 = program->get_entry_form_constants_table(lhs.get_label());
     }
   }
   auto new_operation_node_ptr =
@@ -105,7 +107,9 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 
   auto copy_node_ptr = program->find_node_in_dataflow(rhs.get_label());
 
-  if ((program->type_of(lhs.get_label()) == ir::ConstantTableEntryType::output))
+  bool is_output = program->type_of(lhs.get_label()) == ir::ConstantTableEntryType::output;
+
+  if (is_tracked_object(lhs.get_label()))
   {
     // inserting new output in data flow as assignement, and in the constatns_table but this time we insert it as a
     // symbol with tag
@@ -123,29 +127,17 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     std::string old_label = lhs.get_label();
     lhs.set_new_label();
     program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
-    program->delete_node_from_outputs(old_label);
+
+    if (is_output)
+      program->delete_node_from_outputs(old_label);
+
     program->delete_node_from_dataflow(old_label);
     auto new_assign_operation =
       program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
   }
   else
   {
-    if (is_tracked_object(lhs.get_label()))
-    {
-
-      if (copy_node_ptr == nullptr)
-      {
-        throw("operand is not defined, maybe it was only declared\n");
-      }
-
-      auto new_assign_operation =
-        program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
-    }
-
-    else
-    {
-      lhs.set_label(rhs.get_label());
-    }
+    lhs.set_label(rhs.get_label());
   }
 
   return lhs;

@@ -46,7 +46,7 @@ void Translator::convert_to_square(const ir::Term::Ptr &node_ptr)
 
 void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
 {
-  if (!node_ptr->is_operation_node())
+  if (!node_ptr->is_operation_node() || node_ptr->get_parents_labels().empty())
     return;
 
   auto &operands = node_ptr->get_operands();
@@ -84,7 +84,10 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
       conversion_condition = conversion_condition || dependency_condition;
 
       if (conversion_condition)
+      {
+        program->insert_new_entry_from_existing_with_delete(operand_ptr->get_label(), node_ptr->get_label());
         node_ptr->set_label(operand_ptr->get_label());
+      }
     }
   }
   else if (operands.size() == 2)
@@ -101,8 +104,11 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
 
     /* an additional condition to convert to inplace implicitly */
 
+    bool commutative = (node_ptr->get_opcode() == ir::OpCode::add) || (node_ptr->get_opcode() == ir::OpCode::mul);
+
     if (
-      operands[0]->get_term_type() == ir::ciphertextType && operands[1]->get_term_type() == ir::ciphertextType &&
+      commutative && operands[0]->get_term_type() == ir::ciphertextType &&
+      operands[1]->get_term_type() == ir::ciphertextType &&
       operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size())
     {
       node_ptr->reverse_operands();
@@ -113,7 +119,10 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     conversion_condition = conversion_condition || dependency_condition;
 
     if (conversion_condition)
+    {
+      program->insert_new_entry_from_existing_with_delete(lhs_ptr->get_label(), node_ptr->get_label());
       node_ptr->set_label(lhs_ptr->get_label());
+    }
   }
   else
     throw("unexpected size of operands, more than 2");
@@ -330,11 +339,13 @@ void Translator::translate(std::ofstream &os)
 
   for (auto &node_ptr : nodes_ptr)
   {
-
     convert_to_square(node_ptr); /* it converts only if it is possible */
-
     convert_to_inplace(node_ptr); /* it converts only if it is possible */
+  }
 
+  for (auto &node_ptr : nodes_ptr)
+  {
+    // after doing all passes, now we do the last pass to translate and generate the code
     translate_term(node_ptr, os);
   }
 

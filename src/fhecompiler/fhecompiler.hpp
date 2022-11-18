@@ -48,8 +48,8 @@ void compile(const std::string &output_filename)
   bgv_simulator.simulate_noise_growth(program);
   */
 
-  optimizer::RelinPass relin_pass(program);
-  relin_pass.simple_relinearize();
+  // optimizer::RelinPass relin_pass(program);
+  //  relin_pass.simple_relinearize();
 
   translator::Translator tr(program, &params);
   {

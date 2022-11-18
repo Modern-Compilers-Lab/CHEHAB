@@ -48,6 +48,7 @@ int main()
     fhecompiler::Ciphertext y = fhecompiler::Ciphertext::encrypt(pt2);
 
     // fhecompiler::Ciphertext z("z");
+    //  fhecompiler::Ciphertext z("z");
 
     // 4x^4 + 8x^3 + 8x^2 + 8x + 4
 
@@ -55,20 +56,30 @@ int main()
 
     // 4(x^2+1)(x+1)^2
     // let's compute fibonacci
+
     size_t n = 20;
+
     fhecompiler::Ciphertext ct1 = y;
     fhecompiler::Ciphertext ct2 = x + y;
+
+    fhecompiler::Ciphertext z("z");
+
     n -= 2;
     while (n--)
     {
       Ciphertext ct3 = ct1 + ct2;
       ct1 = ct2;
       ct2 = ct3;
+      if (n == 10)
+        z = ct2;
     }
 
-    output1 = ct2;
-    // y += x
-    // x += y
+    z += z;
+
+    z = ct1;
+
+    output1 = ct2 + z;
+
     fhecompiler::compile("test1.hpp");
   }
   catch (const char *message)
