@@ -87,6 +87,8 @@ public:
     (*operation_attribute).operands.clear();
   }
 
+  void add_parent_label(const std::string &label);
+
   void set_operands(const std::vector<Ptr> &_operands)
   {
     if (operation_attribute == std::nullopt)
@@ -117,9 +119,13 @@ public:
 
   const std::unordered_multiset<std::string> &get_parents_labels() { return this->parents_labels; }
 
+  void set_parents_label(std::unordered_multiset<std::string> p_labels) { parents_labels = p_labels; }
+
   void delete_operand_term(const std::string &term_label);
 
   void delete_parent(const std::string &parent_label);
+
+  void rewrite_by(ir::Term &new_term);
 
   std::shared_ptr<Ptr> make_copy_ptr();
 

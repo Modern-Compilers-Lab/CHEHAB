@@ -4,7 +4,21 @@
 namespace ir
 {
 
-void Term::delete_operand_term(const std::string &term_label) {}
+void Term::delete_operand_term(const std::string &term_label)
+{
+  // this needs to be changed later .. since it is unecessary linear in terms of complexity
+  size_t pos = -1;
+  for (size_t i = 0; i < operation_attribute->operands.size(); i++)
+  {
+    if (operation_attribute->operands[i]->get_label() == term_label)
+    {
+      pos = i;
+      break;
+    }
+  }
+  if (pos >= 0)
+    operation_attribute->operands.erase(operation_attribute->operands.begin() + pos);
+}
 
 void Term::insert_parent_label(const std::string &label)
 {
@@ -101,6 +115,24 @@ bool Term::merge_with_node(Ptr node_to_merge_with)
   }
 
   return true;
+}
+
+void Term::add_parent_label(const std::string &parent_label)
+{
+  parents_labels.insert(parent_label);
+}
+
+void Term::rewrite_by(ir::Term &new_term)
+{
+  new_term.parents_labels = this->parents_labels;
+  *this = new_term;
+  if (this->is_operation_node())
+  {
+    for (auto &operand : this->operation_attribute->operands)
+    {
+      operand->set_parents_label({this->get_label()});
+    }
+  }
 }
 
 } // namespace ir

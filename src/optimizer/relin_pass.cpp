@@ -13,6 +13,7 @@ void RelinPass::simple_relinearize()
     inserted after each cipher_cipher mutliplication or square
   */
   auto &sorted_nodes = program->get_dataflow_sorted_nodes();
+
   for (auto &node_ptr : sorted_nodes)
   {
 
@@ -36,7 +37,8 @@ void RelinPass::simple_relinearize()
     std::shared_ptr<ir::Term> copy_term = std::make_shared<ir::Term>(current_term_copy);
     ir::Term new_term(ir::OpCode::relinearize, {copy_term}, relin_inst_tag);
     new_term.set_term_type(ir::ciphertextType);
-    (*node_ptr.get()).replace_with(new_term);
+    program->insert_new_entry_from_existing_with_delete(new_term.get_label(), node_ptr->get_label());
+    node_ptr->rewrite_by(new_term);
   }
 }
 

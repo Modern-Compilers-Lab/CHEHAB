@@ -103,38 +103,47 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 template <typename T>
 T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 {
+
+  if (lhs.get_label() == rhs.get_label())
+    return lhs;
+
   auto lhs_node_ptr = program->find_node_in_dataflow(lhs.get_label());
 
   auto copy_node_ptr = program->find_node_in_dataflow(rhs.get_label());
 
   bool is_output = program->type_of(lhs.get_label()) == ir::ConstantTableEntryType::output;
 
+  // if (is_tracked_object(lhs.get_label()))
+  //{
+  //  inserting new output in data flow as assignement, and in the constatns_table but this time we insert it as a
+  //  symbol with tag
+
+  /*
+  if (lhs_node_ptr == nullptr)
+    throw("object node doesnt exist in dataflow when trying to overload assign operator");
+  */
+
+  if (copy_node_ptr == nullptr)
+  {
+    throw("operand is not defined, maybe it was only declared\n");
+  }
+
   if (is_tracked_object(lhs.get_label()))
   {
-    // inserting new output in data flow as assignement, and in the constatns_table but this time we insert it as a
-    // symbol with tag
-
-    /*
-    if (lhs_node_ptr == nullptr)
-      throw("object node doesnt exist in dataflow when trying to overload assign operator");
-    */
-
-    if (copy_node_ptr == nullptr)
-    {
-      throw("operand is not defined, maybe it was only declared\n");
-    }
 
     std::string old_label = lhs.get_label();
     lhs.set_new_label();
+
     program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
 
     if (is_output)
       program->delete_node_from_outputs(old_label);
 
-    program->delete_node_from_dataflow(old_label);
+    // program->delete_node_from_dataflow(old_label);
     auto new_assign_operation =
       program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
   }
+
   else
   {
     lhs.set_label(rhs.get_label());
@@ -200,15 +209,15 @@ void operate_copy(const T &lhs, const T &t_copy, ir::TermType term_type)
 template <typename T>
 void operate_move(T &lhs, T &&t_move, ir::TermType term_type)
 {
-  if (is_tracked_object(lhs.get_label()))
-  {
-    auto move_node_ptr = program->insert_node_in_dataflow<T>(t_move);
-    program->insert_operation_node_in_dataflow(ir::OpCode::assign, {move_node_ptr}, lhs.get_label(), term_type);
-  }
-  else
-  {
-    lhs.set_label(t_move.get_label());
-  }
+  // if (is_tracked_object(lhs.get_label()))
+  //{
+  auto move_node_ptr = program->insert_node_in_dataflow<T>(t_move);
+  program->insert_operation_node_in_dataflow(ir::OpCode::assign, {move_node_ptr}, lhs.get_label(), term_type);
+  //}
+  // else
+  //{
+  //  lhs.set_label(t_move.get_label());
+  //}
 }
 
 template <typename T>

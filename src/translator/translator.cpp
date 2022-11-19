@@ -40,13 +40,15 @@ void Translator::convert_to_square(const ir::Term::Ptr &node_ptr)
       node_ptr->set_opcode(ir::OpCode::square);
       node_ptr->clear_operands();
       node_ptr->add_operand(lhs_ptr);
+      lhs_ptr->delete_parent(node_ptr->get_label()); /* remove a parent once, it doesn't matter whether to remove from
+                                                        rhs or lhs since they point to the same object */
     }
   }
 }
 
 void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
 {
-  if (!node_ptr->is_operation_node() || node_ptr->get_parents_labels().empty())
+  if (!node_ptr->is_operation_node())
     return;
 
   auto &operands = node_ptr->get_operands();
@@ -59,9 +61,7 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
                                                         usually applied directly on a ciphertext */
 
   bool conversion_condition =
-    (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end()) ||
-    node_ptr->is_inplace();
-
+    (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end());
   if (operands.size() == 1)
   {
     auto &operand_ptr = operands[0];
@@ -96,8 +96,8 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     auto &rhs_ptr = operands[1];
     ir::OpCode opcode = node_ptr->get_opcode();
 
-    lhs_ptr->delete_parent(node_ptr->get_label());
     rhs_ptr->delete_parent(node_ptr->get_label());
+    lhs_ptr->delete_parent(node_ptr->get_label());
 
     if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input)
       return;
@@ -122,6 +122,10 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     {
       program->insert_new_entry_from_existing_with_delete(lhs_ptr->get_label(), node_ptr->get_label());
       node_ptr->set_label(lhs_ptr->get_label());
+    }
+    else
+    {
+      std::cout << lhs_ptr->get_label() << " " << lhs_ptr->get_parents_labels().size() << "\n";
     }
   }
   else
@@ -293,6 +297,11 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
   {
     auto &operands = term->get_operands();
 
+    if (operands.size() == 0)
+    {
+      throw("unexpected size of operands, 0 operands");
+    }
+
     if (operands.size() == 1)
     {
       if (term->get_opcode() == ir::OpCode::encrypt)
@@ -340,6 +349,10 @@ void Translator::translate(std::ofstream &os)
   for (auto &node_ptr : nodes_ptr)
   {
     convert_to_square(node_ptr); /* it converts only if it is possible */
+    if (node_ptr->get_label() == "ciphertext30")
+    {
+      std::cout << node_ptr->get_parents_labels().size() << "\n";
+    }
     convert_to_inplace(node_ptr); /* it converts only if it is possible */
   }
 

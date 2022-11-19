@@ -28,8 +28,26 @@ Ptr DAG::find_node(const std::string &node_label) const
 void DAG::delete_node(const std::string &node_label)
 {
   auto it = node_ptr_from_label.find(node_label);
+
   if (it == node_ptr_from_label.end())
     return;
+
+  if (it->second->is_operation_node())
+  {
+    for (auto &operand : it->second->get_operands())
+    {
+      operand->delete_parent(node_label);
+    }
+  }
+
+  for (auto &parent_label : it->second->get_parents_labels())
+  {
+    auto it_parent = node_ptr_from_label.find(parent_label);
+    if (it_parent != node_ptr_from_label.end())
+    {
+      it_parent->second->delete_operand_term(node_label);
+    }
+  }
   node_ptr_from_label.erase(it);
 }
 
@@ -91,6 +109,28 @@ void DAG::apply_topological_sort(bool clear_existing_order)
           }
         }
       }
+    }
+  }
+  // remove dead parents
+  for (auto &node_ptr : outputs_nodes_topsorted)
+  {
+    std::string parent_to_delete_label = "";
+    for (auto &parent_label : node_ptr->get_parents_labels())
+    {
+      if (parent_to_delete_label.length())
+      {
+        node_ptr->delete_parent(parent_to_delete_label);
+        parent_to_delete_label = "";
+      }
+      if (visited_labels.find(parent_label) == visited_labels.end())
+      {
+        parent_to_delete_label = parent_label;
+      }
+    }
+    if (parent_to_delete_label.length())
+    {
+      node_ptr->delete_parent(parent_to_delete_label);
+      parent_to_delete_label = "";
     }
   }
 }

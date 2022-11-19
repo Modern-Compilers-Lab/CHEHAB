@@ -10,6 +10,33 @@ Ciphertext sum(const Ciphertext &a, const Ciphertext &b)
   return a + b;
 }
 
+void swap(fhecompiler::Ciphertext &a, fhecompiler::Ciphertext &b)
+{
+  fhecompiler::Ciphertext t = a;
+  // t = a assign
+  // a =
+  a = b;
+  b = t;
+}
+
+Ciphertext sum_all_slots(fhecompiler::Ciphertext &x)
+{
+  // number of slots needs to be know by the user
+  // we assume here that we have 5 slots in x
+  fhecompiler::Ciphertext result("sum_result", VarType::temp);
+  result = x;
+  x <<= 1;
+  result += x;
+  x <<= 1;
+  result += x;
+  x <<= 1;
+  result += x;
+  x <<= 1;
+  result += x;
+  // result of sum will be on the first slot
+  return result;
+}
+
 void print_string(std::optional<std::string> string_opt)
 {
   if (string_opt != nullopt)
@@ -30,7 +57,7 @@ int main()
       Scalars as inputs (yes or no ?)
     */
 
-    fhecompiler::init("test1", 2 << 14, fhecompiler::Scheme::bfv);
+    fhecompiler::init("test1", 1 << 10, fhecompiler::Scheme::bfv);
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
@@ -43,6 +70,10 @@ int main()
     fhecompiler::Plaintext pt1(std::vector<int64_t>({0}));
 
     fhecompiler::Plaintext pt2(std::vector<int64_t>({1}));
+
+    fhecompiler::Plaintext pt3(std::vector<int64_t>({1, 2, 3, 4, 5}));
+
+    fhecompiler::Plaintext pt4(std::vector<int64_t>({3, 4, 5, 6, 6}));
 
     fhecompiler::Ciphertext x = fhecompiler::Ciphertext::encrypt(pt1);
     fhecompiler::Ciphertext y = fhecompiler::Ciphertext::encrypt(pt2);
@@ -64,6 +95,8 @@ int main()
 
     fhecompiler::Ciphertext z("z");
 
+    // fhecompiler::Ciphertext output2("output2")
+
     n -= 2;
     while (n--)
     {
@@ -74,11 +107,24 @@ int main()
         z = ct2;
     }
 
-    z += z;
+    fhecompiler::Ciphertext k = z;
 
-    z = ct1;
+    std::cout << z.get_label() << "\n";
 
-    output1 = ct2 + z;
+    fhecompiler::Ciphertext ct3 = Ciphertext::encrypt(pt3);
+
+    fhecompiler::Ciphertext ct4 = Ciphertext::encrypt(pt4);
+
+    // fhecompiler::Ciphertext product_result("product_result", VarType::output);
+    fhecompiler::Ciphertext product_result = (ct3 * ct4);
+    // sum_all_slots(product_result);
+    output1 = sum_all_slots(product_result); //(z + ct2 - ct1 + ct1 - ct2) * pt2; // ct2 + z + k;
+
+    fhecompiler::Ciphertext output2("output2", VarType::output);
+    output2 = z;
+    // swap(output2, z);
+
+    output2 *= output2;
 
     fhecompiler::compile("test1.hpp");
   }
