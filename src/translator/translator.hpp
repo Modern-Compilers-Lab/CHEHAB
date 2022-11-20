@@ -48,7 +48,10 @@ private:
 public:
   Translator(ir::Program *prgm, params_selector::EncryptionParameters *params)
     : program(prgm), encryption_parameters(params),
-      encoding_writer(encoder_type_literal, encoder_type_identifier, context_identifier, encode_literal),
+      encoding_writer(
+        program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? ckks_encoder_type_literal
+                                                                      : bv_encoder_type_literal,
+        encoder_type_identifier, context_identifier, encode_literal),
       encryption_writer(
         encryptor_type_literal, encryptor_type_identifier, encrypt_literal, public_key_identifier, context_identifier),
       evaluation_writer(evaluator_type_literal, evaluator_identifier, context_identifier),

@@ -93,6 +93,10 @@ private:
 
   fhecompiler::Backend target_backed;
 
+  double scale = 0.0; // for ckks
+
+  size_t number_of_slots;
+
   // size_t dimension;
 
 public:
@@ -159,6 +163,13 @@ public:
   const std::string &get_program_tag() const { return this->program_tag; }
 
   fhecompiler::Scheme get_encryption_scheme() const { return this->program_scheme; }
+
+  void set_scale(double _scale) { scale = _scale; }
+
+  double get_scale() { return scale; }
+
+  void set_number_of_slots(size_t nb_slots) { number_of_slots = nb_slots; }
+  size_t get_number_of_slots() { return number_of_slots; }
 };
 
 } // namespace ir

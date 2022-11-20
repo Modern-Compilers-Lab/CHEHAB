@@ -109,7 +109,7 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 
   auto lhs_node_ptr = program->find_node_in_dataflow(lhs.get_label());
 
-  auto copy_node_ptr = program->find_node_in_dataflow(rhs.get_label());
+  auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
 
   bool is_output = program->type_of(lhs.get_label()) == ir::ConstantTableEntryType::output;
 
@@ -123,7 +123,7 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     throw("object node doesnt exist in dataflow when trying to overload assign operator");
   */
 
-  if (copy_node_ptr == nullptr)
+  if (rhs_node_ptr == nullptr)
   {
     throw("operand is not defined, maybe it was only declared\n");
   }
@@ -141,7 +141,7 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 
     // program->delete_node_from_dataflow(old_label);
     auto new_assign_operation =
-      program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
+      program->insert_operation_node_in_dataflow(ir::OpCode::assign, {rhs_node_ptr}, lhs.get_label(), term_type);
   }
 
   else

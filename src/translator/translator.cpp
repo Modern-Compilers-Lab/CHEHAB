@@ -194,9 +194,11 @@ void Translator::translate_constant_table_entry(
       type_str = (program->get_encryption_scheme() == fhecompiler::ckks ? scalar_float : scalar_int);
 
       if (auto _vector_value = std::get_if<VectorInt>(&vector_value))
-        encoding_writer.write_vector_encoding(os, tag, *_vector_value, type_str);
+        encoding_writer.write_vector_encoding(
+          os, tag, *_vector_value, type_str,
+          program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
       else if (auto vector_literal = std::get_if<VectorFloat>(&vector_value))
-        encoding_writer.write_vector_encoding(os, tag, *_vector_value, type_str);
+        encoding_writer.write_vector_encoding(os, tag, *_vector_value, type_str, program->get_scale());
       else
         throw("unsupported data type by schemes\n");
     }
@@ -211,13 +213,16 @@ void Translator::translate_constant_table_entry(
       {
         int64_t casted_value = static_cast<int64_t>(*value);
         encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(casted_value), type_str, std::to_string(encryption_parameters->poly_modulus_degree));
+          os, tag, std::to_string(casted_value), type_str, std::to_string(program->get_number_of_slots()),
+          program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
       }
       else
       {
+        std::cout << program->get_scale() << "\n";
         double e_value = std::get<double>(scalar_value);
         encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(e_value), type_str, std::to_string(encryption_parameters->poly_modulus_degree));
+          os, tag, std::to_string(e_value), type_str, std::to_string(program->get_number_of_slots()),
+          program->get_scale());
       }
       /*
       if (type_str == scalar_int)

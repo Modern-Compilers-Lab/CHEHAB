@@ -7,7 +7,9 @@ namespace params_selector
 void ParameterSelector::fix_parameters(EncryptionParameters &params)
 {
   // encryption_parameters.set_polynomial_modulus_degree(program->get_dimension());
-  if (params.plaintext_modulus == 0 && params.plaintext_modulus_bit_length == 0)
+  if (
+    params.plaintext_modulus == 0 && params.plaintext_modulus_bit_length == 0 &&
+    program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
     throw("plaintext modulus missing\n");
 
   // now at this level we are sure that we have a plaintext modulus

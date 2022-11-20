@@ -24,12 +24,19 @@ namespace fhecompiler
 static params_selector::EncryptionParameters params;
 
 void init(
-  const std::string &program_name, size_t plaintext_modulus, Scheme program_scheme, Backend backend = Backend::SEAL)
+  const std::string &program_name, size_t plaintext_modulus, size_t number_of_slots, Scheme program_scheme,
+  Backend backend = Backend::SEAL, double scale = 0.0)
 {
   static ir::Program program_object(program_name);
   program = &program_object;
   program->set_scheme(program_scheme);
   program->set_targeted_backed(backend);
+  program->set_scale(scale);
+  program->set_number_of_slots(number_of_slots);
+  if (program_scheme == Scheme::ckks && scale == 0.0)
+  {
+    throw("scale is missing for CKKS\n");
+  }
 }
 
 void compile(const std::string &output_filename)

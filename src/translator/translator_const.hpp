@@ -95,7 +95,8 @@ INLINE const char *galois_keys_type_literal = "GaloisKeys";
 INLINE const char *galois_keys_identifier = "galois_keys";
 INLINE const char *evaluator_type_literal = "Evaluator";
 INLINE const char *evaluator_identifier = "evaluator";
-INLINE const char *encoder_type_literal = "BatchEncoder";
+INLINE const char *bv_encoder_type_literal = "BatchEncoder";
+INLINE const char *ckks_encoder_type_literal = "CKKSEncoder";
 INLINE const char *encoder_type_identifier = "encoder";
 INLINE const char *encryptor_type_literal = "Encryptor";
 INLINE const char *encryptor_type_identifier = "encryptor";
@@ -338,27 +339,35 @@ public:
 
   void write_scalar_encoding(
     std::ostream &os, const std::string &plaintext_id, const std::string &scalar_value, const std::string &scalar_type,
-    const std::string &vector_size) const
+    const std::string &number_of_slots, double scale = 0.0) const
   {
     // create a vector
     const std::string vector_id = plaintext_id + "_clear";
     os << "vector<" << scalar_type << ">"
-       << " " << vector_id << "(" << vector_size << ");" << '\n';
+       << " " << vector_id << "(" << number_of_slots << ");" << '\n';
 
-    os << "for(size_t i = 0; i < " << vector_size << "; i++)" << '\n'
+    os << "for(size_t i = 0; i < " << number_of_slots << "; i++)" << '\n'
        << "{" << '\n'
        << vector_id << "[i] = " << scalar_value << ";" << '\n'
        << "}" << '\n';
 
     os << types_map[ir::plaintextType] << " " << plaintext_id << ";" << '\n';
-    os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
-       << '\n';
+    if (scale > 0.0)
+    {
+      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << scale << ","
+         << plaintext_id << ");" << '\n';
+    }
+    else
+    {
+      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
+         << '\n';
+    }
   }
 
   template <typename T>
   void write_vector_encoding(
     std::ostream &os, const std::string &plaintext_id, const std::vector<T> &vector_value,
-    const std::string &vector_type) const
+    const std::string &vector_type, double scale = 0.0) const
   {
     // dump the vector
     size_t vector_size = vector_value.size();
@@ -376,8 +385,16 @@ public:
 
     // encoding
     os << types_map[ir::plaintextType] << " " << plaintext_id << ";" << '\n';
-    os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
-       << '\n';
+    if (scale > 0.0)
+    {
+      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << scale << ","
+         << plaintext_id << ");" << '\n';
+    }
+    else
+    {
+      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
+         << '\n';
+    }
   }
 
   bool is_initialized() const { return this->is_init; }
@@ -471,12 +488,15 @@ public:
     else
       write_default_coefficient_modulus_BFV(os);
 
-    if (params->plaintext_modulus_bit_length == 0)
+    if (scheme_type != fhecompiler::Scheme::ckks)
     {
-      write_plaintext_modulus(os);
+      if (params->plaintext_modulus_bit_length == 0)
+      {
+        write_plaintext_modulus(os);
+      }
+      else
+        write_plaintext_modulus_bit_length(os);
     }
-    else
-      write_plaintext_modulus_bit_length(os);
   }
 
   /**/

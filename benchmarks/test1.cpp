@@ -19,6 +19,18 @@ void swap(fhecompiler::Ciphertext &a, fhecompiler::Ciphertext &b)
   b = t;
 }
 
+std::vector<int64_t> flatten_image(const std::vector<vector<int64_t>> img)
+{
+  // this is the encoding procedure
+  std::vector<int64_t> encoded_image;
+  for (auto &row : img)
+  {
+    for (auto &e : row)
+      encoded_image.push_back(e);
+  }
+  return encoded_image;
+}
+
 Ciphertext sum_all_slots(fhecompiler::Ciphertext &x)
 {
   // number of slots needs to be know by the user
@@ -33,8 +45,35 @@ Ciphertext sum_all_slots(fhecompiler::Ciphertext &x)
   result += x;
   x <<= 1;
   result += x;
-  // result of sum will be on the first slot
+  // result of sum will be in the first slot
   return result;
+}
+
+Ciphertext dotProduct(fhecompiler::Ciphertext &ct1, fhecompiler::Ciphertext &ct2)
+{
+  fhecompiler::Ciphertext simd_product = ct1 * ct2;
+  return sum_all_slots(simd_product);
+}
+
+Ciphertext simple_sharpening_filter(fhecompiler::Ciphertext &img, int n)
+{
+  /*
+    filter : {
+      {1 ,1 ,1},
+      {1 , -8 ,1},
+      {1 ,1 ,1}
+      }
+  */
+  fhecompiler::Ciphertext r0 = img * -8;
+  fhecompiler::Ciphertext r1 = img << -n - 1;
+  fhecompiler::Ciphertext r2 = img << -n;
+  fhecompiler::Ciphertext r3 = img << -n + 1;
+  fhecompiler::Ciphertext r4 = img << -1;
+  fhecompiler::Ciphertext r5 = img << 1;
+  fhecompiler::Ciphertext r6 = img << n - 1;
+  fhecompiler::Ciphertext r7 = img << n;
+  fhecompiler::Ciphertext r8 = img << n + 1;
+  return 2 * img - (r0 + r1 + r2 + r3 + r4 + r5 + r6 + r7 + r8);
 }
 
 void print_string(std::optional<std::string> string_opt)
@@ -57,15 +96,15 @@ int main()
       Scalars as inputs (yes or no ?)
     */
 
-    fhecompiler::init("test1", 1 << 10, fhecompiler::Scheme::bfv);
+    fhecompiler::init("test1", 0, 4096, fhecompiler::Scheme::ckks, Backend::SEAL, pow(2.0, 40));
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
-    // fhecompiler::params.set_coef_modulus({50, 50, 50});
+    fhecompiler::params.set_coef_modulus({50, 50, 50});
     // a good value for t, 786433
     fhecompiler::params.set_plaintext_modulus(786433);
     // fhecompiler::params.set_plaintext_modulus_bit_length(20);
-    fhecompiler::params.set_polynomial_modulus_degree(1 << 15);
+    fhecompiler::params.set_polynomial_modulus_degree(4096 * 2);
 
     fhecompiler::Plaintext pt1(std::vector<int64_t>({0}));
 
@@ -107,8 +146,6 @@ int main()
         z = ct2;
     }
 
-    fhecompiler::Ciphertext k = z;
-
     std::cout << z.get_label() << "\n";
 
     fhecompiler::Ciphertext ct3 = Ciphertext::encrypt(pt3);
@@ -116,15 +153,36 @@ int main()
     fhecompiler::Ciphertext ct4 = Ciphertext::encrypt(pt4);
 
     // fhecompiler::Ciphertext product_result("product_result", VarType::output);
-    fhecompiler::Ciphertext product_result = (ct3 * ct4);
+    fhecompiler::Ciphertext product_result("product_result");
+    product_result = (ct3 * ct4);
     // sum_all_slots(product_result);
-    output1 = sum_all_slots(product_result); //(z + ct2 - ct1 + ct1 - ct2) * pt2; // ct2 + z + k;
+    // output1 = sum_all_slots(product_result); //(z + ct2 - ct1 + ct1 - ct2) * pt2; // ct2 + z + k;
+    /*
+    output1 = dotProduct(ct3, ct4);
+
+    product_result += z;
 
     fhecompiler::Ciphertext output2("output2", VarType::output);
-    output2 = z;
+    output2 = z + product_result;
     // swap(output2, z);
 
     output2 *= output2;
+
+    std::vector<vector<int64_t>> img_clear = {
+      {100, 120, 80, 123}, {125, 123, 122, 54}, {55, 120, 55, 120}, {55, 120, 55, 120}};
+
+    // flatten image
+    std::vector<int64_t> img_encoded = flatten_image(img_clear);
+
+    fhecompiler::Plaintext img_plain(img_encoded);
+
+    fhecompiler::Ciphertext img_cipher = Ciphertext::encrypt(img_plain);
+
+    fhecompiler::Ciphertext output3("output3", VarType::output);
+    output3 = simple_sharpening_filter(img_cipher, 4);
+    */
+
+    output1 = ct3 + ct4 * 4;
 
     fhecompiler::compile("test1.hpp");
   }

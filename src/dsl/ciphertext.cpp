@@ -207,7 +207,7 @@ Ciphertext rotate(const Ciphertext &lhs, int steps)
 
   ir::OpCode opcode;
 
-  if (program->get_targeted_backend() == Backend::SEAL)
+  if (program->get_targeted_backend() == Backend::SEAL && program->get_encryption_scheme() != Scheme::ckks)
   {
     opcode = ir::OpCode::rotate_rows;
   }
