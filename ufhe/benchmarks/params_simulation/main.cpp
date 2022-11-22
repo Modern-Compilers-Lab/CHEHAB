@@ -55,27 +55,34 @@ int main()
 {
   scheme_type scheme = scheme_type::bfv;
   sec_level_type sec_level = sec_level_type::tc128;
-  int plain_modulus_size = 20;
-  int xdepth = 3;
-  size_t initial_pmd = 1024;
-  int initial_pmd_bit_size = 11;
+  int plain_modulus_size = 17;
+  int xdepth = 5;
+  size_t initial_pmd = 32768;
   size_t max_pmd = 32768;
+
+  if (plain_modulus_size < 17)
+    throw invalid_argument("plain_modulus_size must be at least 17 bits to support batching with n up to 32768");
+
+  int max_fresh_noise = 10;
+  vector<Modulus> coeff_modulus;
+  // Initial bit_sizes: one data level prime, special modulus
+  vector<int> bit_sizes{plain_modulus_size + max_fresh_noise + 1, plain_modulus_size + max_fresh_noise + 1};
+  int bit_count = 2 * (plain_modulus_size + max_fresh_noise + 1);
 
   size_t poly_modulus_degree = initial_pmd;
   int max_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree);
 
-  auto increase_pmd = [&]() {
+  auto increase_pmd = [&poly_modulus_degree, &max_bit_count, max_pmd]() {
     if (poly_modulus_degree >= max_pmd)
       throw logic_error("parameters for this xdepth could not be selected using the security standard");
     poly_modulus_degree *= 2;
     max_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree);
   };
 
-  vector<Modulus> coeff_modulus;
-  // Initial bit_sizes: one data level prime, special modulus
-  vector<int> bit_sizes{initial_pmd_bit_size, initial_pmd_bit_size};
-  int bit_count = 2 * initial_pmd_bit_size;
-  Modulus plain_modulus;
+  while (max_bit_count < bit_count)
+    increase_pmd();
+
+  Modulus plain_modulus = PlainModulus::Batching(poly_modulus_degree, plain_modulus_size);
 
   do
   {
@@ -167,8 +174,6 @@ int main()
       else
         increase_pmd();
       coeff_modulus = CoeffModulus::Create(poly_modulus_degree, bit_sizes);
-      // Set plain_modulus in a similar way to PlainModulus::Batching
-      plain_modulus = PlainModulus::Batching(poly_modulus_degree, plain_modulus_size);
       // Test selected parameters
       EncryptionParameters params(scheme);
       params.set_poly_modulus_degree(poly_modulus_degree);
