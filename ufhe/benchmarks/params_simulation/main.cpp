@@ -6,9 +6,8 @@
 using namespace std;
 using namespace seal;
 
-void test_params(EncryptionParameters params, int xdepth)
+void test_params(SEALContext context, int xdepth)
 {
-  SEALContext context(params);
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
   SecretKey secret_key = keygen.secret_key();
@@ -33,15 +32,15 @@ void test_params(EncryptionParameters params, int xdepth)
   The number of inserted mod_switch operations is the number of inner coefficients of coeff_modulus, ie without the
   first (key level special modulus) and last (lowest level) modulus.
  */
-  int nb_mod_switch = params.coeff_modulus().size() - 2;
-  cout << "init noise bud " << decryptor.invariant_noise_budget(encrypted) << endl;
+  // int nb_mod_switch = context.first_context_data()->parms().coeff_modulus().size() - 2;
+  cout << "Fresh noise budget: " << decryptor.invariant_noise_budget(encrypted) << endl;
   for (int i = 0; i < xdepth; ++i)
   {
     evaluator.multiply_inplace(encrypted, encrypted);
     if (decryptor.invariant_noise_budget(encrypted) == 0)
       throw invalid_argument("insufficient noise budget");
     evaluator.relinearize_inplace(encrypted, relin_keys);
-    cout << "noise bud " << i << " " << decryptor.invariant_noise_budget(encrypted) << endl;
+    cout << "After " << i + 1 << " sequential muls: " << decryptor.invariant_noise_budget(encrypted) << endl;
     /*
     // Do mod_switch operation nb_mod_switch times evenly well distributed across xdepth consecutive multiplications
     if (nb_mod_switch && i / (xdepth / nb_mod_switch) != (i + 1) / (xdepth / nb_mod_switch))
@@ -70,7 +69,7 @@ int main()
   int bit_count = 2 * (initial_plain_m_size + max_fresh_noise + 1);
 
   size_t poly_modulus_degree = initial_poly_md;
-  int max_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree);
+  int max_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level);
 
   int plain_m_size = initial_plain_m_size;
   Modulus plain_modulus = PlainModulus::Batching(poly_modulus_degree, plain_m_size);
@@ -79,7 +78,7 @@ int main()
     if (poly_modulus_degree >= max_poly_md)
       throw logic_error("parameters for this xdepth could not be selected using the security standard");
     poly_modulus_degree *= 2;
-    max_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree);
+    max_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level);
     try
     {
       plain_modulus = PlainModulus::Batching(poly_modulus_degree, plain_m_size);
@@ -96,100 +95,97 @@ int main()
 
   do
   {
-    try
+    if (bit_count < max_bit_count)
     {
-      cout << poly_modulus_degree << " " << max_bit_count << " ";
-      cout << bit_count << " = ";
-      for (size_t i = 0; i < bit_sizes.size(); ++i)
+      int avg_bit_size = bit_count / bit_sizes.size();
+      if (avg_bit_size < 60)
       {
-        cout << bit_sizes[i] << " + ";
-      }
-      cout << endl;
-      if (bit_count < max_bit_count)
-      {
-        int avg_bit_size = bit_count / bit_sizes.size();
-        if (avg_bit_size < 60)
+        for (int i = bit_sizes.size() - 1; i >= 0; --i)
         {
-          for (int i = bit_sizes.size() - 1; i >= 0; --i)
+          if (bit_sizes[i] <= avg_bit_size)
           {
-            if (bit_sizes[i] <= avg_bit_size)
-            {
-              // All primes have the same size
-              if (i == bit_sizes.size() - 1)
-              {
-                // Not to increment only special modulus size making it bigger than other primes
-                if (max_bit_count - bit_count > 1)
-                {
-                  ++bit_sizes[i];
-                  ++bit_sizes[i - 1];
-                  bit_count += 2;
-                }
-                else
-                  increase_pmd();
-              }
-              else
-              {
-                ++bit_sizes[i];
-                ++bit_count;
-              }
-              break;
-            }
-          }
-        }
-        else
-        {
-          int new_bit_count = bit_count - bit_count % (bit_sizes.size() + 1);
-          vector<int> new_bit_sizes(bit_sizes.size() + 1, new_bit_count / (bit_sizes.size() + 1));
-          int data_level_bc = bit_count - bit_sizes.back();
-          int new_data_level_bc = new_bit_count - new_bit_sizes.back();
-          int data_level_bit_diff = new_data_level_bc - data_level_bc;
-          if (data_level_bit_diff > 0)
-          {
-            // Decrease primes sizes to go back to step_size=1
-            for (int i = 0; i < data_level_bit_diff - 1; ++i)
-            {
-              --new_bit_sizes[i % new_bit_sizes.size()];
-              --new_bit_count;
-            }
-          }
-          else
-          {
-            data_level_bit_diff *= -1;
-            if (data_level_bit_diff)
-            {
-              // Increase primes sizes to reach step_size=+1
-              for (int i = 0; i < data_level_bit_diff + 1; ++i)
-              {
-                ++new_bit_sizes.end()[-1 - i];
-                ++new_bit_count;
-              }
-            }
-            else
+            // All primes have the same size
+            if (i == bit_sizes.size() - 1)
             {
               // Not to increment only special modulus size making it bigger than other primes
-              if (max_bit_count - new_bit_count > 1)
+              if (max_bit_count - bit_count > 1)
               {
-                ++new_bit_sizes.end()[-1];
-                ++new_bit_sizes.end()[-2];
-                new_bit_count += 2;
+                ++bit_sizes[i];
+                ++bit_sizes[i - 1];
+                bit_count += 2;
               }
               else
                 increase_pmd();
             }
+            else
+            {
+              ++bit_sizes[i];
+              ++bit_count;
+            }
+            break;
           }
-          bit_sizes = new_bit_sizes;
-          bit_count = new_bit_count;
         }
       }
       else
-        increase_pmd();
+      {
+        int new_bit_count = bit_count - bit_count % (bit_sizes.size() + 1);
+        vector<int> new_bit_sizes(bit_sizes.size() + 1, new_bit_count / (bit_sizes.size() + 1));
+        int data_level_bc = bit_count - bit_sizes.back();
+        int new_data_level_bc = new_bit_count - new_bit_sizes.back();
+        int data_level_bit_diff = new_data_level_bc - data_level_bc;
+        if (data_level_bit_diff > 0)
+        {
+          // Decrease primes sizes to go back to step_size=1
+          for (int i = 0; i < data_level_bit_diff - 1; ++i)
+          {
+            --new_bit_sizes[i % new_bit_sizes.size()];
+            --new_bit_count;
+          }
+        }
+        else
+        {
+          data_level_bit_diff *= -1;
+          if (data_level_bit_diff)
+          {
+            // Increase primes sizes to reach step_size=+1
+            for (int i = 0; i < data_level_bit_diff + 1; ++i)
+            {
+              ++new_bit_sizes.end()[-1 - i];
+              ++new_bit_count;
+            }
+          }
+          else
+          {
+            // Not to increment only special modulus size making it bigger than other primes
+            if (max_bit_count - new_bit_count > 1)
+            {
+              ++new_bit_sizes.end()[-1];
+              ++new_bit_sizes.end()[-2];
+              new_bit_count += 2;
+            }
+            else
+              increase_pmd();
+          }
+        }
+        bit_sizes = new_bit_sizes;
+        bit_count = new_bit_count;
+      }
+    }
+    else
+      increase_pmd();
+    try
+    {
       coeff_modulus = CoeffModulus::Create(poly_modulus_degree, bit_sizes);
       // Test selected parameters
+      cout << endl;
       EncryptionParameters params(scheme);
       params.set_poly_modulus_degree(poly_modulus_degree);
       params.set_coeff_modulus(coeff_modulus);
       params.set_plain_modulus(plain_modulus);
-      test_params(params, xdepth);
+      SEALContext context(params, false, sec_level);
+      // Print current parameters
+      print_parameters(context);
+      test_params(context, xdepth);
       break;
     }
     catch (invalid_argument &e)
