@@ -123,27 +123,42 @@ int main()
         {
           int new_bit_count = bit_count - bit_count % (bit_sizes.size() + 1);
           vector<int> new_bit_sizes(bit_sizes.size() + 1, new_bit_count / (bit_sizes.size() + 1));
-          int bit_diff = bit_count - new_bit_count;
-          // Restore bit_count with bit_sizes.size() + 1 primes and move forward (+1)
-          if (bit_diff)
+          int data_level_bc = bit_count - bit_sizes.back();
+          int new_data_level_bc = new_bit_count - new_bit_sizes.back();
+          int data_level_bit_diff = new_data_level_bc - data_level_bc;
+          if (data_level_bit_diff > 0)
           {
-            for (int i = 0; i < bit_diff + 1; ++i)
+            // Decrease primes sizes to go back to step_size=1
+            for (int i = 0; i < data_level_bit_diff - 1; ++i)
             {
-              ++new_bit_sizes.end()[-1 - i];
-              ++new_bit_count;
+              --new_bit_sizes[i % new_bit_sizes.size()];
+              --new_bit_count;
             }
           }
           else
           {
-            // Not to increment only special modulus size making it bigger than other primes
-            if (max_bit_count - bit_count > 1)
+            data_level_bit_diff *= -1;
+            if (data_level_bit_diff)
             {
-              ++new_bit_sizes.end()[-1];
-              ++new_bit_sizes.end()[-2];
-              new_bit_count += 2;
+              // Increase primes sizes to reach step_size=+1
+              for (int i = 0; i < data_level_bit_diff + 1; ++i)
+              {
+                ++new_bit_sizes.end()[-1 - i];
+                ++new_bit_count;
+              }
             }
             else
-              increase_pmd();
+            {
+              // Not to increment only special modulus size making it bigger than other primes
+              if (max_bit_count - new_bit_count > 1)
+              {
+                ++new_bit_sizes.end()[-1];
+                ++new_bit_sizes.end()[-2];
+                new_bit_count += 2;
+              }
+              else
+                increase_pmd();
+            }
           }
           bit_sizes = new_bit_sizes;
           bit_count = new_bit_count;
