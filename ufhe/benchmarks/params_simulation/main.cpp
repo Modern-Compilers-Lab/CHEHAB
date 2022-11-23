@@ -1,6 +1,7 @@
 #include "utils.hpp"
 #include <cstddef>
 #include <random>
+#include <stdexcept>
 #include <vector>
 
 using namespace std;

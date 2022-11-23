@@ -1,35 +1,88 @@
 #include "seal/seal.h"
+#include "utils.hpp"
 #include <chrono>
 #include <cstddef>
-#include <cstdint>
 #include <iostream>
 #include <random>
 #include <stdexcept>
-#include <string>
-#include <tuple>
 #include <vector>
 
 using namespace std;
 using namespace seal;
 
-tuple<int, vector<int>> get_params_from_xdepth_bgv_128(int xdepth)
+EncryptionParameters select_params_bfv(
+  int xdepth, sec_level_type sec_level = sec_level_type::tc128, size_t initial_poly_md = 2048,
+  int initial_plain_m_size = 17)
 {
-  static const map<int, tuple<int, vector<int>>> params_from_xdepth_bgv_128{
+  if (initial_plain_m_size < 17)
+    throw invalid_argument("plain modulus size must be at least 17 bits");
 
-    /*
-    xdepth:10
-    Polynomial modulus: 16384
-    Modulus count: 8
-    Total bit count: 438
-    */
-    {10, {16384, {55, 55, 54, 54, 55, 55, 55, 55}}}
+  size_t max_poly_md = 32768;
+  int max_fresh_noise = 10;
+  int safety_margin = 1;
 
-  };
+  size_t poly_modulus_degree = initial_poly_md;
+  vector<Modulus> coeff_modulus;
+  Modulus plain_modulus;
+  int plain_m_size = initial_plain_m_size;
 
-  return params_from_xdepth_bgv_128.at(xdepth);
+  // Set coeff modulus primes sizes
+  int worst_case_mul_ng = util::get_significant_bit_count(poly_modulus_degree) * 2 + plain_m_size + 1;
+  int best_case_mul_ng = plain_m_size + 1;
+  int avg_mul_ng = (worst_case_mul_ng + best_case_mul_ng) / 2 + (worst_case_mul_ng + best_case_mul_ng) % 2;
+  int coeff_m_data_level_bc = plain_m_size + max_fresh_noise + xdepth * avg_mul_ng + safety_margin;
+
+  vector<int> coeff_m_bit_sizes;
+  // No special prime
+  if (xdepth <= 1 && coeff_m_data_level_bc <= 60)
+    coeff_m_bit_sizes.assign(1, coeff_m_data_level_bc);
+  else
+  {
+    int lowest_nb_levels = coeff_m_data_level_bc / 60;
+    if (coeff_m_data_level_bc % 60)
+      ++lowest_nb_levels;
+    coeff_m_bit_sizes.assign(lowest_nb_levels, 60);
+    // Remove exceeding bits
+    for (int i = 0; i < 60 - (coeff_m_data_level_bc % 60); ++i)
+      --coeff_m_bit_sizes[i % coeff_m_bit_sizes.size()];
+    // Add special modulus for ks
+    coeff_m_bit_sizes.push_back(coeff_m_bit_sizes.back());
+  }
+
+  // If for the supposed n and the given security level q size cannot reach the needed value
+  if (
+    CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level) <
+    coeff_m_data_level_bc + ((coeff_m_bit_sizes.size() > 1) ? coeff_m_bit_sizes.back() : 0))
+  {
+    if (poly_modulus_degree == max_poly_md)
+      throw invalid_argument("depth too large, corresponding parameters not included in fhe security standard");
+    //  Repeat with initial n=2*current_n
+    return select_params_bfv(xdepth, sec_level, poly_modulus_degree * 2, plain_m_size);
+  }
+
+  try
+  {
+    plain_modulus = PlainModulus::Batching(poly_modulus_degree, plain_m_size);
+  }
+  // suitable prime could not be found
+  catch (logic_error &e)
+  {
+    if (plain_m_size == 60)
+      throw invalid_argument("depth too large, corresponding parameters not included in fhe security standard");
+    //  Repeat with incremented initial plain modulus size
+    return select_params_bfv(xdepth, sec_level, poly_modulus_degree, plain_m_size + 1);
+  }
+
+  coeff_modulus = CoeffModulus::Create(poly_modulus_degree, coeff_m_bit_sizes);
+  // Create context from the selected parameters
+  EncryptionParameters params(scheme_type::bfv);
+  params.set_poly_modulus_degree(poly_modulus_degree);
+  params.set_coeff_modulus(coeff_modulus);
+  params.set_plain_modulus(plain_modulus);
+  return params;
 }
 
-tuple<int64_t, int64_t> bfv_test(SEALContext context, int xdepth)
+void bfv_mul_bencmark(SEALContext context, int xdepth)
 {
   chrono::high_resolution_clock::time_point time_start, time_end;
   chrono::microseconds time_mul(0);
@@ -85,12 +138,11 @@ tuple<int64_t, int64_t> bfv_test(SEALContext context, int xdepth)
   cout << "Average mul: " << avg_mul << " microseconds" << endl;
   cout << "Average relin: " << avg_relin << " microseconds" << endl;
   cout << "Average modswitch: " << avg_mod_switch << " microseconds" << endl;
-  return {avg_mul, avg_relin};
 }
 
 int main()
 {
-  EncryptionParameters parms(scheme_type::bfv);
+  /*EncryptionParameters parms(scheme_type::bfv);
   size_t poly_modulus_degree = 16384;
   parms.set_poly_modulus_degree(poly_modulus_degree);
   parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, {55, 54, 54, 54, 55, 55, 55, 55}));
@@ -99,6 +151,9 @@ int main()
   SEALContext context(parms);
   bfv_test(context, 10);
   // cout << "Average mul: " << avg_mul << " microseconds" << endl;
-  // cout << "Average relin: " << avg_relin << " microseconds" << endl;
+  // cout << "Average relin: " << avg_relin << " microseconds" << endl;*/
+  EncryptionParameters params = select_params_bfv(23);
+  SEALContext context(params);
+  print_parameters(context);
   return 0;
 }
