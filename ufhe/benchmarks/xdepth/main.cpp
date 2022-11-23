@@ -140,8 +140,11 @@ void bfv_mul_bencmark(SEALContext context, int xdepth)
   cout << "Average modswitch: " << avg_mod_switch << " microseconds" << endl;
 }
 
-int main()
+int main(int argc, char **argv)
 {
+  int xdepth = 23;
+  if (argc > 1)
+    xdepth = atoi(argv[1]);
   /*EncryptionParameters parms(scheme_type::bfv);
   size_t poly_modulus_degree = 16384;
   parms.set_poly_modulus_degree(poly_modulus_degree);
@@ -152,7 +155,7 @@ int main()
   bfv_test(context, 10);
   // cout << "Average mul: " << avg_mul << " microseconds" << endl;
   // cout << "Average relin: " << avg_relin << " microseconds" << endl;*/
-  EncryptionParameters params = select_params_bfv(23);
+  EncryptionParameters params = select_params_bfv(xdepth);
   SEALContext context(params);
   print_parameters(context);
   return 0;

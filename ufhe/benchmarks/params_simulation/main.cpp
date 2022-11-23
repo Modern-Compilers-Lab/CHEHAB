@@ -49,19 +49,22 @@ void test_params(SEALContext context, int xdepth)
   }
 }
 
-int main()
+int main(int argc, char **argv)
 {
+  int xdepth = 3;
+  if (argc > 1)
+    xdepth = atoi(argv[1]);
   scheme_type scheme = scheme_type::bfv;
   sec_level_type sec_level = sec_level_type::tc128;
   int initial_plain_m_size = 17;
-  int xdepth = 10;
   size_t initial_poly_md = 1024;
-  size_t max_poly_md = 32768;
 
   if (initial_plain_m_size < 17)
     throw invalid_argument("plain modulus size must be at least 17 bits to support batching with n up to 32768");
 
+  size_t max_poly_md = 32768;
   int max_fresh_noise = 10;
+
   vector<Modulus> coeff_modulus;
   // Initial bit_sizes: one data level prime, special modulus
   vector<int> bit_sizes{initial_plain_m_size + max_fresh_noise + 1, initial_plain_m_size + max_fresh_noise + 1};
