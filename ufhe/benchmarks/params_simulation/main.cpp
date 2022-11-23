@@ -7,7 +7,7 @@
 using namespace std;
 using namespace seal;
 
-void test_params(SEALContext context, int xdepth)
+vector<int> test_params(SEALContext context, int xdepth)
 {
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
@@ -34,19 +34,22 @@ void test_params(SEALContext context, int xdepth)
   first (key level special modulus) and last (lowest level) modulus.
  */
   // int nb_mod_switch = context.first_context_data()->parms().coeff_modulus().size() - 1;
-  cout << "Fresh noise budget: " << decryptor.invariant_noise_budget(encrypted) << endl;
+  vector<int> noise_budgets(xdepth + 1);
+  noise_budgets[0] = decryptor.invariant_noise_budget(encrypted);
   for (int i = 0; i < xdepth; ++i)
   {
     evaluator.multiply_inplace(encrypted, encrypted);
     if (decryptor.invariant_noise_budget(encrypted) == 0)
       throw invalid_argument("insufficient noise budget");
     evaluator.relinearize_inplace(encrypted, relin_keys);
-    cout << "After " << i + 1 << " sequential muls: " << decryptor.invariant_noise_budget(encrypted) << endl;
+    noise_budgets[i + 1] = decryptor.invariant_noise_budget(encrypted);
+
     /*
     // Do mod_switch operation nb_mod_switch times evenly well distributed across xdepth consecutive multiplications
     if (nb_mod_switch && i / (xdepth / nb_mod_switch) != (i + 1) / (xdepth / nb_mod_switch))
       evaluator.mod_switch_to_next_inplace(encrypted);*/
   }
+  return noise_budgets;
 }
 
 int main(int argc, char **argv)
@@ -179,16 +182,28 @@ int main(int argc, char **argv)
     {
       coeff_modulus = CoeffModulus::Create(poly_modulus_degree, bit_sizes);
       // Test selected parameters
-      cout << endl;
       EncryptionParameters params(scheme);
       params.set_poly_modulus_degree(poly_modulus_degree);
       params.set_coeff_modulus(coeff_modulus);
       params.set_plain_modulus(plain_modulus);
       SEALContext context(params, false, sec_level);
-      // Print current parameters
+      // Test parameters
+      vector<int> noise_budgets = test_params(context, xdepth);
+      // Print correct parameters
       print_parameters(context);
-      test_params(context, xdepth);
-      break;
+      // Print noise budget progress over the computation
+      for (int i = 0; i < noise_budgets.size(); ++i)
+      {
+        if (i == 0)
+          cout << "Fresh noise budget: " << noise_budgets[0] << endl;
+        else
+          cout << "After " << i << " sequential muls: " << noise_budgets[i] << endl;
+      }
+      // Stop if the found correct parameters have xdepth data level primes
+      if (coeff_modulus.size() - 1 == xdepth)
+        break;
+      else
+        cout << endl;
     }
     catch (invalid_argument &e)
     {
