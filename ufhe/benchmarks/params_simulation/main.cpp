@@ -32,7 +32,7 @@ void test_params(SEALContext context, int xdepth)
   The number of inserted mod_switch operations is the number of inner coefficients of coeff_modulus, ie without the
   first (key level special modulus) and last (lowest level) modulus.
  */
-  // int nb_mod_switch = context.first_context_data()->parms().coeff_modulus().size() - 2;
+  // int nb_mod_switch = context.first_context_data()->parms().coeff_modulus().size() - 1;
   cout << "Fresh noise budget: " << decryptor.invariant_noise_budget(encrypted) << endl;
   for (int i = 0; i < xdepth; ++i)
   {
@@ -46,8 +46,6 @@ void test_params(SEALContext context, int xdepth)
     if (nb_mod_switch && i / (xdepth / nb_mod_switch) != (i + 1) / (xdepth / nb_mod_switch))
       evaluator.mod_switch_to_next_inplace(encrypted);*/
   }
-  // Print valid parameters
-  print_parameters(context);
 }
 
 int main()
