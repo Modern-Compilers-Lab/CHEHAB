@@ -11,8 +11,8 @@ using namespace std;
 using namespace seal;
 
 EncryptionParameters select_params_bfv(
-  int xdepth, sec_level_type sec_level = sec_level_type::tc128, size_t initial_poly_md = 2048,
-  int initial_plain_m_size = 17)
+  int xdepth, bool use_least_levels = false, sec_level_type sec_level = sec_level_type::tc128,
+  size_t initial_poly_md = 2048, int initial_plain_m_size = 17)
 {
   if (initial_plain_m_size < 17)
     throw invalid_argument("plain modulus size must be at least 17 bits");
@@ -38,15 +38,28 @@ EncryptionParameters select_params_bfv(
     coeff_m_bit_sizes.assign(1, coeff_m_data_level_bc);
   else
   {
-    int lowest_nb_levels = coeff_m_data_level_bc / 60;
-    if (coeff_m_data_level_bc % 60)
-      ++lowest_nb_levels;
-    coeff_m_bit_sizes.assign(lowest_nb_levels, 60);
-    // Remove exceeding bits
-    for (int i = 0; i < 60 - (coeff_m_data_level_bc % 60); ++i)
-      --coeff_m_bit_sizes[i % coeff_m_bit_sizes.size()];
-    // Add special modulus for ks
-    coeff_m_bit_sizes.push_back(coeff_m_bit_sizes.back());
+    if (use_least_levels)
+    {
+      int lowest_nb_levels = coeff_m_data_level_bc / 60;
+      if (coeff_m_data_level_bc % 60)
+        ++lowest_nb_levels;
+      coeff_m_bit_sizes.assign(lowest_nb_levels, 60);
+      // Remove exceeding bits
+      for (int i = 0; i < 60 - (coeff_m_data_level_bc % 60); ++i)
+        --coeff_m_bit_sizes[i % coeff_m_bit_sizes.size()];
+      // Add special modulus for ks
+      coeff_m_bit_sizes.push_back(coeff_m_bit_sizes.back());
+    }
+    else
+    {
+      int avg_prime_size = coeff_m_data_level_bc / xdepth;
+      coeff_m_bit_sizes.assign(xdepth, avg_prime_size);
+      // Remove exceeding bits
+      for (int i = 0; i < coeff_m_data_level_bc % xdepth; ++i)
+        ++coeff_m_bit_sizes.end()[-1 - i];
+      // Add special modulus for ks
+      coeff_m_bit_sizes.push_back(coeff_m_bit_sizes.back());
+    }
   }
 
   // If for the supposed n and the given security level q size cannot reach the needed value
@@ -57,7 +70,7 @@ EncryptionParameters select_params_bfv(
     if (poly_modulus_degree == max_poly_md)
       throw invalid_argument("depth too large, corresponding parameters not included in fhe security standard");
     //  Repeat with initial n=2*current_n
-    return select_params_bfv(xdepth, sec_level, poly_modulus_degree * 2, plain_m_size);
+    return select_params_bfv(xdepth, use_least_levels, sec_level, poly_modulus_degree * 2, plain_m_size);
   }
 
   try
@@ -70,7 +83,7 @@ EncryptionParameters select_params_bfv(
     if (plain_m_size == 60)
       throw invalid_argument("depth too large, corresponding parameters not included in fhe security standard");
     //  Repeat with incremented initial plain modulus size
-    return select_params_bfv(xdepth, sec_level, poly_modulus_degree, plain_m_size + 1);
+    return select_params_bfv(xdepth, use_least_levels, sec_level, poly_modulus_degree, plain_m_size + 1);
   }
 
   coeff_modulus = CoeffModulus::Create(poly_modulus_degree, coeff_m_bit_sizes);
@@ -82,7 +95,7 @@ EncryptionParameters select_params_bfv(
   return params;
 }
 
-void bfv_mul_bencmark(SEALContext context, int xdepth)
+void bfv_mul_benchmark(SEALContext context, int xdepth)
 {
   chrono::high_resolution_clock::time_point time_start, time_end;
   chrono::microseconds time_mul(0);
@@ -143,8 +156,13 @@ void bfv_mul_bencmark(SEALContext context, int xdepth)
 int main(int argc, char **argv)
 {
   int xdepth = 23;
+  bool use_least_levels = true;
   if (argc > 1)
+  {
     xdepth = atoi(argv[1]);
+    if (argc > 2)
+      use_least_levels = atoi(argv[2]);
+  }
   /*EncryptionParameters parms(scheme_type::bfv);
   size_t poly_modulus_degree = 16384;
   parms.set_poly_modulus_degree(poly_modulus_degree);
@@ -155,7 +173,7 @@ int main(int argc, char **argv)
   bfv_test(context, 10);
   // cout << "Average mul: " << avg_mul << " microseconds" << endl;
   // cout << "Average relin: " << avg_relin << " microseconds" << endl;*/
-  EncryptionParameters params = select_params_bfv(xdepth);
+  EncryptionParameters params = select_params_bfv(xdepth, use_least_levels);
   SEALContext context(params);
   print_parameters(context);
   return 0;
