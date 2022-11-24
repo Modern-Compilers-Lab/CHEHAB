@@ -95,12 +95,15 @@ EncryptionParameters select_params_bfv(
   return params;
 }
 
-void bfv_mul_benchmark(SEALContext context, int xdepth)
+void mul_benchmark(SEALContext context, int xdepth, int repeat = 10)
 {
+  if (context.first_context_data()->parms().coeff_modulus().size() != xdepth)
+    throw invalid_argument("Coeff_modulus levels different than xdepth");
+
   chrono::high_resolution_clock::time_point time_start, time_end;
-  chrono::microseconds time_mul(0);
-  chrono::microseconds time_relin(0);
-  chrono::microseconds time_mod_switch(0);
+  vector<chrono::microseconds> time_mul_levels(xdepth);
+  vector<chrono::microseconds> time_relin_levels(xdepth);
+  vector<chrono::microseconds> time_mod_switch_levels(xdepth);
 
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
@@ -123,40 +126,80 @@ void bfv_mul_benchmark(SEALContext context, int xdepth)
   Ciphertext encrypted(context);
   encryptor.encrypt(plain, encrypted);
 
+  Ciphertext tmp(context);
+
   for (int i = 0; i < xdepth; i++)
   {
+    // Multiplication time per level
+    for (int j = 0; j < repeat - 1; ++j)
+    {
+      time_start = chrono::high_resolution_clock::now();
+      evaluator.multiply(encrypted, encrypted, tmp);
+      time_end = chrono::high_resolution_clock::now();
+      time_mul_levels[i] += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+    }
     time_start = chrono::high_resolution_clock::now();
     evaluator.multiply_inplace(encrypted, encrypted);
     time_end = chrono::high_resolution_clock::now();
-    time_mul += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
-
+    time_mul_levels[i] += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+    // Relinearization time per level
+    for (int j = 0; j < repeat - 1; ++j)
+    {
+      time_start = chrono::high_resolution_clock::now();
+      evaluator.relinearize(encrypted, relin_keys, tmp);
+      time_end = chrono::high_resolution_clock::now();
+      time_relin_levels[i] += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+    }
     time_start = chrono::high_resolution_clock::now();
     evaluator.relinearize_inplace(encrypted, relin_keys);
     time_end = chrono::high_resolution_clock::now();
-    time_relin += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
-    if (i % 2)
+    time_relin_levels[i] += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+    // Modulus switching time per level
+    if (i < xdepth - 1)
     {
+      for (int j = 0; j < repeat - 1; ++j)
+      {
+        time_start = chrono::high_resolution_clock::now();
+        evaluator.mod_switch_to_next(encrypted, tmp);
+        time_end = chrono::high_resolution_clock::now();
+        time_mod_switch_levels[i] += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+      }
       time_start = chrono::high_resolution_clock::now();
       evaluator.mod_switch_to_next_inplace(encrypted);
       time_end = chrono::high_resolution_clock::now();
-      time_mod_switch += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+      time_mod_switch_levels[i] += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
     }
   }
   if (decryptor.invariant_noise_budget(encrypted) == 0)
     throw logic_error("insufficient noise budget");
 
-  int64_t avg_mul = time_mul.count() / xdepth;
-  int64_t avg_relin = time_relin.count() / xdepth;
-  int64_t avg_mod_switch = time_mod_switch.count() / 5;
-  cout << "Average mul: " << avg_mul << " microseconds" << endl;
-  cout << "Average relin: " << avg_relin << " microseconds" << endl;
-  cout << "Average modswitch: " << avg_mod_switch << " microseconds" << endl;
+  vector<int64_t> avg_mul_levels(xdepth);
+  vector<int64_t> avg_relin_levels(xdepth);
+  vector<int64_t> avg_mod_switch_levels(xdepth);
+  for (int i = 0; i < xdepth; ++i)
+  {
+    avg_mul_levels[i] = time_mul_levels[i].count() / repeat;
+    avg_relin_levels[i] = time_mul_levels[i].count() / repeat;
+    avg_mod_switch_levels[i] = time_mul_levels[i].count() / repeat;
+  }
+
+  // Print resutls
+  cout << "Average mul: ";
+  for (int i = 0; i < xdepth; ++i)
+    cout << avg_mul_levels[i] << " " << endl;
+  cout << "Average relin: ";
+  for (int i = 0; i < xdepth; ++i)
+    cout << avg_relin_levels[i] << " " << endl;
+  cout << "Average modswitch: ";
+  for (int i = 0; i < xdepth; ++i)
+    cout << avg_mod_switch_levels[i] << " " << endl;
 }
 
 int main(int argc, char **argv)
 {
-  int xdepth = 23;
-  bool use_least_levels = true;
+  // FHE security standard allows up to 23
+  int xdepth = 5;
+  bool use_least_levels = false;
   if (argc > 1)
   {
     xdepth = atoi(argv[1]);
@@ -176,5 +219,6 @@ int main(int argc, char **argv)
   EncryptionParameters params = select_params_bfv(xdepth, use_least_levels);
   SEALContext context(params);
   print_parameters(context);
+  mul_benchmark(context, xdepth);
   return 0;
 }
