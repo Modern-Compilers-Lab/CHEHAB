@@ -48,27 +48,49 @@ vector<int> test_params(SEALContext context, int xdepth)
 
 int main(int argc, char **argv)
 {
-  int max_xdepth = 5;
+  int max_xdepth = 20;
+  int min_xdepth = 0;
+  int initial_plain_m_size = 17;
+  int initial_coeff_m_bit_count = 2 * (initial_plain_m_size + 1);
   if (argc > 1)
     max_xdepth = atoi(argv[1]);
+  if (argc > 2)
+    min_xdepth = atoi(argv[2]);
+  if (argc > 3)
+    initial_coeff_m_bit_count = atoi(argv[3]);
+
+  if (min_xdepth > max_xdepth)
+    throw invalid_argument("min_xdepth cannot be greater than max_xdepth");
+
   scheme_type scheme = scheme_type::bfv;
   sec_level_type sec_level = sec_level_type::tc128;
-  int initial_plain_m_size = 17;
   size_t initial_poly_md = 1024;
 
   if (initial_plain_m_size < 17)
     throw invalid_argument("plain modulus size must be at least 17 bits to support batching with n up to 32768");
 
   size_t max_poly_md = 32768;
-  int xdepth = 0;
+  int xdepth = min_xdepth;
 
   vector<Modulus> coeff_modulus;
-  // Initial bit_sizes: one data level prime, special modulus
-  vector<int> bit_sizes{initial_plain_m_size + 1, initial_plain_m_size + 1};
-  int bit_count = 2 * (initial_plain_m_size + 1);
+  // Initial coeff_m_bit_sizes with the user provided initial_coeff_m_bit_count
+  vector<int> coeff_m_bit_sizes;
+  int coeff_m_bit_count = initial_coeff_m_bit_count;
+  int initial_nb_primes = coeff_m_bit_count / 60;
+  if (coeff_m_bit_count % 60)
+    ++initial_nb_primes;
+  // No special prime
+  if (initial_nb_primes == 1)
+    coeff_m_bit_sizes.assign(2, coeff_m_bit_count / 2);
+  else
+  {
+    coeff_m_bit_sizes.assign(initial_nb_primes, 60);
+    for (int i = 0; i < 60 - (coeff_m_bit_count % 60); ++i)
+      --coeff_m_bit_sizes[i % coeff_m_bit_sizes.size()];
+  }
 
   size_t poly_modulus_degree = initial_poly_md;
-  int max_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level);
+  int max_coeff_m_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level);
 
   int plain_m_size = initial_plain_m_size;
   Modulus plain_modulus = PlainModulus::Batching(poly_modulus_degree, plain_m_size);
@@ -77,7 +99,7 @@ int main(int argc, char **argv)
     if (poly_modulus_degree >= max_poly_md)
       throw logic_error("parameters for this xdepth could not be selected using the security standard");
     poly_modulus_degree *= 2;
-    max_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level);
+    max_coeff_m_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level);
     try
     {
       plain_modulus = PlainModulus::Batching(poly_modulus_degree, plain_m_size);
@@ -89,92 +111,14 @@ int main(int argc, char **argv)
     }
   };
 
-  while (max_bit_count < bit_count)
+  while (max_coeff_m_bit_count < coeff_m_bit_count)
     increase_pmd();
 
   do
   {
-    if (bit_count < max_bit_count)
-    {
-      int avg_bit_size = bit_count / bit_sizes.size();
-      if (avg_bit_size < 60)
-      {
-        for (int i = bit_sizes.size() - 1; i >= 0; --i)
-        {
-          if (bit_sizes[i] <= avg_bit_size)
-          {
-            // All primes have the same size
-            if (i == bit_sizes.size() - 1)
-            {
-              // Not to increment only special modulus size making it bigger than other primes
-              if (max_bit_count - bit_count > 1)
-              {
-                ++bit_sizes[i];
-                ++bit_sizes[i - 1];
-                bit_count += 2;
-              }
-              else
-                increase_pmd();
-            }
-            else
-            {
-              ++bit_sizes[i];
-              ++bit_count;
-            }
-            break;
-          }
-        }
-      }
-      else
-      {
-        int new_bit_count = bit_count - bit_count % (bit_sizes.size() + 1);
-        vector<int> new_bit_sizes(bit_sizes.size() + 1, new_bit_count / (bit_sizes.size() + 1));
-        int data_level_bc = bit_count - bit_sizes.back();
-        int new_data_level_bc = new_bit_count - new_bit_sizes.back();
-        int data_level_bit_diff = new_data_level_bc - data_level_bc;
-        if (data_level_bit_diff > 0)
-        {
-          // Decrease primes sizes to go back to step_size=1
-          for (int i = 0; i < data_level_bit_diff - 1; ++i)
-          {
-            --new_bit_sizes[i % new_bit_sizes.size()];
-            --new_bit_count;
-          }
-        }
-        else
-        {
-          data_level_bit_diff *= -1;
-          if (data_level_bit_diff)
-          {
-            // Increase primes sizes to reach step_size=+1
-            for (int i = 0; i < data_level_bit_diff + 1; ++i)
-            {
-              ++new_bit_sizes.end()[-1 - i];
-              ++new_bit_count;
-            }
-          }
-          else
-          {
-            // Not to increment only special modulus size making it bigger than other primes
-            if (max_bit_count - new_bit_count > 1)
-            {
-              ++new_bit_sizes.end()[-1];
-              ++new_bit_sizes.end()[-2];
-              new_bit_count += 2;
-            }
-            else
-              increase_pmd();
-          }
-        }
-        bit_sizes = new_bit_sizes;
-        bit_count = new_bit_count;
-      }
-    }
-    else
-      increase_pmd();
     try
     {
-      coeff_modulus = CoeffModulus::Create(poly_modulus_degree, bit_sizes);
+      coeff_modulus = CoeffModulus::Create(poly_modulus_degree, coeff_m_bit_sizes);
       // Test selected parameters
       EncryptionParameters params(scheme);
       params.set_poly_modulus_degree(poly_modulus_degree);
@@ -212,6 +156,86 @@ int main(int argc, char **argv)
       // Not enough suitable primes could be found
       // cout << e.what() << endl;
     }
+
+    if (coeff_m_bit_count < max_coeff_m_bit_count)
+    {
+      int avg_bit_size = coeff_m_bit_count / coeff_m_bit_sizes.size();
+      if (avg_bit_size < 60)
+      {
+        for (int i = coeff_m_bit_sizes.size() - 1; i >= 0; --i)
+        {
+          if (coeff_m_bit_sizes[i] <= avg_bit_size)
+          {
+            // All primes have the same size
+            if (i == coeff_m_bit_sizes.size() - 1)
+            {
+              // Not to increment only special modulus size making it bigger than other primes
+              if (max_coeff_m_bit_count - coeff_m_bit_count > 1)
+              {
+                ++coeff_m_bit_sizes[i];
+                ++coeff_m_bit_sizes[i - 1];
+                coeff_m_bit_count += 2;
+              }
+              else
+                increase_pmd();
+            }
+            else
+            {
+              ++coeff_m_bit_sizes[i];
+              ++coeff_m_bit_count;
+            }
+            break;
+          }
+        }
+      }
+      else
+      {
+        int new_coeff_m_bit_count = coeff_m_bit_count - coeff_m_bit_count % (coeff_m_bit_sizes.size() + 1);
+        vector<int> new_coeff_m_bit_sizes(
+          coeff_m_bit_sizes.size() + 1, new_coeff_m_bit_count / (coeff_m_bit_sizes.size() + 1));
+        int data_level_bc = coeff_m_bit_count - coeff_m_bit_sizes.back();
+        int new_data_level_bc = new_coeff_m_bit_count - new_coeff_m_bit_sizes.back();
+        int data_level_bit_diff = new_data_level_bc - data_level_bc;
+        if (data_level_bit_diff > 0)
+        {
+          // Decrease primes sizes to go back to step_size=1
+          for (int i = 0; i < data_level_bit_diff - 1; ++i)
+          {
+            --new_coeff_m_bit_sizes[i % new_coeff_m_bit_sizes.size()];
+            --new_coeff_m_bit_count;
+          }
+        }
+        else
+        {
+          data_level_bit_diff *= -1;
+          if (data_level_bit_diff)
+          {
+            // Increase primes sizes to reach step_size=+1
+            for (int i = 0; i < data_level_bit_diff + 1; ++i)
+            {
+              ++new_coeff_m_bit_sizes.end()[-1 - i];
+              ++new_coeff_m_bit_count;
+            }
+          }
+          else
+          {
+            // Not to increment only special modulus size making it bigger than other primes
+            if (max_coeff_m_bit_count - new_coeff_m_bit_count > 1)
+            {
+              ++new_coeff_m_bit_sizes.end()[-1];
+              ++new_coeff_m_bit_sizes.end()[-2];
+              new_coeff_m_bit_count += 2;
+            }
+            else
+              increase_pmd();
+          }
+        }
+        coeff_m_bit_sizes = new_coeff_m_bit_sizes;
+        coeff_m_bit_count = new_coeff_m_bit_count;
+      }
+    }
+    else
+      increase_pmd();
   } while (true);
 
   return 0;
