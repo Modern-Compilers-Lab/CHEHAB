@@ -16,8 +16,15 @@ void Term::delete_operand_term(const std::string &term_label)
       break;
     }
   }
+
   if (pos >= 0)
-    operation_attribute->operands.erase(operation_attribute->operands.begin() + pos);
+  {
+    size_t degree = operation_attribute->operands.size();
+    operation_attribute->operands[pos]->delete_parent(this->label);
+    // operation_attribute->operands.erase(operation_attribute->operands.begin() + pos);
+    operation_attribute->operands[pos] = operation_attribute->operands.back();
+    operation_attribute->operands.erase(operation_attribute->operands.begin() + (degree - 1));
+  }
 }
 
 void Term::insert_parent_label(const std::string &label)
@@ -104,15 +111,7 @@ bool Term::merge_with_node(Ptr node_to_merge_with)
   };
 
   if (mergening_condition(node_to_merge_with))
-  {
-    /*
-      Mergening steps are simple. Having two nodes n1 and n2 where we want to merge them, in that n1 will contain
-      operands of n2 and n2 will be deleted. mergening is done from lower to higher level.
-    */
-    auto operands_to_merge_with_list = node_to_merge_with->get_operands();
-    auto &operands_list = (*operation_attribute).operands;
-    // operands_list.replace_node_with_list(node_to_merge_with->get_label(), operands_to_merge_with_list);
-  }
+  {}
 
   return true;
 }

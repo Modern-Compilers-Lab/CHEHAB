@@ -73,10 +73,14 @@ Ciphertext &operator-=(Ciphertext &lhs, const Plaintext &rhs)
   return lhs;
 }
 
+/*
 Ciphertext operator-(const Plaintext &lhs, const Ciphertext &rhs)
 {
-  return rhs - lhs;
+  return datatype::operate_binary<Ciphertext, Plaintext, Ciphertext>(
+    lhs, rhs, ir::OpCode::sub_plain, ir::ciphertextType);
 }
+*/
+
 /*
 Plaintext operator-(const Plaintext &lhs, const Scalar &rhs)
 {
@@ -105,10 +109,12 @@ Ciphertext operator-=(Ciphertext &lhs, const Scalar &rhs)
   return lhs;
 }
 
+/*
 Ciphertext operator-(const Scalar &lhs, const Ciphertext &rhs)
 {
-  return rhs - lhs;
+  return datatype::operate_binary<Ciphertext, Scalar, Ciphertext>(lhs, rhs, ir::OpCode::sub_plain, ir::ciphertextType);
 }
+*/
 
 // multiplication
 Ciphertext operator*(const Ciphertext &lhs, const Plaintext &rhs)

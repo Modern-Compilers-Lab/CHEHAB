@@ -55,6 +55,21 @@ Ciphertext dotProduct(fhecompiler::Ciphertext &ct1, fhecompiler::Ciphertext &ct2
   return sum_all_slots(simd_product);
 }
 
+/*
+1 Ctxt foo_batched ( Ctxt img ) {
+2 Ctxt r0 = img * -8;
+3 Ctxt r1 = img << -n -1;
+4 Ctxt r2 = img << -n;
+5 Ctxt r3 = img << -n +1;
+6 Ctxt r4 = img << -1;
+7 Ctxt r5 = img << 1;
+8 Ctxt r6 = img << n -1;
+9 Ctxt r7 = img << n;
+10 Ctxt r8 = img << n +1;
+11 return 2* img -( r0+r1+r2+r3+r4+r5+r6+r7+r8) ;
+12 }
+*/
+
 Ciphertext simple_sharpening_filter(fhecompiler::Ciphertext &img, int n)
 {
   /*
@@ -96,7 +111,7 @@ int main()
       Scalars as inputs (yes or no ?)
     */
 
-    fhecompiler::init("test1", 0, 4096, fhecompiler::Scheme::ckks, Backend::SEAL, pow(2.0, 40));
+    fhecompiler::init("test1", 0, 4096, fhecompiler::Scheme::bfv, Backend::SEAL);
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
@@ -167,9 +182,8 @@ int main()
     // swap(output2, z);
 
     output2 *= output2;
-
-    std::vector<vector<int64_t>> img_clear = {
-      {100, 120, 80, 123}, {125, 123, 122, 54}, {55, 120, 55, 120}, {55, 120, 55, 120}};
+    */
+    std::vector<vector<int64_t>> img_clear = {{1, 2, 3, 4}, {5, 6, 7, 8}, {1, 2, 4, 7}, {12, 1, 2, 2}};
 
     // flatten image
     std::vector<int64_t> img_encoded = flatten_image(img_clear);
@@ -180,10 +194,12 @@ int main()
 
     fhecompiler::Ciphertext output3("output3", VarType::output);
     output3 = simple_sharpening_filter(img_cipher, 4);
+
+    /*
+    output1 = (ct1 + ct2 - ct1 + ct2 + ct3 - ct4 - (-ct1) + ct1 - ct2 - ct2 - ct2) * 2 +
+              (ct1 + ct2 - ct1 + ct2 + ct3 - ct4 - (-ct1) + ct1 - ct2 - ct2 - ct2) * 2 -
+              (ct1 + ct2 - ct1 + ct2 + ct3 - ct4 - (-ct1) + ct1 - ct2 - ct2 - ct2) * 2;
     */
-
-    output1 = ct3 + ct4 * 4;
-
     fhecompiler::compile("test1.hpp");
   }
   catch (const char *message)
