@@ -29,25 +29,17 @@ vector<int> test_params(SEALContext context, int xdepth)
   batch_encoder.encode(pod_vector, plain);
   Ciphertext encrypted(context);
   encryptor.encrypt(plain, encrypted);
-  /*
-  The number of inserted mod_switch operations is the number of inner coefficients of coeff_modulus, ie without the
-  first (key level special modulus) and last (lowest level) modulus.
- */
-  // int nb_mod_switch = context.first_context_data()->parms().coeff_modulus().size() - 1;
+
   vector<int> noise_budgets(xdepth + 1);
   noise_budgets[0] = decryptor.invariant_noise_budget(encrypted);
   for (int i = 0; i < xdepth; ++i)
   {
     evaluator.multiply_inplace(encrypted, encrypted);
-    if (decryptor.invariant_noise_budget(encrypted) == 0)
-      throw invalid_argument("insufficient noise budget");
     evaluator.relinearize_inplace(encrypted, relin_keys);
-    noise_budgets[i + 1] = decryptor.invariant_noise_budget(encrypted);
-
-    /*
-    // Do mod_switch operation nb_mod_switch times evenly well distributed across xdepth consecutive multiplications
-    if (nb_mod_switch && i / (xdepth / nb_mod_switch) != (i + 1) / (xdepth / nb_mod_switch))
-      evaluator.mod_switch_to_next_inplace(encrypted);*/
+    int noise_budget = decryptor.invariant_noise_budget(encrypted);
+    if (noise_budget == 0)
+      throw invalid_argument("insufficient noise budget");
+    noise_budgets[i + 1] = noise_budget;
   }
   return noise_budgets;
 }
@@ -199,11 +191,7 @@ int main(int argc, char **argv)
         else
           cout << "After " << i << " sequential muls: " << noise_budgets[i] << endl;
       }
-      // Stop if the found correct parameters have xdepth data level primes
-      if (coeff_modulus.size() - 1 == xdepth)
-        break;
-      else
-        cout << endl;
+      break;
     }
     catch (invalid_argument &e)
     {
