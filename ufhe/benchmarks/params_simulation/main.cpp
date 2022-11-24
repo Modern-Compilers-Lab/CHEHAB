@@ -32,6 +32,8 @@ vector<int> test_params(SEALContext context, int xdepth)
 
   vector<int> noise_budgets(xdepth + 1);
   noise_budgets[0] = decryptor.invariant_noise_budget(encrypted);
+  if (noise_budgets[0] == 0)
+    throw invalid_argument("insufficient noise budget");
   for (int i = 0; i < xdepth; ++i)
   {
     evaluator.multiply_inplace(encrypted, encrypted);
@@ -46,9 +48,9 @@ vector<int> test_params(SEALContext context, int xdepth)
 
 int main(int argc, char **argv)
 {
-  int xdepth = 3;
+  int max_xdepth = 5;
   if (argc > 1)
-    xdepth = atoi(argv[1]);
+    max_xdepth = atoi(argv[1]);
   scheme_type scheme = scheme_type::bfv;
   sec_level_type sec_level = sec_level_type::tc128;
   int initial_plain_m_size = 17;
@@ -58,12 +60,12 @@ int main(int argc, char **argv)
     throw invalid_argument("plain modulus size must be at least 17 bits to support batching with n up to 32768");
 
   size_t max_poly_md = 32768;
-  int max_fresh_noise = 10;
+  int xdepth = 0;
 
   vector<Modulus> coeff_modulus;
   // Initial bit_sizes: one data level prime, special modulus
-  vector<int> bit_sizes{initial_plain_m_size + max_fresh_noise + 1, initial_plain_m_size + max_fresh_noise + 1};
-  int bit_count = 2 * (initial_plain_m_size + max_fresh_noise + 1);
+  vector<int> bit_sizes{initial_plain_m_size + 1, initial_plain_m_size + 1};
+  int bit_count = 2 * (initial_plain_m_size + 1);
 
   size_t poly_modulus_degree = initial_poly_md;
   int max_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level);
@@ -182,6 +184,7 @@ int main(int argc, char **argv)
       // Test parameters
       vector<int> noise_budgets = test_params(context, xdepth);
       // Print correct parameters
+      cout << "xdepth= " << xdepth << endl;
       print_parameters(context);
       // Print noise budget progress over the computation
       for (int i = 0; i < noise_budgets.size(); ++i)
@@ -191,7 +194,13 @@ int main(int argc, char **argv)
         else
           cout << "After " << i << " sequential muls: " << noise_budgets[i] << endl;
       }
-      break;
+      if (xdepth < max_xdepth)
+      {
+        ++xdepth;
+        cout << "-----------------------------------------------------" << endl;
+      }
+      else
+        break;
     }
     catch (invalid_argument &e)
     {
