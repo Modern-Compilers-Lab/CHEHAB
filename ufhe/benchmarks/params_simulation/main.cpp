@@ -77,7 +77,7 @@ int main(int argc, char **argv)
       SEALContext context(params, true, sec_level);
       // Test parameters
       vector<int> noise_budgets = test_params(context, xdepth);
-      // Print correct parameters
+      // Print the first correct parameters
       cout << "xdepth= " << xdepth << endl;
       print_parameters(context);
       // Print noise budget progress over the computation
@@ -92,13 +92,21 @@ int main(int argc, char **argv)
       if (noise_budgets.back() > safety_margin)
       {
         // Reduce coeff modulus bit count
-        coeff_m_bit_count -= noise_budgets.back() - safety_margin;
+        // coeff_m_bit_count -= noise_budgets.back() - safety_margin;
+        // Calculate coeff modulus data level bit count
+        int data_level_bc = coeff_m_bit_count - coeff_m_bit_sizes.back();
+        // Remove special prime size for now
+        coeff_m_bit_sizes.pop_back();
         int first_bigger_prime_idx = coeff_m_bit_sizes.size() - 1;
         while (first_bigger_prime_idx > 0 &&
                coeff_m_bit_sizes[first_bigger_prime_idx] == coeff_m_bit_sizes[first_bigger_prime_idx - 1])
           --first_bigger_prime_idx;
         for (int i = 0; i < noise_budgets.back() - safety_margin; ++i)
           --coeff_m_bit_sizes[(first_bigger_prime_idx + i) % coeff_m_bit_sizes.size()];
+        data_level_bc -= noise_budgets.back() - safety_margin;
+        // Add special prime
+        coeff_m_bit_sizes.push_back(coeff_m_bit_sizes.back());
+        coeff_m_bit_count = data_level_bc + coeff_m_bit_sizes.back();
         // Reduce poly_modulus_degree according to the minimal coeff_m_bit_count and sec_level
         while (CoeffModulus::MaxBitCount(poly_modulus_degree >> 2, sec_level) >= coeff_m_bit_count)
           poly_modulus_degree >>= 1;
