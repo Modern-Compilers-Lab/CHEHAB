@@ -6,6 +6,9 @@ int main(int argc, char **argv)
   if (argc > 1)
     initial_plain_m_size = atoi(argv[1]);
 
+  if (initial_plain_m_size > 60)
+    throw invalid_argument("plain modulus size too large");
+
   int xdepth = 20;
   if (argc > 2)
     xdepth = atoi(argv[2]);
@@ -19,11 +22,13 @@ int main(int argc, char **argv)
 
   string depth_too_large_msg = "xdepth too large, corresponding parameters not included in FHE security standard";
   scheme_type scheme = scheme_type::bfv;
+  size_t initial_poly_md = 1024;
   size_t max_poly_md = 32768;
   int safety_margin = xdepth;
   cout << "safety_margin: " << safety_margin << endl;
   // Set Initial parameters using using bfv_params_heuristic
-  EncryptionParameters params = bfv_params_heuristic(initial_plain_m_size, xdepth, sec_level, use_least_levels);
+  EncryptionParameters params = bfv_params_heuristic(
+    initial_plain_m_size, xdepth, sec_level, use_least_levels, initial_poly_md, max_poly_md, depth_too_large_msg);
   cout << "Initial parameters using bfv_params_heuristic" << endl;
   // Initial coeff_m_bit_sizes
   vector<int> coeff_m_bit_sizes(params.coeff_modulus().size());
