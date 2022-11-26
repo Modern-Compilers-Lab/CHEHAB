@@ -153,6 +153,22 @@ Modulus create_plain_modulus(size_t poly_modulus_degree, int &size, int max_size
   return plain_modulus;
 }
 
+int first_biggest_prime_index(const vector<int> &bit_sizes)
+{
+  int idx = bit_sizes.size() - 1;
+  while (idx > 0 && bit_sizes[idx] == bit_sizes[idx - 1])
+    --idx;
+  return idx;
+}
+
+int last_smallest_prime_index(const vector<int> &bit_sizes)
+{
+  int idx = 0;
+  while (idx < bit_sizes.size() - 1 && bit_sizes[idx] == bit_sizes[idx + 1])
+    ++idx;
+  return idx;
+}
+
 void reduce_coeff_modulus_bit_count(vector<int> &bit_sizes, int &bit_count, int amount)
 {
   // Calculate data level bit count
@@ -160,9 +176,7 @@ void reduce_coeff_modulus_bit_count(vector<int> &bit_sizes, int &bit_count, int 
   // Remove special prime size for now
   bit_sizes.pop_back();
   // Find the first bigger prime index
-  int idx = bit_sizes.size() - 1;
-  while (idx > 0 && bit_sizes[idx] == bit_sizes[idx - 1])
-    --idx;
+  int idx = first_biggest_prime_index(bit_sizes);
   // Reduce data level primes bit sizes by amount starting from idx
   for (int i = 0; i < amount; ++i)
     --bit_sizes[(idx + i) % bit_sizes.size()];

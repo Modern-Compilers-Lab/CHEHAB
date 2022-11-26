@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
   scheme_type scheme = scheme_type::bfv;
   size_t max_poly_md = 32768;
-  int safety_margin = 3;
+  int safety_margin = xdepth / 2;
   // Set Initial parameters using using bfv_params_heuristic
   EncryptionParameters params = bfv_params_heuristic(initial_plain_m_size, xdepth, sec_level, use_least_levels);
   // Initial coeff_m_bit_sizes
@@ -123,79 +123,44 @@ int main(int argc, char **argv)
     // Increment parameters
     if (coeff_m_bit_count < max_coeff_m_bit_count)
     {
-      int avg_bit_size = coeff_m_bit_count / coeff_m_bit_sizes.size();
-      if (avg_bit_size < 60)
+      // Increment coeff modulus data level bit count
+      int smallest_prime_idx = last_smallest_prime_index(coeff_m_bit_sizes);
+      // Smallest prime size can be incremented
+      if (coeff_m_bit_sizes[smallest_prime_idx] < 60)
       {
-        for (int i = coeff_m_bit_sizes.size() - 1; i >= 0; --i)
+        // All primes have the same size
+        if (smallest_prime_idx == coeff_m_bit_sizes.size() - 1)
         {
-          if (coeff_m_bit_sizes[i] <= avg_bit_size)
+          // Not to increment only special prime size
+          if (max_coeff_m_bit_count - coeff_m_bit_count > 1)
           {
-            // All primes have the same size
-            if (i == coeff_m_bit_sizes.size() - 1)
-            {
-              // Not to increment only special modulus size making it bigger than other primes
-              if (max_coeff_m_bit_count - coeff_m_bit_count > 1)
-              {
-                ++coeff_m_bit_sizes[i];
-                ++coeff_m_bit_sizes[i - 1];
-                coeff_m_bit_count += 2;
-              }
-              else
-                increase_pmd();
-            }
-            else
-            {
-              ++coeff_m_bit_sizes[i];
-              ++coeff_m_bit_count;
-            }
-            break;
+            ++coeff_m_bit_sizes[smallest_prime_idx];
+            ++coeff_m_bit_sizes[smallest_prime_idx - 1];
+            coeff_m_bit_count += 2;
           }
-        }
-      }
-      else
-      {
-        int new_coeff_m_bit_count = coeff_m_bit_count - coeff_m_bit_count % (coeff_m_bit_sizes.size() + 1);
-        vector<int> new_coeff_m_bit_sizes(
-          coeff_m_bit_sizes.size() + 1, new_coeff_m_bit_count / (coeff_m_bit_sizes.size() + 1));
-        int data_level_bc = coeff_m_bit_count - coeff_m_bit_sizes.back();
-        int new_data_level_bc = new_coeff_m_bit_count - new_coeff_m_bit_sizes.back();
-        int data_level_bit_diff = new_data_level_bc - data_level_bc;
-        if (data_level_bit_diff > 0)
-        {
-          // Decrease primes sizes to go back to step_size=1
-          for (int i = 0; i < data_level_bit_diff - 1; ++i)
-          {
-            --new_coeff_m_bit_sizes[i % new_coeff_m_bit_sizes.size()];
-            --new_coeff_m_bit_count;
-          }
+          else
+            increase_pmd();
         }
         else
         {
-          data_level_bit_diff *= -1;
-          if (data_level_bit_diff)
-          {
-            // Increase primes sizes to reach step_size=+1
-            for (int i = 0; i < data_level_bit_diff + 1; ++i)
-            {
-              ++new_coeff_m_bit_sizes.end()[-1 - i];
-              ++new_coeff_m_bit_count;
-            }
-          }
-          else
-          {
-            // Not to increment only special modulus size making it bigger than other primes
-            if (max_coeff_m_bit_count - new_coeff_m_bit_count > 1)
-            {
-              ++new_coeff_m_bit_sizes.end()[-1];
-              ++new_coeff_m_bit_sizes.end()[-2];
-              new_coeff_m_bit_count += 2;
-            }
-            else
-              increase_pmd();
-          }
+          ++coeff_m_bit_sizes[smallest_prime_idx];
+          ++coeff_m_bit_count;
         }
-        coeff_m_bit_sizes = new_coeff_m_bit_sizes;
-        coeff_m_bit_count = new_coeff_m_bit_count;
+      }
+      // All prime sizes have reached 60, add a new prime
+      else
+      {
+        int data_level_bc = coeff_m_bit_count - coeff_m_bit_sizes.back();
+        // new_bit_sizes with only data level primes sizes
+        vector<int> new_bit_sizes(coeff_m_bit_sizes.size(), data_level_bc / coeff_m_bit_sizes.size());
+        // Add remaining bits and increment
+        int remaining_bits = data_level_bc % new_bit_sizes.size();
+        for (int i = 0; i < remaining_bits + 1; ++i)
+          ++new_bit_sizes.end()[-1 - i];
+        // Add special prime
+        new_bit_sizes.push_back(new_bit_sizes.back());
+        coeff_m_bit_sizes = new_bit_sizes;
+        coeff_m_bit_count = data_level_bc + 1 + new_bit_sizes.back();
       }
     }
     else
