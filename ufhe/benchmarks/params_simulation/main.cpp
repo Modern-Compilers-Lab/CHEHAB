@@ -11,6 +11,9 @@ int main(int argc, char **argv)
     xdepth = atoi(argv[2]);
 
   bool use_least_levels = false;
+  if (argc > 3)
+    use_least_levels = atoi(argv[3]);
+
   sec_level_type sec_level = sec_level_type::tc128;
 
   scheme_type scheme = scheme_type::bfv;
@@ -60,6 +63,8 @@ int main(int argc, char **argv)
       vector<int> noise_budgets = test_params(context, xdepth);
       // Print the first correct parameters
       cout << "xdepth: " << xdepth << endl;
+      if (noise_budgets.back() > safety_margin)
+        cout << "Not minimal parameters" << endl;
       print_parameters(context);
       // Print noise budget progress over the computation
       print_noise_budget_progress(noise_budgets);
@@ -73,22 +78,23 @@ int main(int argc, char **argv)
           poly_modulus_degree >>= 1;
         // If poly_modulus_degree is reduced
         if (params.poly_modulus_degree() > poly_modulus_degree)
+        {
+          params.set_poly_modulus_degree(poly_modulus_degree);
           // Retry to create plain modulus with the user given size
           plain_m_size = initial_plain_m_size;
-        params.set_poly_modulus_degree(poly_modulus_degree);
+          plain_modulus = create_plain_modulus(
+            poly_modulus_degree, plain_m_size, params.plain_modulus().bit_count(),
+            "Minimal parameters plain_modulus could not be created");
+        }
         try
         {
           coeff_modulus = CoeffModulus::Create(poly_modulus_degree, coeff_m_bit_sizes);
         }
         catch (logic_error &e)
         {
-          throw logic_error("Minimal parameters coeff_modulus primes could not be found");
+          throw logic_error("Minimal parameters coeff_modulus primes could not be created");
         }
         params.set_coeff_modulus(coeff_modulus);
-        // Increasing plain_modulus above the found parameters does not guarantee corectness of minimal parameters
-        plain_modulus = create_plain_modulus(
-          poly_modulus_degree, plain_m_size, params.plain_modulus().bit_count(),
-          "Minimal parameters plain_modulus prime could not be found");
         params.set_plain_modulus(plain_modulus);
         context = SEALContext(params, true, sec_level);
         // Test parameters
