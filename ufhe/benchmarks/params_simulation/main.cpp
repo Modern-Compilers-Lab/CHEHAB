@@ -9,6 +9,7 @@ int main(int argc, char **argv)
   int xdepth = 20;
   if (argc > 2)
     xdepth = atoi(argv[2]);
+  cout << "xdepth: " << xdepth << endl;
 
   bool use_least_levels = false;
   if (argc > 3)
@@ -18,9 +19,11 @@ int main(int argc, char **argv)
 
   scheme_type scheme = scheme_type::bfv;
   size_t max_poly_md = 32768;
-  int safety_margin = xdepth / 2;
+  int safety_margin = xdepth;
+  cout << "safety_margin: " << safety_margin << endl;
   // Set Initial parameters using using bfv_params_heuristic
   EncryptionParameters params = bfv_params_heuristic(initial_plain_m_size, xdepth, sec_level, use_least_levels);
+  cout << "Initial parameters using bfv_params_heuristic" << endl;
   // Initial coeff_m_bit_sizes
   vector<int> coeff_m_bit_sizes(params.coeff_modulus().size());
   int coeff_m_bit_count = 0;
@@ -48,6 +51,7 @@ int main(int argc, char **argv)
     plain_modulus = create_plain_modulus(poly_modulus_degree, plain_m_size, 60, depth_too_large_msg);
   };
 
+  int test_count = 0;
   do
   {
     try
@@ -61,9 +65,15 @@ int main(int argc, char **argv)
       SEALContext context(params, true, sec_level);
       // Test
       vector<int> noise_budgets = test_params(context, xdepth);
-      // Print the first correct parameters
-      cout << "xdepth: " << xdepth << endl;
-      if (noise_budgets.back() > safety_margin)
+      ++test_count;
+      // Print the first valid parameters
+      if (test_count == 1)
+        cout << "Valid initial parameters" << endl;
+      else
+        cout << "Valid parameters after testing " << test_count << " parameters sets" << endl;
+      if (noise_budgets.back() <= safety_margin)
+        cout << "Minimal parameters" << endl;
+      else
         cout << "Not minimal parameters" << endl;
       print_parameters(context);
       // Print noise budget progress over the computation
@@ -104,11 +114,11 @@ int main(int argc, char **argv)
         }
         catch (invalid_argument &e)
         {
-          throw logic_error("Minimal parameters not correct, evaluation failed");
+          throw logic_error("Minimal parameters not valid, evaluation failed");
         }
-        // Print minimal correct parameters
-        cout << "-----------------------------------------------------" << endl;
-        cout << "Minimal parameters" << endl;
+        // Print minimal valid parameters
+        cout << "---------------------------------------------------------------" << endl;
+        cout << "Minimal parameters " << endl;
         print_parameters(context);
         // Print noise budget progress over the computation
         print_noise_budget_progress(noise_budgets);
