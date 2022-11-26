@@ -9,7 +9,8 @@ using namespace std;
 using namespace seal;
 
 EncryptionParameters bfv_params_heuristic(
-  int initial_plain_m_size, int xdepth, sec_level_type sec_level, bool use_least_levels, size_t initial_poly_md)
+  int initial_plain_m_size = 17, int xdepth = 23, sec_level_type sec_level = sec_level_type::tc128,
+  bool use_least_levels = false, size_t initial_poly_md = 1024)
 {
   if (initial_plain_m_size > 60)
     throw invalid_argument("plain modulus size too large");
@@ -89,7 +90,7 @@ EncryptionParameters bfv_params_heuristic(
   return params;
 }
 
-vector<int> test_params(SEALContext context, int xdepth)
+vector<int> test_params(const SEALContext &context, int xdepth)
 {
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
@@ -126,6 +127,61 @@ vector<int> test_params(SEALContext context, int xdepth)
     noise_budgets[i + 1] = noise_budget;
   }
   return noise_budgets;
+}
+
+Modulus create_plain_modulus(size_t poly_modulus_degree, int &size, int max_size, const string &err_msg)
+{
+  if (size > max_size)
+    throw invalid_argument("plain_modulus initial size greater than max_size");
+
+  Modulus plain_modulus;
+  do
+  {
+    try
+    {
+      plain_modulus = PlainModulus::Batching(poly_modulus_degree, size);
+      break;
+    }
+    // Suitable prime could not be found
+    catch (logic_error &e)
+    {
+      if (size == max_size)
+        throw invalid_argument(err_msg);
+      ++size;
+    }
+  } while (true);
+  return plain_modulus;
+}
+
+void reduce_coeff_modulus_bit_count(vector<int> &bit_sizes, int &bit_count, int amount)
+{
+  // Calculate data level bit count
+  int data_level_bit_count = bit_count - bit_sizes.back();
+  // Remove special prime size for now
+  bit_sizes.pop_back();
+  // Find the first bigger prime index
+  int idx = bit_sizes.size() - 1;
+  while (idx > 0 && bit_sizes[idx] == bit_sizes[idx - 1])
+    --idx;
+  // Reduce data level primes bit sizes by amount starting from idx
+  for (int i = 0; i < amount; ++i)
+    --bit_sizes[(idx + i) % bit_sizes.size()];
+  data_level_bit_count -= amount;
+  // Add special prime
+  bit_sizes.push_back(bit_sizes.back());
+  // Update bit_count
+  bit_count = data_level_bit_count + bit_sizes.back();
+}
+
+void print_noise_budget_progress(vector<int> noise_budgets)
+{
+  for (int i = 0; i < noise_budgets.size(); ++i)
+  {
+    if (i == 0)
+      cout << "Fresh noise budget: " << noise_budgets[0] << endl;
+    else
+      cout << "After " << i << " seq muls: " << noise_budgets[i] << endl;
+  }
 }
 
 void print_parameters(const seal::SEALContext &context)
