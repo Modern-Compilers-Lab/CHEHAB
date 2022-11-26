@@ -17,6 +17,7 @@ int main(int argc, char **argv)
 
   sec_level_type sec_level = sec_level_type::tc128;
 
+  string depth_too_large_msg = "xdepth too large, corresponding parameters not included in FHE security standard";
   scheme_type scheme = scheme_type::bfv;
   size_t max_poly_md = 32768;
   int safety_margin = xdepth;
@@ -34,22 +35,8 @@ int main(int argc, char **argv)
   }
   // Initial poly_modulus_degree
   size_t poly_modulus_degree = params.poly_modulus_degree();
-  int max_coeff_m_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level);
   // Initial plain_modulus
   Modulus plain_modulus = params.plain_modulus();
-  int plain_m_size = plain_modulus.bit_count();
-
-  // Lambda function to increase poly_modulus_degree
-  auto increase_pmd = [&]() {
-    string depth_too_large_msg = "xdepth too large, corresponding parameters not included in fhe security standard";
-    if (poly_modulus_degree == max_poly_md)
-      throw invalid_argument(depth_too_large_msg);
-
-    poly_modulus_degree *= 2;
-    max_coeff_m_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level);
-    // Set plain modulus for batching with the new poly_modulus_degree
-    plain_modulus = create_plain_modulus(poly_modulus_degree, plain_m_size, 60, depth_too_large_msg);
-  };
 
   int test_count = 0;
   do
@@ -90,10 +77,9 @@ int main(int argc, char **argv)
         if (params.poly_modulus_degree() > poly_modulus_degree)
         {
           params.set_poly_modulus_degree(poly_modulus_degree);
-          // Retry to create plain modulus with the user given size
-          plain_m_size = initial_plain_m_size;
+          // Retry to create plain modulus with size initial_plain_m_size
           plain_modulus = create_plain_modulus(
-            poly_modulus_degree, plain_m_size, params.plain_modulus().bit_count(),
+            poly_modulus_degree, initial_plain_m_size, params.plain_modulus().bit_count(),
             "Minimal parameters plain_modulus could not be created");
         }
         try
@@ -118,7 +104,7 @@ int main(int argc, char **argv)
         }
         // Print minimal valid parameters
         cout << "---------------------------------------------------------------" << endl;
-        cout << "Minimal parameters " << endl;
+        cout << "Minimal parameters" << endl;
         print_parameters(context);
         // Print noise budget progress over the computation
         print_noise_budget_progress(noise_budgets);
@@ -137,6 +123,7 @@ int main(int argc, char **argv)
     }
 
     // Increment parameters
+    int max_coeff_m_bit_count = CoeffModulus::MaxBitCount(poly_modulus_degree, sec_level);
     if (coeff_m_bit_count < max_coeff_m_bit_count)
     {
       // Increment coeff modulus data level bit count
@@ -155,7 +142,11 @@ int main(int argc, char **argv)
             coeff_m_bit_count += 2;
           }
           else
-            increase_pmd();
+          {
+            increase_poly_md(poly_modulus_degree, max_poly_md, depth_too_large_msg);
+            plain_modulus =
+              create_plain_modulus(poly_modulus_degree, plain_modulus.bit_count(), 60, depth_too_large_msg);
+          }
         }
         else
         {
@@ -167,20 +158,25 @@ int main(int argc, char **argv)
       else
       {
         int data_level_bc = coeff_m_bit_count - coeff_m_bit_sizes.back();
-        // new_bit_sizes with only data level primes sizes
-        vector<int> new_bit_sizes(coeff_m_bit_sizes.size(), data_level_bc / coeff_m_bit_sizes.size());
+        // Increment the number of data level primes, old number of primes + 1 (special prime)
+        int data_level_nb_primes = coeff_m_bit_sizes.size();
+        // coeff_m_bit_sizes with only data level primes sizes
+        coeff_m_bit_sizes.assign(data_level_nb_primes, data_level_bc / data_level_nb_primes);
         // Add remaining bits and increment
-        int remaining_bits = data_level_bc % new_bit_sizes.size();
+        int remaining_bits = data_level_bc % coeff_m_bit_sizes.size();
         for (int i = 0; i < remaining_bits + 1; ++i)
-          ++new_bit_sizes.end()[-1 - i];
+          ++coeff_m_bit_sizes.end()[-1 - i];
         // Add special prime
-        new_bit_sizes.push_back(new_bit_sizes.back());
-        coeff_m_bit_sizes = new_bit_sizes;
-        coeff_m_bit_count = data_level_bc + 1 + new_bit_sizes.back();
+        coeff_m_bit_sizes.push_back(coeff_m_bit_sizes.back());
+        coeff_m_bit_count = data_level_bc + 1 + coeff_m_bit_sizes.back();
       }
     }
     else
-      increase_pmd();
+    {
+      increase_poly_md(poly_modulus_degree, max_poly_md, depth_too_large_msg);
+      plain_modulus = create_plain_modulus(poly_modulus_degree, plain_modulus.bit_count(), 60, depth_too_large_msg);
+    }
+
   } while (true);
 
   return 0;

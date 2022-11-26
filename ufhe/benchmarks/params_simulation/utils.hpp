@@ -129,28 +129,33 @@ vector<int> test_params(const SEALContext &context, int xdepth)
   return noise_budgets;
 }
 
-Modulus create_plain_modulus(size_t poly_modulus_degree, int &size, int max_size, const string &err_msg)
+void increase_poly_md(size_t &poly_modulus_degree, size_t max_poly_md, const string &err_msg)
 {
-  if (size > max_size)
+  if (poly_modulus_degree == max_poly_md)
+    throw invalid_argument(err_msg);
+
+  poly_modulus_degree <<= 2;
+}
+
+Modulus create_plain_modulus(size_t poly_modulus_degree, int initial_size, int max_size, const string &err_msg)
+{
+  if (initial_size > max_size)
     throw invalid_argument("plain_modulus initial size greater than max_size");
 
-  Modulus plain_modulus;
   do
   {
     try
     {
-      plain_modulus = PlainModulus::Batching(poly_modulus_degree, size);
-      break;
+      return PlainModulus::Batching(poly_modulus_degree, initial_size);
     }
     // Suitable prime could not be found
     catch (logic_error &e)
     {
-      if (size == max_size)
+      if (initial_size == max_size)
         throw invalid_argument(err_msg);
-      ++size;
+      ++initial_size;
     }
   } while (true);
-  return plain_modulus;
 }
 
 int first_biggest_prime_index(const vector<int> &bit_sizes)
