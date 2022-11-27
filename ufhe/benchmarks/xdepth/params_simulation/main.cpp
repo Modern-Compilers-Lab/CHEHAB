@@ -15,7 +15,7 @@ int main(int argc, char **argv)
   if (argc > 3)
     use_least_levels = atoi(argv[3]);
 
-  bfv_params_simulation(initial_plain_m_size, xdepth, xdepth, use_least_levels);
+  bfv_params_simulation(initial_plain_m_size, xdepth, xdepth + 1, use_least_levels);
 
   return 0;
 }
