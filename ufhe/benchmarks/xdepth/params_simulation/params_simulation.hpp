@@ -30,3 +30,5 @@ int last_smallest_prime_index(const std::vector<int> &bit_sizes);
 void print_noise_budget_progress(const std::vector<int> &noise_budgets);
 
 void print_parameters(const seal::SEALContext &context);
+
+int ceil_float_div(int a, int b);

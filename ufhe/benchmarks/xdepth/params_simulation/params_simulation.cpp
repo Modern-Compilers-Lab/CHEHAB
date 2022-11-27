@@ -1,5 +1,6 @@
 
 #include "params_simulation.hpp"
+#include <cmath>
 #include <iostream>
 #include <random>
 #include <stdexcept>
@@ -19,10 +20,10 @@ SEALContext bfv_params_simulation(
   scheme_type scheme = scheme_type::bfv;
   size_t max_poly_md = 32768;
   cout << "safety_margin: " << safety_margin << endl;
+  cout << "Initial parameters using bfv_params_heuristic" << endl;
   // Set Initial parameters using using bfv_params_heuristic
   EncryptionParameters params = bfv_params_heuristic(
     initial_plain_m_size, xdepth, sec_level, use_least_levels, 1024, max_poly_md, depth_too_large_msg);
-  cout << "Initial parameters using bfv_params_heuristic" << endl;
   // Initial coeff_m_bit_sizes
   vector<int> coeff_m_bit_sizes(params.coeff_modulus().size());
   int coeff_m_bit_count = 0;
@@ -156,8 +157,10 @@ SEALContext bfv_params_simulation(
       else
       {
         int data_level_bc = coeff_m_bit_count - coeff_m_bit_sizes.back();
-        // Increment the number of data level primes, old number of primes + 1 (special prime)
-        int data_level_nb_primes = coeff_m_bit_sizes.size();
+        // Remove special prime size
+        coeff_m_bit_sizes.pop_back();
+        // Increment the number of data level primes
+        int data_level_nb_primes = coeff_m_bit_sizes.size() + 1;
         // coeff_m_bit_sizes with only data level primes sizes
         coeff_m_bit_sizes.assign(data_level_nb_primes, data_level_bc / data_level_nb_primes);
         // Add remaining bits and increment
@@ -200,14 +203,13 @@ EncryptionParameters bfv_params_heuristic(
     int plain_m_size = plain_modulus.bit_count();
     int worst_case_mul_ng = poly_md_bit_count * 2 + plain_m_size + 1;
     int best_case_mul_ng = max(poly_md_bit_count, plain_m_size);
-    int avg_mul_ng = (worst_case_mul_ng + best_case_mul_ng) / 2 + (worst_case_mul_ng + best_case_mul_ng) % 2;
+    // Calculate the average and round to the next integer
+    int avg_mul_ng = ceil_float_div(worst_case_mul_ng + best_case_mul_ng, 2);
     int coeff_m_data_level_bc = plain_m_size + max_fresh_noise + xdepth * avg_mul_ng;
     // Set coeff_modulus primes sizes
     if (use_least_levels)
     {
-      int lowest_nb_levels = coeff_m_data_level_bc / 60;
-      if (coeff_m_data_level_bc % 60)
-        ++lowest_nb_levels;
+      int lowest_nb_levels = ceil_float_div(coeff_m_data_level_bc, 60);
       coeff_m_bit_sizes.assign(lowest_nb_levels, 60);
       // Remove exceeding bits
       for (int i = 0; i < 60 - (coeff_m_data_level_bc % 60); ++i)
@@ -244,7 +246,7 @@ EncryptionParameters bfv_params_heuristic(
       // Repeat estimation with new poly_modulus_degree and plain_modulus
       continue;
     }
-
+    cout << "Estimated mul noise growth: " << avg_mul_ng << endl;
     break;
 
   } while (true);
@@ -331,7 +333,7 @@ void reduce_coeff_modulus_bit_count(vector<int> &bit_sizes, int &bit_count, int 
 {
   // Calculate data level bit count
   int data_level_bit_count = bit_count - bit_sizes.back();
-  // Remove special prime size for now
+  // Remove special prime size
   bit_sizes.pop_back();
   // Find the first bigger prime index
   int idx = first_biggest_prime_index(bit_sizes);
@@ -370,6 +372,10 @@ void print_noise_budget_progress(const vector<int> &noise_budgets)
     else
       cout << "After " << i << " seq muls: " << noise_budgets[i] << endl;
   }
+  int total_noise_growth = noise_budgets[0] - noise_budgets.back();
+  int nb_muls = noise_budgets.size() - 1;
+
+  cout << "Observed mul avg noise growth: " << ceil_float_div(total_noise_growth, nb_muls) << endl;
 }
 
 void print_parameters(const seal::SEALContext &context)
@@ -422,4 +428,9 @@ void print_parameters(const seal::SEALContext &context)
   }
 
   std::cout << "\\" << std::endl;
+}
+
+int ceil_float_div(int a, int b)
+{
+  return static_cast<int>(ceilf(static_cast<float>(a) / b));
 }
