@@ -22,7 +22,7 @@ void reduce_coeff_mod_size(std::vector<int> &primes_sizes, int &total_size, int 
 
 int last_small_prime_index(const std::vector<int> &primes_sizes);
 
-void print_noise_budget_progress(const std::vector<int> &noise_budgets);
+void print_noise_budget_progress(const std::vector<int> &noise_budgets, bool verbose = false);
 
 void print_parameters(const seal::SEALContext &context);
 

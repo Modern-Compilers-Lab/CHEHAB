@@ -127,7 +127,15 @@ SEALContext bfv_params_simulation(int init_plain_mod_size, int xdepth, int safet
 
     // Valid parameters
     if (test_count == 1)
+    {
       cout << "Valid initial parameters" << endl;
+      print_parameters(context);
+      cout << endl;
+      // Print noise budget progress over the computation
+      cout << "Noise budget progress (bits)" << endl;
+      print_noise_budget_progress(noise_budgets);
+      cout << endl;
+    }
     else
       cout << "Valid parameters after " << test_count << " tests" << endl;
 
@@ -195,7 +203,7 @@ SEALContext bfv_params_simulation(int init_plain_mod_size, int xdepth, int safet
     print_parameters(context);
     cout << endl;
     // Print noise budget progress over the computation
-    cout << "Noise budget progress" << endl;
+    cout << "Noise budget progress (bits)" << endl;
     print_noise_budget_progress(noise_budgets);
     return context;
   } while (true);
@@ -345,11 +353,12 @@ int last_small_prime_index(const vector<int> &primes_sizes)
   return idx;
 }
 
-void print_noise_budget_progress(const vector<int> &noise_budgets)
+void print_noise_budget_progress(const vector<int> &noise_budgets, bool verbose)
 {
-  cout << "Fresh budget: " << noise_budgets[0] << " bits" << endl;
+  cout << "Fresh budget: " << noise_budgets[0] << endl;
   if (noise_budgets.size() == 1)
     return;
+
   int min_mul_ng = noise_budgets[0] - noise_budgets[1];
   int max_mul_ng = min_mul_ng;
   int nb_muls = noise_budgets.size() - 1;
@@ -360,11 +369,15 @@ void print_noise_budget_progress(const vector<int> &noise_budgets)
       min_mul_ng = mul_ng;
     if (mul_ng > max_mul_ng)
       max_mul_ng = mul_ng;
-    cout << i << " seqmul: " << noise_budgets[i];
-    cout << " (-" << mul_ng << " bits)" << endl;
+    if (verbose)
+      cout << i << " seqmul: " << noise_budgets[i] << " (-" << mul_ng << ")" << endl;
   }
-  cout << "Min growth: " << min_mul_ng << " bits" << endl;
-  cout << "Max growth: " << max_mul_ng << " bits" << endl;
+  if (!verbose)
+    cout << "Remaining budget: " << noise_budgets.back() << endl;
+  cout << "Min growth: " << min_mul_ng << endl;
+  cout << "Max growth: " << max_mul_ng << endl;
+  int total_ng = noise_budgets[0] - noise_budgets.back();
+  cout << "Avg growth: " << static_cast<float>(total_ng) / nb_muls << endl;
 }
 
 void print_parameters(const seal::SEALContext &context)
@@ -392,14 +405,18 @@ void print_parameters(const seal::SEALContext &context)
   std::cout << "/" << std::endl;
   std::cout << "| Encryption parameters :" << std::endl;
   std::cout << "|   scheme: " << scheme_name << std::endl;
-  std::cout << "|   poly_mod: " << context_data.parms().poly_modulus_degree() << std::endl;
+  size_t poly_mod = context_data.parms().poly_modulus_degree();
+  std::cout << "|   poly_mod: " << poly_mod << " (" << util::get_significant_bit_count(poly_mod) << " bits)"
+            << std::endl;
 
   /*
   Print the size of the true (product) coefficient modulus.
   */
   std::cout << "|   coeff_mod size: ";
-  std::cout << context_data.total_coeff_modulus_bit_count() << " (";
   auto coeff_mod = context_data.parms().coeff_modulus();
+  int total_bit_count = context_data.total_coeff_modulus_bit_count();
+  std::cout << total_bit_count << " (" << total_bit_count - coeff_mod.back().bit_count() << " + "
+            << coeff_mod.back().bit_count() << ") (";
   std::size_t coeff_mod_size = coeff_mod.size();
   for (std::size_t i = 0; i < coeff_mod_size - 1; ++i)
   {
@@ -414,7 +431,8 @@ void print_parameters(const seal::SEALContext &context)
   if (
     context_data.parms().scheme() == seal::scheme_type::bfv || context_data.parms().scheme() == seal::scheme_type::bgv)
   {
-    std::cout << "|   plain_mod: " << context_data.parms().plain_modulus().value() << std::endl;
+    Modulus plain_mod = context_data.parms().plain_modulus();
+    std::cout << "|   plain_mod: " << plain_mod.value() << " (" << plain_mod.bit_count() << " bits)" << std::endl;
   }
 
   std::cout << "\\" << std::endl;
