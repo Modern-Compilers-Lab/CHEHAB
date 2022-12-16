@@ -5,17 +5,20 @@
 #include <random>
 #include <stdexcept>
 
+#define MIN_PARAMS_PRIMES_ERROR "minimal parameters primes could not be created"
+#define MIN_PARAMS_NOT_VALID "Minimal parameters not valid"
+
 using namespace std;
 using namespace seal;
 
 SEALContext bfv_params_simulation(int init_plain_mod_size, int xdepth, int safety_margin, sec_level_type sec_level)
 {
+  cout << "initial plain modulus size: " << init_plain_mod_size << endl;
   cout << "xdepth: " << xdepth << endl;
-  cout << "safety_margin: " << safety_margin << endl;
-  cout << "Initial parameters using bfv_params_heuristic" << endl;
+  cout << endl;
+
   // Set Initial parameters using using bfv_params_heuristic
   auto [params, estimated_mul_ng] = bfv_params_heuristic(init_plain_mod_size, xdepth, sec_level);
-  cout << "Estimated mul noise growth: " << estimated_mul_ng;
   // Initial coeff_mod_primes_sizes
   vector<int> coeff_mod_primes_sizes(params.coeff_modulus().size());
   int coeff_mod_total_size = 0;
@@ -121,21 +124,36 @@ SEALContext bfv_params_simulation(int init_plain_mod_size, int xdepth, int safet
       increment_params();
       continue;
     }
-    // Print the first valid parameters
+
+    // Valid parameters
     if (test_count == 1)
       cout << "Valid initial parameters" << endl;
     else
-      cout << "Valid parameters after testing " << test_count << " parameters sets" << endl;
-    if (noise_budgets.back() <= safety_margin)
-      cout << "Minimal parameters" << endl;
-    else
-      cout << "Not minimal parameters" << endl;
-    print_parameters(context);
-    // Print noise budget progress over the computation
-    print_noise_budget_progress(noise_budgets);
+      cout << "Valid parameters after " << test_count << " tests" << endl;
 
-    // Parameters are not minimal
-    if (noise_budgets.back() > safety_margin)
+    if (noise_budgets.back() < safety_margin)
+    {
+      for (int i = 0; i < safety_margin - noise_budgets.back(); ++i)
+        increment_params();
+      // Update EncryptionParameters object with current parameters
+      try
+      {
+        coeff_mod = CoeffModulus::Create(poly_mod, coeff_mod_primes_sizes);
+      }
+      catch (logic_error &e)
+      {
+        // Not enough suitable primes could be found
+        throw logic_error(MIN_PARAMS_NOT_VALID);
+      }
+      params.set_poly_modulus_degree(poly_mod);
+      params.set_coeff_modulus(coeff_mod);
+      params.set_plain_modulus(plain_mod);
+      // Create SEALContext
+      SEALContext context(params, true, sec_level);
+      // Test just to update noise budget progress
+      noise_budgets = test_params(context, xdepth);
+    }
+    else
     {
       // Reduce coeff modulus bit count
       reduce_coeff_mod_size(coeff_mod_primes_sizes, coeff_mod_total_size, noise_budgets.back() - safety_margin);
@@ -155,7 +173,8 @@ SEALContext bfv_params_simulation(int init_plain_mod_size, int xdepth, int safet
       }
       catch (logic_error &e)
       {
-        throw logic_error("Minimal parameters coeff_mod primes could not be created");
+        // Not enough suitable primes could be found
+        throw logic_error(MIN_PARAMS_PRIMES_ERROR);
       }
       params.set_coeff_modulus(coeff_mod);
       params.set_plain_modulus(plain_mod);
@@ -168,15 +187,16 @@ SEALContext bfv_params_simulation(int init_plain_mod_size, int xdepth, int safet
       // Parameters not sufficient for xdepth
       catch (invalid_argument &e)
       {
-        throw logic_error("Minimal parameters not valid, evaluation failed");
+        throw logic_error(MIN_PARAMS_NOT_VALID);
       }
-      // Print minimal valid parameters
-      cout << "---------------------------------------------------------------" << endl;
-      cout << "Minimal parameters" << endl;
-      print_parameters(context);
-      // Print noise budget progress over the computation
-      print_noise_budget_progress(noise_budgets);
     }
+    // Print minimal parameters
+    cout << "Minimal parameters with margin of " << safety_margin << " bits" << endl;
+    print_parameters(context);
+    cout << endl;
+    // Print noise budget progress over the computation
+    cout << "Noise budget progress" << endl;
+    print_noise_budget_progress(noise_budgets);
     return context;
   } while (true);
 }
@@ -327,15 +347,24 @@ int last_small_prime_index(const vector<int> &primes_sizes)
 
 void print_noise_budget_progress(const vector<int> &noise_budgets)
 {
-  cout << "Fresh noise budget: " << noise_budgets[0] << endl;
+  cout << "Fresh budget: " << noise_budgets[0] << " bits" << endl;
+  if (noise_budgets.size() == 1)
+    return;
+  int min_mul_ng = noise_budgets[0] - noise_budgets[1];
+  int max_mul_ng = min_mul_ng;
   int nb_muls = noise_budgets.size() - 1;
   for (int i = 1; i <= nb_muls; ++i)
-    cout << "After " << i << " seq muls: " << noise_budgets[i] << endl;
-  if (nb_muls)
   {
-    int total_noise_growth = noise_budgets[0] - noise_budgets.back();
-    cout << "Observed mul avg noise growth: " << ceil_float_div(total_noise_growth, nb_muls) << endl;
+    int mul_ng = noise_budgets[i - 1] - noise_budgets[i];
+    if (mul_ng < min_mul_ng)
+      min_mul_ng = mul_ng;
+    if (mul_ng > max_mul_ng)
+      max_mul_ng = mul_ng;
+    cout << i << " seqmul: " << noise_budgets[i];
+    cout << " (-" << mul_ng << " bits)" << endl;
   }
+  cout << "Min growth: " << min_mul_ng << " bits" << endl;
+  cout << "Max growth: " << max_mul_ng << " bits" << endl;
 }
 
 void print_parameters(const seal::SEALContext &context)

@@ -11,7 +11,7 @@ int main(int argc, char **argv)
   if (argc > 2)
     xdepth = atoi(argv[2]);
 
-  bfv_params_simulation(initial_plain_m_size, xdepth, xdepth + 1);
+  bfv_params_simulation(initial_plain_m_size, xdepth, 5);
 
   return 0;
 }
