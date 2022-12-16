@@ -18,32 +18,50 @@ void log_noise_budget_progress(const vector<int> &noise_budgets, ofstream &ofile
   cout << endl;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-  int initial_plain_m_size = 14;
-  int xdepth = 23;
-  int safety_margin = 23;
+  int plain_mod_size;
+  if (argc > 1)
+    plain_mod_size = atoi(argv[1]);
 
-  string name_suffix = to_string(initial_plain_m_size) + "_" + to_string(xdepth) + "_" + to_string(safety_margin);
+  int xdepth;
+  if (argc > 2)
+    xdepth = atoi(argv[2]);
 
-  ofstream ofile;
-  ofile.open("noise_budget_logging_" + name_suffix + ".txt", ios_base::app);
+  int coeff_mod_data_level_size;
+  if (argc > 3)
+    coeff_mod_data_level_size = atoi(argv[3]);
 
-  string params_file_name = "params_" + name_suffix;
-  ifstream params_file(params_file_name, ios::binary);
+  string id = to_string(plain_mod_size) + "_" + to_string(xdepth) + "_" + to_string(coeff_mod_data_level_size);
+  ifstream params_file("saved_params/" + id + ".params", ios::binary);
   EncryptionParameters params;
   params.load(params_file);
+  params_file.close();
   SEALContext context(params, true, sec_level_type::tc128);
   print_parameters(context);
   cout << endl;
   vector<int> noise_budgets;
 
-  int repeat = 10;
+  ofstream ofile;
+  ofile.open("noise_budget_logging/" + id + ".txt", ios_base::app);
+
+  int repeat = 100;
   for (int i = 0; i < repeat; ++i)
   {
-    noise_budgets = test_params(context, xdepth);
-    log_noise_budget_progress(noise_budgets, ofile);
+    try
+    {
+      noise_budgets = test_params(context, xdepth);
+      log_noise_budget_progress(noise_budgets, ofile);
+    }
+    // Parameters not sufficient for xdepth
+    catch (invalid_argument &e)
+    {
+      ofile << "failed!" << endl;
+      cout << "failed!" << endl;
+      break;
+    }
   }
+  ofile.close();
 
   return 0;
 }

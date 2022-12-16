@@ -7,6 +7,7 @@
 
 #define MIN_PARAMS_PRIMES_ERROR "minimal parameters primes could not be created"
 #define MIN_PARAMS_NOT_VALID "Minimal parameters not valid"
+#define MAX_MOD_SIZE 60
 
 using namespace std;
 using namespace seal;
@@ -47,7 +48,7 @@ tuple<SEALContext, vector<int>> bfv_params_simulation(
         // Increment coeff modulus data level bit count
         int idx = last_small_prime_index(coeff_mod_primes_sizes);
         // Smallest prime size can be incremented
-        if (coeff_mod_primes_sizes[idx] < 60)
+        if (coeff_mod_primes_sizes[idx] < MAX_MOD_SIZE)
         {
           // All primes have the same size
           if (idx == coeff_mod_primes_sizes.size() - 1)
@@ -162,7 +163,7 @@ tuple<SEALContext, vector<int>> bfv_params_simulation(
       params.set_coeff_modulus(coeff_mod);
       params.set_plain_modulus(plain_mod);
       // Create SEALContext
-      SEALContext context(params, true, sec_level);
+      context = SEALContext(params, true, sec_level);
       // Test just to update noise budget progress
       noise_budgets = test_params(context, xdepth);
     }
@@ -235,10 +236,10 @@ tuple<EncryptionParameters, int> bfv_params_heuristic(int init_plain_mod_size, i
     int coeff_mod_data_level_size = plain_mod_size + max_fresh_noise + xdepth * avg_mul_ng;
 
     // Set coeff_mod primes sizes (use the lowest number of primes)
-    int lowest_nb_data_level_primes = ceil_float_div(coeff_mod_data_level_size, 60);
-    coeff_mod_primes_sizes.assign(lowest_nb_data_level_primes, 60);
+    int lowest_nb_data_level_primes = ceil_float_div(coeff_mod_data_level_size, MAX_MOD_SIZE);
+    coeff_mod_primes_sizes.assign(lowest_nb_data_level_primes, MAX_MOD_SIZE);
     // Remove exceeding bits
-    for (int i = 0; i < 60 - (coeff_mod_data_level_size % 60); ++i)
+    for (int i = 0; i < MAX_MOD_SIZE - (coeff_mod_data_level_size % MAX_MOD_SIZE); ++i)
       --coeff_mod_primes_sizes[i % coeff_mod_primes_sizes.size()];
     // Add special prime
     coeff_mod_primes_sizes.push_back(coeff_mod_primes_sizes.back());
@@ -304,8 +305,8 @@ vector<int> test_params(const SEALContext &context, int xdepth)
   noise_budgets[0] = decryptor.invariant_noise_budget(cipher);
   if (noise_budgets[0] == 0)
   {
-    cout << "Budget progress: " << endl;
-    print_noise_budget_progress(noise_budgets, true);
+    // cout << "Budget progress: " << endl;
+    // print_noise_budget_progress(noise_budgets, true);
     throw invalid_argument("insufficient noise budget");
   }
   for (int i = 0; i < xdepth; ++i)
@@ -315,9 +316,8 @@ vector<int> test_params(const SEALContext &context, int xdepth)
     int noise_budget = decryptor.invariant_noise_budget(cipher);
     if (noise_budget == 0)
     {
-      cout << "Budget progress: " << endl;
-      print_noise_budget_progress(noise_budgets, true);
-      cout << endl;
+      // cout << "Budget progress: " << endl;
+      // print_noise_budget_progress(noise_budgets, true);
       throw invalid_argument("insufficient noise budget");
     }
     noise_budgets[i + 1] = noise_budget;

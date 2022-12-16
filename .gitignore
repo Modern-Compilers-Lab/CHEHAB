@@ -41,3 +41,6 @@ build/
 *.build
 env
 thirdparty/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
