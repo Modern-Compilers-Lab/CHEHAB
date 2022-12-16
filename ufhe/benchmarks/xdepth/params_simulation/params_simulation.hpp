@@ -8,7 +8,7 @@
 
 #define OUT_HE_STD "corresponding parameters not included in HE security standard"
 
-seal::SEALContext bfv_params_simulation(
+std::tuple<seal::SEALContext, std::vector<int>> bfv_params_simulation(
   int init_plain_mod_size, int xdepth, int safety_margin, seal::sec_level_type sec_level = seal::sec_level_type::tc128);
 
 std::tuple<seal::EncryptionParameters, int> bfv_params_heuristic(

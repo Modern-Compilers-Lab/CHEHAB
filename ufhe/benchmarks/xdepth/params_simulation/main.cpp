@@ -1,5 +1,5 @@
 #include "params_simulation.hpp"
-#include <iostream>
+#include <cstdlib>
 
 int main(int argc, char **argv)
 {

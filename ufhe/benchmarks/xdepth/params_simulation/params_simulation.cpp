@@ -11,15 +11,19 @@
 using namespace std;
 using namespace seal;
 
-SEALContext bfv_params_simulation(int init_plain_mod_size, int xdepth, int safety_margin, sec_level_type sec_level)
+tuple<SEALContext, vector<int>> bfv_params_simulation(
+  int init_plain_mod_size, int xdepth, int safety_margin, sec_level_type sec_level)
 {
   cout << "initial plain modulus size: " << init_plain_mod_size << endl;
   cout << "xdepth: " << xdepth << endl;
+  cout << "Safety margin: " << safety_margin << endl;
   cout << endl;
 
   // Set Initial parameters using using bfv_params_heuristic
-  auto [params, estimated_mul_ng] = bfv_params_heuristic(init_plain_mod_size, xdepth, sec_level);
+  auto result = bfv_params_heuristic(init_plain_mod_size, xdepth, sec_level);
   // Initial coeff_mod_primes_sizes
+  EncryptionParameters params = get<0>(result);
+  int estimated_mul_ng = get<1>(result);
   vector<int> coeff_mod_primes_sizes(params.coeff_modulus().size());
   int coeff_mod_total_size = 0;
   for (int i = 0; i < coeff_mod_primes_sizes.size(); ++i)
@@ -129,6 +133,7 @@ SEALContext bfv_params_simulation(int init_plain_mod_size, int xdepth, int safet
     if (test_count == 1)
     {
       cout << "Valid initial parameters" << endl;
+      cout << "Estimated mul noise growth: " << estimated_mul_ng << " bits" << endl;
       print_parameters(context);
       cout << endl;
       // Print noise budget progress over the computation
@@ -205,7 +210,7 @@ SEALContext bfv_params_simulation(int init_plain_mod_size, int xdepth, int safet
     // Print noise budget progress over the computation
     cout << "Noise budget progress (bits)" << endl;
     print_noise_budget_progress(noise_budgets);
-    return context;
+    return {context, noise_budgets};
   } while (true);
 }
 
@@ -298,14 +303,23 @@ vector<int> test_params(const SEALContext &context, int xdepth)
   vector<int> noise_budgets(xdepth + 1, 0);
   noise_budgets[0] = decryptor.invariant_noise_budget(cipher);
   if (noise_budgets[0] == 0)
+  {
+    cout << "Budget progress: " << endl;
+    print_noise_budget_progress(noise_budgets, true);
     throw invalid_argument("insufficient noise budget");
+  }
   for (int i = 0; i < xdepth; ++i)
   {
     evaluator.multiply_inplace(cipher, cipher);
     evaluator.relinearize_inplace(cipher, relin_keys);
     int noise_budget = decryptor.invariant_noise_budget(cipher);
     if (noise_budget == 0)
+    {
+      cout << "Budget progress: " << endl;
+      print_noise_budget_progress(noise_budgets, true);
+      cout << endl;
       throw invalid_argument("insufficient noise budget");
+    }
     noise_budgets[i + 1] = noise_budget;
   }
   return noise_budgets;
