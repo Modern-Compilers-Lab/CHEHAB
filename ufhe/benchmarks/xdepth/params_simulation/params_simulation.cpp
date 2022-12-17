@@ -236,27 +236,14 @@ tuple<EncryptionParameters, int> bfv_params_heuristic(int init_plain_mod_size, i
     int coeff_mod_data_level_size = plain_mod_size + max_fresh_noise + xdepth * avg_mul_ng;
 
     // Set coeff_mod primes sizes (use the lowest number of primes)
-    int lowest_nb_data_level_primes = ceil_float_div(coeff_mod_data_level_size, MAX_MOD_SIZE);
-    coeff_mod_primes_sizes.assign(lowest_nb_data_level_primes, MAX_MOD_SIZE);
-    // Remove exceeding bits
-    for (int i = 0; i < MAX_MOD_SIZE - (coeff_mod_data_level_size % MAX_MOD_SIZE); ++i)
-      --coeff_mod_primes_sizes[i % coeff_mod_primes_sizes.size()];
-    // Add special prime
-    coeff_mod_primes_sizes.push_back(coeff_mod_primes_sizes.back());
+    coeff_mod_primes_sizes = split_coeff_mod_lowest_nb_primes(coeff_mod_data_level_size);
     int coeff_mod_total_size = coeff_mod_data_level_size + coeff_mod_primes_sizes.back();
 
     // If for poly_mod and the given security level, coeff_mod size cannot reach the needed value
-    int max_total_size = CoeffModulus::MaxBitCount(poly_mod, sec_level);
-    if (max_total_size < coeff_mod_total_size)
+    size_t correct_poly_mod = get_poly_mod(coeff_mod_total_size, poly_mod, sec_level);
+    if (poly_mod < correct_poly_mod)
     {
-      do
-      {
-        // Increase poly_mod
-        poly_mod <<= 1;
-        max_total_size = CoeffModulus::MaxBitCount(poly_mod, sec_level);
-        if (max_total_size == 0)
-          throw invalid_argument(OUT_HE_STD);
-      } while (max_total_size < coeff_mod_total_size);
+      poly_mod = correct_poly_mod;
       // Create plain modulus for batching with new poly_mod
       plain_mod = create_plain_mod(poly_mod, plain_mod_size);
       // Repeat estimation with new poly_mod and plain_mod
@@ -275,6 +262,42 @@ tuple<EncryptionParameters, int> bfv_params_heuristic(int init_plain_mod_size, i
   params.set_coeff_modulus(coeff_mod);
   params.set_plain_modulus(plain_mod);
   return {params, estimated_mul_ng};
+}
+
+vector<int> split_coeff_mod_lowest_nb_primes(int coeff_mod_data_level_size)
+{
+  int lowest_nb_data_level_primes = ceil_float_div(coeff_mod_data_level_size, MAX_MOD_SIZE);
+  vector<int> coeff_mod_primes_sizes(lowest_nb_data_level_primes, MAX_MOD_SIZE);
+  // Remove exceeding bits
+  for (int i = 0; i < MAX_MOD_SIZE - (coeff_mod_data_level_size % MAX_MOD_SIZE); ++i)
+    --coeff_mod_primes_sizes[i % coeff_mod_primes_sizes.size()];
+  // Add special prime
+  coeff_mod_primes_sizes.push_back(coeff_mod_primes_sizes.back());
+  return coeff_mod_primes_sizes;
+}
+
+size_t get_poly_mod(int coeff_mod_total_size, size_t init_value, sec_level_type sec_level)
+{
+  size_t poly_mod = init_value;
+  int max_total_size = CoeffModulus::MaxBitCount(poly_mod, sec_level);
+  if (max_total_size < coeff_mod_total_size)
+  {
+    // Increase poly_mod
+    do
+    {
+      poly_mod <<= 1;
+      max_total_size = CoeffModulus::MaxBitCount(poly_mod, sec_level);
+      if (max_total_size == 0)
+        throw invalid_argument(OUT_HE_STD);
+    } while (max_total_size < coeff_mod_total_size);
+  }
+  else
+  {
+    // Reduce poly_mod
+    while (CoeffModulus::MaxBitCount(poly_mod >> 1, sec_level) >= coeff_mod_total_size)
+      poly_mod >>= 1;
+  }
+  return poly_mod;
 }
 
 vector<int> test_params(const SEALContext &context, int xdepth)

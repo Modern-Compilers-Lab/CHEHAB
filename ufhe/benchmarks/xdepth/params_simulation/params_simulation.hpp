@@ -14,6 +14,12 @@ std::tuple<seal::SEALContext, std::vector<int>> bfv_params_simulation(
 std::tuple<seal::EncryptionParameters, int> bfv_params_heuristic(
   int init_plain_mod_size, int xdepth, seal::sec_level_type sec_level = seal::sec_level_type::tc128);
 
+std::vector<int> split_coeff_mod_lowest_nb_primes(int coeff_mod_data_level_size);
+
+std::size_t get_poly_mod(
+  int coeff_mod_total_size, std::size_t init_value = 1024,
+  seal::sec_level_type sec_level = seal::sec_level_type::tc128);
+
 std::vector<int> test_params(const seal::SEALContext &context, int xdepth);
 
 seal::Modulus create_plain_mod(std::size_t poly_mod, int plain_mod_init_size);

@@ -20,15 +20,15 @@ void log_noise_budget_progress(const vector<int> &noise_budgets, ofstream &ofile
 
 int main(int argc, char **argv)
 {
-  int plain_mod_size;
+  int plain_mod_size = 17;
   if (argc > 1)
     plain_mod_size = atoi(argv[1]);
 
-  int xdepth;
+  int xdepth = 10;
   if (argc > 2)
     xdepth = atoi(argv[2]);
 
-  int coeff_mod_data_level_size;
+  int coeff_mod_data_level_size = 333;
   if (argc > 3)
     coeff_mod_data_level_size = atoi(argv[3]);
 
