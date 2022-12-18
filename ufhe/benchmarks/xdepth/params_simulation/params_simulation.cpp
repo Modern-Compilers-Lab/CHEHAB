@@ -24,7 +24,7 @@ tuple<SEALContext, vector<int>> bfv_params_simulation(
   auto result = bfv_params_heuristic(init_plain_mod_size, xdepth, sec_level);
   // Initial coeff_mod_primes_sizes
   EncryptionParameters params = get<0>(result);
-  int estimated_mul_ng = get<1>(result);
+  float estimated_mul_ng = get<1>(result);
   vector<int> coeff_mod_primes_sizes(params.coeff_modulus().size());
   int coeff_mod_total_size = 0;
   for (int i = 0; i < coeff_mod_primes_sizes.size(); ++i)
@@ -215,13 +215,13 @@ tuple<SEALContext, vector<int>> bfv_params_simulation(
   } while (true);
 }
 
-tuple<EncryptionParameters, int> bfv_params_heuristic(int init_plain_mod_size, int xdepth, sec_level_type sec_level)
+tuple<EncryptionParameters, float> bfv_params_heuristic(int init_plain_mod_size, int xdepth, sec_level_type sec_level)
 {
   size_t poly_mod = 1024;
   vector<int> coeff_mod_primes_sizes;
   Modulus plain_mod = create_plain_mod(poly_mod, init_plain_mod_size);
 
-  int estimated_mul_ng;
+  float avg_mul_ng;
 
   do
   {
@@ -232,8 +232,8 @@ tuple<EncryptionParameters, int> bfv_params_heuristic(int init_plain_mod_size, i
     int worst_case_mul_ng = poly_mod_size * 2 + plain_mod_size + 1;
     int best_case_mul_ng = max(poly_mod_size, plain_mod_size);
     // Calculate the average and round to the next integer
-    int avg_mul_ng = ceil_float_div(worst_case_mul_ng + best_case_mul_ng, 2);
-    int coeff_mod_data_level_size = plain_mod_size + max_fresh_noise + xdepth * avg_mul_ng;
+    avg_mul_ng = static_cast<float>(worst_case_mul_ng + best_case_mul_ng) / 2;
+    int coeff_mod_data_level_size = plain_mod_size + max_fresh_noise + static_cast<int>(ceilf(xdepth * avg_mul_ng));
 
     // Set coeff_mod primes sizes (use the lowest number of primes)
     coeff_mod_primes_sizes = split_coeff_mod_lowest_nb_primes(coeff_mod_data_level_size);
@@ -250,7 +250,6 @@ tuple<EncryptionParameters, int> bfv_params_heuristic(int init_plain_mod_size, i
       continue;
     }
     // Done
-    estimated_mul_ng = avg_mul_ng;
     break;
 
   } while (true);
@@ -261,16 +260,21 @@ tuple<EncryptionParameters, int> bfv_params_heuristic(int init_plain_mod_size, i
   params.set_poly_modulus_degree(poly_mod);
   params.set_coeff_modulus(coeff_mod);
   params.set_plain_modulus(plain_mod);
-  return {params, estimated_mul_ng};
+  return {params, avg_mul_ng};
 }
 
 vector<int> split_coeff_mod_lowest_nb_primes(int coeff_mod_data_level_size)
 {
-  int lowest_nb_data_level_primes = ceil_float_div(coeff_mod_data_level_size, MAX_MOD_SIZE);
+  int lowest_nb_data_level_primes = coeff_mod_data_level_size / MAX_MOD_SIZE;
   vector<int> coeff_mod_primes_sizes(lowest_nb_data_level_primes, MAX_MOD_SIZE);
-  // Remove exceeding bits
-  for (int i = 0; i < MAX_MOD_SIZE - (coeff_mod_data_level_size % MAX_MOD_SIZE); ++i)
-    --coeff_mod_primes_sizes[i % coeff_mod_primes_sizes.size()];
+  if (coeff_mod_data_level_size % MAX_MOD_SIZE)
+  {
+    ++lowest_nb_data_level_primes;
+    coeff_mod_primes_sizes.push_back(MAX_MOD_SIZE);
+    // Remove exceeding bits
+    for (int i = 0; i < MAX_MOD_SIZE - (coeff_mod_data_level_size % MAX_MOD_SIZE); ++i)
+      --coeff_mod_primes_sizes[i % coeff_mod_primes_sizes.size()];
+  }
   // Add special prime
   coeff_mod_primes_sizes.push_back(coeff_mod_primes_sizes.back());
   return coeff_mod_primes_sizes;
@@ -473,9 +477,4 @@ void print_parameters(const seal::SEALContext &context)
   }
 
   std::cout << "\\" << std::endl;
-}
-
-int ceil_float_div(int a, int b)
-{
-  return static_cast<int>(ceilf(static_cast<float>(a) / b));
 }

@@ -11,7 +11,7 @@
 std::tuple<seal::SEALContext, std::vector<int>> bfv_params_simulation(
   int init_plain_mod_size, int xdepth, int safety_margin, seal::sec_level_type sec_level = seal::sec_level_type::tc128);
 
-std::tuple<seal::EncryptionParameters, int> bfv_params_heuristic(
+std::tuple<seal::EncryptionParameters, float> bfv_params_heuristic(
   int init_plain_mod_size, int xdepth, seal::sec_level_type sec_level = seal::sec_level_type::tc128);
 
 std::vector<int> split_coeff_mod_lowest_nb_primes(int coeff_mod_data_level_size);
@@ -31,5 +31,3 @@ int last_small_prime_index(const std::vector<int> &primes_sizes);
 void print_noise_budget_progress(const std::vector<int> &noise_budgets, bool verbose = false);
 
 void print_parameters(const seal::SEALContext &context);
-
-int ceil_float_div(int a, int b);
