@@ -110,16 +110,19 @@ int main()
     /*
       Scalars as inputs (yes or no ?)
     */
-
     fhecompiler::init("test1", 0, 4096, fhecompiler::Scheme::bfv, Backend::SEAL);
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
-    fhecompiler::params.set_coef_modulus({50, 50, 50});
+    params_selector::EncryptionParameters params;
+
+    params.set_coef_modulus({50, 50, 50});
     // a good value for t, 786433
-    fhecompiler::params.set_plaintext_modulus(786433);
+    params.set_plaintext_modulus(786433);
     // fhecompiler::params.set_plaintext_modulus_bit_length(20);
-    fhecompiler::params.set_polynomial_modulus_degree(4096 * 2);
+    params.set_polynomial_modulus_degree(4096 * 2);
+
+    std::cout << params.plaintext_modulus_bit_length << " " << params.plaintext_modulus << "\n";
 
     fhecompiler::Plaintext pt1(std::vector<int64_t>({0}));
 
@@ -200,7 +203,7 @@ int main()
               (ct1 + ct2 - ct1 + ct2 + ct3 - ct4 - (-ct1) + ct1 - ct2 - ct2 - ct2) * 2 -
               (ct1 + ct2 - ct1 + ct2 + ct3 - ct4 - (-ct1) + ct1 - ct2 - ct2 - ct2) * 2;
     */
-    fhecompiler::compile("test1.hpp");
+    fhecompiler::compile("test1.hpp", &params);
   }
   catch (const char *message)
   {

@@ -23,7 +23,7 @@ void Term::delete_operand_term(const std::string &term_label)
     operation_attribute->operands[pos]->delete_parent(this->label);
     // operation_attribute->operands.erase(operation_attribute->operands.begin() + pos);
     operation_attribute->operands[pos] = operation_attribute->operands.back();
-    operation_attribute->operands.erase(operation_attribute->operands.begin() + (degree - 1));
+    operation_attribute->operands.pop_back();
   }
 }
 
@@ -34,6 +34,7 @@ void Term::insert_parent_label(const std::string &label)
 
 void Term::add_operand(const Ptr &operand)
 {
+  operand->add_parent_label(this->label);
   (*operation_attribute).operands.push_back(operand);
 }
 
@@ -52,70 +53,6 @@ void Term::delete_parent(const std::string &parent_label)
   parents_labels.erase(it);
 }
 
-bool Term::merge_with_node(Ptr node_to_merge_with)
-{
-  /*
-    nullptr edge case
-  */
-  if (node_to_merge_with == nullptr)
-    return false;
-
-  /*
-    merge a node with itself edge case
-  */
-  if (node_to_merge_with->get_label() == this->get_label())
-    return false;
-
-  /*
-    node to merge with is not an operation node
-  */
-
-  if (!node_to_merge_with->is_operation_node())
-    return false;
-
-  /*
-    a constant node cant be merged with any other node
-  */
-  if (operation_attribute == std::nullopt)
-    return false;
-
-  /*
-    node is operation but it represents an assignement or encryption, encoding ..
-  */
-  const std::unordered_set<ir::OpCode> static_opcodes = {
-    ir::OpCode::assign, ir::OpCode::encrypt}; // don't merge with these operations
-
-  ir::OpCode node_opcode = node_to_merge_with->get_opcode();
-
-  if (static_opcodes.find(node_opcode) != static_opcodes.end())
-    return false;
-
-  /*
-    two nodes must have same operation code, except for case of assign for the node to merge
-  */
-  if ((*operation_attribute).opcode != node_to_merge_with->get_opcode())
-    return false;
-
-  /*
-    we dont merge outputs
-  */
-
-  /*
-    at this point we need to merge, but we first we need to decide how and when we merge also if there is any specific
-    data structure is needed for performance
-  */
-
-  auto mergening_condition = [&](const Ptr &term_ptr) -> bool {
-    // this condition will have an impact on the quality of optimizations
-    return term_ptr->get_parents_labels().size() == 1;
-  };
-
-  if (mergening_condition(node_to_merge_with))
-  {}
-
-  return true;
-}
-
 void Term::add_parent_label(const std::string &parent_label)
 {
   parents_labels.insert(parent_label);
@@ -131,6 +68,68 @@ void Term::rewrite_by(ir::Term &new_term)
     {
       operand->set_parents_label({this->get_label()});
     }
+  }
+}
+
+void Term::set_operand_at_index(size_t index, const Ptr &operand_ptr)
+{
+  if (!is_operation_node())
+    return;
+
+  if (index < 0)
+    return;
+
+  if (index >= operation_attribute->operands.size())
+    operation_attribute->operands.emplace_back(operand_ptr);
+
+  operation_attribute->operands[index]->delete_parent(this->get_label());
+
+  operation_attribute->operands[index] = operand_ptr;
+
+  operand_ptr->add_parent_label(this->label);
+}
+
+void Term::delete_operand_at_index(size_t index)
+{
+  if (!is_operation_node())
+    return;
+
+  if (index < 0)
+    return;
+
+  if (index >= operation_attribute->operands.size())
+    return;
+
+  if (operation_attribute->operands.size() == 1)
+  {
+    operation_attribute->operands[0]->delete_parent(this->label);
+    operation_attribute->operands.pop_back();
+    return;
+  }
+
+  size_t degree = operation_attribute->operands.size();
+  operation_attribute->operands[index]->delete_parent(this->label);
+  // operation_attribute->operands.erase(operation_attribute->operands.begin() + pos);
+  operation_attribute->operands[index] = operation_attribute->operands.back();
+  operation_attribute->operands.pop_back();
+}
+
+void Term::sort_operands(std::function<bool(const Ptr &, const Ptr &)> comp)
+{
+  if (!is_operation_node())
+    return;
+
+  sort(operation_attribute->operands.begin(), operation_attribute->operands.end(), comp);
+}
+
+void Term::clear_operands()
+{
+  if (!is_operation_node())
+    return;
+
+  while (operation_attribute->operands.size() > 0)
+  {
+    delete_operand_at_index(operation_attribute->operands.size() - 1);
   }
 }
 

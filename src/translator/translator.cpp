@@ -30,7 +30,9 @@ void Translator::convert_to_square(const ir::Term::Ptr &node_ptr)
   {
     auto &operands = node_ptr->get_operands();
     if (operands.size() != 2)
-      throw("got an unexpcted number of operands, expected number is 2");
+    {
+      throw("got an unexpcted number of operands, expected number is 2 in covert_to_square");
+    }
 
     auto &lhs_ptr = operands[0];
     auto &rhs_ptr = operands[1];
@@ -114,6 +116,9 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
       node_ptr->reverse_operands();
     }
 
+    if (program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::constant)
+      return;
+
     bool dependency_condition = lhs_ptr->get_parents_labels().size() == 0;
 
     conversion_condition = conversion_condition || dependency_condition;
@@ -122,10 +127,6 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     {
       program->insert_new_entry_from_existing_with_delete(lhs_ptr->get_label(), node_ptr->get_label());
       node_ptr->set_label(lhs_ptr->get_label());
-    }
-    else
-    {
-      std::cout << lhs_ptr->get_label() << " " << lhs_ptr->get_parents_labels().size() << "\n";
     }
   }
   else
@@ -178,6 +179,7 @@ void Translator::translate_constant_table_entry(
   }
   else if (entry_type == ir::ConstantTableEntryType::constant)
   {
+
     if (!encoding_writer.is_initialized())
     {
       encoding_writer.init(os);
@@ -218,7 +220,6 @@ void Translator::translate_constant_table_entry(
       }
       else
       {
-        std::cout << program->get_scale() << "\n";
         double e_value = std::get<double>(scalar_value);
         encoding_writer.write_scalar_encoding(
           os, tag, std::to_string(e_value), type_str, std::to_string(program->get_number_of_slots()),
@@ -328,7 +329,6 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
     }
     else
     {
-      std::cout << operands.size() << "\n";
       translate_nary_operation(term, constant_table_entry_opt, os);
     }
   }
@@ -353,11 +353,7 @@ void Translator::translate(std::ofstream &os)
 
   for (auto &node_ptr : nodes_ptr)
   {
-    convert_to_square(node_ptr); /* it converts only if it is possible */
-    if (node_ptr->get_label() == "ciphertext30")
-    {
-      std::cout << node_ptr->get_parents_labels().size() << "\n";
-    }
+    // convert_to_square(node_ptr); /* it converts only if it is possible */
     convert_to_inplace(node_ptr); /* it converts only if it is possible */
   }
 

@@ -97,6 +97,8 @@ private:
 
   size_t number_of_slots;
 
+  size_t plain_modulus;
+
   // size_t dimension;
 
 public:
@@ -149,6 +151,10 @@ public:
   bool insert_new_entry_from_existing_with_delete(std::string new_entry_key, std::string exsisting_entry_key);
 
   ConstantTableEntryType type_of(const std::string &label);
+
+  void set_plain_modulus(size_t modulus) { this->plain_modulus = modulus; }
+
+  size_t get_plain_modulus() const { return this->plain_modulus; }
 
   // size_t get_dimension() const { return this->dimension; }
 

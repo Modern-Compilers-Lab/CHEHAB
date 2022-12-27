@@ -5,9 +5,11 @@
 #include "plaintext.hpp"
 #include "scalar.hpp"
 #include <algorithm>
+#include <functional>
 #include <list>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -68,7 +70,10 @@ public:
 
   Term(OpCode _opcode, const std::vector<Ptr> &_operands, const std::string &label_value)
     : operation_attribute({_opcode, _operands}), label(label_value)
-  {}
+  {
+    for (auto &operand : _operands)
+      operand->add_parent_label(this->label);
+  }
 
   // this constructure is useful in case of rawData where we store it in the lable as an int
   Term(const std::string &symbol, TermType term_type) : label(symbol), type(term_type) {}
@@ -80,12 +85,7 @@ public:
     reverse(operation_attribute->operands.begin(), operation_attribute->operands.end());
   }
 
-  void clear_operands()
-  {
-    if (operation_attribute == std::nullopt)
-      return;
-    (*operation_attribute).operands.clear();
-  }
+  void clear_operands();
 
   void add_parent_label(const std::string &label);
 
@@ -93,15 +93,16 @@ public:
   {
     if (operation_attribute == std::nullopt)
       return;
-
+    for (auto &operand : _operands)
+    {
+      operand->insert_parent_label(this->label);
+    }
     (*operation_attribute).operands = _operands;
   }
 
   bool is_inplace() const { return (*operation_attribute).is_inplace; }
 
   void insert_parent_label(const std::string &label);
-
-  bool merge_with_node(Ptr node_to_merge_with);
 
   void set_opcode(ir::OpCode _opcode) { (*operation_attribute).opcode = _opcode; }
 
@@ -125,7 +126,11 @@ public:
 
   void delete_parent(const std::string &parent_label);
 
+  void delete_operand_at_index(size_t index);
+
   void rewrite_by(ir::Term &new_term);
+
+  void set_operand_at_index(size_t index, const Ptr &operand_ptr);
 
   std::shared_ptr<Ptr> make_copy_ptr();
 
@@ -137,6 +142,8 @@ public:
 
   std::string get_label() const { return this->label; }
   TermType get_term_type() const { return this->type; }
+
+  void sort_operands(std::function<bool(const Ptr &, const Ptr &)> comp);
 };
 
 } // namespace ir
