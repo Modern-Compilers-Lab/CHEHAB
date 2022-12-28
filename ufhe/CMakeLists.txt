@@ -1,18 +1,19 @@
-cmake_minimum_required(VERSION 3.13)
-
-project (UFHE VERSION 1.0 LANGUAGES CXX)
-
 set(UFHE_SOURCE_FILES "")
 
 add_subdirectory(src/ufhe/seal_backend)
 add_subdirectory(src/ufhe)
+add_subdirectory(src/ufhe/api)
 
 add_library(ufhe STATIC ${UFHE_SOURCE_FILES})
 
 target_include_directories(ufhe PUBLIC src)
 
+
 find_package(SEAL 4.0.0 EXACT REQUIRED)
 target_link_libraries(ufhe PUBLIC SEAL::seal)
 
-add_subdirectory(examples/rotations)
-add_subdirectory(examples/simple_addition)
+install(FILES ${UFHE_HEADER_FILES} DESTINATION include/ufhe)
+install(FILES ${UFHEAPI_HEADER_FILES} DESTINATION include/ufhe/api)
+install(FILES ${UFHESEALBACCKED_HEADER_FILES} DESTINATION include/ufhe/seal_backend)
+install(TARGETS ufhe LIBRARY DESTINATION lib)
+
