@@ -7,7 +7,6 @@ FHECO is a compiler for FHE applications. FHECO provides a DSL embedded in C++ a
 The following is an example of an FHE prgram written with FHECO.
 
 ```cpp
-// C++ code with a Tiramisu expression.
 #include "fhecompiler.hpp"
 #include <bits/stdc++.h>
 
