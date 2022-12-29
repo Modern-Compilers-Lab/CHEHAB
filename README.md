@@ -8,7 +8,7 @@ FHECO is a compiler for FHE applications. FHECO provides a DSL embedded in C++ a
 
 The following is an example of an FHE prgram written with FHECO. The program applies a 3x3 sharpening_filter on a 4x4 image.
 
-* Note : Parameters selection is supposed to be done by the compiler during compile time, however in this example we show that the user can do it manually while writing his input program, and in case the user parameters set is better than one figured by the compiler, the compiler will generate what was introduce by the user.
+* Note : Parameters selection is supposed to be done by the compiler during compile time, however in this example we show that the user can do it manually while writing his input program except for plaintext modulus where it is required to introduce it before compilation, and in case the user parameters set is better than one figured by the compiler, the compiler will generate what was introduce by the user.
 
 ```cpp
 #include "fhecompiler.hpp"
