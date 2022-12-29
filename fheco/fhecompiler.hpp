@@ -18,10 +18,8 @@
 namespace fhecompiler
 {
 
-// init program
-void init(
-  const std::string &program_name, size_t plaintext_modulus, size_t number_of_slots, Scheme program_scheme,
-  Backend backend = Backend::SEAL, double scale = 0.0);
+/*program init, scale is only for ckks*/
+void init(const std::string &program_name, Scheme program_scheme, Backend backend = Backend::SEAL, double scale = 0.0);
 
 // paramters selection manually
 

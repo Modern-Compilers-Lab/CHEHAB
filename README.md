@@ -44,7 +44,7 @@ int main()
 {
   try
   {
-    fhecompiler::init("test1", 0, 4096, fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
+    fhecompiler::init("sharpening_filter", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
 
     fhecompiler::Ciphertext output1("output1", fhecompiler::VarType::output);
 

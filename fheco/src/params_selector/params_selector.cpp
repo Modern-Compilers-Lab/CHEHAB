@@ -59,6 +59,7 @@ void ParameterSelector::fix_parameters(EncryptionParameters &params)
     for now we don't have a mechanism to validate a set of fixed parameters, but this will be done either using
     heuristic bounds and/or experimental data based on the multiplicative depth of the circuit and type of scheme ...
   */
+  program->set_number_of_slots(params.poly_modulus_degree);
 }
 
 } // namespace params_selector

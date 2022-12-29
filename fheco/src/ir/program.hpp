@@ -36,6 +36,8 @@ struct ConstantTableEntry
     std::optional<ConstantValue> value;
     std::string tag;
 
+    EntryValue() = default;
+
     EntryValue(const std::string &_tag, std::optional<ConstantValue> _value) : value(_value), tag(_tag) {}
 
     EntryValue(const std::string _tag) : tag(_tag), value(std::nullopt) {}
@@ -44,7 +46,7 @@ struct ConstantTableEntry
 
     std::string get_tag() { return this->tag; }
 
-    ~EntryValue() = default;
+    ~EntryValue() {}
   };
 
   ConstantTableEntryType entry_type;
@@ -60,6 +62,8 @@ public:
   ConstantTableEntry &operator=(ConstantTableEntry &entry_copy) = default;
 
   ConstantTableEntry(ConstantTableEntryType _type, EntryValue _value) : entry_type(_type), entry_value(_value) {}
+
+  ~ConstantTableEntry() {}
 
   void set_entry_type(ConstantTableEntryType _type) { entry_type = _type; }
 
