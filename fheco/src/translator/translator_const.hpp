@@ -462,10 +462,9 @@ public:
     {
       throw("default coef modulus is supported only for BFV\n");
     }
-
     os << params_identifier_literal << "." << set_coef_modulus_instruction << "(CoeffModulus::BFVDefault("
-       << params->poly_modulus_degree << "," << security_level_str[static_cast<int>(params->security_level)] << "));"
-       << '\n';
+       << params->poly_modulus_degree << "," << security_level_str[(static_cast<int>(params->security_level)) - 1]
+       << "));" << '\n';
   }
 
   void write_polynomial_modulus_degree(std::ostream &os)
