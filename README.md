@@ -172,8 +172,7 @@ SEAL4.0 is a required dependency but it is already included with the project.
 git clone https://github.com/imadchabounia/fhecompiler_work.git
 cd fhecompiler_work
 ```
-2) 
-Inside main directory run the following 
+2) Inside main directory run the following commands.
 ```bash
 cd build
 cmake -S ..
