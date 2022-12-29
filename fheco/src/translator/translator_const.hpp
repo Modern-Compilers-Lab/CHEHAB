@@ -8,8 +8,8 @@
 #include <optional>
 #include <stdio.h>
 #include <string>
-#include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 
 #define INLINE inline
 
@@ -18,7 +18,7 @@ namespace translator
 /* return types map, it maps IR types with corresponding literal for code generation that targets the API */
 INLINE std::unordered_map<ir::TermType, const char *> types_map = {
 
-  {ir::ciphertextType, "Ciphertext"}, {ir::plaintextType, "Plaintext"}
+  {ir::ciphertextType, "ufhe::Ciphertext"}, {ir::plaintextType, "ufhe::Plaintext"}
 
 };
 
@@ -75,7 +75,7 @@ INLINE std::unordered_set<ir::OpCode> inplace_instructions = {
   ir::OpCode::exponentiate, ir::OpCode::square};
 
 /* literals related to api/backend */
-INLINE const char *params_type_literal = "EncryptionParameters";
+INLINE const char *params_type_literal = "ufhe::EncryptionParams";
 INLINE const char *params_identifier_literal = "params";
 INLINE const char *scalar_int = "int64_t";
 INLINE const char *scalar_float = "double";
@@ -83,32 +83,33 @@ INLINE const char *encode_literal = "encode";
 INLINE const char *decode_literal = "decode";
 INLINE const char *encrypt_literal = "encrypt";
 INLINE const char *decrypt_literal = "decrypt";
-INLINE const char *context_type_literal = "EncryptionContext";
+INLINE const char *context_type_literal = "ufhe::EncryptionContext";
 INLINE const char *context_identifier = "context";
-INLINE const char *public_key_literal = "PublicKey";
+INLINE const char *public_key_literal = "ufhe::PublicKey";
 INLINE const char *public_key_identifier = "public_key";
-INLINE const char *secret_key_literal = "SecretKey";
+INLINE const char *secret_key_literal = "ufhe::SecretKey";
 INLINE const char *secret_key_identifier = "secret_key";
-INLINE const char *relin_keys_type_literal = "RelinKeys";
+INLINE const char *relin_keys_type_literal = "ufhe::RelinKeys";
 INLINE const char *relin_keys_identifier = "relin_keys";
-INLINE const char *galois_keys_type_literal = "GaloisKeys";
+INLINE const char *galois_keys_type_literal = "ufhe::GaloisKeys";
 INLINE const char *galois_keys_identifier = "galois_keys";
-INLINE const char *evaluator_type_literal = "Evaluator";
+INLINE const char *evaluator_type_literal = "ufhe::Evaluator";
 INLINE const char *evaluator_identifier = "evaluator";
-INLINE const char *bv_encoder_type_literal = "BatchEncoder";
-INLINE const char *ckks_encoder_type_literal = "CKKSEncoder";
+INLINE const char *bv_encoder_type_literal = "ufhe::BatchEncoder";
+INLINE const char *ckks_encoder_type_literal = "ufhe::CKKSEncoder";
 INLINE const char *encoder_type_identifier = "encoder";
-INLINE const char *encryptor_type_literal = "Encryptor";
+INLINE const char *encryptor_type_literal = "ufhe::Encryptor";
 INLINE const char *encryptor_type_identifier = "encryptor";
 INLINE const char *insert_object_instruction = "insert"; // instruction to insert inputs/outputs
 INLINE const char *context_function_name = "create_context";
 INLINE const char *set_plain_modulus_intruction = "set_plain_modulus";
 INLINE const char *set_coef_modulus_instruction = "set_coeff_modulus";
 INLINE const char *set_poly_modulus_degree_instruction = "set_poly_modulus_degree";
-INLINE const char *encrypted_inputs_class_literal = "std::unordered_map<std::string, Ciphertext>";
-INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::string, Plaintext>";
-INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, Plaintext>";
-INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, Ciphertext>";
+INLINE const char *encrypted_inputs_class_literal = "std::unordered_map<std::string, ufhe::Ciphertext>";
+INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::string, ufhe::Plaintext>";
+INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, ufhe::Plaintext>";
+INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, ufhe::Ciphertext>";
+INLINE const char *headers_include = "#include\"ufhe/ufhe.hpp\"\n#include<vector>\n#include<unordered_map>\n";
 
 INLINE std::unordered_map<ir::TermType, const char *> outputs_class_identifier = {
   {ir::plaintextType, "encoded_outputs"}, {ir::ciphertextType, "encrypted_outputs"}};
@@ -343,7 +344,7 @@ public:
   {
     // create a vector
     const std::string vector_id = plaintext_id + "_clear";
-    os << "vector<" << scalar_type << ">"
+    os << "std::vector<" << scalar_type << ">"
        << " " << vector_id << "(" << number_of_slots << ");" << '\n';
 
     os << "for(size_t i = 0; i < " << number_of_slots << "; i++)" << '\n'
@@ -380,7 +381,7 @@ public:
     }
     vector_value_str += "}";
     const std::string vector_id = plaintext_id + "_clear";
-    os << "vector<" << vector_type << ">"
+    os << "std::vector<" << vector_type << ">"
        << " " << vector_id << " = " << vector_value_str << ";" << '\n';
 
     // encoding
@@ -408,7 +409,7 @@ private:
 
   const std::vector<std::string> scheme_type_str = {"bfv", "bgv", "ckks"};
   const std::vector<std::string> security_level_str = {
-    "sec_level_type::tc128", "sec_level_type::tc192", "sec_level_type::tc256"};
+    "ufhe::sec_level_type::tc128", "ufhe::sec_level_type::tc192", "ufhe::sec_level_type::tc256"};
 
 public:
   bool is_defined = false;
@@ -428,7 +429,7 @@ public:
     if (params->poly_modulus_degree == 0)
       throw("invalid plynomial modulus degree in write_plaintext_modulus_bit_length \n");
 
-    os << params_identifier_literal << "." << set_plain_modulus_intruction << "(PlainModulus::Batching("
+    os << params_identifier_literal << "." << set_plain_modulus_intruction << "(ufhe::PlainModulus::Batching("
        << params->poly_modulus_degree << "," << params->plaintext_modulus_bit_length << "));" << '\n';
   }
 
@@ -449,7 +450,7 @@ public:
         }
       }
       os << "};" << '\n';
-      os << params_identifier_literal << "." << set_coef_modulus_instruction << "(CoeffModulus::Create("
+      os << params_identifier_literal << "." << set_coef_modulus_instruction << "(ufhe::CoeffModulus::Create("
          << params->poly_modulus_degree << "," << coef_modulus_identifier << "));" << '\n';
     }
     else
@@ -462,7 +463,7 @@ public:
     {
       throw("default coef modulus is supported only for BFV\n");
     }
-    os << params_identifier_literal << "." << set_coef_modulus_instruction << "(CoeffModulus::BFVDefault("
+    os << params_identifier_literal << "." << set_coef_modulus_instruction << "(ufhe::CoeffModulus::BFVDefault("
        << params->poly_modulus_degree << "," << security_level_str[(static_cast<int>(params->security_level)) - 1]
        << "));" << '\n';
   }
@@ -477,7 +478,7 @@ public:
   {
 
     os << params_type_literal << " " << params_identifier_literal
-       << "(scheme_type::" << scheme_type_str[static_cast<int>(scheme_type)] << ");" << '\n';
+       << "(ufhe::scheme_type::" << scheme_type_str[static_cast<int>(scheme_type)] << ");" << '\n';
 
     write_polynomial_modulus_degree(os);
     if (!params->coef_modulus.empty())
@@ -497,12 +498,6 @@ public:
         write_plaintext_modulus_bit_length(os);
     }
   }
-
-  /**/
-
-  /*
-    a + b + c*k*z + .... +
-  */
 
   void write_context(std::ostream &os)
   {

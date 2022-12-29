@@ -346,6 +346,8 @@ void Translator::translate(std::ofstream &os)
     program->get_dataflow_sorted_nodes(true); /* the flag passed to the function needs to be true to make sure that
                                                  order is updated after different compiler passes */
 
+  os << headers_include;
+
   context_writer.write_context(os);
 
   generate_function_signature(os);
