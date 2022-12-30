@@ -30,8 +30,8 @@ target_sources(fhecompiler PRIVATE
   ${SRC_TRANSLATOR}/translator.cpp
 )
 
-set_target_properties(fhecompiler PROPERTIES PUBLIC_HEADER fhecompiler.hpp)
-set_target_properties(fhecompiler PROPERTIES PRIVATE_HEADER
+install(FILES  
+  fhecompiler.hpp
   ${SRC_DSL}/ciphertext.hpp 
   ${SRC_DSL}/datatypes_const.hpp
   ${SRC_DSL}/datatypes_util.hpp 
@@ -51,10 +51,9 @@ set_target_properties(fhecompiler PROPERTIES PRIVATE_HEADER
   ${SRC_TRANSLATOR}/translator.hpp
   ${SRC_TRANSLATOR}/translator_const.hpp
   ${SRC_UTILS}/fhecompiler_const.hpp
+  DESTINATION ${HEADERS_INSTALL_DIR}
 )
 
 install(TARGETS 
   fhecompiler LIBRARY DESTINATION ${FHECOMPILER_STATIC_INSTALL_DIR} 
-  PUBLIC_HEADER DESTINATION ${HEADERS_INSTALL_DIR} 
-  PRIVATE_HEADER DESTINATION ${HEADERS_INSTALL_DIR}
 )
