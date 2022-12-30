@@ -1,5 +1,7 @@
 #include "fhecompiler.hpp"
 
+using namespace fhecompiler;
+
 ir::Program *program;
 
 namespace fhecompiler
@@ -7,11 +9,10 @@ namespace fhecompiler
 
 void init(const std::string &program_name, Scheme program_scheme, Backend backend, double scale)
 {
-  static ir::Program program_object(program_name);
-  program = &program_object;
+  if (program != nullptr)
+    delete program;
 
-  // paramters
-  params_selector::EncryptionParameters params_object;
+  program = new ir::Program(program_name);
 
   program->set_scheme(program_scheme);
   program->set_targeted_backed(backend);
@@ -47,6 +48,8 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
     translation_os.close();
   }
+  delete program;
+  program = nullptr;
 }
 
 } // namespace fhecompiler
