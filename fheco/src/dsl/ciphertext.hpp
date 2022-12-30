@@ -58,30 +58,6 @@ public:
 
   Ciphertext operator-();
 
-  friend Ciphertext operator+(const Ciphertext &lhs, const Ciphertext &rhs);
-
-  friend Ciphertext operator-(const Ciphertext &lhs, const Ciphertext &rhs);
-
-  friend Ciphertext operator*(const Ciphertext &lhs, const Ciphertext &rhs);
-
-  friend Ciphertext operator<<(const Ciphertext &lhs, int steps);
-
-  friend Ciphertext operator>>(const Ciphertext &lhs, int steps);
-
-  friend Ciphertext operator-(const Ciphertext &rhs);
-
-  friend Ciphertext exponentiate(const Ciphertext &lhs, uint64_t rhs);
-
-  friend Ciphertext square(const Ciphertext &lhs);
-
-  friend Ciphertext rotate(const Ciphertext &rhs, uint64_t steps);
-
-  friend Ciphertext rotate_rows(const Ciphertext &lhs, int steps);
-
-  friend Ciphertext rotate_columns(const Ciphertext &lhs);
-
-  void reduce(std::uint64_t plaintext_modulus);
-
   std::string get_label() const { return this->label; }
 
   void set_label(std::string label_value) { this->label = label_value; }
