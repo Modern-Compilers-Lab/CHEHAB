@@ -20,6 +20,11 @@ void Plaintext::set_new_label()
   this->set_label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++));
 }
 
+Plaintext::Plaintext() : label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++))
+{
+  operate_in_constants_table(label, label, VarType::temp);
+}
+
 Plaintext &Plaintext::operator=(Plaintext &&pt_move)
 {
   operate_move<Plaintext>(*this, std::move(pt_move), ir::plaintextType);

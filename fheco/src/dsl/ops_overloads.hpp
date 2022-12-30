@@ -67,9 +67,9 @@ Ciphertext operator*(const Ciphertext &lhs, const Ciphertext &rhs);
 Ciphertext operator<<(const Ciphertext &lhs, int steps);
 Ciphertext operator>>(const Ciphertext &lhs, int steps);
 Ciphertext operator-(const Ciphertext &rhs);
-Ciphertext exponentiate(const Ciphertext &lhs, uint64_t rhs);
+Ciphertext exponentiate(const Ciphertext &lhs, uint32_t rhs);
 Ciphertext square(const Ciphertext &lhs);
-Ciphertext rotate(const Ciphertext &rhs, uint64_t steps);
+Ciphertext rotate(const Ciphertext &rhs, int steps);
 Ciphertext rotate_rows(const Ciphertext &lhs, int steps);
 Ciphertext rotate_columns(const Ciphertext &lhs);
 

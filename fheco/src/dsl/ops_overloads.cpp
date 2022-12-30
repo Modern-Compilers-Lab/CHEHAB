@@ -183,7 +183,7 @@ Ciphertext operator-(const Ciphertext &rhs)
   return operate_unary<Ciphertext, Ciphertext>(rhs, ir::OpCode::negate, ir::ciphertextType);
 }
 
-Ciphertext exponentiate(const Ciphertext &lhs, uint64_t exponent)
+Ciphertext exponentiate(const Ciphertext &lhs, uint32_t exponent)
 {
   return operate_with_raw<Ciphertext>(lhs, std::to_string(exponent), ir::OpCode::exponentiate, ir::ciphertextType);
 }

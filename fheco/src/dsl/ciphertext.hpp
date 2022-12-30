@@ -22,7 +22,7 @@ private:
   static size_t ciphertext_id;
 
 public:
-  Ciphertext() = delete;
+  Ciphertext();
   Ciphertext(const Plaintext &) = delete;
   Ciphertext(Plaintext) = delete;
 

@@ -15,11 +15,14 @@ size_t Ciphertext::ciphertext_id = 0;
 
 using Ptr = std::shared_ptr<ir::Term>;
 
-Ciphertext rotate(const Ciphertext &lhs, int steps);
-
 void Ciphertext::set_new_label()
 {
   this->set_label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++));
+}
+
+Ciphertext::Ciphertext() : label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++))
+{
+  operate_in_constants_table(label, label, VarType::temp);
 }
 
 Ciphertext &Ciphertext::operator=(Ciphertext &&ct_move)

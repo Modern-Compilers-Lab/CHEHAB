@@ -23,7 +23,7 @@ private:
   static size_t plaintext_id;
 
 public:
-  Plaintext() = delete;
+  Plaintext();
   Plaintext(const std::vector<int64_t> &message);
   Plaintext(const std::vector<double> &message);
   Plaintext(const std::vector<int> &message) : Plaintext((const std::vector<int64_t> &)message) {}
