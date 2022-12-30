@@ -1,24 +1,13 @@
 #!/bin/bash
 
-mkdir build
+#run frontend tests
 
-cd build
-
-cmake -S ..
-
-cd frontend_tests
-
-make
-
-mkdir out
+cd build/frontend_tests/
 
 ./frontendtests
 
+#run backend tests
+
 cd ../backend_tests
 
-make
-
 ./backendtests
-
-
-

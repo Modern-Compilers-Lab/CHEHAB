@@ -4,4 +4,5 @@ int main()
 {
   test1_frontend();
   test2_frontend();
+  test3_frontend();
 }
