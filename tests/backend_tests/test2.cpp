@@ -1,11 +1,10 @@
-#include "./../inputs_tests/build/test1.hpp"
 #include "seal/seal.h"
 #include "ufhe/ufhe.hpp"
 #include <bits/stdc++.h>
 
 using namespace std;
 
-void ufhe_version()
+void ufhe_version_test2()
 {
 
   ufhe::Scheme scheme(ufhe::api::scheme_type::bfv); // just an enum, doesn't need to be an object
@@ -47,66 +46,30 @@ void ufhe_version()
   ufhe::PublicKey public_key;
   key_gen.create_public_key(public_key);
 
-  test1(
-    encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, context, relin_keys, galois_keys, public_key);
+  ufhe::BatchEncoder encoder(context);
+
+  std::vector<int64_t> clear_data = {1, 2, 3, 4, 5, 6};
+  ufhe::Plaintext pt;
+  encoder.encode(clear_data, pt);
+
+  ufhe::Ciphertext ct_input;
+
+  ufhe::Encryptor encryptor(context, public_key);
+
+  encryptor.encrypt(pt, ct_input);
+
+  encrypted_inputs.insert({"ct1", ct_input});
+
+  // test2(
+  // encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, context, relin_keys, galois_keys,
+  // public_key);
 
   ufhe::SecretKey secret_key = key_gen.secret_key();
 
   ufhe::Decryptor decryptor(context, secret_key);
 
   ufhe::Plaintext decrypted_output;
-  decryptor.decrypt(encrypted_outputs["sum_output"], decrypted_output);
-
-  std::vector<int64_t> decoded_output;
-
-  ufhe::BatchEncoder encoder(context);
-  encoder.decode(decrypted_output, decoded_output);
-
-  for (size_t i = 0; i < 10; i++)
-  {
-    std::cout << decoded_output[i] << " ";
-  }
-  std::cout << "\n";
-}
-
-void seal_version()
-{
-  seal::EncryptionParameters params(seal::scheme_type::bfv);
-  size_t poly_modulus_degree = 8192;
-  params.set_poly_modulus_degree(poly_modulus_degree);
-  params.set_coeff_modulus({8796092858369, 8796092792833, 17592186028033, 17592185438209, 17592184717313});
-  params.set_plain_modulus(1032193);
-  seal::SEALContext context(params);
-
-  seal::KeyGenerator key_gen(context);
-  seal::RelinKeys relin_keys;
-  key_gen.create_relin_keys(relin_keys);
-  seal::GaloisKeys galois_keys;
-  seal::PublicKey public_key;
-  key_gen.create_public_key(public_key);
-
-  seal::BatchEncoder encoder(context);
-  std::vector<int64_t> plaintext1_clear = {2, 3, 4, 5, 6, 7};
-  seal::Plaintext plaintext1;
-  encoder.encode(plaintext1_clear, plaintext1);
-  seal::Encryptor encryptor(context, public_key);
-  seal::Ciphertext ciphertext1;
-  encryptor.encrypt(plaintext1, ciphertext1);
-  std::vector<int64_t> plaintext0_clear = {1, 2, 3, 4, 5, 6};
-  seal::Plaintext plaintext0;
-  encoder.encode(plaintext0_clear, plaintext0);
-  seal::Ciphertext ciphertext0;
-  encryptor.encrypt(plaintext0, ciphertext0);
-  seal::Evaluator evaluator(context);
-  evaluator.add_inplace(ciphertext0, ciphertext1);
-  seal::Ciphertext sum_output = ciphertext0;
-
-  seal::SecretKey secret_key = key_gen.secret_key();
-
-  seal::Decryptor decryptor(context, secret_key);
-
-  seal::Plaintext decrypted_output;
-  decryptor.decrypt(sum_output, decrypted_output);
+  decryptor.decrypt(encrypted_outputs["add_cipher_plain"], decrypted_output);
 
   std::vector<int64_t> decoded_output;
 
@@ -119,18 +82,20 @@ void seal_version()
   std::cout << "\n";
 }
 
-int main()
+void seal_version_test2() {}
+
+int test2_backend()
 {
 
   chrono::high_resolution_clock::time_point time_start, time_end;
   time_start = chrono::high_resolution_clock::now();
-  ufhe_version();
+  ufhe_version_test2();
   time_end = chrono::high_resolution_clock::now();
   chrono::milliseconds time_diff = chrono::duration_cast<chrono::milliseconds>(time_end - time_start);
   std::cout << "ufhe time : " << time_diff.count() << "\n";
 
   time_start = chrono::high_resolution_clock::now();
-  seal_version();
+  seal_version_test2();
   time_end = chrono::high_resolution_clock::now();
   time_diff = chrono::duration_cast<chrono::milliseconds>(time_end - time_start);
   std::cout << "seal time : " << time_diff.count() << "\n";

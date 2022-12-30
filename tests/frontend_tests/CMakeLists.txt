@@ -1,0 +1,17 @@
+add_executable(frontendtests)
+
+set(FRONTEND_SOURCES
+  ${CMAKE_CURRENT_LIST_DIR}/frontend_tester.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/test1.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/test2.cpp
+)
+
+set(INCLUDE_HEADERS_DIR /usr/local/include)
+
+target_sources(frontendtests PRIVATE
+  ${FRONTEND_SOURCES}
+)
+
+include_directories(${INCLUDE_HEADERS_DIR})
+
+target_link_libraries(frontendtests fhecompiler)
