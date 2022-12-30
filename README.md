@@ -2,13 +2,13 @@
 
 FHECO is a compiler for FHE applications. FHECO provides a DSL embedded in C++ as well as various optimizations.
 
-![alt text](https://lh3.googleusercontent.com/2-dyi6gLdBENz8Megq-EQjYLOifaq0wPbd1EVm4jBly1NBi-znMBJO4afjiRNKsElL_uelymrgZb1BghLxbLXw72LVhO7yLXEIVxeH0vye60oqzs9IivJHbAf3lQ5lcXsOqZOjlqlcO9OzSH-dcdj9Uk-11Uiiz0zmGqIgsS7T3dqKvEzoK42pS6Pgiufxhesp7lq9Fpp0GJSnwpdz8DeeK7l78u7Ac8RCMnDZzhXCZ6Qd2zWZeQRjAY2TKu2dpacEnON0Inr0Yzb3FaFJLgqFeIasGMSUCegh3YokKGflfzZvyH4a4T7Vh0S9aodXSYohEdeFsQcPTG73jaH9muPWwRUvafv5ewNzSebNKVqhj5G_q9l7Gk9fbUNkpTbOLxxCxSSYBQswKtRzkKTnxyMZQfLiAj6kdCobTtzC32qYa4pI-zltjLVAczqyEJrrhFTmyV5bW6QHxj2LXJoHqncXpKKtT5ulZlpJLnmW8FNXaSitSpnjZmbgc77yoA3XS84pWpDIxKrnooO8KQRpIyF5mc-l2hDJotoF0WCV80S7M4s6q87M4zj84QFmdyXgVj7Sdm2BNucda29irCM81xvHm0MBCLY6sCG0KeZX-tczi3Vro-jhshFnetg_8ZRBt0W0nvBVRfRG8nH_B0z9kQWe44Nr83nEdqDj3jJ1Ya7hVgf3gt8evPADG22a7ybJBAYw5RLHUMhjBnkuLgmxPjz1C3jNjaHGE3Tz-CaDzbvAHo3HKjPkCd350zkNKm9dW4JypaoLhRznh_FNzSe6AiI7P5KOJr5H9TPlUvYM6QdYOK4Rv6A-YgUYRl6FJLTbfnOSS9XgktFJwJsppT3rWvuffSkI-rJ2HcgvrMMfVI08_iYUbOR7K_UVVDdsJnrTG_xLJpUi1VT8uTPWrvDMroiAUOiTpj7B6gt4bzzCRp5OyhaP9G2I91ImrHzrT-kKLdzbYlO6VJvjQTmE70Xa3ROVBQRCdY8L5XX_ptHLXrLJGEe0YssSBXAda4uA=w1518-h642-no?authuser=0)
+![alt text](docs/images/fheco_overview_img.png)
 
 ### Example
 
 The following is an example of an FHE prgram written with FHECO. The program applies a 3x3 sharpening_filter on a 4x4 image.
 
-* Note : Parameters selection is supposed to be done by the compiler during compile time, however in this example we show that the user can do it manually while writing his input program except for plaintext modulus where it is required to introduce it before compilation, and in case the user parameters set is better than one figured by the compiler, the compiler will generate what was introduce by the user.
+* Note : Parameters selection is supposed to be done by the compiler during compile time, however in this example we show that the user can do it manually while writing his input program except for plaintext modulus where it is required to introduce it before compilation, and in case the user parameters set is better than one figured by the compiler, the compiler will generate what was introduced by the user.
 
 ```cpp
 #include "fhecompiler.hpp"
