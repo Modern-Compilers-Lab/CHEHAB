@@ -8,7 +8,7 @@
 
 extern ir::Program *program;
 
-namespace datatype
+namespace fhecompiler
 {
 
 inline bool is_tracked_object(const std::string &label);
@@ -265,4 +265,4 @@ T operate_with_raw(const T &lhs, datatype::rawData raw_data, ir::OpCode opcode, 
   return new_T;
 }
 
-} // namespace datatype
+} // namespace fhecompiler

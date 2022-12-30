@@ -4,9 +4,9 @@
 #include "term.hpp"
 #include <memory>
 
-extern ir::Program *program;
-
 using namespace datatype;
+
+extern ir::Program *program;
 
 namespace fhecompiler
 {
