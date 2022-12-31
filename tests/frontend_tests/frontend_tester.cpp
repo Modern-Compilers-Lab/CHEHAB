@@ -7,4 +7,5 @@ int main()
   test3_frontend();
   test4_frontend();
   test5_frontend();
+  test6_frontend();
 }
