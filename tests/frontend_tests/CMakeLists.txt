@@ -5,6 +5,8 @@ set(FRONTEND_SOURCES
   ${CMAKE_CURRENT_LIST_DIR}/test1.cpp
   ${CMAKE_CURRENT_LIST_DIR}/test2.cpp
   ${CMAKE_CURRENT_LIST_DIR}/test3.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/test4.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/test5.cpp
 
 )
 
