@@ -113,10 +113,12 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 
   bool is_output = program->type_of(lhs.get_label()) == ir::ConstantTableEntryType::output;
 
+  bool is_input = program->type_of(lhs.get_label()) == ir::ConstantTableEntryType::input;
+
   // if (is_tracked_object(lhs.get_label()))
   //{
-  //  inserting new output in data flow as assignement, and in the constatns_table but this time we insert it as a
-  //  symbol with tag
+  //  inserting new output in data flow as assignement, and in the constatns_table but this time we
+  //  insert it as a symbol with tag
 
   /*
   if (lhs_node_ptr == nullptr)
@@ -134,7 +136,10 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     std::string old_label = lhs.get_label();
     lhs.set_new_label();
 
-    program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+    if (!is_input)
+    {
+      program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+    }
 
     if (is_output)
       program->delete_node_from_outputs(old_label);

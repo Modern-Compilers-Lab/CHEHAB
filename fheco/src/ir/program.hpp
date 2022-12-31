@@ -140,6 +140,10 @@ public:
     return new_term;
   }
 
+  void update_tag_value_in_constants_table_entry(const std::string &entry_key, const std::string &tag_value);
+
+  std::string get_tag_value_in_constants_table_entry(const std::string &entry_key);
+
   void set_node_operands(const std::string &node_label, const std::vector<Ptr> &new_opreands);
 
   void set_scheme(fhecompiler::Scheme program_scheme_value) { program_scheme = program_scheme_value; }

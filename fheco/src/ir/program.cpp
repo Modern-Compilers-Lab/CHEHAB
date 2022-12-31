@@ -113,6 +113,26 @@ ConstantTableEntryType Program::type_of(const std::string &label)
     return (*table_entry).get().entry_type;
 }
 
+std::string Program::get_tag_value_in_constants_table_entry(const std::string &entry_key)
+{
+  auto table_entry = get_entry_form_constants_table(entry_key);
+  if (table_entry == std::nullopt)
+  {
+    throw("no table entry with the given key in function get_tag_value_in_constants_table_entry()");
+  }
+  return (*table_entry).get().get_entry_value().get_tag();
+}
+
+void Program::update_tag_value_in_constants_table_entry(const std::string &entry_key, const std::string &tag_value)
+{
+  auto table_entry = this->get_entry_form_constants_table(entry_key);
+  if (table_entry == std::nullopt)
+  {
+    throw("no table entry with the given key in function update_tag_value_in_constants_table_entry()");
+  }
+  (*table_entry).get().set_entry_tag(tag_value);
+}
+
 const std::unordered_map<std::string, Ptr> &Program::get_outputs_nodes() const
 {
   return this->data_flow->get_outputs_nodes();
