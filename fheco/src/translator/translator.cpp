@@ -18,6 +18,27 @@ std::string Translator::get_identifier(const Ptr &term_ptr) const
     return term_ptr->get_label();
 }
 
+void Translator::compact_assignement(const ir::Term::Ptr &node_ptr)
+{
+  if (!node_ptr->is_operation_node())
+    return;
+
+  if (
+    node_ptr->get_opcode() != ir::OpCode::assign ||
+    (program->type_of(node_ptr->get_label()) == ir::ConstantTableEntryType::output))
+    return;
+
+  auto operand = node_ptr->get_operands()[0];
+
+  if (
+    operand->is_operation_node() && (operand->get_opcode() == ir::OpCode::assign) &&
+    (program->type_of(operand->get_label()) != ir::ConstantTableEntryType::output))
+  {
+    node_ptr->delete_operand_at_index(0);
+    node_ptr->add_operand(operand->get_operands()[0]);
+  }
+}
+
 void Translator::convert_to_square(const ir::Term::Ptr &node_ptr)
 {
   /* this function converts mul operation to square operation when it is possible */
@@ -342,10 +363,6 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
 void Translator::translate(std::ofstream &os)
 {
 
-  const std::vector<Ptr> &nodes_ptr =
-    program->get_dataflow_sorted_nodes(true); /* the flag passed to the function needs to be true to make sure that
-                                                 order is updated after different compiler passes */
-
   os << headers_include;
 
   context_writer.write_context(os);
@@ -353,18 +370,26 @@ void Translator::translate(std::ofstream &os)
   generate_function_signature(os);
   os << "{" << '\n';
 
-  for (auto &node_ptr : nodes_ptr)
   {
-    // convert_to_square(node_ptr); /* it converts only if it is possible */
-    convert_to_inplace(node_ptr); /* it converts only if it is possible */
+    const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
+
+    for (auto &node_ptr : nodes_ptr)
+    {
+      compact_assignement(node_ptr);
+      //  convert_to_square(node_ptr); /* it converts only if it is possible */
+    }
   }
 
-  for (auto &node_ptr : nodes_ptr)
   {
-    // after doing all passes, now we do the last pass to translate and generate the code
-    translate_term(node_ptr, os);
-  }
+    const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
 
+    for (auto &node_ptr : nodes_ptr)
+    {
+      // after doing all passes, now we do the last pass to translate and generate the code
+      convert_to_inplace(node_ptr); /* it converts only if it is possible */
+      translate_term(node_ptr, os);
+    }
+  }
   for (auto &output_node : program->get_outputs_nodes())
   {
     write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);

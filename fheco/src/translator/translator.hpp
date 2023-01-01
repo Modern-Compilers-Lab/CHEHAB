@@ -45,6 +45,8 @@ private:
 
   void convert_to_square(const ir::Term::Ptr &node_ptr);
 
+  void compact_assignement(const ir::Term::Ptr &node_ptr);
+
 public:
   Translator(ir::Program *prgm, params_selector::EncryptionParameters *params)
     : program(prgm), encryption_parameters(params),
