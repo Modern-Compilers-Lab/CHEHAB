@@ -7,3 +7,8 @@ int test3_frontend();
 int test4_frontend();
 int test5_frontend();
 int test6_frontend();
+int test7_frontend();
+int test8_frontend();
+int test9_frontend();
+int test10_frontend();
+int test11_frontend();

@@ -8,4 +8,9 @@ int main()
   test4_frontend();
   test5_frontend();
   test6_frontend();
+  test7_frontend();
+  test8_frontend();
+  test9_frontend();
+  test10_frontend();
+  test11_frontend();
 }
