@@ -23,19 +23,15 @@ void Translator::compact_assignement(const ir::Term::Ptr &node_ptr)
   if (!node_ptr->is_operation_node())
     return;
 
-  if (
-    node_ptr->get_opcode() != ir::OpCode::assign ||
-    (program->type_of(node_ptr->get_label()) == ir::ConstantTableEntryType::output))
+  if (node_ptr->get_opcode() != ir::OpCode::assign)
     return;
 
   auto operand = node_ptr->get_operands()[0];
 
-  if (operand->is_operation_node() && (program->type_of(operand->get_label()) != ir::ConstantTableEntryType::output))
+  if (operand->is_operation_node() && operand->get_opcode() == ir::OpCode::assign)
   {
     node_ptr->delete_operand_at_index(0);
-    // node_ptr->add_operand(operand->get_operands()[0]);
-    node_ptr->set_opcode(operand->get_opcode());
-    node_ptr->set_operands(operand->get_operands());
+    node_ptr->add_operand(operand->get_operands()[0]);
   }
 }
 
