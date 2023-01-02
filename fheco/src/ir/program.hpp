@@ -169,6 +169,8 @@ public:
 
   void compact_assignement(const ir::Term::Ptr &node_ptr);
 
+  void convert_to_inplace(const ir::Term::Ptr &node_ptr);
+
   const std::vector<Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
 
   const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const;

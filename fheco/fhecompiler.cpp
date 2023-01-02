@@ -48,6 +48,16 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   optimizer::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
 
+  // convert to inplace pass
+  {
+    const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
+
+    for (auto &node_ptr : nodes_ptr)
+    {
+      program->convert_to_inplace(node_ptr); /* it converts only if it is possible */
+    }
+  }
+
   translator::Translator tr(program, params);
   {
     std::ofstream translation_os(output_filename);

@@ -178,11 +178,98 @@ void Program::compact_assignement(const ir::Term::Ptr &node_ptr)
     node_ptr->add_operand(operand->get_operands()[0]);
     std::optional<std::string> new_tag = get_tag_value_in_constants_table_entry_if_exists(operand->get_label());
 
-    if (new_tag != std::nullopt)
+    if (
+      new_tag != std::nullopt && type_of(node_ptr->get_label()) != ir::ConstantTableEntryType::output &&
+      type_of(node_ptr->get_label()) != ir::ConstantTableEntryType::input)
     {
       update_tag_value_in_constants_table_entry(node_ptr->get_label(), *new_tag);
     }
   }
+}
+
+void Program::convert_to_inplace(const ir::Term::Ptr &node_ptr)
+{
+  if (!node_ptr->is_operation_node())
+    return;
+
+  auto &operands = node_ptr->get_operands();
+
+  if (operands.size() == 0)
+    throw("unexpected size of operands, 0 operands");
+
+  std::unordered_set<ir::OpCode> instructions_to_be_converted = {
+    ir::OpCode::relinearize, ir::OpCode::modswitch}; /* these instructions needs to be converted since those  are
+  usually applied directly on a ciphertext */
+
+  bool conversion_condition =
+    (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end());
+  if (operands.size() == 1)
+  {
+    auto &operand_ptr = operands[0];
+    ir::OpCode opcode = node_ptr->get_opcode();
+
+    operand_ptr->delete_parent(node_ptr->get_label());
+
+    if (opcode == ir::OpCode::assign || opcode == ir::OpCode::encrypt)
+      return;
+    else
+    {
+      // to not lose inputs, since we don't if know if the wants to
+      if (type_of(operand_ptr->get_label()) == ir::ConstantTableEntryType::input && !node_ptr->is_inplace())
+        return;
+
+      // an additional condition to convert to inplace implicitly
+
+      bool dependency_condition = operand_ptr->get_parents_labels().size() == 0;
+
+      conversion_condition = conversion_condition || dependency_condition;
+
+      if (conversion_condition)
+      {
+        insert_new_entry_from_existing_with_delete(operand_ptr->get_label(), node_ptr->get_label());
+        node_ptr->set_label(operand_ptr->get_label());
+      }
+    }
+  }
+  else if (operands.size() == 2)
+  {
+    auto &lhs_ptr = operands[0];
+    auto &rhs_ptr = operands[1];
+    ir::OpCode opcode = node_ptr->get_opcode();
+
+    rhs_ptr->delete_parent(node_ptr->get_label());
+    lhs_ptr->delete_parent(node_ptr->get_label());
+
+    if (type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input)
+      return;
+
+    // an additional condition to convert to inplace implicitly
+
+    bool commutative = (node_ptr->get_opcode() == ir::OpCode::add) || (node_ptr->get_opcode() == ir::OpCode::mul);
+
+    if (
+      commutative && operands[0]->get_term_type() == ir::ciphertextType &&
+      operands[1]->get_term_type() == ir::ciphertextType &&
+      operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size())
+    {
+      node_ptr->reverse_operands();
+    }
+
+    if (type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::constant)
+      return;
+
+    bool dependency_condition = lhs_ptr->get_parents_labels().size() == 0;
+
+    conversion_condition = conversion_condition || dependency_condition;
+
+    if (conversion_condition)
+    {
+      insert_new_entry_from_existing_with_delete(lhs_ptr->get_label(), node_ptr->get_label());
+      node_ptr->set_label(lhs_ptr->get_label());
+    }
+  }
+  else
+    throw("unexpected size of operands, more than 2");
 }
 
 } // namespace ir

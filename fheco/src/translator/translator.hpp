@@ -41,7 +41,7 @@ private:
 
   std::string get_identifier(const Ptr &term_ptr) const;
 
-  void convert_to_inplace(const ir::Term::Ptr &node_ptr);
+  // void convert_to_inplace(const ir::Term::Ptr &node_ptr);
 
   void convert_to_square(const ir::Term::Ptr &node_ptr);
 
