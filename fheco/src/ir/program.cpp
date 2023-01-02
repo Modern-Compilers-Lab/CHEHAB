@@ -123,14 +123,27 @@ std::string Program::get_tag_value_in_constants_table_entry(const std::string &e
   return (*table_entry).get().get_entry_value().get_tag();
 }
 
+std::optional<std::string> Program::get_tag_value_in_constants_table_entry_if_exists(const std::string &entry_key)
+{
+  auto table_entry = get_entry_form_constants_table(entry_key);
+
+  if (table_entry == std::nullopt)
+    return std::nullopt;
+
+  return (*table_entry).get().get_entry_value().get_tag();
+}
+
 void Program::update_tag_value_in_constants_table_entry(const std::string &entry_key, const std::string &tag_value)
 {
   auto table_entry = this->get_entry_form_constants_table(entry_key);
   if (table_entry == std::nullopt)
   {
-    throw("no table entry with the given key in function update_tag_value_in_constants_table_entry()");
+    insert_entry_in_constants_table({entry_key, {type_of(entry_key), tag_value}});
   }
-  (*table_entry).get().set_entry_tag(tag_value);
+  else
+  {
+    (*table_entry).get().set_entry_tag(tag_value);
+  }
 }
 
 const std::unordered_map<std::string, Ptr> &Program::get_outputs_nodes() const
@@ -142,6 +155,34 @@ const std::vector<Ptr> &Program::get_dataflow_sorted_nodes(bool clear_existing_o
 {
   this->data_flow->apply_topological_sort(clear_existing_order);
   return this->data_flow->get_outputs_nodes_topsorted();
+}
+
+/*
+  This a function that applies a simple transformation in order to compact assignement. For example if we have a = b and
+  b = c it will transform it to a = c while taking in consideration tags (variable names). This function was moved from
+  Translator class to here but later maybe it will be moved to another class that encompass various transformations.
+*/
+void Program::compact_assignement(const ir::Term::Ptr &node_ptr)
+{
+  if (!node_ptr->is_operation_node())
+    return;
+
+  if (node_ptr->get_opcode() != ir::OpCode::assign)
+    return;
+
+  auto operand = node_ptr->get_operands()[0];
+
+  if (operand->is_operation_node() && operand->get_opcode() == ir::OpCode::assign)
+  {
+    node_ptr->delete_operand_at_index(0);
+    node_ptr->add_operand(operand->get_operands()[0]);
+    std::optional<std::string> new_tag = get_tag_value_in_constants_table_entry_if_exists(operand->get_label());
+
+    if (new_tag != std::nullopt)
+    {
+      update_tag_value_in_constants_table_entry(node_ptr->get_label(), *new_tag);
+    }
+  }
 }
 
 } // namespace ir

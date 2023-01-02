@@ -18,6 +18,7 @@ std::string Translator::get_identifier(const Ptr &term_ptr) const
     return term_ptr->get_label();
 }
 
+/*
 void Translator::compact_assignement(const ir::Term::Ptr &node_ptr)
 {
   if (!node_ptr->is_operation_node())
@@ -32,8 +33,16 @@ void Translator::compact_assignement(const ir::Term::Ptr &node_ptr)
   {
     node_ptr->delete_operand_at_index(0);
     node_ptr->add_operand(operand->get_operands()[0]);
+    std::optional<std::string> new_tag =
+      program->get_tag_value_in_constants_table_entry_if_exists(operand->get_label());
+
+    if (new_tag != std::nullopt)
+    {
+      program->update_tag_value_in_constants_table_entry(node_ptr->get_label(), *new_tag);
+    }
   }
 }
+*/
 
 void Translator::convert_to_square(const ir::Term::Ptr &node_ptr)
 {
@@ -365,17 +374,6 @@ void Translator::translate(std::ofstream &os)
 
   generate_function_signature(os);
   os << "{" << '\n';
-
-  {
-    const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
-
-    for (auto &node_ptr : nodes_ptr)
-    {
-      compact_assignement(node_ptr);
-      //  convert_to_square(node_ptr); /* it converts only if it is possible */
-    }
-  }
-
   {
     const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
 

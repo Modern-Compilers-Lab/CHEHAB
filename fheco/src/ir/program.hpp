@@ -143,6 +143,7 @@ public:
   void update_tag_value_in_constants_table_entry(const std::string &entry_key, const std::string &tag_value);
 
   std::string get_tag_value_in_constants_table_entry(const std::string &entry_key);
+  std::optional<std::string> get_tag_value_in_constants_table_entry_if_exists(const std::string &entry_key);
 
   void set_node_operands(const std::string &node_label, const std::vector<Ptr> &new_opreands);
 
@@ -166,7 +167,7 @@ public:
 
   // size_t get_dimension() const { return this->dimension; }
 
-  void sort_dataflow();
+  void compact_assignement(const ir::Term::Ptr &node_ptr);
 
   const std::vector<Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
 

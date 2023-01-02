@@ -34,6 +34,17 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   parameters_selector.fix_parameters(*params);
 
+  // compact assignement pass
+  {
+    const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
+
+    for (auto &node_ptr : nodes_ptr)
+    {
+      program->compact_assignement(node_ptr);
+      //  convert_to_square(node_ptr); /* it converts only if it is possible */
+    }
+  }
+
   optimizer::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
 
