@@ -13,4 +13,6 @@ int main()
   test9_frontend();
   test10_frontend();
   test11_frontend();
+  test12_frontend();
+  test13_frontend();
 }
