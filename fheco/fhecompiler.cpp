@@ -56,6 +56,8 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     {
       program->convert_to_inplace(node_ptr); /* it converts only if it is possible */
     }
+
+    // this needs to be the last pass and we must not do any new sorting of the graph
   }
 
   translator::Translator tr(program, params);
