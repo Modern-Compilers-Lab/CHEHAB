@@ -34,7 +34,7 @@ int test12_frontend()
 
     ct1_output = random_computation(ct1, ct2);
 
-    ct2_otuput = fhecompiler::square(ct1_output);
+    ct2_otuput = ct1_output * ct1_output;
 
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
