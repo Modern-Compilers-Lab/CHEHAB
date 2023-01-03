@@ -84,6 +84,9 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
   if (operands.size() == 0)
     throw("unexpected size of operands, 0 operands");
 
+  if (program->type_of(node_ptr->get_label()) == ir::ConstantTableEntryType::output)
+    return;
+
   std::unordered_set<ir::OpCode> instructions_to_be_converted = {
     ir::OpCode::relinearize, ir::OpCode::modswitch}; // these instructions needs to be converted since those  are
                                                      // usually applied directly on a ciphertext
@@ -102,7 +105,12 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     {
       operand_ptr->delete_parent(node_ptr->get_label());
 
+      bool is_an_output_operand = (program->type_of(operand_ptr->get_label()) != ir::ConstantTableEntryType::output);
+
       if (program->type_of(operand_ptr->get_label()) == ir::ConstantTableEntryType::input && !node_ptr->is_inplace())
+        return;
+
+      if (is_an_output_operand && !conversion_condition)
         return;
 
       // an additional condition to convert to inplace implicitly
@@ -127,22 +135,37 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     rhs_ptr->delete_parent(node_ptr->get_label());
     lhs_ptr->delete_parent(node_ptr->get_label());
 
-    if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input)
-      return;
-
     // an additional condition to convert to inplace implicitly
 
     bool commutative = (node_ptr->get_opcode() == ir::OpCode::add) || (node_ptr->get_opcode() == ir::OpCode::mul);
 
+    if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input && !commutative)
+      return;
+
+    bool is_lhs_an_output = program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::output;
+    bool is_rhs_an_output = program->type_of(operands[1]->get_label()) == ir::ConstantTableEntryType::output;
+
+    bool is_rhs_an_input = program->type_of(operands[1]->get_label()) == ir::ConstantTableEntryType::input;
+
     if (
       commutative && operands[0]->get_term_type() == ir::ciphertextType &&
       operands[1]->get_term_type() == ir::ciphertextType &&
-      operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size())
+      operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size() && !is_rhs_an_output &&
+      !is_rhs_an_input)
     {
       node_ptr->reverse_operands();
     }
 
     if (program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::constant)
+      return;
+
+    if (program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::input)
+      return;
+
+    if (
+      program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::output &&
+      !conversion_condition) // in this case no need to check dependency condition since the lhs is an output, checking
+                             // !conversion_condition is enough
       return;
 
     bool dependency_condition = lhs_ptr->get_parents_labels().size() == 0;
@@ -386,7 +409,7 @@ void Translator::translate(std::ofstream &os)
     {
       // after doing all passes, now we do the last pass to translate and generate the code
       translate_term(node_ptr, os);
-
+      /*
       if (
         program->type_of(node_ptr->get_label()) == ir::ConstantTableEntryType::output &&
         writen_outputs.find(node_ptr->get_label()) == writen_outputs.end())
@@ -394,14 +417,14 @@ void Translator::translate(std::ofstream &os)
         write_output(get_identifier(node_ptr), node_ptr->get_term_type(), os);
         writen_outputs.insert(node_ptr->get_label());
       }
+      */
     }
   }
-  /*
+
   for (auto &output_node : program->get_outputs_nodes())
   {
     write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
   }
-  */
 
   os << "}" << '\n';
 }
