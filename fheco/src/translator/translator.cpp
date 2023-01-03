@@ -74,7 +74,6 @@ void Translator::convert_to_square(const ir::Term::Ptr &node_ptr)
   }
 }
 
-/*
 void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
 {
   if (!node_ptr->is_operation_node())
@@ -87,80 +86,78 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
 
   std::unordered_set<ir::OpCode> instructions_to_be_converted = {
     ir::OpCode::relinearize, ir::OpCode::modswitch}; // these instructions needs to be converted since those  are
-                                                        usually applied directly on a ciphertext
+                                                     // usually applied directly on a ciphertext
 
-bool conversion_condition =
-  (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end());
-if (operands.size() == 1)
-{
-  auto &operand_ptr = operands[0];
-  ir::OpCode opcode = node_ptr->get_opcode();
+  bool conversion_condition =
+    (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end());
 
-  operand_ptr->delete_parent(node_ptr->get_label());
-
-  if (opcode == ir::OpCode::assign || opcode == ir::OpCode::encrypt)
-    return;
-  else
+  if (operands.size() == 1)
   {
-    // to not lose inputs, since we don't if know if the wants to
-    if (program->type_of(operand_ptr->get_label()) == ir::ConstantTableEntryType::input && !node_ptr->is_inplace())
+    auto &operand_ptr = operands[0];
+    ir::OpCode opcode = node_ptr->get_opcode();
+
+    if (opcode == ir::OpCode::assign || opcode == ir::OpCode::encrypt)
+      return;
+    else
+    {
+      operand_ptr->delete_parent(node_ptr->get_label());
+
+      if (program->type_of(operand_ptr->get_label()) == ir::ConstantTableEntryType::input && !node_ptr->is_inplace())
+        return;
+
+      // an additional condition to convert to inplace implicitly
+
+      bool dependency_condition = operand_ptr->get_parents_labels().size() == 0;
+
+      conversion_condition = conversion_condition || dependency_condition;
+
+      if (conversion_condition)
+      {
+        program->insert_new_entry_from_existing_with_delete(operand_ptr->get_label(), node_ptr->get_label());
+        node_ptr->set_label(operand_ptr->get_label());
+      }
+    }
+  }
+  else if (operands.size() == 2)
+  {
+    auto &lhs_ptr = operands[0];
+    auto &rhs_ptr = operands[1];
+    ir::OpCode opcode = node_ptr->get_opcode();
+
+    rhs_ptr->delete_parent(node_ptr->get_label());
+    lhs_ptr->delete_parent(node_ptr->get_label());
+
+    if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input)
       return;
 
     // an additional condition to convert to inplace implicitly
 
-    bool dependency_condition = operand_ptr->get_parents_labels().size() == 0;
+    bool commutative = (node_ptr->get_opcode() == ir::OpCode::add) || (node_ptr->get_opcode() == ir::OpCode::mul);
+
+    if (
+      commutative && operands[0]->get_term_type() == ir::ciphertextType &&
+      operands[1]->get_term_type() == ir::ciphertextType &&
+      operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size())
+    {
+      node_ptr->reverse_operands();
+    }
+
+    if (program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::constant)
+      return;
+
+    bool dependency_condition = lhs_ptr->get_parents_labels().size() == 0;
 
     conversion_condition = conversion_condition || dependency_condition;
 
     if (conversion_condition)
     {
-      program->insert_new_entry_from_existing_with_delete(operand_ptr->get_label(), node_ptr->get_label());
-      node_ptr->set_label(operand_ptr->get_label());
+      program->insert_new_entry_from_existing_with_delete(lhs_ptr->get_label(), node_ptr->get_label());
+      node_ptr->set_label(lhs_ptr->get_label());
     }
   }
+  else
+    throw("unexpected size of operands, more than 2");
 }
-else if (operands.size() == 2)
-{
-  auto &lhs_ptr = operands[0];
-  auto &rhs_ptr = operands[1];
-  ir::OpCode opcode = node_ptr->get_opcode();
-
-  rhs_ptr->delete_parent(node_ptr->get_label());
-  lhs_ptr->delete_parent(node_ptr->get_label());
-
-  if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input)
-    return;
-
-  // an additional condition to convert to inplace implicitly
-
-  bool commutative = (node_ptr->get_opcode() == ir::OpCode::add) || (node_ptr->get_opcode() == ir::OpCode::mul);
-
-  if (
-    commutative && operands[0]->get_term_type() == ir::ciphertextType &&
-    operands[1]->get_term_type() == ir::ciphertextType &&
-    operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size())
-  {
-    node_ptr->reverse_operands();
-  }
-
-  if (program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::constant)
-    return;
-
-  bool dependency_condition = lhs_ptr->get_parents_labels().size() == 0;
-
-  conversion_condition = conversion_condition || dependency_condition;
-
-  if (conversion_condition)
-  {
-    program->insert_new_entry_from_existing_with_delete(lhs_ptr->get_label(), node_ptr->get_label());
-    node_ptr->set_label(lhs_ptr->get_label());
-  }
-}
-else
-  throw("unexpected size of operands, more than 2");
-}
-
-*/
 
 void Translator::translate_constant_table_entry(
   ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os)
@@ -377,19 +374,34 @@ void Translator::translate(std::ofstream &os)
 
   generate_function_signature(os);
   os << "{" << '\n';
+
+  convert_to_inplace_pass();
+
   {
     const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(false);
+
+    std::unordered_set<std::string> writen_outputs;
 
     for (auto &node_ptr : nodes_ptr)
     {
       // after doing all passes, now we do the last pass to translate and generate the code
       translate_term(node_ptr, os);
+
+      if (
+        program->type_of(node_ptr->get_label()) == ir::ConstantTableEntryType::output &&
+        writen_outputs.find(node_ptr->get_label()) == writen_outputs.end())
+      {
+        write_output(get_identifier(node_ptr), node_ptr->get_term_type(), os);
+        writen_outputs.insert(node_ptr->get_label());
+      }
     }
   }
+  /*
   for (auto &output_node : program->get_outputs_nodes())
   {
     write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
   }
+  */
 
   os << "}" << '\n';
 }
@@ -429,6 +441,15 @@ void Translator::write_assign_operation(
   std::ofstream &os, const std::string &lhs_id, const std::string &rhs_id, ir::TermType type)
 {
   os << types_map[type] << " " << lhs_id << " = " << rhs_id << ";" << '\n';
+}
+
+void Translator::convert_to_inplace_pass()
+{
+  auto &sorted_nodes = program->get_dataflow_sorted_nodes(true);
+  for (auto &node_ptr : sorted_nodes)
+  {
+    convert_to_inplace(node_ptr);
+  }
 }
 
 } // namespace translator

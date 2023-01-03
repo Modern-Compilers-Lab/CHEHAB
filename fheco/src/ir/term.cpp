@@ -58,19 +58,6 @@ void Term::add_parent_label(const std::string &parent_label)
   parents_labels.insert(parent_label);
 }
 
-void Term::rewrite_by(ir::Term &new_term)
-{
-  new_term.parents_labels = this->parents_labels;
-  *this = new_term;
-  if (this->is_operation_node())
-  {
-    for (auto &operand : this->operation_attribute->operands)
-    {
-      operand->set_parents_label({this->get_label()});
-    }
-  }
-}
-
 void Term::set_operand_at_index(size_t index, const Ptr &operand_ptr)
 {
   if (!is_operation_node())
@@ -110,7 +97,6 @@ void Term::delete_operand_at_index(size_t index)
   size_t degree = operation_attribute->operands.size();
   operation_attribute->operands[index]->delete_parent(this->label);
   // operation_attribute->operands.erase(operation_attribute->operands.begin() + pos);
-  operation_attribute->operands[index] = operation_attribute->operands.back();
   operation_attribute->operands.pop_back();
 }
 
@@ -131,6 +117,12 @@ void Term::clear_operands()
   {
     delete_operand_at_index(operation_attribute->operands.size() - 1);
   }
+}
+
+void Term::replace_with(const Ptr &rhs)
+{
+  (*(rhs.get())).parents_labels = (*this).parents_labels;
+  *this = *(rhs.get());
 }
 
 } // namespace ir

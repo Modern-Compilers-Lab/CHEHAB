@@ -9,10 +9,10 @@ size_t RelinPass::relin_instruction_id = 0;
 void RelinPass::simple_relinearize()
 {
   /*
-    This implements the simplest relinearization(relin) strategy in FHE applications, where a relin instruction is
+    This implements a simple relinearization(relin) strategy in FHE applications, where a relin instruction is
     inserted after each cipher_cipher mutliplication or square
   */
-  auto &sorted_nodes = program->get_dataflow_sorted_nodes();
+  auto sorted_nodes = program->get_dataflow_sorted_nodes(true);
 
   for (auto &node_ptr : sorted_nodes)
   {
@@ -33,12 +33,13 @@ void RelinPass::simple_relinearize()
     /*rewrite, where rule is a * b -> relinearize(a*b) . a and b are ciphertexts */
 
     std::string relin_inst_tag = node_ptr->get_label() + inst_keyword + std::to_string(relin_instruction_id++);
-    ir::Term current_term_copy = *node_ptr.get(); /* call copy constructor */
-    std::shared_ptr<ir::Term> copy_term = std::make_shared<ir::Term>(current_term_copy);
-    ir::Term new_term(ir::OpCode::relinearize, {copy_term}, relin_inst_tag);
-    new_term.set_term_type(ir::ciphertextType);
-    program->insert_new_entry_from_existing_with_delete(new_term.get_label(), node_ptr->get_label());
-    node_ptr->rewrite_by(new_term);
+    ir::Term copy_term(*(node_ptr.get()));
+    copy_term.clear_parents();
+    std::shared_ptr<ir::Term> copy_ptr = std::make_shared<ir::Term>(copy_term);
+    std::vector<std::shared_ptr<ir::Term>> relin_operands = {copy_ptr};
+    auto relin_node_ptr = std::make_shared<ir::Term>(ir::OpCode::relinearize, relin_operands, relin_inst_tag);
+    relin_node_ptr->set_term_type(ir::ciphertextType);
+    node_ptr->replace_with(relin_node_ptr);
   }
 }
 

@@ -87,6 +87,8 @@ public:
 
   void clear_operands();
 
+  void clear_parents() { parents_labels.clear(); }
+
   void add_parent_label(const std::string &label);
 
   void set_operands(const std::vector<Ptr> &_operands)
@@ -110,9 +112,7 @@ public:
 
   void set_inplace() { (*operation_attribute).is_inplace = true; }
 
-  void replace_with(const ir::Term &rhs) { *this = rhs; /* calling copy assignement operator*/ }
-
-  void replace_with(const Ptr &rhs) { *this = *(rhs.get()); /* calling copy assignement operator*/ }
+  void replace_with(const Ptr &rhs);
 
   bool is_operation_node() const { return operation_attribute != std::nullopt; }
 
@@ -128,7 +128,7 @@ public:
 
   void delete_operand_at_index(size_t index);
 
-  void rewrite_by(ir::Term &new_term);
+  void relin_node_ptr(ir::Term &new_term);
 
   void set_operand_at_index(size_t index, const Ptr &operand_ptr);
 

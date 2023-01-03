@@ -35,30 +35,31 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   parameters_selector.fix_parameters(*params);
 
   // compact assignement pass
+
   {
     const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
 
     for (auto &node_ptr : nodes_ptr)
     {
       program->compact_assignement(node_ptr);
-      //  convert_to_square(node_ptr); /* it converts only if it is possible */
     }
   }
 
   optimizer::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
-
+  /*
   // convert to inplace pass
   {
     const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
 
     for (auto &node_ptr : nodes_ptr)
     {
-      program->convert_to_inplace(node_ptr); /* it converts only if it is possible */
+      program->convert_to_inplace(node_ptr);
     }
 
     // this needs to be the last pass and we must not do any new sorting of the graph
   }
+  */
 
   translator::Translator tr(program, params);
   {
