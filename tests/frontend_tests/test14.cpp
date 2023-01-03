@@ -38,7 +38,7 @@ int test14_frontend()
 
     // ct3_output.square();
 
-    ct3_output += (ct1_output + ct2_output);
+    ct3_output += (ct1_output + ct2_output + y);
 
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
