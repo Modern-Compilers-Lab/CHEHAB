@@ -298,9 +298,7 @@ void Translator::translate_constant_table_entry(
   }
 }
 
-void Translator::translate_binary_operation(
-  const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-  std::ofstream &os)
+void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &os)
 {
   std::string other_args(""); // this depends on the operation
   auto it = get_other_args_by_opcode.find(term_ptr->get_opcode());
@@ -316,16 +314,12 @@ void Translator::translate_binary_operation(
     os, term_ptr->get_opcode(), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
 }
 
-void Translator::translate_nary_operation(
-  const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-  std::ofstream &os)
+void Translator::translate_nary_operation(const Ptr &term_ptr, std::ofstream &os)
 {
   std::cout << "translation of nary \n";
 }
 
-void Translator::translate_unary_operation(
-  const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-  std::ofstream &os)
+void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &os)
 {
   std::string op_identifier = get_identifier(term_ptr);
   std::string rhs_identifier = get_identifier(term_ptr->get_operands()[0]);
@@ -370,15 +364,15 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
         encryption_writer.write_encryption(os, plaintext_id, destination_cipher);
       }
       else
-        translate_unary_operation(term, constant_table_entry_opt, os);
+        translate_unary_operation(term, os);
     }
     else if (operands.size() == 2)
     {
-      translate_binary_operation(term, constant_table_entry_opt, os);
+      translate_binary_operation(term, os);
     }
     else
     {
-      translate_nary_operation(term, constant_table_entry_opt, os);
+      translate_nary_operation(term, os);
     }
   }
   else if (constant_table_entry_opt != std::nullopt)
@@ -403,21 +397,10 @@ void Translator::translate(std::ofstream &os)
   {
     const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(false);
 
-    std::unordered_set<std::string> writen_outputs;
-
+    // after doing all passes, now we do the last pass to translate and generate the code
     for (auto &node_ptr : nodes_ptr)
     {
-      // after doing all passes, now we do the last pass to translate and generate the code
       translate_term(node_ptr, os);
-      /*
-      if (
-        program->type_of(node_ptr->get_label()) == ir::ConstantTableEntryType::output &&
-        writen_outputs.find(node_ptr->get_label()) == writen_outputs.end())
-      {
-        write_output(get_identifier(node_ptr), node_ptr->get_term_type(), os);
-        writen_outputs.insert(node_ptr->get_label());
-      }
-      */
     }
   }
 

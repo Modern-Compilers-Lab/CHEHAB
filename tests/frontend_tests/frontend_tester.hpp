@@ -15,3 +15,4 @@ int test11_frontend();
 int test12_frontend();
 int test13_frontend();
 int test14_frontend();
+int test15_frontend();

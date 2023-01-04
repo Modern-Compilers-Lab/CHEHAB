@@ -25,15 +25,9 @@ private:
   EvaluationWriter evaluation_writer;
   ContextWriter context_writer;
 
-  void translate_binary_operation(
-    const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-    std::ofstream &os);
-  void translate_nary_operation(
-    const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-    std::ofstream &os);
-  void translate_unary_operation(
-    const Ptr &term_ptr, std::optional<std::reference_wrapper<ir::ConstantTableEntry>> &table_entry_opt,
-    std::ofstream &os);
+  void translate_binary_operation(const Ptr &term_ptr, std::ofstream &os);
+  void translate_nary_operation(const Ptr &term_ptr, std::ofstream &os);
+  void translate_unary_operation(const Ptr &term_ptr, std::ofstream &os);
 
   void translate_constant_table_entry(ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os);
 
