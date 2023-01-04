@@ -32,9 +32,15 @@ int test15_frontend()
 
     fhecompiler::Ciphertext ct3_output("ct3_output", fhecompiler::VarType::output);
 
+    fhecompiler::Ciphertext tmp_ct;
+
     ct3_output = ct2_output + 213;
 
     ct3_output <<= 7;
+
+    tmp_ct = ct3_output + 111;
+
+    tmp_ct.square();
 
     std::cout << ct3_output.get_label() << "\n";
 
@@ -44,7 +50,7 @@ int test15_frontend()
 
     std::cout << ct3_output.get_label() << "\n";
 
-    ct3_output += (ct1_output + ct2_output + y);
+    ct3_output += (ct1_output + ct2_output + y + tmp_ct);
 
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;

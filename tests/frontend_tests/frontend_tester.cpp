@@ -19,4 +19,5 @@ int main()
   test14_frontend();
   */
   test15_frontend();
+  test16_frontend();
 }

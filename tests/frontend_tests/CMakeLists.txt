@@ -3,6 +3,7 @@ add_executable(frontendtests)
 set(FRONTEND_SOURCES
   ${CMAKE_CURRENT_LIST_DIR}/frontend_tester.cpp
   ${CMAKE_CURRENT_LIST_DIR}/test15.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/test16.cpp
 
 
 )

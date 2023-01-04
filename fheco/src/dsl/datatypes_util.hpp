@@ -102,17 +102,16 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
   auto new_rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (new_rhs_node_ptr == nullptr)
     throw("term supposed to be inserted \n");
+
   auto table_entry_opt = program->get_entry_form_constants_table(old_label);
   if (table_entry_opt != std::nullopt)
   {
-
     ir::ConstantTableEntry &table_entry = *table_entry_opt;
     bool is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
     bool is_input = table_entry.get_entry_type() == ir::ConstantTableEntryType::input;
     if (is_output || is_tracked_object(old_label))
     {
       // program->delete_node_from_dataflow(old_label);
-
       if (!is_input)
       {
         program->insert_new_entry_from_existing_with_delete(rhs.get_label(), old_label);
