@@ -45,16 +45,20 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
 
     ir::ConstantTableEntry &table_entry = *table_entry_opt;
     bool is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
+    bool is_input = table_entry.get_entry_type() == ir::ConstantTableEntryType::input;
+
     if (is_output || is_tracked_object(old_label))
     {
       // program->delete_node_from_dataflow(old_label);
-      program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+      if (!is_input)
+      {
+        program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+      }
 
       if (is_output)
       {
         program->delete_node_from_outputs(old_label);
       }
-      auto table_entry_opt2 = program->get_entry_form_constants_table(lhs.get_label());
     }
   }
   auto new_operation_node_ptr =
@@ -71,7 +75,7 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
   {
     throw("operand is not defined, maybe it was only declared\n");
   }
-  return operate<T1>(opcode, {lhs_node_ptr, rhs_node_ptr}, term_type);
+  return operate<T1>(opcode, std::vector<std::shared_ptr<ir::Term>>({lhs_node_ptr, rhs_node_ptr}), term_type);
 }
 
 template <typename T1, typename T2>
@@ -82,7 +86,7 @@ T1 operate_unary(const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
   {
     throw("operand is not defined, maybe it was only declared\n");
   }
-  return operate<T1>(opcode, {rhs_node_ptr}, term_type);
+  return operate<T1>(opcode, std::vector<std::shared_ptr<ir::Term>>({rhs_node_ptr}), term_type);
 }
 
 template <typename T1, typename T2>
@@ -93,10 +97,33 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
   {
     throw("operand is not defined, maybe it was only declared\n");
   }
-  rhs.set_label(operate<T1>(opcode, {rhs_node_ptr}, term_type).get_label());
+  std::string old_label = rhs.get_label();
+  rhs.set_label(operate<T1>(opcode, std::vector<std::shared_ptr<ir::Term>>({rhs_node_ptr}), term_type).get_label());
   auto new_rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (new_rhs_node_ptr == nullptr)
     throw("term supposed to be inserted \n");
+  auto table_entry_opt = program->get_entry_form_constants_table(old_label);
+  if (table_entry_opt != std::nullopt)
+  {
+
+    ir::ConstantTableEntry &table_entry = *table_entry_opt;
+    bool is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
+    bool is_input = table_entry.get_entry_type() == ir::ConstantTableEntryType::input;
+    if (is_output || is_tracked_object(old_label))
+    {
+      // program->delete_node_from_dataflow(old_label);
+
+      if (!is_input)
+      {
+        program->insert_new_entry_from_existing_with_delete(rhs.get_label(), old_label);
+      }
+
+      if (is_output)
+      {
+        program->delete_node_from_outputs(old_label);
+      }
+    }
+  }
   new_rhs_node_ptr->set_inplace();
 }
 
@@ -148,7 +175,6 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     auto new_assign_operation =
       program->insert_operation_node_in_dataflow(ir::OpCode::assign, {rhs_node_ptr}, lhs.get_label(), term_type);
   }
-
   else
   {
     lhs.set_label(rhs.get_label());
@@ -242,12 +268,16 @@ void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode op
   {
     ir::ConstantTableEntry &table_entry = *table_entry_opt;
     bool is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
+    bool is_input = table_entry.get_entry_type() == ir::ConstantTableEntryType::input;
     if (is_output || is_tracked_object(old_label))
     {
       if (is_output)
         program->delete_node_from_outputs(old_label);
 
-      program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+      if (!is_input)
+      {
+        program->insert_new_entry_from_existing_with_delete(lhs.get_label(), old_label);
+      }
     }
   }
   auto new_operation_node_ptr =
