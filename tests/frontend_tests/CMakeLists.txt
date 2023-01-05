@@ -19,6 +19,11 @@ set(FRONTEND_SOURCES
   ${CMAKE_CURRENT_LIST_DIR}/test14.cpp
   ${CMAKE_CURRENT_LIST_DIR}/test15.cpp
   ${CMAKE_CURRENT_LIST_DIR}/test16.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/test17.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/test18.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/test19.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/test20.cpp
+
 )
 
 set(INCLUDE_HEADERS_DIR /usr/local/include)

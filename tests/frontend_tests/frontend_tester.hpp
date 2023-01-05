@@ -17,3 +17,7 @@ int test13_frontend();
 int test14_frontend();
 int test15_frontend();
 int test16_frontend();
+int test17_frontend();
+int test18_frontend();
+int test19_frontend();
+int test20_frontend();

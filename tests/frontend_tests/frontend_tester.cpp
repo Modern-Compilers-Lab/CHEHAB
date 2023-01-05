@@ -18,4 +18,8 @@ int main()
   test14_frontend();
   test15_frontend();
   test16_frontend();
+  test17_frontend();
+  test18_frontend();
+  test19_frontend();
+  test20_frontend();
 }
