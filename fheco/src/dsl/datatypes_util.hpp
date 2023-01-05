@@ -98,10 +98,8 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
     throw("operand is not defined, maybe it was only declared\n");
   }
   std::string old_label = rhs.get_label();
-  rhs.set_label(operate<T1>(opcode, std::vector<std::shared_ptr<ir::Term>>({rhs_node_ptr}), term_type).get_label());
-  auto new_rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
-  if (new_rhs_node_ptr == nullptr)
-    throw("term supposed to be inserted \n");
+
+  rhs.set_new_label();
 
   auto table_entry_opt = program->get_entry_form_constants_table(old_label);
   if (table_entry_opt != std::nullopt)
@@ -123,7 +121,9 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
       }
     }
   }
-  new_rhs_node_ptr->set_inplace();
+  auto new_operation_node_ptr =
+    program->insert_operation_node_in_dataflow(opcode, std::vector<Ptr>({rhs_node_ptr}), rhs.get_label(), term_type);
+  new_operation_node_ptr->set_inplace();
 }
 
 template <typename T>
