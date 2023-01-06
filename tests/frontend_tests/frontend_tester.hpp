@@ -21,3 +21,4 @@ int test17_frontend();
 int test18_frontend();
 int test19_frontend();
 int test20_frontend();
+int test21_frontend();

@@ -22,4 +22,5 @@ int main()
   test18_frontend();
   test19_frontend();
   test20_frontend();
+  test21_frontend();
 }
