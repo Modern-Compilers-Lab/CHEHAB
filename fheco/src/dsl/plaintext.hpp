@@ -26,7 +26,6 @@ public:
   Plaintext();
   Plaintext(const std::vector<int64_t> &message);
   Plaintext(const std::vector<double> &message);
-  Plaintext(const std::vector<int> &message) : Plaintext((const std::vector<int64_t> &)message) {}
 
   Plaintext(const std::string &tag, VarType var_type = VarType::temp);
 

@@ -186,9 +186,9 @@ void Translator::translate_constant_table_entry(
   ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os)
 {
   /*
-  basically in this function we need to generate a decalartion or a definition in C++ for a given entry.
-  the entry could be representing an input, output, a constant (with raw data) or some temp variable with a tag
-  specified by the programmer
+    basically in this function we need to generate a decalartion or a definition in C++ for a given entry.
+    the entry could be representing an input, output, a constant (with raw data) or some temp variable with a tag
+    specified by the programmer
   */
 
   // Retrieving needed information
@@ -406,6 +406,10 @@ void Translator::translate(std::ofstream &os)
 
   for (auto &output_node : program->get_outputs_nodes())
   {
+
+    if (output_node.second->is_operation_node() == false) /* Output node must be at least an assignement node */
+      continue;
+
     write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
   }
 
