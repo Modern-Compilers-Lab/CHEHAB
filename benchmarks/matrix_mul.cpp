@@ -1,15 +1,15 @@
 #include "fhecompiler/fhecompiler.hpp"
 
-inline fhecompiler::Ciphertext sum_all_slots(const fhecompiler::Ciphertext &x)
+inline fhecompiler::Ciphertext sum_all_slots(const fhecompiler::Ciphertext &x, int vector_size)
 {
-  // number of slots needs to be know by the user
-  // we assume here that we have 3 slots in x
-  fhecompiler::Ciphertext result;
-  result = x;
-  fhecompiler::Ciphertext x1 = x << 1;
-  result += x1;
-  fhecompiler::Ciphertext x2 = x1 << 1;
-  result += x2;
+  std::vector<fhecompiler::Ciphertext> rotated_ciphers = {x};
+  fhecompiler::Ciphertext result = rotated_ciphers.back();
+  for (; vector_size > 0; vector_size--)
+  {
+    fhecompiler::Ciphertext cipher_rotated = rotated_ciphers.back() << 1;
+    result += cipher_rotated;
+    rotated_ciphers.push_back(cipher_rotated);
+  }
   // result of sum will be in the first slot
   return result;
 }
@@ -24,14 +24,13 @@ int main()
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
 
-    std::vector<std::vector<int64_t>> A = {{1, 2, 3}, {-5, 3, 2}, {1, 0, 1}};
-    std::vector<std::vector<int64_t>> B = {{0, 1}, {-7, -10}, {1, 9}};
+    std::vector<std::vector<int64_t>> A = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
+    std::vector<std::vector<int64_t>> B = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
     std::vector<fhecompiler::Ciphertext> A_encrypted;
     // encrypt by line for matrix A
     for (std::vector<int64_t> line : A)
     {
-      fhecompiler::Plaintext pt(line);
       fhecompiler::Ciphertext line_encrypted = fhecompiler::Ciphertext::encrypt(line);
       A_encrypted.push_back(line_encrypted);
     }
@@ -60,9 +59,8 @@ int main()
       {
         std::vector<int64_t> mask(A[0].size(), 0);
         mask[0] = 1;
-        fhecompiler::Plaintext mask_plain(mask);
         fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_encrypted[j];
-        fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product) * mask;
+        fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product, A[0].size()) * mask;
         temp_cipher >>= j;
         temp_ciphers.push_back(temp_cipher);
       }
