@@ -72,7 +72,6 @@ int main()
       output = c_line;
     }
 
-    // now for each ouput we need to give it a ciphertext
     params_selector::EncryptionParameters params;
     params.set_plaintext_modulus(plaintext_modulus);
     params.set_polynomial_modulus_degree(polynomial_modulus_degree);
