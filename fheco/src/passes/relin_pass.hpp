@@ -1,6 +1,8 @@
+#pragma once
+
 #include "program.hpp"
 
-namespace optimizer
+namespace fheco_passes
 
 {
 
@@ -20,4 +22,4 @@ public:
   void simple_relinearize();
 };
 
-} // namespace optimizer
+} // namespace fheco_passes

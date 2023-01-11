@@ -1,6 +1,6 @@
 set(SRC_DSL src/dsl)
 set(SRC_IR src/ir)
-set(SRC_OPTIMIZER src/optimizer)
+set(SRC_PASSES src/passes)
 set(SRC_PARAMS_SELECTOR src/params_selector)
 set(SRC_TRANSLATOR src/translator)
 set(SRC_UTILS src/utils)
@@ -13,7 +13,7 @@ set(FHECOMPILER_STATIC_INSTALL_DIR lib)
 
 add_library(fhecompiler fhecompiler.cpp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC src/ir PUBLIC src/dsl PUBLIC src/optimizer PUBLIC src/params_selector PUBLIC src/translator src/utils)
+target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_IR} PUBLIC ${SRC_DSL} PUBLIC ${SRC_PASSES} PUBLIC ${SRC_PARAMS_SELECTOR} PUBLIC ${SRC_TRANSLATOR} ${SRC_UTILS})
 
 target_sources(fhecompiler PRIVATE
   ${SRC_DSL}/ciphertext.cpp
@@ -23,9 +23,10 @@ target_sources(fhecompiler PRIVATE
   ${SRC_IR}/dag.cpp
   ${SRC_IR}/program.cpp
   ${SRC_IR}/term.cpp
-  ${SRC_OPTIMIZER}/cse_pass.cpp
-  ${SRC_OPTIMIZER}/preprocessor.cpp
-  ${SRC_OPTIMIZER}/relin_pass.cpp
+  ${SRC_PASSES}/cse_pass.cpp
+  ${SRC_PASSES}/preprocessor.cpp
+  ${SRC_PASSES}/relin_pass.cpp
+  ${SRC_PASSES}/rotationkeys_select_pass.cpp
   ${SRC_PARAMS_SELECTOR}/params_selector.cpp
   ${SRC_TRANSLATOR}/translator.cpp
 )
@@ -42,15 +43,15 @@ install(FILES
   ${SRC_IR}/ir_const.hpp
   ${SRC_IR}/program.hpp
   ${SRC_IR}/term.hpp
-  ${SRC_OPTIMIZER}/optimizer.hpp
-  ${SRC_OPTIMIZER}/cse_pass.hpp
-  ${SRC_OPTIMIZER}/preprocessor.hpp
-  ${SRC_OPTIMIZER}/relin_pass.hpp
+  ${SRC_PASSES}/cse_pass.hpp
+  ${SRC_PASSES}/preprocessor.hpp
+  ${SRC_PASSES}/relin_pass.hpp
   ${SRC_PARAMS_SELECTOR}/encryption_parameters.hpp
   ${SRC_PARAMS_SELECTOR}/params_selector.hpp
   ${SRC_TRANSLATOR}/translator.hpp
   ${SRC_TRANSLATOR}/translator_const.hpp
   ${SRC_UTILS}/fhecompiler_const.hpp
+  ${SRC_PASSES}/rotationkeys_select_pass.hpp
   DESTINATION ${HEADERS_INSTALL_DIR}
 )
 

@@ -1,6 +1,7 @@
 #include "translator.hpp"
 #include "fhecompiler_const.hpp"
 #include "program.hpp"
+#include "rotationkeys_select_pass.hpp"
 #include <fstream>
 
 namespace translator
@@ -392,6 +393,8 @@ void Translator::translate(std::ofstream &os)
   generate_function_signature(os);
   os << "{" << '\n';
 
+  // generate_rotation_keys(os);
+
   convert_to_inplace_pass();
 
   {
@@ -460,6 +463,30 @@ void Translator::convert_to_inplace_pass()
   {
     convert_to_inplace(node_ptr);
   }
+}
+
+void Translator::generate_rotation_keys(std::ofstream &os) const
+{
+  std::vector<int> rotation_steps = fheco_passes::get_unique_rotation_steps(program);
+  if (!rotation_steps.empty())
+  {
+    generate_key_generator(os);
+
+    os << galois_keys_type_literal << " " << galois_keys_identifier << ";\n";
+    os << key_generator_identifier << "." << create_galois_instruction << "({";
+    for (size_t i = 0; i < rotation_steps.size(); i++)
+    {
+      os << rotation_steps[i];
+      if (i < rotation_steps.size() - 1)
+        os << ",";
+    }
+    os << "}," << galois_keys_identifier << ");\n";
+  }
+}
+
+void Translator::generate_key_generator(std::ofstream &os) const
+{
+  // os << key_generator_type_literal << " " << key_generator_identifier << "(" << context_identifier << ");\n";
 }
 
 } // namespace translator

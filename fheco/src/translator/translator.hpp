@@ -56,8 +56,13 @@ public:
       context_writer(this->encryption_parameters, program->get_encryption_scheme())
   {}
 
-  void generate_function_signature(std::ofstream &os) const;
   ~Translator() {}
+
+  void generate_function_signature(std::ofstream &os) const;
+
+  void generate_key_generator(std::ofstream &os) const;
+
+  void generate_rotation_keys(std::ofstream &os) const;
 
   void write_assign_operation(
     std::ofstream &os, const std::string &lhs_id, const std::string &rhs_id, ir::TermType type);

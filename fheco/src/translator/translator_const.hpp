@@ -93,6 +93,8 @@ INLINE const char *relin_keys_type_literal = "ufhe::RelinKeys";
 INLINE const char *relin_keys_identifier = "relin_keys";
 INLINE const char *galois_keys_type_literal = "ufhe::GaloisKeys";
 INLINE const char *galois_keys_identifier = "galois_keys";
+INLINE const char *key_generator_type_literal = "ufhe::KeyGenerator";
+INLINE const char *key_generator_identifier = "key_gen";
 INLINE const char *evaluator_type_literal = "ufhe::Evaluator";
 INLINE const char *evaluator_identifier = "evaluator";
 INLINE const char *bv_encoder_type_literal = "ufhe::BatchEncoder";
@@ -110,6 +112,7 @@ INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::strin
 INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, ufhe::Plaintext>";
 INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, ufhe::Ciphertext>";
 INLINE const char *headers_include = "#include\"ufhe/ufhe.hpp\"\n#include<vector>\n#include<unordered_map>\n";
+INLINE const char *create_galois_instruction = "create_galois_key";
 
 INLINE std::unordered_map<ir::TermType, const char *> outputs_class_identifier = {
   {ir::plaintextType, "encoded_outputs"}, {ir::ciphertextType, "encrypted_outputs"}};

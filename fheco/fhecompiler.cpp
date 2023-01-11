@@ -1,4 +1,6 @@
 #include "fhecompiler.hpp"
+#include "relin_pass.hpp"
+#include "rotationkeys_select_pass.hpp"
 
 using namespace fhecompiler;
 
@@ -45,8 +47,16 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     }
   }
 
-  optimizer::RelinPass relin_pass(program);
+  fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
+
+  /*
+    std::vector<int> program_rotations_steps = fheco_passes::get_unique_rotation_steps(program);
+    for (auto &step : program_rotations_steps)
+      std::cout << step << " ";
+    std::cout << "\n";
+  */
+
   /*
   // convert to inplace pass
   {

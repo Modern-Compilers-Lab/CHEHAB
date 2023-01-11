@@ -4,7 +4,6 @@
 #include "encryption_parameters.hpp"
 #include "fhecompiler_const.hpp"
 #include "ops_overloads.hpp"
-#include "optimizer.hpp"
 #include "params_selector.hpp"
 #include "plaintext.hpp"
 #include "program.hpp"

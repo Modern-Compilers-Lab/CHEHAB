@@ -1,6 +1,6 @@
 #pragma once
 
-namespace optimizer
+namespace fheco_passes
 {
 
 /*
@@ -15,4 +15,4 @@ class PreProcessor
   // merge with a certain condition
   // delete operand
 };
-} // namespace optimizer
+} // namespace fheco_passes
