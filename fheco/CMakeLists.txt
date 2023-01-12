@@ -27,6 +27,7 @@ target_sources(fhecompiler PRIVATE
   ${SRC_PASSES}/preprocessor.cpp
   ${SRC_PASSES}/relin_pass.cpp
   ${SRC_PASSES}/rotationkeys_select_pass.cpp
+  ${SRC_PASSES}/rotation_rewrite_pass.cpp
   ${SRC_PARAMS_SELECTOR}/params_selector.cpp
   ${SRC_TRANSLATOR}/translator.cpp
 )
@@ -52,6 +53,7 @@ install(FILES
   ${SRC_TRANSLATOR}/translator_const.hpp
   ${SRC_UTILS}/fhecompiler_const.hpp
   ${SRC_PASSES}/rotationkeys_select_pass.hpp
+  ${SRC_PASSES}/rotation_rewrite_pass.hpp
   DESTINATION ${HEADERS_INSTALL_DIR}
 )
 
