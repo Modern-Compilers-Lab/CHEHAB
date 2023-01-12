@@ -33,7 +33,7 @@ private:
   struct OperationAttribute
   {
 
-    OpCode opcode;
+    OpCode opcode = OpCode::undefined;
 
     bool is_inplace = false; // true if the term represents an inplace instruction
 

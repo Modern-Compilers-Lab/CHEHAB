@@ -96,6 +96,7 @@ void Term::delete_operand_at_index(size_t index)
 
   size_t degree = operation_attribute->operands.size();
   operation_attribute->operands[index]->delete_parent(this->label);
+  operation_attribute->operands[index] = operation_attribute->operands.back();
   // operation_attribute->operands.erase(operation_attribute->operands.begin() + pos);
   operation_attribute->operands.pop_back();
 }
