@@ -17,7 +17,7 @@ int main()
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
-    output1 = (A << 3) + (B << 5);
+    output1 = (A << 3) * (B << 5) + ((A << 3) + (B << 3));
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;
