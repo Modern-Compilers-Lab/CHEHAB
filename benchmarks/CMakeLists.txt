@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-add_executable(gx_kernel)
+add_executable(test1)
 
-set(FRONTEND_SOURCES
-  ${CMAKE_CURRENT_LIST_DIR}/gx_kernel.cpp
+set(SOURCES
+  ${CMAKE_CURRENT_LIST_DIR}/test1.cpp
 )
 
 set(INCLUDE_HEADERS_DIR /usr/local/include)
 
-target_sources(gx_kernel PRIVATE
-  ${FRONTEND_SOURCES}
+target_sources(test1 PRIVATE
+  ${SOURCES}
 )
 
 include_directories(${INCLUDE_HEADERS_DIR})
 
-target_link_libraries(gx_kernel fhecompiler)
+target_link_libraries(test1 fhecompiler)

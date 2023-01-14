@@ -51,8 +51,8 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
 
-  // fheco_passes::RotationRewritePass rw_pass(program);
-  // rw_pass.apply_rewrite();
+  fheco_passes::RotationRewritePass rw_pass(program);
+  rw_pass.apply_rewrite();
 
   /*
     std::vector<int> program_rotations_steps = fheco_passes::get_unique_rotation_steps(program);

@@ -57,38 +57,14 @@ void RotationRewritePass::apply_rule1(const std::shared_ptr<ir::Term> &node_term
   else
     throw("one of rotation's operand must be a raw data type");
 
-  // if (lhs_rotation_operand->get_label() != rhs_rotation_operand->get_label())
-  // return;
+  ir::Program::Ptr node_to_rotate_with_new_steps;
+  if (n < m)
+    node_to_rotate_with_new_steps = rhs_rotation_operand;
+  else
+    node_to_rotate_with_new_steps = lhs_rotation_operand;
 
-  auto swap = [](int32_t &lhs, int32_t &rhs) {
-    int32_t t = lhs;
-    lhs = rhs;
-    rhs = t;
-  };
-
-  // n and m are rotation steps, we assume that m is the biggest
-  if (node_term->get_opcode() != ir::OpCode::sub && n < m)
-  {
-    swap(n, m);
-    node_term->reverse_operands(); // reversing two elements is just swapping them
-    // sawpping the two pointers
-    auto ref_temp = lhs_rotation_operand;
-    lhs_rotation_operand = rhs_rotation_operand;
-    rhs_rotation_operand = ref_temp;
-  }
-  else if (n < m) // later we will see what do here
-    return;
-
-  /*
-    We apply the rewrite rule, (c << n) + (c << m) = (c << (n-m) + c) << m.
-    node_term after applying the rule will become a rotation node instead of an arithmetic operation node
-    operands of node_term will change where term_operands[0] becomes an addition and term_operands[1] is a rawDataType
-    node that contains number of steps
-  */
-  std::string m_str = std::to_string(m);
+  std::string m_str = std::to_string(std::min(n, m));
   ir::Program::Ptr new_rhs = std::make_shared<ir::Term>(m_str, ir::rawDataType);
-
-  // at this stage lhs_rotation_operand == rhs_rotation_operand
 
   ir::OpCode old_opcode = node_term->get_opcode();
 
@@ -98,9 +74,9 @@ void RotationRewritePass::apply_rule1(const std::shared_ptr<ir::Term> &node_term
                        // node_term->get_operands()[1]->get_opcode()
   node_term->clear_operands();
   std::string rotation_node_in_lhs_label = inst_keyword + "_" + std::to_string(pass_instruction_id++);
-  ir::Program::Ptr steps_raw_node = std::make_shared<ir::Term>(std::to_string(n - m), ir::rawDataType);
+  ir::Program::Ptr steps_raw_node = std::make_shared<ir::Term>(std::to_string(std::abs(n - m)), ir::rawDataType);
   ir::Program::Ptr rotation_node_in_lhs = program->insert_operation_node_in_dataflow(
-    node_term->get_opcode(), std::vector<ir::Program::Ptr>({lhs_rotation_operand, steps_raw_node}),
+    node_term->get_opcode(), std::vector<ir::Program::Ptr>({node_to_rotate_with_new_steps, steps_raw_node}),
     rotation_node_in_lhs_label, ir::ciphertextType);
 
   std::string lhs_label = inst_keyword + "_" + std::to_string(pass_instruction_id++);
@@ -116,8 +92,11 @@ void RotationRewritePass::apply_rule1(const std::shared_ptr<ir::Term> &node_term
   else
   {
     new_lhs = program->insert_operation_node_in_dataflow(
-      old_opcode, std::vector<ir::Program::Ptr>({rotation_node_in_lhs, lhs_rotation_operand}), lhs_label,
-      ir::ciphertextType);
+      old_opcode,
+      std::vector<ir::Program::Ptr>(
+        {rotation_node_in_lhs,
+         (node_to_rotate_with_new_steps == lhs_rotation_operand ? rhs_rotation_operand : lhs_rotation_operand)}),
+      lhs_label, ir::ciphertextType);
   }
 
   node_term->add_operand(new_lhs);
@@ -167,6 +146,8 @@ void RotationRewritePass::apply_rewrite()
   {
     apply_rule2(node_ptr);
     apply_rule1(node_ptr);
+    // rule3
+    // rule4
   }
 }
 
