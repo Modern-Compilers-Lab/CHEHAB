@@ -30,6 +30,7 @@ target_sources(fhecompiler PRIVATE
   ${SRC_PASSES}/rotation_rewrite_pass.cpp
   ${SRC_PARAMS_SELECTOR}/params_selector.cpp
   ${SRC_TRANSLATOR}/translator.cpp
+  ${SRC_UTILS}/draw_ir.cpp
 )
 
 install(FILES  
