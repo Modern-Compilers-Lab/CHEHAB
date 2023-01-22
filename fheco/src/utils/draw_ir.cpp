@@ -62,6 +62,33 @@ void utils::draw_ir(ir::Program *program, std::string ofile_name)
     for (const ir::Program::Ptr &operand : node->get_operands())
       ofile << node->get_label() << " -> " << operand->get_label() << endl;
   }
+  string key = R"(subgraph cluster_key {
+    graph[label="Key"]
+    node [width=0.5]
+    edge [dir=forward style=invis]
+    in_cipher [label=input color=blue fontcolor=blue style=dashed]
+    tmp_cipher [label=tmp color=black fontcolor=black style=dashed]
+    out_cipher [label=out color=red fontcolor=red style=dashed]
+    cipher [shape=plain]
+
+    in_plain [label=in icolor=blue fontcolor=blue style=dotted]
+    tmp_plain [label=tmp color=black fontcolor=black style=dotted]
+    out_plain [label=out color=red fontcolor=red style=dotted]
+    plain [shape=plain]
+    
+    other [color=black fontcolor=black style=solid]
+    scalar [color=darkgreen fontcolor=darkgreen style=solid]
+    const[shape=plain]
+    
+    cipher -> plain
+    plain -> const
+    out_cipher -> out_plain
+    in_cipher -> in_plain
+    tmp_cipher -> tmp_plain
+    in_plain -> other
+    out_plain -> scalar
+})";
+  ofile << key << endl;
   ofile << "}" << endl;
   ofile.close();
 }
