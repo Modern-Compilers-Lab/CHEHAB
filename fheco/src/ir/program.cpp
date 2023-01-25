@@ -187,4 +187,45 @@ void Program::compact_assignement(const ir::Term::Ptr &node_ptr)
   }
 }
 
+void Program::flatten_term_operand_by_one_level_at_index(const ir::Program::Ptr &node_term, size_t index)
+{
+  /*
+    t2 = a+b
+    t1 = t2 + t3 -> t1 = a+b+t3
+  */
+
+  /*
+    This function is assumed to be run in a bottom up traversal as it doesn't call itself recursively
+  */
+
+  if (node_term->is_operation_node() == false)
+    return;
+
+  auto flattening_condition = [this](const ir::Program::Ptr &operand) -> bool {
+    if (operand->is_operation_node() == false)
+      return false;
+    if (type_of(operand->get_label()) == ir::ConstantTableEntryType::output)
+      return false;
+    if (operand->get_parents_labels().size() > 1)
+      return false;
+
+    return true;
+  };
+
+  if (node_term->get_operands().size() >= index || index < 0)
+    return;
+
+  auto operand = node_term->get_operands()[index];
+
+  // term->clear_operands();
+
+  if (flattening_condition(operand) == true)
+  {
+    node_term->delete_operand_at_index(index);
+
+    for (auto &sub_operand : operand->get_operands())
+      node_term->add_operand(sub_operand);
+  }
+}
+
 } // namespace ir

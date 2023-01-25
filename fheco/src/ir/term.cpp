@@ -4,6 +4,8 @@
 namespace ir
 {
 
+size_t Term::term_id = 0;
+
 void Term::delete_operand_term(const std::string &term_label)
 {
   // this needs to be changed later .. since it is unecessary linear in terms of complexity
@@ -124,6 +126,11 @@ void Term::replace_with(const Ptr &rhs)
 {
   (*(rhs.get())).parents_labels = (*this).parents_labels;
   *this = *(rhs.get());
+}
+
+void Term::set_a_default_label()
+{
+  label = term_type_str[type] + std::to_string(term_id);
 }
 
 } // namespace ir

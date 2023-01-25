@@ -26,9 +26,9 @@ public:
   using Ptr = std::shared_ptr<Term>;
 
 private:
-  int term_id;
-
   TermType type;
+
+  static size_t term_id;
 
   struct OperationAttribute
   {
@@ -62,21 +62,24 @@ public:
   Term(Term &&term_move) = default;
   Term &operator=(Term &&term_move) = default;
 
-  Term(const fhecompiler::Ciphertext &ct) : label(ct.get_label()), type(ir::ciphertextType) {}
+  Term(const fhecompiler::Ciphertext &ct) : label(ct.get_label()), type(ir::ciphertextType) { term_id++; }
 
-  Term(const fhecompiler::Plaintext &pt) : label(pt.get_label()), type(ir::plaintextType) {}
+  Term(const fhecompiler::Plaintext &pt) : label(pt.get_label()), type(ir::plaintextType) { term_id++; }
 
-  Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::scalarType) {}
+  Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::scalarType) { term_id++; }
 
   Term(OpCode _opcode, const std::vector<Ptr> &_operands, const std::string &label_value)
     : operation_attribute({_opcode, _operands}), label(label_value)
   {
+
     for (auto &operand : _operands)
       operand->add_parent_label(this->label);
+
+    term_id++;
   }
 
   // this constructure is useful in case of rawData where we store it in the lable as an int
-  Term(const std::string &symbol, TermType term_type) : label(symbol), type(term_type) {}
+  Term(const std::string &symbol, TermType term_type) : label(symbol), type(term_type) { term_id++; }
 
   void reverse_operands()
   {
@@ -128,11 +131,7 @@ public:
 
   void delete_operand_at_index(size_t index);
 
-  void relin_node_ptr(ir::Term &new_term);
-
   void set_operand_at_index(size_t index, const Ptr &operand_ptr);
-
-  std::shared_ptr<Ptr> make_copy_ptr();
 
   OpCode get_opcode() const { return (*operation_attribute).opcode; }
 
@@ -140,10 +139,14 @@ public:
 
   void set_term_type(TermType term_type) { this->type = term_type; }
 
+  size_t get_term_id() { return term_id; }
+
   std::string get_label() const { return this->label; }
   TermType get_term_type() const { return this->type; }
 
   void sort_operands(std::function<bool(const Ptr &, const Ptr &)> comp);
+
+  void set_a_default_label();
 };
 
 } // namespace ir

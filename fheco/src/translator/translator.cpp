@@ -1,5 +1,6 @@
 #include "translator.hpp"
 #include "fhecompiler_const.hpp"
+#include "ir_const.hpp"
 #include "program.hpp"
 #include "rotationkeys_select_pass.hpp"
 #include <fstream>
@@ -238,7 +239,7 @@ void Translator::translate_constant_table_entry(
     if (term_type == ir::plaintextType)
     {
       // encoding
-      using VectorValue = ir::ConstantTableEntry::VectorValue;
+      using VectorValue = ir::VectorValue;
       VectorValue vector_value = std::get<VectorValue>(*(entry_value.value));
       using VectorInt = std::vector<int64_t>;
       using VectorFloat = std::vector<double>;
@@ -258,7 +259,7 @@ void Translator::translate_constant_table_entry(
     else if (term_type == ir::scalarType)
     {
       // don't forget to reduce
-      using ScalarValue = ir::ConstantTableEntry::ScalarValue;
+      using ScalarValue = ir::ScalarValue;
       ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
 
       if (auto value = std::get_if<int64_t>(&scalar_value))

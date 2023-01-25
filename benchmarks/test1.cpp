@@ -14,10 +14,14 @@ int main()
 
     fhecompiler::Ciphertext A("A", fhecompiler::VarType::input);
     fhecompiler::Ciphertext B("B", fhecompiler::VarType::input);
+    fhecompiler::Ciphertext C("C", fhecompiler::VarType::input);
+    fhecompiler::Ciphertext D("D", fhecompiler::VarType::input);
+
+    fhecompiler::Plaintext E("E", fhecompiler::VarType::input);
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
-    output1 = (A << 3) * (B << 5) + ((A << 3) + (B << 3));
+    output1 = (A + 1) - 1;
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

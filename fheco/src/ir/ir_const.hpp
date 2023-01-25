@@ -1,7 +1,17 @@
 #pragma once
+#include <string>
+#include <unordered_map>
+#include <variant>
+#include <vector>
 
 namespace ir
 {
+
+using ScalarValue = std::variant<int64_t, double, uint64_t>;
+
+using VectorValue = std::variant<std::vector<int64_t>, std::vector<double>>;
+
+using ConstantValue = std::variant<ScalarValue, VectorValue>;
 
 enum TermType
 {
@@ -41,5 +51,8 @@ enum class ConstantTableEntryType
   output,
   temp
 };
+
+inline std::unordered_map<ir::TermType, std::string> term_type_str = {
+  {ir::scalarType, "scalar"}, {ir::plaintextType, "plaintext"}, {ir::ciphertextType, "ciphertext"}};
 
 } // namespace ir

@@ -4,6 +4,8 @@ set(SRC_PASSES src/passes)
 set(SRC_PARAMS_SELECTOR src/params_selector)
 set(SRC_TRANSLATOR src/translator)
 set(SRC_UTILS src/utils)
+set(SRC_TRS src/trs)
+
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -13,7 +15,7 @@ set(FHECOMPILER_STATIC_INSTALL_DIR lib)
 
 add_library(fhecompiler fhecompiler.cpp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_IR} PUBLIC ${SRC_DSL} PUBLIC ${SRC_PASSES} PUBLIC ${SRC_PARAMS_SELECTOR} PUBLIC ${SRC_TRANSLATOR} ${SRC_UTILS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_IR} PUBLIC ${SRC_DSL} PUBLIC ${SRC_PASSES} PUBLIC ${SRC_PARAMS_SELECTOR} PUBLIC ${SRC_TRANSLATOR} ${SRC_UTILS} ${SRC_TRS})
 
 target_sources(fhecompiler PRIVATE
   ${SRC_DSL}/ciphertext.cpp
@@ -23,13 +25,16 @@ target_sources(fhecompiler PRIVATE
   ${SRC_IR}/dag.cpp
   ${SRC_IR}/program.cpp
   ${SRC_IR}/term.cpp
+  ${SRC_IR}/ir_utils.cpp
   ${SRC_PASSES}/cse_pass.cpp
-  ${SRC_PASSES}/preprocessor.cpp
   ${SRC_PASSES}/relin_pass.cpp
   ${SRC_PASSES}/rotationkeys_select_pass.cpp
   ${SRC_PASSES}/rotation_rewrite_pass.cpp
+  ${SRC_PASSES}/arith_expr_pass.cpp
   ${SRC_PARAMS_SELECTOR}/params_selector.cpp
   ${SRC_TRANSLATOR}/translator.cpp
+  ${SRC_TRS}/trs.cpp
+  ${SRC_TRS}/matching_term.cpp
 )
 
 install(FILES  
@@ -44,8 +49,8 @@ install(FILES
   ${SRC_IR}/ir_const.hpp
   ${SRC_IR}/program.hpp
   ${SRC_IR}/term.hpp
+  ${SRC_IR}/ir_utils.hpp
   ${SRC_PASSES}/cse_pass.hpp
-  ${SRC_PASSES}/preprocessor.hpp
   ${SRC_PASSES}/relin_pass.hpp
   ${SRC_PARAMS_SELECTOR}/encryption_parameters.hpp
   ${SRC_PARAMS_SELECTOR}/params_selector.hpp
@@ -53,7 +58,11 @@ install(FILES
   ${SRC_TRANSLATOR}/translator_const.hpp
   ${SRC_UTILS}/fhecompiler_const.hpp
   ${SRC_PASSES}/rotationkeys_select_pass.hpp
+  ${SRC_PASSES}/arith_expr_pass.hpp
   ${SRC_PASSES}/rotation_rewrite_pass.hpp
+  ${SRC_TRS}/trs.hpp
+  ${SRC_TRS}/matching_term.hpp
+  ${SRC_TRS}/rewrite_rule.hpp
   DESTINATION ${HEADERS_INSTALL_DIR}
 )
 

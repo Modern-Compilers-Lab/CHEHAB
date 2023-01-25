@@ -17,19 +17,6 @@ namespace ir
 
 struct ConstantTableEntry
 {
-
-  struct Encrypt
-  {
-    std::string plaintext_label;
-    // to be extended in the future maybe
-  };
-
-  using ScalarValue = std::variant<int64_t, double, uint64_t>;
-
-  using VectorValue = std::variant<std::vector<int64_t>, std::vector<double>>;
-
-  using ConstantValue = std::variant<ScalarValue, VectorValue, Encrypt>;
-
   struct EntryValue
   {
 
@@ -169,6 +156,8 @@ public:
 
   void compact_assignement(const ir::Term::Ptr &node_ptr);
 
+  void flatten_term_operand_by_one_level_at_index(const ir::Term::Ptr &term, size_t index);
+
   const std::vector<Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
 
   const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const;
@@ -184,6 +173,7 @@ public:
   double get_scale() { return scale; }
 
   void set_number_of_slots(size_t nb_slots) { number_of_slots = nb_slots; }
+
   size_t get_number_of_slots() { return number_of_slots; }
 };
 
