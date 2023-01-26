@@ -53,8 +53,8 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   fheco_trs::TRS trs(program);
   trs.apply_trs_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
 
-  // fheco_passes::RelinPass relin_pass(program);
-  // relin_pass.simple_relinearize();
+  fheco_passes::RelinPass relin_pass(program);
+  relin_pass.simple_relinearize();
 
   // fheco_passes::RotationRewritePass rw_pass(program);
   // rw_pass.apply_rewrite();

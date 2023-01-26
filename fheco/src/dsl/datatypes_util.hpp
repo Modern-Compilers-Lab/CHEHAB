@@ -11,8 +11,6 @@ extern ir::Program *program;
 namespace fhecompiler
 {
 
-inline bool is_tracked_object(const std::string &label);
-
 using Ptr = std::shared_ptr<ir::Term>;
 
 template <typename T>
@@ -47,7 +45,7 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
     bool is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
     bool is_input = table_entry.get_entry_type() == ir::ConstantTableEntryType::input;
 
-    if (is_output || is_tracked_object(old_label))
+    if (is_output || program->is_tracked_object(old_label))
     {
       // program->delete_node_from_dataflow(old_label);
       if (!is_input)
@@ -107,7 +105,7 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
     ir::ConstantTableEntry &table_entry = *table_entry_opt;
     bool is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
     bool is_input = table_entry.get_entry_type() == ir::ConstantTableEntryType::input;
-    if (is_output || is_tracked_object(old_label))
+    if (is_output || program->is_tracked_object(old_label))
     {
       // program->delete_node_from_dataflow(old_label);
       if (!is_input)
@@ -156,7 +154,7 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     throw("operand is not defined, maybe it was only declared\n");
   }
 
-  if (is_tracked_object(lhs.get_label()))
+  if (program->is_tracked_object(lhs.get_label()))
   {
 
     std::string old_label = lhs.get_label();
@@ -215,20 +213,6 @@ bool is_compile_time_evaluation_possible(const T &lhs, const T &rhs)
   return lhs_entry_type == ir::ConstantTableEntryType::constant && lhs_entry_type == program->type_of(rhs.get_label());
 }
 
-inline bool is_tracked_object(const std::string &label)
-{
-  auto table_entry = program->get_entry_form_constants_table(label);
-
-  if (table_entry == std::nullopt)
-    return false;
-
-  ir::ConstantTableEntry lhs_table_entry_value = *table_entry;
-
-  ir::ConstantTableEntry::EntryValue entry_value = lhs_table_entry_value.get_entry_value();
-
-  return entry_value.get_tag().length() > 0;
-}
-
 template <typename T>
 void operate_copy(const T &lhs, const T &t_copy, ir::TermType term_type)
 {
@@ -268,7 +252,7 @@ void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode op
     ir::ConstantTableEntry &table_entry = *table_entry_opt;
     bool is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
     bool is_input = table_entry.get_entry_type() == ir::ConstantTableEntryType::input;
-    if (is_output || is_tracked_object(old_label))
+    if (is_output || program->is_tracked_object(old_label))
     {
       if (is_output)
         program->delete_node_from_outputs(old_label);

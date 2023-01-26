@@ -175,6 +175,8 @@ public:
   void set_number_of_slots(size_t nb_slots) { number_of_slots = nb_slots; }
 
   size_t get_number_of_slots() { return number_of_slots; }
+
+  bool is_tracked_object(const std::string &label);
 };
 
 } // namespace ir

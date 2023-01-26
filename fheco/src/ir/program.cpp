@@ -172,18 +172,19 @@ void Program::compact_assignement(const ir::Term::Ptr &node_ptr)
 
   auto operand = node_ptr->get_operands()[0];
 
-  if (operand->is_operation_node() && operand->get_opcode() == ir::OpCode::assign)
+  while (operand->is_operation_node() && operand->get_opcode() == ir::OpCode::assign)
   {
-    node_ptr->delete_operand_at_index(0);
-    node_ptr->add_operand(operand->get_operands()[0]);
-    std::optional<std::string> new_tag = get_tag_value_in_constants_table_entry_if_exists(operand->get_label());
-
-    if (
-      new_tag != std::nullopt && type_of(node_ptr->get_label()) != ir::ConstantTableEntryType::output &&
-      type_of(node_ptr->get_label()) != ir::ConstantTableEntryType::input)
-    {
-      update_tag_value_in_constants_table_entry(node_ptr->get_label(), *new_tag);
-    }
+    operand = operand->get_operands()[0];
+  }
+  if (operand->is_operation_node())
+  {
+    node_ptr->clear_operands();
+    node_ptr->set_operands(operand->get_operands());
+    node_ptr->set_opcode(operand->get_opcode());
+  }
+  else
+  {
+    node_ptr->replace_with(operand);
   }
 }
 
@@ -226,6 +227,20 @@ void Program::flatten_term_operand_by_one_level_at_index(const ir::Program::Ptr 
     for (auto &sub_operand : operand->get_operands())
       node_term->add_operand(sub_operand);
   }
+}
+
+bool Program::is_tracked_object(const std::string &label)
+{
+  auto table_entry = get_entry_form_constants_table(label);
+
+  if (table_entry == std::nullopt)
+    return false;
+
+  ir::ConstantTableEntry lhs_table_entry_value = *table_entry;
+
+  ir::ConstantTableEntry::EntryValue entry_value = lhs_table_entry_value.get_entry_value();
+
+  return entry_value.get_tag().length() > 0;
 }
 
 } // namespace ir
