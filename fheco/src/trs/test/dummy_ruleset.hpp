@@ -35,5 +35,9 @@ MatchingTerm q(fheco_trs::TermType::rawDataType);
   {exponentiate(x, p) * exponentiate(x, q), exponentiate(x, MatchingTerm::fold(p + q))}};*/
 
 std::vector<RewriteRule> dummy_ruleset = {
-  {(x + n) - m, x + MatchingTerm::fold(n - m)}, {x + n, x, n == static_cast<int64_t>(0)}};
+  {(x + n) - m, x + MatchingTerm::fold(n - m)},
+  {x + n, x, n == 0},
+  {exponentiate(x, p), x, p == 1},
+  {x + y * n + z * m, x + (y * n + z * m)},
+  {x + (y * n + y * m), x + y *MatchingTerm::fold(n + m)}};
 } // namespace fheco_trs

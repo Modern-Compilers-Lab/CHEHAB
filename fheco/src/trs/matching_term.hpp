@@ -31,6 +31,7 @@ public:
   ~MatchingTerm() {}
 
   MatchingTerm(int64_t);
+  MatchingTerm(int);
   MatchingTerm(double);
   MatchingTerm(fheco_trs::OpCode, const std::vector<MatchingTerm> &, fheco_trs::TermType);
   MatchingTerm(fheco_trs::TermType); // a leaf node

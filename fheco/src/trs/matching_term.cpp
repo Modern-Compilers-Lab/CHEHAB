@@ -11,6 +11,7 @@ namespace fheco_trs
 size_t MatchingTerm::term_id = 0;
 
 MatchingTerm::MatchingTerm(int64_t _value) : term_type(fheco_trs::TermType::scalarType), value(_value), id(term_id++) {}
+MatchingTerm::MatchingTerm(int _value) : term_type(fheco_trs::TermType::scalarType), value(_value), id(term_id++) {}
 MatchingTerm::MatchingTerm(double _value) : term_type(fheco_trs::TermType::scalarType), value(_value), id(term_id++) {}
 
 MatchingTerm::MatchingTerm(

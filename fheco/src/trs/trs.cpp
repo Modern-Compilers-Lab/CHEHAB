@@ -138,8 +138,7 @@ std::vector<MatchingPair> TRS::substitute(
 
   std::shared_ptr<ir::Term> new_ir_node =
     make_ir_node_from_matching_term(rewrite_rule_rhs, matching_map, new_constants_matching_pairs);
-
-  if (new_ir_node->get_opcode() != ir::OpCode::undefined)
+  if (new_ir_node->is_operation_node())
   {
     ir_node->clear_operands();
     ir_node->set_opcode(new_ir_node->get_opcode());
@@ -311,7 +310,9 @@ std::vector<MatchingPair> TRS::apply_rule_on_ir_node(std::shared_ptr<ir::Term> i
         return substitute(ir_node, rule.get_rhs(), *matching_map);
       }
       else
+      {
         return {};
+      }
     }
     else
     {
