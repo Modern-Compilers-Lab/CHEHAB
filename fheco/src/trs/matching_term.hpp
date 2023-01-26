@@ -65,6 +65,7 @@ MatchingTerm operator*(const MatchingTerm &lhs, const MatchingTerm &rhs);
 MatchingTerm operator+(const MatchingTerm &lhs, const MatchingTerm &rhs);
 MatchingTerm operator-(const MatchingTerm &lhs, const MatchingTerm &rhs);
 MatchingTerm operator-(const MatchingTerm &term);
+MatchingTerm operator<<(const MatchingTerm &lhs, const MatchingTerm &rhs);
 MatchingTerm exponentiate(const MatchingTerm &lhs, const MatchingTerm &rhs);
 MatchingTerm square(const MatchingTerm &term);
 MatchingTerm relin(const MatchingTerm &term);
