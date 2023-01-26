@@ -30,7 +30,6 @@ target_sources(fhecompiler PRIVATE
   ${SRC_PASSES}/relin_pass.cpp
   ${SRC_PASSES}/rotationkeys_select_pass.cpp
   ${SRC_PASSES}/rotation_rewrite_pass.cpp
-  ${SRC_PASSES}/arith_expr_pass.cpp
   ${SRC_PARAMS_SELECTOR}/params_selector.cpp
   ${SRC_TRANSLATOR}/translator.cpp
   ${SRC_TRS}/trs.cpp
@@ -58,7 +57,6 @@ install(FILES
   ${SRC_TRANSLATOR}/translator_const.hpp
   ${SRC_UTILS}/fhecompiler_const.hpp
   ${SRC_PASSES}/rotationkeys_select_pass.hpp
-  ${SRC_PASSES}/arith_expr_pass.hpp
   ${SRC_PASSES}/rotation_rewrite_pass.hpp
   ${SRC_TRS}/trs.hpp
   ${SRC_TRS}/matching_term.hpp
