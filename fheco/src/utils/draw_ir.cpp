@@ -37,6 +37,10 @@ string node_attes(
 
 void utils::draw_ir(ir::Program *program, std::string ofile_name)
 {
+
+  if (program == nullptr) // a safety check
+    return;
+
   ofstream ofile;
   ofile.open(ofile_name);
   ofile << "digraph \"" << program->get_program_tag() << "\" {" << endl;
@@ -59,6 +63,10 @@ void utils::draw_ir(ir::Program *program, std::string ofile_name)
   {
     ofile << node->get_label() << " [" << node_attes(program, node, format_by_termtype, format_by_vartype) << "]"
           << endl;
+
+    if (node->is_operation_node() == false)
+      continue;
+
     for (const ir::Program::Ptr &operand : node->get_operands())
       ofile << node->get_label() << " -> " << operand->get_label() << endl;
   }
