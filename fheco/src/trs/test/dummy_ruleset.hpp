@@ -24,7 +24,6 @@ MatchingTerm q(fheco_trs::TermType::rawDataType);
   {x + n, x + n},
   {(x + n) + m, x + MatchingTerm::fold(n + m)},
   {exponentiate(x, p) * exponentiate(x, q), exponentiate(x, MatchingTerm::fold(p + q))}};*/
-
 /*
 
   {x * y * z * k, (x * y) * (z * k)},
@@ -38,6 +37,15 @@ std::vector<RewriteRule> dummy_ruleset = {
   {(x + n) - m, x + MatchingTerm::fold(n - m)},
   {x + n, x, n == 0},
   {(x + y * n) + y * m, x + (y * MatchingTerm::fold(n + m))},
-  {(x << p) << q, x << (MatchingTerm::fold(p + q))}};
+  {(x << p) << q, x << (MatchingTerm::fold(p + q))},
+  {(x << p) + (y << p), (x + y) << p},
+  {(x << p) * (y << p), (x * y) << p},
+  {(x << p) - (y << p), (x - y) << p},
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, p > q},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, q > p},
+  {(x << p) * (y << q), ((x << MatchingTerm::fold(p - q)) * y) << q, p > q},
+  {(x << p) * (y << q), ((y << MatchingTerm::fold(q - p)) * x) << p, q > p},
+  {(x << p) - (y << q), ((x << MatchingTerm::fold(p - q)) - y) << q, p > q},
+  {(x << p) - (y << q), ((x - (y << MatchingTerm::fold(q - p)))) << p, q > p}};
 
 } // namespace fheco_trs
