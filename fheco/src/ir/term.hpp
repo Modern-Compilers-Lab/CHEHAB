@@ -30,10 +30,10 @@ private:
 
   static size_t term_id;
 
+  OpCode opcode = OpCode::undefined;
+
   struct OperationAttribute
   {
-
-    OpCode opcode = OpCode::undefined;
 
     bool is_inplace = false; // true if the term represents an inplace instruction
 
@@ -42,7 +42,7 @@ private:
     OperationAttribute() = default;
     ~OperationAttribute() {}
 
-    OperationAttribute(OpCode _opcode, const std::vector<Ptr> &_operands) : opcode(_opcode), operands(_operands) {}
+    OperationAttribute(const std::vector<Ptr> &_operands) : operands(_operands) {}
   };
 
   std::optional<OperationAttribute> operation_attribute;
@@ -69,7 +69,7 @@ public:
   Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::scalarType) { term_id++; }
 
   Term(OpCode _opcode, const std::vector<Ptr> &_operands, const std::string &label_value)
-    : operation_attribute({_opcode, _operands}), label(label_value)
+    : operation_attribute({_operands}), label(label_value), opcode(_opcode)
   {
 
     for (auto &operand : _operands)
@@ -109,7 +109,7 @@ public:
 
   void insert_parent_label(const std::string &label);
 
-  void set_opcode(ir::OpCode _opcode) { (*operation_attribute).opcode = _opcode; }
+  void set_opcode(ir::OpCode _opcode) { opcode = _opcode; }
 
   void set_label(const std::string &_label) { label = _label; }
 
@@ -133,7 +133,7 @@ public:
 
   void set_operand_at_index(size_t index, const Ptr &operand_ptr);
 
-  OpCode get_opcode() const { return (*operation_attribute).opcode; }
+  OpCode get_opcode() const { return opcode; }
 
   void add_operand(const Ptr &operand);
 

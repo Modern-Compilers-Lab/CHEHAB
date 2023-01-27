@@ -30,6 +30,7 @@ string node_attes(
   string attrs = "label=\"" + node_label(program, node) + "\"";
   if (format_by_termtype[node->get_term_type()].size())
     attrs += " " + format_by_termtype[node->get_term_type()];
+
   if (format_by_vartype[program->type_of(node->get_label())].size())
     attrs += " " + format_by_vartype[program->type_of(node->get_label())];
   return attrs;
@@ -70,6 +71,7 @@ void utils::draw_ir(ir::Program *program, std::string ofile_name)
     for (const ir::Program::Ptr &operand : node->get_operands())
       ofile << node->get_label() << " -> " << operand->get_label() << endl;
   }
+
   string key = R"(subgraph cluster_key {
     graph[label="Key"]
     node [width=0.5]

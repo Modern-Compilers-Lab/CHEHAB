@@ -32,7 +32,6 @@ void init(const std::string &program_name, Scheme program_scheme, Backend backen
 
 void compile(const std::string &output_filename, params_selector::EncryptionParameters *params)
 {
-  utils::draw_ir(program, output_filename + "1.dot");
   /*
   params_selector::ParameterSelector parameters_selector(program);
   params_selector::EncryptionParameters params = parameters_selector.select_parameters();
@@ -52,11 +51,14 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     }
   }
 
+  utils::draw_ir(program, output_filename + "1.dot");
+
   fheco_trs::TRS trs(program);
   trs.apply_trs_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
 
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
+
   utils::draw_ir(program, output_filename + "2.dot");
 
   // fheco_passes::RotationRewritePass rw_pass(program);
