@@ -9,7 +9,6 @@ add_library(ufhe STATIC ${UFHE_SOURCE_FILES})
 target_include_directories(ufhe PUBLIC src)
 
 
-find_package(SEAL 4.0.0 EXACT REQUIRED)
 target_link_libraries(ufhe PUBLIC SEAL::seal)
 
 install(FILES ${UFHE_HEADER_FILES} DESTINATION include/ufhe)

@@ -1,17 +1,11 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-add_executable(matrix_mul)
+set(CMAKE_CXX_STANDARD 17)
 
-set(SOURCES
-  ${CMAKE_CURRENT_LIST_DIR}/matrix_mul.cpp
-)
+add_executable(test1 test1.cpp)
+add_executable(dot_product dot_product.cpp)
+add_executable(matrix_mul matrix_mul.cpp)
 
-set(INCLUDE_HEADERS_DIR /usr/local/include)
-
-target_sources(matrix_mul PRIVATE
-  ${SOURCES}
-)
-
-include_directories(${INCLUDE_HEADERS_DIR})
-
+target_link_libraries(test1 fhecompiler)
+target_link_libraries(dot_product fhecompiler)
 target_link_libraries(matrix_mul fhecompiler)
