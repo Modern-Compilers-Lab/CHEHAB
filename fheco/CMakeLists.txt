@@ -34,6 +34,7 @@ target_sources(fhecompiler PRIVATE
   ${SRC_TRANSLATOR}/translator.cpp
   ${SRC_TRS}/trs.cpp
   ${SRC_TRS}/matching_term.cpp
+  ${SRC_TRS}/rewrite_rule.cpp
   ${SRC_UTILS}/draw_ir.cpp
 )
 

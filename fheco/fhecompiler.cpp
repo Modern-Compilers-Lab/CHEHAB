@@ -15,6 +15,7 @@ namespace fhecompiler
 
 void init(const std::string &program_name, Scheme program_scheme, Backend backend, double scale)
 {
+
   if (program != nullptr)
     delete program;
 
@@ -54,7 +55,8 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   utils::draw_ir(program, output_filename + "1.dot");
 
   fheco_trs::TRS trs(program);
-  trs.apply_trs_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
 
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
