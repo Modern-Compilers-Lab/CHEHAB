@@ -3,7 +3,8 @@
 namespace ir
 {
 
-int32_t fold_raw(const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, ir::OpCode opcode)
+std::shared_ptr<ir::Term> fold_raw(
+  const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, ir::OpCode opcode)
 {
   if ((lhs->get_term_type() != ir::rawDataType) || (rhs->get_term_type() != ir::rawDataType))
   {
@@ -14,14 +15,19 @@ int32_t fold_raw(const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir:
     int32_t lhs_value = std::stoi(lhs->get_label());
     int32_t rhs_value = std::stoi(rhs->get_label());
 
+    int32_t folded_value;
+
     if (opcode == ir::OpCode::add)
-      return lhs_value + rhs_value;
+      folded_value = lhs_value + rhs_value;
     else if (opcode == ir::OpCode::sub)
-      return lhs_value - rhs_value;
+      folded_value = lhs_value - rhs_value;
     else if (opcode == ir::OpCode::mul)
-      return lhs_value - rhs_value;
+      folded_value = lhs_value * rhs_value;
     else
       throw("unsupported operation in fold_raw");
+
+    ir::Term new_raw_node(std::to_string(folded_value), ir::rawDataType);
+    return std::make_shared<ir::Term>(new_raw_node);
   }
 }
 

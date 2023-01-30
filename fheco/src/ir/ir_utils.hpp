@@ -4,7 +4,7 @@
 namespace ir
 {
 
-int32_t fold_raw(const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, ir::OpCode opcode);
+std::shared_ptr<ir::Term> fold_raw(const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, ir::OpCode opcode);
 std::shared_ptr<ir::Term> fold_scalar(
   const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, ir::OpCode opcode, ir::Program *program);
 
