@@ -39,7 +39,7 @@ fheco_trs::TermType MatchingTerm::deduce_term_type(fheco_trs::TermType lhs_term_
     throw("cannot deduce term type");
 }
 
-MatchingTerm MatchingTerm::flatten(MatchingTerm &term)
+MatchingTerm MatchingTerm::flatten(MatchingTerm term)
 {
   if (term.get_opcode() == fheco_trs::OpCode::undefined)
     return term;
@@ -52,9 +52,11 @@ MatchingTerm MatchingTerm::flatten(MatchingTerm &term)
     {
       if (operand.get_opcode() == fheco_trs::OpCode::undefined)
         new_operands.push_back(operand);
-      else
+      else if (operand.get_opcode() == term.get_opcode())
       {
-        auto sub_operands = operand.get_operands();
+        MatchingTerm flattened_operand = flatten(operand);
+        auto sub_operands = flattened_operand.get_operands();
+
         for (auto &sub_operand : sub_operands)
           new_operands.push_back(sub_operand);
       }
@@ -104,6 +106,14 @@ MatchingTerm operator-(const MatchingTerm &lhs, const MatchingTerm &rhs)
     new_term.set_opcode(fheco_trs::OpCode::sub_plain);
   }
 
+  return new_term;
+}
+
+MatchingTerm operator!(const MatchingTerm &operand)
+{
+  MatchingTerm new_term(TermType::booleanType);
+  new_term.set_opcode(OpCode::_not);
+  new_term.set_operands({operand});
   return new_term;
 }
 
@@ -175,9 +185,7 @@ MatchingTerm operator!=(const MatchingTerm &lhs, const MatchingTerm &rhs)
 
 MatchingTerm operator&&(const MatchingTerm &lhs, const MatchingTerm &rhs)
 {
-  if (
-    rewrite_condition_types.find(lhs.get_term_type()) == rewrite_condition_types.end() ||
-    rewrite_condition_types.find(rhs.get_term_type()) == rewrite_condition_types.end())
+  if (lhs.get_term_type() != TermType::booleanType || rhs.get_term_type() != TermType::booleanType)
   {
     throw("impossible to evaluate rewrite condition");
   }
@@ -245,9 +253,7 @@ MatchingTerm operator>=(const MatchingTerm &lhs, const MatchingTerm &rhs)
 
 MatchingTerm operator||(const MatchingTerm &lhs, const MatchingTerm &rhs)
 {
-  if (
-    rewrite_condition_types.find(lhs.get_term_type()) == rewrite_condition_types.end() ||
-    rewrite_condition_types.find(rhs.get_term_type()) == rewrite_condition_types.end())
+  if (lhs.get_term_type() != TermType::booleanType || rhs.get_term_type() != TermType::booleanType)
   {
     throw("impossible to evaluate rewrite condition");
   }
@@ -282,6 +288,14 @@ MatchingTerm MatchingTerm::fold(MatchingTerm term_to_fold)
 
   term_to_fold.set_fold_flag();
   return term_to_fold;
+}
+
+MatchingTerm MatchingTerm::is_opcode_equal_to(const MatchingTerm &term, OpCode opcode)
+{
+  MatchingTerm new_term(TermType::opcodeAttribute);
+  new_term.set_operands({term});
+  new_term.set_opcode(opcode);
+  return new_term;
 }
 
 } // namespace fheco_trs

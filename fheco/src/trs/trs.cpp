@@ -1,4 +1,5 @@
 #include "trs.hpp"
+#include "draw_ir.hpp"
 #include "ir_utils.hpp"
 #include "trs_const.hpp"
 #include <variant>
@@ -6,10 +7,36 @@
 namespace fheco_trs
 {
 
-/* This function needs to handle */
+size_t auto_inc = 0;
+
 bool TRS::evaluate_boolean_matching_term(
   const MatchingTerm &matching_term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map)
 {
+  if (matching_term.get_opcode() == OpCode::_not)
+  {
+    return !evaluate_boolean_matching_term(matching_term.get_operands()[0], matching_map);
+  }
+
+  if (term_types_attributes.find(matching_term.get_term_type()) != term_types_attributes.end())
+  {
+    bool evaluation_result;
+    switch (matching_term.get_term_type())
+    {
+    case TermType::opcodeAttribute:
+    {
+      auto ir_node_to_check_it = matching_map.find(matching_term.get_operands()[0].get_term_id());
+      if (ir_node_to_check_it == matching_map.end())
+        throw("no matching found for ir node to check attribute value");
+      return ir_node_to_check_it->second->get_opcode() == opcode_mapping[matching_term.get_opcode()];
+    }
+    break;
+
+    default:
+      return false;
+      break;
+    }
+  }
+
   if (matching_term.get_opcode() == fheco_trs::OpCode::undefined)
     return true;
 
@@ -145,7 +172,9 @@ std::vector<MatchingPair> TRS::substitute(
     ir_node->set_operands(new_ir_node->get_operands());
   }
   else
+  {
     ir_node->replace_with(new_ir_node);
+  }
 
   return new_constants_matching_pairs;
 }
@@ -267,11 +296,9 @@ std::shared_ptr<ir::Term> TRS::fold_term(const std::shared_ptr<ir::Term> &term)
 
   if ((folded_lhs->get_term_type() == ir::rawDataType) && (folded_rhs->get_term_type() == ir::rawDataType))
   {
-    int32_t fold_value = ir::fold_raw(folded_lhs, folded_rhs, term->get_opcode());
-    std::shared_ptr<ir::Term> folded_term =
-      std::make_shared<ir::Term>(ir::rawDataType); // we should take care of fold_value = 0 case
-    folded_term->set_label(std::to_string(fold_value));
-    return folded_term;
+    std::shared_ptr<ir::Term> folded_term = ir::fold_raw(folded_lhs, folded_rhs, term->get_opcode());
+    term->replace_with(folded_term);
+    return term;
   }
 
   if (folded_rhs->get_term_type() == ir::scalarType && folded_lhs->get_term_type() == ir::scalarType)
@@ -296,8 +323,12 @@ std::shared_ptr<ir::Term> TRS::fold_term(const std::shared_ptr<ir::Term> &term)
   */
 }
 
-std::vector<MatchingPair> TRS::apply_rule_on_ir_node(std::shared_ptr<ir::Term> ir_node, const RewriteRule &rule)
+std::vector<MatchingPair> TRS::apply_rule_on_ir_node(
+  const std::shared_ptr<ir::Term> &ir_node, const RewriteRule &rule, bool &is_rule_applied)
 {
+  /*
+    Let's make this recursive
+  */
   auto matching_map = match_ir_node(ir_node, rule.get_lhs());
   if (matching_map != std::nullopt)
   {
@@ -307,6 +338,7 @@ std::vector<MatchingPair> TRS::apply_rule_on_ir_node(std::shared_ptr<ir::Term> i
       std::cout << "checking condition ...\n";
       if (evaluate_boolean_matching_term(*(rule.get_rewrite_condition()), *matching_map))
       {
+        is_rule_applied = true;
         return substitute(ir_node, rule.get_rhs(), *matching_map);
       }
       else
@@ -316,6 +348,7 @@ std::vector<MatchingPair> TRS::apply_rule_on_ir_node(std::shared_ptr<ir::Term> i
     }
     else
     {
+      is_rule_applied = true;
       return substitute(ir_node, rule.get_rhs(), *matching_map);
     }
   }
@@ -323,17 +356,17 @@ std::vector<MatchingPair> TRS::apply_rule_on_ir_node(std::shared_ptr<ir::Term> i
     return {};
 }
 
-void TRS::apply_trs_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
+bool TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const std::vector<RewriteRule> &rules)
 {
-  auto nodes_sorted = program->get_dataflow_sorted_nodes(true);
-  for (auto &node : nodes_sorted)
+  for (auto &rule : rules)
   {
-    for (auto &rule : rules)
+    /*
+      new_nodes_matching_pairs supposed to contain matching pairs for constants only
+    */
+    bool was_rule_applied = false;
+    auto new_nodes_matching_pairs = apply_rule_on_ir_node(node, rule, was_rule_applied);
+    if (was_rule_applied)
     {
-      /*
-        new_nodes_matching_pairs supposed to contain matching pairs for constants only
-      */
-      auto new_nodes_matching_pairs = apply_rule_on_ir_node(node, rule);
       for (auto &matching_pair : new_nodes_matching_pairs)
       {
         if (matching_pair.matching_term.get_value() == std::nullopt)
@@ -344,6 +377,24 @@ void TRS::apply_trs_rewrite_rules_on_program(const std::vector<RewriteRule> &rul
           {matching_pair.ir_node->get_label(), *(matching_pair.matching_term.get_value())});
         program->insert_entry_in_constants_table({matching_pair.ir_node->get_label(), c_table_entry});
       }
+      return true;
+    }
+  }
+  return false;
+}
+
+void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
+{
+  size_t i = 0;
+  auto &sorted_nodes = program->get_dataflow_sorted_nodes(true);
+  for (auto &node : sorted_nodes)
+  {
+    if (node->get_opcode() == ir::OpCode::undefined)
+      continue;
+    while (true)
+    {
+      if (apply_rules_on_ir_node(node, rules) == false)
+        break;
     }
   }
 }

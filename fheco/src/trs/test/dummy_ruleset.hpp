@@ -12,40 +12,37 @@ MatchingTerm n(fheco_trs::TermType::scalarType);
 MatchingTerm m(fheco_trs::TermType::scalarType);
 MatchingTerm p(fheco_trs::TermType::rawDataType);
 MatchingTerm q(fheco_trs::TermType::rawDataType);
+MatchingTerm r(fheco_trs::TermType::rawDataType);
+MatchingTerm s(fheco_trs::TermType::rawDataType);
 
 /*
-  {exponentiate(x, p) * exponentiate(y, q), exponentiate(x *y, p), p == q},
-*/
-
-/*
-  {x * y * z * k, (x * y) * (z * k)},
-  {x + x, static_cast<int64_t>(2) * x},
-  {n * x, x *n},
-  {x + n, x + n},
-  {(x + n) + m, x + MatchingTerm::fold(n + m)},
-  {exponentiate(x, p) * exponentiate(x, q), exponentiate(x, MatchingTerm::fold(p + q))}};*/
-/*
-
-  {x * y * z * k, (x * y) * (z * k)},
-  {x + x, static_cast<int64_t>(2) * x},
-  {(x + n) + m, x + MatchingTerm::fold(n + m)},
-  {(x + n), (y + m), (x + y) + MatchingTerm::fold(n + m)},
-  {(x + n), (m + y), (x + y) + MatchingTerm::fold(n + m)},
-  {exponentiate(x, p) * exponentiate(x, q), exponentiate(x, MatchingTerm::fold(p + q))}};*/
-
 std::vector<RewriteRule> dummy_ruleset = {
   {(x + n) - m, x + MatchingTerm::fold(n - m)},
   {x + n, x, n == 0},
   {(x + y * n) + y * m, x + (y * MatchingTerm::fold(n + m))},
   {(x << p) << q, x << (MatchingTerm::fold(p + q))},
+  {x + (y << p) + (z << q), x + ((y << p) + (z << q))},
+  {(y << p) + (z << q) + x, x + ((y << p) + (z << q))},
+  {x + (y << p) + (z << q) + (k << r), x + ((y << p) + (z << q) + (k << r))},
   {(x << p) + (y << p), (x + y) << p},
   {(x << p) * (y << p), (x * y) << p},
-  {(x << p) - (y << p), (x - y) << p},
-  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, p > q},
-  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, q > p},
-  {(x << p) * (y << q), ((x << MatchingTerm::fold(p - q)) * y) << q, p > q},
-  {(x << p) * (y << q), ((y << MatchingTerm::fold(q - p)) * x) << p, q > p},
-  {(x << p) - (y << q), ((x << MatchingTerm::fold(p - q)) - y) << q, p > q},
-  {(x << p) - (y << q), ((x - (y << MatchingTerm::fold(q - p)))) << p, q > p}};
+  {(x << p) - (y << p), (x - y) << p}};
+// {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + x) << q, p > q},
+// {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, q > p},
+// {(x << p) * (y << q), ((x << MatchingTerm::fold(p - q)) * y) << q, p > q},
+// {(x << p) * (y << q), ((y << MatchingTerm::fold(q - p)) * x) << p, q > p},
+// {(x << p) - (y << q), ((x << MatchingTerm::fold(p - q)) - y) << q, p > q},
+// {(x << p) - (y << q), ((x - (y << MatchingTerm::fold(q - p)))) << p, q > p}};
+*/
+std::vector<RewriteRule> dummy_ruleset = {
+  {y + (x << p), (x << p) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
+  {(z << q) + ((x << p) + y), (x << p) + (z << q) + y},
+  {(x << p), x, p == 0},
+  {(x << p) << q, x << (MatchingTerm::fold(p + q))},
+  {(x << p) + (y << q), (x + y) << p, p == q},
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + x) << q, (p > q) && (p > 0) && (q > 0)},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q > p) && (p > 0) && (q > 0)},
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + x) << q, (p < q) && (p < 0) && (q < 0)},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0)}};
 
 } // namespace fheco_trs

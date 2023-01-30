@@ -46,9 +46,11 @@ public:
 
   void set_operands(const std::vector<MatchingTerm> &new_operands) { operands = new_operands; }
 
+  static MatchingTerm is_opcode_equal_to(const MatchingTerm &term, OpCode opcode);
+
   static fheco_trs::TermType deduce_term_type(fheco_trs::TermType, fheco_trs::TermType);
 
-  static MatchingTerm flatten(MatchingTerm &term);
+  static MatchingTerm flatten(MatchingTerm term);
 
   const std::vector<MatchingTerm> &get_operands() const { return operands; }
   size_t get_term_id() const { return id; }
@@ -83,5 +85,5 @@ MatchingTerm operator>(const MatchingTerm &lhs, const MatchingTerm &rhs);
 MatchingTerm operator>=(const MatchingTerm &lhs, const MatchingTerm &rhs);
 MatchingTerm operator||(const MatchingTerm &lhs, const MatchingTerm &rhs);
 MatchingTerm operator==(const MatchingTerm &lhs, const MatchingTerm &rhs);
-
+MatchingTerm operator!(const MatchingTerm &operand);
 } // namespace fheco_trs

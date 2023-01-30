@@ -1,3 +1,6 @@
 [submodule "third_party/SEAL4.0"]
 	path = third_party/SEAL4.0
 	url = https://github.com/microsoft/SEAL.git
+[submodule "benchmarks/vip-bench"]
+	path = benchmarks/vip-bench
+	url = https://bitbucket.org/vip-benchmarks/vip-bench.git

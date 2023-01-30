@@ -12,7 +12,8 @@ enum class TermType
   scalarType,
   ciphertextType,
   plaintextType,
-  booleanType
+  booleanType,
+  opcodeAttribute
 };
 
 enum class OpCode
@@ -42,11 +43,14 @@ enum class OpCode
   not_equal,
   equal,
   _and,
-  _or
+  _or,
+  _not
 };
 
 inline std::unordered_set<fheco_trs::TermType> rewrite_condition_types = {
   fheco_trs::TermType::rawDataType, fheco_trs::TermType::scalarType};
+
+inline std::unordered_set<fheco_trs::TermType> term_types_attributes = {fheco_trs::TermType::opcodeAttribute};
 
 inline std::unordered_map<fheco_trs::OpCode, ir::OpCode> opcode_mapping = {
   {fheco_trs::OpCode::undefined, ir::OpCode::undefined},
