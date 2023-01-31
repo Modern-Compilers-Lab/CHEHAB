@@ -185,11 +185,6 @@ MatchingTerm operator!=(const MatchingTerm &lhs, const MatchingTerm &rhs)
 
 MatchingTerm operator&&(const MatchingTerm &lhs, const MatchingTerm &rhs)
 {
-  if (lhs.get_term_type() != TermType::booleanType || rhs.get_term_type() != TermType::booleanType)
-  {
-    throw("impossible to evaluate rewrite condition");
-  }
-
   MatchingTerm new_term(
     fheco_trs::OpCode::_and, std::vector<MatchingTerm>({lhs, rhs}), fheco_trs::TermType::booleanType);
   return new_term;
@@ -253,11 +248,6 @@ MatchingTerm operator>=(const MatchingTerm &lhs, const MatchingTerm &rhs)
 
 MatchingTerm operator||(const MatchingTerm &lhs, const MatchingTerm &rhs)
 {
-  if (lhs.get_term_type() != TermType::booleanType || rhs.get_term_type() != TermType::booleanType)
-  {
-    throw("impossible to evaluate rewrite condition");
-  }
-
   MatchingTerm new_term(
     fheco_trs::OpCode::_or, std::vector<MatchingTerm>({lhs, rhs}), fheco_trs::TermType::booleanType);
   return new_term;

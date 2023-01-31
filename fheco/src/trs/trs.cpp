@@ -7,11 +7,73 @@
 namespace fheco_trs
 {
 
-size_t auto_inc = 0;
+double TRS::arithmetic_eval(
+  const MatchingTerm &term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map)
+{
+
+  if (term.get_opcode() == OpCode::undefined)
+  {
+    // a constant term, it must be a MatchingTerm with a value or it matches with a scalarType or rawdataType ir node
+    if (term.get_value() != std::nullopt)
+    {
+      return ir::get_constant_value_as_double(*term.get_value());
+    }
+    else
+    {
+      auto ir_term_itr = matching_map.find(term.get_term_id());
+      if (ir_term_itr == matching_map.end())
+        throw("arithmetic evaluation impossible");
+
+      if (ir_term_itr->second->get_term_type() == ir::rawDataType)
+      {
+        return std::stod(ir_term_itr->second->get_label());
+      }
+      else if (ir_term_itr->second->get_term_type() == ir::scalarType)
+      {
+        ir::ConstantValue constant_value =
+          *(*program->get_entry_form_constants_table(ir_term_itr->second->get_label())).get().get_entry_value().value;
+        return ir::get_constant_value_as_double(constant_value);
+      }
+      else
+        throw("arithmetic evaluation impossible");
+    }
+  }
+  else
+  {
+    // for now we consider only binary operations
+
+    if (term.get_operands().size() != 2)
+      throw("only binary operations are supported at the moment in arithmetic_eval");
+
+    double lhs_value = arithmetic_eval(term.get_operands()[0], matching_map);
+    double rhs_value = arithmetic_eval(term.get_operands()[1], matching_map);
+
+    switch (term.get_opcode())
+    {
+    case OpCode::add:
+      return lhs_value + rhs_value;
+      break;
+
+    case OpCode::mul:
+      return lhs_value * rhs_value;
+      break;
+
+    case OpCode::sub:
+      return lhs_value - rhs_value;
+      break;
+    default:
+      throw("undefined opcode in arithmetic_eval");
+      break;
+    }
+  }
+}
 
 bool TRS::evaluate_boolean_matching_term(
   const MatchingTerm &matching_term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map)
 {
+
+  // there could be arithmetic expressions but at this level all needs to be evaluated
+
   if (matching_term.get_opcode() == OpCode::_not)
   {
     return !evaluate_boolean_matching_term(matching_term.get_operands()[0], matching_map);
@@ -26,7 +88,10 @@ bool TRS::evaluate_boolean_matching_term(
     {
       auto ir_node_to_check_it = matching_map.find(matching_term.get_operands()[0].get_term_id());
       if (ir_node_to_check_it == matching_map.end())
+      {
+        std::cout << "exception..\n";
         throw("no matching found for ir node to check attribute value");
+      }
       return ir_node_to_check_it->second->get_opcode() == opcode_mapping[matching_term.get_opcode()];
     }
     break;
@@ -69,6 +134,10 @@ bool TRS::evaluate_boolean_matching_term(
   // double
   double lhs_value, rhs_value;
 
+  lhs_value = arithmetic_eval(lhs, matching_map);
+  rhs_value = arithmetic_eval(rhs, matching_map);
+
+  /*
   auto lhs_itr = matching_map.find(lhs.get_term_id());
   auto rhs_itr = matching_map.find(rhs.get_term_id());
 
@@ -120,6 +189,7 @@ bool TRS::evaluate_boolean_matching_term(
     else
       throw("couldnt evaluate rewrite condition");
   }
+  */
 
   switch (matching_term.get_opcode())
   {
@@ -180,6 +250,13 @@ std::vector<MatchingPair> TRS::substitute(
 }
 
 std::shared_ptr<ir::Term> TRS::make_ir_node_from_matching_term(
+  const MatchingTerm &matching_term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map)
+{
+  std::vector<MatchingPair> dummy_vector;
+  return make_ir_node_from_matching_term(matching_term, matching_map, dummy_vector);
+}
+
+std::shared_ptr<ir::Term> TRS::make_ir_node_from_matching_term(
   const MatchingTerm &matching_term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map,
   std::vector<MatchingPair> &new_constants_matching_pairs)
 {
@@ -203,8 +280,6 @@ std::shared_ptr<ir::Term> TRS::make_ir_node_from_matching_term(
       std::make_shared<ir::Term>(opcode_mapping[matching_term.get_opcode()], operands, "");
     ir_node->set_term_type(fheco_trs::term_type_map[matching_term.get_term_type()]);
     ir_node->set_a_default_label();
-
-    // call for specific processes
 
     if (matching_term.get_fold_flag() == true)
     {
