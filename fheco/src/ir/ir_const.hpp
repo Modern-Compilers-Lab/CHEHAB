@@ -55,4 +55,21 @@ enum class ConstantTableEntryType
 inline std::unordered_map<ir::TermType, std::string> term_type_str = {
   {ir::scalarType, "scalar"}, {ir::plaintextType, "plaintext"}, {ir::ciphertextType, "ciphertext"}};
 
+inline std::unordered_map<ir::OpCode, std::string> str_opcode = {
+  {OpCode::undefined, "undefined"},
+  {OpCode::add, "add"},
+  {OpCode::add_plain, "add_plain"},
+  {OpCode::mul, "mul"},
+  {OpCode::mul_plain, "mul_plain"},
+  {OpCode::sub, "sub"},
+  {OpCode::sub_plain, "sub_plain"},
+  {OpCode::negate, "negate"},
+  {OpCode::modswitch, "modswitch"},
+  {OpCode::relinearize, "relinearize"},
+  {OpCode::exponentiate, "exponentiate"},
+  {OpCode::rescale, "rescale"},
+  {OpCode::rotate, "rotate"},
+  {OpCode::rotate_columns, "rotate_columns"},
+  {OpCode::rotate_rows, "rotate_rows"}};
+
 } // namespace ir

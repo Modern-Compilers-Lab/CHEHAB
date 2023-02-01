@@ -177,6 +177,8 @@ public:
   size_t get_number_of_slots() { return number_of_slots; }
 
   bool is_tracked_object(const std::string &label);
+
+  void insert_created_node_in_dataflow(const Ptr &node);
 };
 
 } // namespace ir

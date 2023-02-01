@@ -210,4 +210,23 @@ double get_constant_value_as_double(ir::ConstantValue const_value)
     return std::get<double>(scalar_value);
 }
 
+void cast_int_vector_to_double(const std::vector<int64_t> &int_vector, std::vector<double> &double_vector)
+{
+  double_vector.resize(int_vector.size());
+  for (size_t i = 0; i < int_vector.size(); i++)
+    double_vector[i] = static_cast<double>(int_vector[i]);
+}
+
+void get_constant_value_as_vector_of_double(ir::ConstantValue const_value, std::vector<double> &double_vector)
+{
+  ir::VectorValue vector_value = std::get<VectorValue>(const_value);
+  if (auto v = std::get_if<std::vector<double>>(&vector_value))
+    double_vector = *v;
+  else
+  {
+    auto int_vector = std::get<std::vector<int64_t>>(vector_value);
+    cast_int_vector_to_double(int_vector, double_vector);
+  }
+}
+
 } // namespace ir

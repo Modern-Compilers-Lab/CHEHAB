@@ -70,14 +70,13 @@ void DAG::apply_topological_sort(bool clear_existing_order)
 
   std::stack<std::pair<bool, Ptr>> traversal_stack;
 
-  std::unordered_set<std::string> visited_labels;
+  std::unordered_set<Ptr> visited_labels;
 
   for (auto &e : outputs_nodes)
   {
-
     auto &node_ptr = e.second;
 
-    if (visited_labels.find(node_ptr->get_label()) == visited_labels.end())
+    if (visited_labels.find(node_ptr) == visited_labels.end())
     {
       traversal_stack.push(std::make_pair(false, node_ptr));
     }
@@ -91,10 +90,10 @@ void DAG::apply_topological_sort(bool clear_existing_order)
         outputs_nodes_topsorted.push_back(top_node.second);
         continue;
       }
-      if (visited_labels.find(top_node.second->get_label()) != visited_labels.end())
+      if (visited_labels.find(top_node.second) != visited_labels.end())
         continue;
 
-      visited_labels.insert(top_node.second->get_label());
+      visited_labels.insert(top_node.second);
       traversal_stack.push(std::make_pair(true, top_node.second));
       if (top_node.second->is_operation_node())
       {
@@ -103,7 +102,7 @@ void DAG::apply_topological_sort(bool clear_existing_order)
 
         for (auto &operand_ptr : operands)
         {
-          if (visited_labels.find(operand_ptr->get_label()) == visited_labels.end())
+          if (visited_labels.find(operand_ptr) == visited_labels.end())
           {
             traversal_stack.push(std::make_pair(false, operand_ptr));
           }
@@ -112,17 +111,20 @@ void DAG::apply_topological_sort(bool clear_existing_order)
     }
   }
   // remove dead parents
+  /*
   for (auto &node_ptr : outputs_nodes_topsorted)
   {
     std::string parent_to_delete_label = "";
     for (auto &parent_label : node_ptr->get_parents_labels())
     {
+      auto parent_ptr = find_node(parent_label);
       if (parent_to_delete_label.length())
       {
         node_ptr->delete_parent(parent_to_delete_label);
         parent_to_delete_label = "";
       }
-      if (visited_labels.find(parent_label) == visited_labels.end())
+
+      if (parent_ptr == nullptr || visited_labels.find(parent_ptr) == visited_labels.end())
       {
         parent_to_delete_label = parent_label;
       }
@@ -131,6 +133,18 @@ void DAG::apply_topological_sort(bool clear_existing_order)
     {
       node_ptr->delete_parent(parent_to_delete_label);
       parent_to_delete_label = "";
+    }
+  }
+  */
+  for (auto &node_ptr : outputs_nodes_topsorted)
+  {
+    node_ptr->clear_parents();
+    if (node_ptr->is_operation_node())
+    {
+      for (auto &operand : node_ptr->get_operands())
+      {
+        operand->insert_parent_label(node_ptr->get_label());
+      }
     }
   }
 }

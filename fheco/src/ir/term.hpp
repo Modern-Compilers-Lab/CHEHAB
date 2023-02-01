@@ -139,6 +139,8 @@ public:
 
   void set_term_type(TermType term_type) { this->type = term_type; }
 
+  void replace_operand_with(const Ptr &operand, const Ptr &to_replace_with);
+
   size_t get_term_id() { return term_id; }
 
   std::string get_label() const { return this->label; }

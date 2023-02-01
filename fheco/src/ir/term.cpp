@@ -6,6 +6,20 @@ namespace ir
 
 size_t Term::term_id = 0;
 
+void Term::replace_operand_with(const Ptr &operand, const Ptr &to_replace_with)
+{
+  if (is_operation_node() == false)
+    return;
+  for (size_t i = 0; i < get_operands().size(); i++)
+  {
+    if (get_operands()[i] == operand)
+    {
+      set_operand_at_index(i, to_replace_with);
+      break;
+    }
+  }
+}
+
 void Term::delete_operand_term(const std::string &term_label)
 {
   // this needs to be changed later .. since it is unecessary linear in terms of complexity
@@ -62,19 +76,19 @@ void Term::add_parent_label(const std::string &parent_label)
 
 void Term::set_operand_at_index(size_t index, const Ptr &operand_ptr)
 {
-  if (!is_operation_node())
+  if (is_operation_node() == false)
     return;
 
   if (index < 0)
     return;
 
-  if (index >= operation_attribute->operands.size())
-    operation_attribute->operands.emplace_back(operand_ptr);
-
+  if (index >= get_operands().size())
+  {
+    add_operand(operand_ptr);
+    return;
+  }
   operation_attribute->operands[index]->delete_parent(this->get_label());
-
   operation_attribute->operands[index] = operand_ptr;
-
   operand_ptr->add_parent_label(this->label);
 }
 

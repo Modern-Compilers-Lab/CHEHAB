@@ -243,4 +243,9 @@ bool Program::is_tracked_object(const std::string &label)
   return entry_value.get_tag().length() > 0;
 }
 
+void Program::insert_created_node_in_dataflow(const Ptr &node)
+{
+  data_flow->insert_node(node);
+}
+
 } // namespace ir
