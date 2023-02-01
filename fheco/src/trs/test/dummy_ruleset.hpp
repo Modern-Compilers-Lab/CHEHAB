@@ -34,14 +34,13 @@ std::vector<RewriteRule> dummy_ruleset = {
 // {(x << p) - (y << q), ((x << MatchingTerm::fold(p - q)) - y) << q, p > q},
 // {(x << p) - (y << q), ((x - (y << MatchingTerm::fold(q - p)))) << p, q > p}};
 */
+
 std::vector<RewriteRule> dummy_ruleset = {
   {y + (x << p), (x << p) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
   {(z << q) + ((x << p) + y), (x << p) + (z << q) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
   {(x << p), x, p == 0},
   {(x << p) << q, x << (MatchingTerm::fold(p + q))},
-  // {x + (y << p) + (z << q), x + ((y << p) + (z << q)), !MatchingTerm::is_opcode_equal_to(x, OpCode::rotate_rows)},
-  // {(y << p) + (z << q) + x, x + ((y << p) + (z << q)), !MatchingTerm::is_opcode_equal_to(x, OpCode::rotate_rows)},
-  {(x << p) + (y << q), (x + y) << p, (p == q) && (p - q == 0)},
+  {(x << p) + (y << q), (x + y) << p, (p == q)},
   {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q,
    (p > q) && (p > 0) && (q > 0) && MatchingTerm::is_opcode_equal_to(x, OpCode::undefined) &&
      MatchingTerm::is_opcode_equal_to(y, OpCode::undefined)},

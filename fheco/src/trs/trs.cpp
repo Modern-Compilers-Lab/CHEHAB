@@ -10,7 +10,9 @@ namespace fheco_trs
 double TRS::arithmetic_eval(
   const MatchingTerm &term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map)
 {
-
+  /*
+    This method evaluates arithmetic expressions that involve scalarType and rawDataType
+  */
   if (term.get_opcode() == OpCode::undefined)
   {
     // a constant term, it must be a MatchingTerm with a value or it matches with a scalarType or rawdataType ir node
@@ -286,6 +288,8 @@ std::shared_ptr<ir::Term> TRS::make_ir_node_from_matching_term(
       ir_node = fold_term(ir_node);
     }
 
+    program->insert_created_node_in_dataflow(ir_node);
+
     return ir_node;
   }
   else
@@ -294,6 +298,9 @@ std::shared_ptr<ir::Term> TRS::make_ir_node_from_matching_term(
       std::make_shared<ir::Term>("", fheco_trs::term_type_map[matching_term.get_term_type()]);
     ir_node->set_a_default_label();
     new_constants_matching_pairs.push_back({matching_term, ir_node});
+
+    program->insert_created_node_in_dataflow(ir_node);
+
     return ir_node;
   }
 }
