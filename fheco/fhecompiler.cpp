@@ -1,4 +1,5 @@
 #include "fhecompiler.hpp"
+#include "cse_pass.hpp"
 #include "draw_ir.hpp"
 #include "relin_pass.hpp"
 #include "rotation_rewrite_pass.hpp"
@@ -42,7 +43,6 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   parameters_selector.fix_parameters(*params);
 
   // compact assignement pass
-
   {
     const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
 
@@ -57,6 +57,9 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   fheco_trs::TRS trs(program);
   trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
   trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+
+  fheco_passes::CSE cse_pass(program);
+  cse_pass.apply_cse2();
 
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();

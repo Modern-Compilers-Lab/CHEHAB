@@ -38,10 +38,10 @@ int main()
       A.push_back(line);
     }
 
-    for (size_t i = 0; i < 50; i++)
+    for (size_t i = 0; i < 10; i++)
     {
       std::vector<int64_t> line;
-      for (size_t j = 0; j < 50; j++)
+      for (size_t j = 0; j < 10; j++)
       {
         line.push_back((i + 1) * (j + 1));
       }
