@@ -2,7 +2,6 @@
 #include "cse_pass.hpp"
 #include "draw_ir.hpp"
 #include "relin_pass.hpp"
-#include "rotation_rewrite_pass.hpp"
 #include "rotationkeys_select_pass.hpp"
 #include "test/dummy_ruleset.hpp"
 #include "trs.hpp"
@@ -52,42 +51,24 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     }
   }
 
-  utils::draw_ir(program, output_filename + "1.dot");
+  // utils::draw_ir(program, output_filename + "1.dot");
 
   fheco_trs::TRS trs(program);
   trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-
+  // trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
   fheco_passes::CSE cse_pass(program);
-  cse_pass.apply_cse2();
+  cse_pass.apply_cse2(true);
 
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
 
-  utils::draw_ir(program, output_filename + "2.dot");
-
-  // fheco_passes::RotationRewritePass rw_pass(program);
-  // rw_pass.apply_rewrite();
+  // utils::draw_ir(program, output_filename + "2.dot");
 
   /*
     std::vector<int> program_rotations_steps = fheco_passes::get_unique_rotation_steps(program);
     for (auto &step : program_rotations_steps)
       std::cout << step << " ";
     std::cout << "\n";
-  */
-
-  /*
-  // convert to inplace pass
-  {
-    const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
-
-    for (auto &node_ptr : nodes_ptr)
-    {
-      program->convert_to_inplace(node_ptr);
-    }
-
-    // this needs to be the last pass and we must not do any new sorting of the graph
-  }
   */
 
   translator::Translator tr(program, params);

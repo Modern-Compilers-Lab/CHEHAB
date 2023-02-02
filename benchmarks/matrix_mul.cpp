@@ -28,20 +28,22 @@ int main()
     std::vector<std::vector<int64_t>> B = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
     /*
-    for (size_t i = 0; i < 10; i++)
+    size_t N = 10;
+    size_t M = 10;
+    for (size_t i = 0; i < N; i++)
     {
       std::vector<int64_t> line;
-      for (size_t j = 0; j < 10; j++)
+      for (size_t j = 0; j < M; j++)
       {
         line.push_back((i + 1) * (j + 1));
       }
       A.push_back(line);
     }
 
-    for (size_t i = 0; i < 10; i++)
+    for (size_t i = 0; i < N; i++)
     {
       std::vector<int64_t> line;
-      for (size_t j = 0; j < 10; j++)
+      for (size_t j = 0; j < M; j++)
       {
         line.push_back((i + 1) * (j + 1));
       }

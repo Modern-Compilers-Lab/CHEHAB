@@ -414,10 +414,10 @@ std::vector<MatchingPair> TRS::apply_rule_on_ir_node(
   auto matching_map = match_ir_node(ir_node, rule.get_lhs());
   if (matching_map != std::nullopt)
   {
-    std::cout << "matched ... \n";
+    // std::cout << "matched ... \n";
     if (rule.get_rewrite_condition() != std::nullopt)
     {
-      std::cout << "checking condition ...\n";
+      // std::cout << "checking condition ...\n";
       if (evaluate_boolean_matching_term(*(rule.get_rewrite_condition()), *matching_map))
       {
         is_rule_applied = true;

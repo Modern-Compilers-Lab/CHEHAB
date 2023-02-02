@@ -312,8 +312,9 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
   auto &operands = term_ptr->get_operands();
   std::string lhs_identifier = get_identifier(operands[0]);
   std::string rhs_identifier = get_identifier(operands[1]);
+
   evaluation_writer.write_binary_operation(
-    os, term_ptr->get_opcode(), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
+    os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
 }
 
 void Translator::translate_nary_operation(const Ptr &term_ptr, std::ofstream &os)
@@ -487,7 +488,53 @@ void Translator::generate_rotation_keys(std::ofstream &os) const
 
 void Translator::generate_key_generator(std::ofstream &os) const
 {
-  // os << key_generator_type_literal << " " << key_generator_identifier << "(" << context_identifier << ");\n";
+  os << key_generator_type_literal << " " << key_generator_identifier << "(" << context_identifier << ");\n";
+}
+
+ir::OpCode Translator::deduce_opcode_to_generate(const Ptr &node) const
+{
+  if (node->is_operation_node() == false)
+    return node->get_opcode();
+
+  if (node->get_operands().size() == 1)
+    return node->get_opcode();
+
+  if (node->get_operands().size() == 2)
+  {
+    auto lhs = node->get_operands()[0];
+    auto rhs = node->get_operands()[1];
+
+    if (lhs->get_term_type() == rhs->get_term_type())
+      return node->get_opcode();
+
+    else if (
+      node->get_term_type() == ir::ciphertextType &&
+      (lhs->get_term_type() != ir::ciphertextType || rhs->get_term_type() != ir::ciphertextType))
+    {
+      switch (node->get_opcode())
+      {
+      case ir::OpCode::add:
+        return ir::OpCode::add_plain;
+        break;
+
+      case ir::OpCode::mul:
+        return ir::OpCode::mul_plain;
+        break;
+
+      case ir::OpCode::sub:
+        return ir::OpCode::sub_plain;
+        break;
+
+      default:
+        return node->get_opcode();
+        break;
+      }
+    }
+    else
+      return node->get_opcode();
+  }
+  else
+    throw("node with more than 2 operands in deduce_opcode_to_generate");
 }
 
 } // namespace translator

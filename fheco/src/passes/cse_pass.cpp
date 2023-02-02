@@ -5,6 +5,7 @@
 namespace fheco_passes
 {
 
+/*
 std::string CSE::calculate_id(const ir::Program::Ptr &term)
 {
   std::stringstream ss;
@@ -21,6 +22,7 @@ std::string CSE::calculate_id(const ir::Program::Ptr &term)
   }
   return ss.str();
 }
+*/
 
 bool CSE::check_inputs_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
 {
@@ -149,6 +151,9 @@ bool CSE::check_syntactical_equality(const ir::Program::Ptr &lhs, const ir::Prog
     return check_inputs_equality(lhs, rhs);
   }
 
+  /*
+    This part is not reached when calling cse_apply2
+  */
   if (lhs->get_opcode() != ir::OpCode::undefined && rhs->get_opcode() != ir::OpCode::undefined)
   {
     if (lhs->get_operands().size() != rhs->get_operands().size())
@@ -163,6 +168,10 @@ bool CSE::check_syntactical_equality(const ir::Program::Ptr &lhs, const ir::Prog
   }
   return lhs == rhs;
 }
+
+/*
+
+//Native implementation that we keep in case we need it for debugging
 
 void CSE::apply_cse()
 {
@@ -209,12 +218,15 @@ void CSE::apply_cse()
       processed_nodes.insert(node);
   }
 }
+*/
 
-void CSE::apply_cse2()
+void CSE::apply_cse2(bool allow_assign_insertion)
 {
 
+  // Please note that this pass may insert assign operation nodes
+
   std::unordered_set<ir::Program::Ptr> processed_constants;
-  std::unordered_map<std::string, ir::Program::Ptr> calculated_ids;
+  std::unordered_map<SEid, ir::Program::Ptr, SEidHash> calculated_expressions_ids;
 
   auto nodes = program->get_dataflow_sorted_nodes(true);
   for (size_t i = 0; i < nodes.size(); i++)
@@ -246,23 +258,38 @@ void CSE::apply_cse2()
     }
     else
     {
-      std::string node_id = calculate_id(node);
-      auto it = calculated_ids.find(node_id);
-      if (it != calculated_ids.end())
+      SEid expression_id = node;
+      auto it = calculated_expressions_ids.find(expression_id);
+      if (it != calculated_expressions_ids.end())
       {
         // all parents of node needs to point to processed_node instead of node
-        for (auto &parent_label : parents_labels)
+        if (parents_labels.size())
         {
-          auto parent_node = program->find_node_in_dataflow(parent_label);
-          if (parent_node == nullptr)
-            continue;
+          for (auto &parent_label : parents_labels)
+          {
+            auto parent_node = program->find_node_in_dataflow(parent_label);
+            if (parent_node == nullptr)
+              continue;
 
-          parent_node->replace_operand_with(node, it->second);
+            parent_node->replace_operand_with(node, it->second);
+          }
         }
-        cse_applied = true;
+        else
+        {
+          /*
+            if the node doesn't have parents then in that case we convert the operation node to an assignement node. in
+            best case will gain at most one operation each time we face this scenarion
+          */
+          if (allow_assign_insertion)
+          {
+            node->set_opcode(ir::OpCode::assign);
+            node->clear_operands();
+            node->set_operands({it->second});
+          }
+        }
       }
-      if (!cse_applied)
-        calculated_ids[node_id] = node;
+      else
+        calculated_expressions_ids[expression_id] = node;
     }
   }
 }

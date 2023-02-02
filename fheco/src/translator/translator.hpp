@@ -70,6 +70,13 @@ public:
   void write_input(const std::string &input_identifier, ir::TermType type, std::ostream &os);
   void write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os);
 
+  /*
+    This function deduce the OpCode to be used by the translator in order to generate the instruction for the backend.an
+    example of deduction is that the function can deduce add_plain from add if one of the operands is a ciphertext and
+    the other one is a plaintext/scalar.
+  */
+  ir::OpCode deduce_opcode_to_generate(const Ptr &node) const;
+
   void translate(std::ofstream &os);
 };
 
