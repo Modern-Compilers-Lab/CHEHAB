@@ -15,7 +15,7 @@ set(FHECOMPILER_STATIC_INSTALL_DIR lib)
 
 add_library(fhecompiler fhecompiler.cpp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_IR} PUBLIC ${SRC_DSL} PUBLIC ${SRC_PASSES} PUBLIC ${SRC_PARAMS_SELECTOR} PUBLIC ${SRC_TRANSLATOR} ${SRC_UTILS} ${SRC_TRS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_IR} PUBLIC ${SRC_DSL} PUBLIC ${SRC_PASSES} PUBLIC ${SRC_PARAMS_SELECTOR} PUBLIC ${SRC_TRANSLATOR} PUBLIC ${SRC_UTILS} PUBLIC ${SRC_TRS} PUBLIC ${SRC_TRS}/reduction_order)
 
 target_sources(fhecompiler PRIVATE
   ${SRC_DSL}/ciphertext.cpp
@@ -36,6 +36,8 @@ target_sources(fhecompiler PRIVATE
   ${SRC_TRS}/matching_term.cpp
   ${SRC_TRS}/rewrite_rule.cpp
   ${SRC_UTILS}/draw_ir.cpp
+  ${SRC_TRS}/reduction_order/utils.cpp
+  ${SRC_TRS}/reduction_order/component_orders.cpp
 )
 
 install(FILES  
@@ -63,6 +65,9 @@ install(FILES
   ${SRC_TRS}/trs.hpp
   ${SRC_TRS}/matching_term.hpp
   ${SRC_TRS}/rewrite_rule.hpp
+  ${SRC_TRS}/trs_const.hpp
+  ${SRC_TRS}/reduction_order/utils.hpp
+  ${SRC_TRS}/reduction_order/component_orders.hpp
   DESTINATION ${HEADERS_INSTALL_DIR}
 )
 
