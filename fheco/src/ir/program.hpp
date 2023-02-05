@@ -161,8 +161,11 @@ public:
   const std::vector<Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
 
   const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const;
-
-  std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(const std::string &);
+  /*
+    Search key here is node label. In order to use just call get_label() method of the object you are manipulating
+  */
+  std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(
+    const std::string &search_key);
 
   const std::string &get_program_tag() const { return this->program_tag; }
 

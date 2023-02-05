@@ -1,14 +1,27 @@
 #include "fhecompiler/fhecompiler.hpp"
 
+int32_t clog(int32_t x)
+{
+  int32_t c = 0;
+  while (x > 1)
+  {
+    x /= 2;
+    c += 1;
+  }
+  return c;
+}
+
 inline fhecompiler::Ciphertext sum_all_slots(const fhecompiler::Ciphertext &x, int vector_size)
 {
   std::vector<fhecompiler::Ciphertext> rotated_ciphers = {x};
   fhecompiler::Ciphertext result = rotated_ciphers.back();
-  for (; vector_size > 0; vector_size--)
+  int32_t rotation_step = 1;
+  for (; rotation_step <= clog(vector_size) + 1;)
   {
-    fhecompiler::Ciphertext cipher_rotated = rotated_ciphers.back() << 1;
+    fhecompiler::Ciphertext cipher_rotated = rotated_ciphers.back() << rotation_step;
     result += cipher_rotated;
     rotated_ciphers.push_back(cipher_rotated);
+    rotation_step *= 2;
   }
   // result of sum will be in the first slot
   return result;
@@ -24,10 +37,9 @@ int main()
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
 
-    std::vector<std::vector<int64_t>> A = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
-    std::vector<std::vector<int64_t>> B = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
+    std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
+    std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
-    /*
     size_t N = 10;
     size_t M = 10;
     for (size_t i = 0; i < N; i++)
@@ -49,7 +61,6 @@ int main()
       }
       B.push_back(line);
     }
-    */
 
     std::vector<fhecompiler::Ciphertext> A_encrypted;
     // encrypt by line for matrix A

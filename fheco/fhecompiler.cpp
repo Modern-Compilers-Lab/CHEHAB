@@ -51,18 +51,20 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     }
   }
 
-  // utils::draw_ir(program, output_filename + "1.dot");
+  utils::draw_ir(program, output_filename + "1.dot");
 
   fheco_trs::TRS trs(program);
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-  // trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
   fheco_passes::CSE cse_pass(program);
+  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset2);
+  //  cse_pass.apply_cse2(false);
+  //  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+  //  cse_pass.apply_cse2(true);
+  //  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
   cse_pass.apply_cse2(true);
-
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
 
-  // utils::draw_ir(program, output_filename + "2.dot");
+  utils::draw_ir(program, output_filename + "2.dot");
 
   /*
     std::vector<int> program_rotations_steps = fheco_passes::get_unique_rotation_steps(program);

@@ -212,9 +212,20 @@ double get_constant_value_as_double(ir::ConstantValue const_value)
 
 void cast_int_vector_to_double(const std::vector<int64_t> &int_vector, std::vector<double> &double_vector)
 {
-  double_vector.resize(int_vector.size());
+  if (double_vector.size() < int_vector.size())
+    double_vector.resize(int_vector.size());
+
   for (size_t i = 0; i < int_vector.size(); i++)
     double_vector[i] = static_cast<double>(int_vector[i]);
+}
+
+void cast_double_vector_to_int(const std::vector<double> &double_vector, std::vector<int64_t> &int_vector)
+{
+  if (int_vector.size() < double_vector.size())
+    int_vector.resize(double_vector.size());
+
+  for (size_t i = 0; i < int_vector.size(); i++)
+    int_vector[i] = static_cast<int64_t>(double_vector[i]);
 }
 
 void get_constant_value_as_vector_of_double(ir::ConstantValue const_value, std::vector<double> &double_vector)
@@ -226,6 +237,204 @@ void get_constant_value_as_vector_of_double(ir::ConstantValue const_value, std::
   {
     auto int_vector = std::get<std::vector<int64_t>>(vector_value);
     cast_int_vector_to_double(int_vector, double_vector);
+  }
+}
+
+std::shared_ptr<ir::Term> sum_const_plains(
+  const std::vector<std::shared_ptr<ir::Term>> &const_plains, ir::Program *program)
+{
+
+  if (const_plains.size() == 0)
+    throw("empty const_plains vector in sum_const_plains");
+
+  if (const_plains.size() == 1)
+    return const_plains[0];
+
+  std::vector<double> const_plains_sum; // simd sum
+  for (size_t i = 0; i < const_plains.size(); i++)
+  {
+    auto &const_plain = const_plains[i];
+    if (
+      program->type_of(const_plain->get_label()) != ir::ConstantTableEntryType::constant ||
+      const_plain->get_term_type() != ir::plaintextType)
+    {
+      throw("only constant plaintext are expected at sum_const_plains");
+    }
+
+    ir::ConstantValue const_value =
+      *(*program->get_entry_form_constants_table(const_plain->get_label())).get().get_entry_value().value;
+
+    std::vector<double> vector_value;
+    get_constant_value_as_vector_of_double(const_value, vector_value);
+    if (i == 0)
+      const_plains_sum = vector_value;
+    else
+    {
+      // this is bad and better to avoid it
+      if (const_plains_sum.size() < vector_value.size())
+        const_plains_sum.resize(vector_value.size());
+
+      for (size_t j = 0; j < vector_value.size(); j++)
+        const_plains_sum[j] += vector_value[j];
+    }
+  }
+  std::shared_ptr<ir::Term> plain_const_term = std::make_shared<ir::Term>(ir::TermType::plaintextType);
+  plain_const_term->set_a_default_label();
+
+  if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
+  {
+    std::vector<int64_t> const_plains_sum_int;
+    cast_double_vector_to_int(const_plains_sum, const_plains_sum_int);
+    ir::ConstantTableEntry const_table_entry(
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum_int});
+    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
+  }
+  else
+  {
+    ir::ConstantTableEntry const_table_entry(
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum});
+    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
+  }
+  return plain_const_term;
+}
+
+std::shared_ptr<ir::Term> subtract_const_plains(
+  const std::vector<std::shared_ptr<ir::Term>> &const_plains, ir::Program *program)
+{
+
+  if (const_plains.size() == 0)
+    throw("empty const_plains vector in subtract_const_plains");
+
+  if (const_plains.size() == 1)
+    return const_plains[0];
+
+  std::vector<double> const_plains_sum; // simd sum
+  for (size_t i = 0; i < const_plains.size(); i++)
+  {
+    auto &const_plain = const_plains[i];
+    if (
+      program->type_of(const_plain->get_label()) != ir::ConstantTableEntryType::constant ||
+      const_plain->get_term_type() != ir::plaintextType)
+    {
+      throw("only constant plaintext are expected at subtract_const_plains");
+    }
+
+    ir::ConstantValue const_value =
+      *(*program->get_entry_form_constants_table(const_plain->get_label())).get().get_entry_value().value;
+
+    std::vector<double> vector_value;
+    get_constant_value_as_vector_of_double(const_value, vector_value);
+    if (i == 0)
+      const_plains_sum = vector_value;
+    else
+    {
+      // this is bad and better to avoid it
+      if (const_plains_sum.size() < vector_value.size())
+        const_plains_sum.resize(vector_value.size());
+
+      for (size_t j = 0; j < vector_value.size(); j++)
+        const_plains_sum[j] -= vector_value[j];
+    }
+  }
+  std::shared_ptr<ir::Term> plain_const_term = std::make_shared<ir::Term>(ir::TermType::plaintextType);
+  plain_const_term->set_a_default_label();
+
+  if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
+  {
+    std::vector<int64_t> const_plains_sum_int;
+    cast_double_vector_to_int(const_plains_sum, const_plains_sum_int);
+    ir::ConstantTableEntry const_table_entry(
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum_int});
+    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
+  }
+  else
+  {
+    ir::ConstantTableEntry const_table_entry(
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum});
+    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
+  }
+  return plain_const_term;
+}
+
+std::shared_ptr<ir::Term> multiply_const_plains(
+  const std::vector<std::shared_ptr<ir::Term>> &const_plains, ir::Program *program)
+{
+
+  if (const_plains.size() == 0)
+    throw("empty const_plains vector multiply_const_plains");
+
+  if (const_plains.size() == 1)
+    return const_plains[0];
+
+  std::vector<double> const_plains_sum; // simd sum
+  for (size_t i = 0; i < const_plains.size(); i++)
+  {
+    auto &const_plain = const_plains[i];
+    if (
+      program->type_of(const_plain->get_label()) != ir::ConstantTableEntryType::constant ||
+      const_plain->get_term_type() != ir::plaintextType)
+    {
+      throw("only constant plaintext are expected at multiply_const_plains");
+    }
+
+    ir::ConstantValue const_value =
+      *(*program->get_entry_form_constants_table(const_plain->get_label())).get().get_entry_value().value;
+
+    std::vector<double> vector_value;
+    get_constant_value_as_vector_of_double(const_value, vector_value);
+    if (i == 0)
+      const_plains_sum = vector_value;
+    else
+    {
+      // this is bad and better to avoid it
+      if (const_plains_sum.size() < vector_value.size())
+        const_plains_sum.resize(vector_value.size());
+
+      for (size_t j = 0; j < vector_value.size(); j++)
+        const_plains_sum[j] *= vector_value[j];
+    }
+  }
+
+  std::shared_ptr<ir::Term> plain_const_term = std::make_shared<ir::Term>(ir::TermType::plaintextType);
+  plain_const_term->set_a_default_label();
+
+  if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
+  {
+    std::vector<int64_t> const_plains_sum_int;
+    cast_double_vector_to_int(const_plains_sum, const_plains_sum_int);
+    ir::ConstantTableEntry const_table_entry(
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum_int});
+    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
+  }
+  else
+  {
+    ir::ConstantTableEntry const_table_entry(
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum});
+    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
+  }
+  return plain_const_term;
+}
+
+std::shared_ptr<ir::Term> fold_const_plain(
+  const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, ir::OpCode opcode, ir::Program *program)
+{
+  switch (opcode)
+  {
+  case ir::OpCode::add:
+    return sum_const_plains({lhs, rhs}, program);
+    break;
+
+  case ir::OpCode::mul:
+    return multiply_const_plains({lhs, rhs}, program);
+    break;
+
+  case ir::OpCode::sub:
+    return subtract_const_plains({lhs, rhs}, program);
+    break;
+
+  default:
+    throw("unsuported operation in fold_const_plain");
+    break;
   }
 }
 

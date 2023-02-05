@@ -73,10 +73,7 @@ MatchingTerm operator*(const MatchingTerm &lhs, const MatchingTerm &rhs)
     fheco_trs::OpCode::mul, std::vector<MatchingTerm>({lhs, rhs}),
     MatchingTerm::deduce_term_type(lhs.get_term_type(), rhs.get_term_type()));
 
-  if (new_term.get_term_type() == fheco_trs::TermType::ciphertextType && lhs.get_term_type() != rhs.get_term_type())
-  {
-    new_term.set_opcode(fheco_trs::OpCode::mul_plain);
-  }
+  new_term.set_opcode(fheco_trs::OpCode::mul);
 
   return new_term;
 }
@@ -86,11 +83,7 @@ MatchingTerm operator+(const MatchingTerm &lhs, const MatchingTerm &rhs)
   MatchingTerm new_term(
     fheco_trs::OpCode::add, std::vector<MatchingTerm>({lhs, rhs}),
     MatchingTerm::deduce_term_type(lhs.get_term_type(), rhs.get_term_type()));
-
-  if (new_term.get_term_type() == fheco_trs::TermType::ciphertextType && lhs.get_term_type() != rhs.get_term_type())
-  {
-    new_term.set_opcode(fheco_trs::OpCode::add_plain);
-  }
+  new_term.set_opcode(fheco_trs::OpCode::add);
 
   return new_term;
 }
@@ -101,10 +94,7 @@ MatchingTerm operator-(const MatchingTerm &lhs, const MatchingTerm &rhs)
     fheco_trs::OpCode::sub, std::vector<MatchingTerm>({lhs, rhs}),
     MatchingTerm::deduce_term_type(lhs.get_term_type(), rhs.get_term_type()));
 
-  if (new_term.get_term_type() == fheco_trs::TermType::ciphertextType && lhs.get_term_type() != rhs.get_term_type())
-  {
-    new_term.set_opcode(fheco_trs::OpCode::sub_plain);
-  }
+  new_term.set_opcode(fheco_trs::OpCode::sub);
 
   return new_term;
 }

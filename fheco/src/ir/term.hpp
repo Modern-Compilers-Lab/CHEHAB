@@ -81,6 +81,8 @@ public:
   // this constructure is useful in case of rawData where we store it in the lable as an int
   Term(const std::string &symbol, TermType term_type) : label(symbol), type(term_type) { term_id++; }
 
+  Term(TermType term_type) : type(term_type) {}
+
   void reverse_operands()
   {
     if (!is_operation_node())

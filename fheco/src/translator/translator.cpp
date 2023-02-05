@@ -197,7 +197,6 @@ void Translator::translate_constant_table_entry(
   ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
   ir::ConstantTableEntryType entry_type = table_entry.get_entry_type();
   std::string tag = entry_value.get_tag();
-
   // getting type
   std::string type_str;
 
@@ -230,12 +229,10 @@ void Translator::translate_constant_table_entry(
   }
   else if (entry_type == ir::ConstantTableEntryType::constant)
   {
-
     if (!encoding_writer.is_initialized())
     {
       encoding_writer.init(os);
     }
-
     if (term_type == ir::plaintextType)
     {
       // encoding

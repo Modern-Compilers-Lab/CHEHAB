@@ -35,6 +35,7 @@ std::vector<RewriteRule> dummy_ruleset = {
 // {(x << p) - (y << q), ((x - (y << MatchingTerm::fold(q - p)))) << p, q > p}};
 */
 
+/*
 std::vector<RewriteRule> dummy_ruleset = {
   {y + (x << p), (x << p) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
   {(z << q) + ((x << p) + y), (x << p) + (z << q) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
@@ -53,5 +54,28 @@ std::vector<RewriteRule> dummy_ruleset = {
   {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p,
    (q < p) && (p < 0) && (q < 0) && MatchingTerm::is_opcode_equal_to(y, OpCode::undefined) &&
      MatchingTerm::is_opcode_equal_to(x, OpCode::undefined)}};
+*/
+
+std::vector<RewriteRule> dummy_ruleset = {
+  {y + (x << p), (x << p) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
+  {(z << q) + ((x << p) + y), (x << p) + (z << q) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
+  {(x << p), x, p == 0},
+  {(x << p) << q, x << (MatchingTerm::fold(p + q))},
+  {x + (y << p) + (z << q), x + ((y << p) + (z << q)), !MatchingTerm::is_opcode_equal_to(x, OpCode::rotate_rows)},
+  {(y << p) + (z << q) + x, x + ((y << p) + (z << q)), !MatchingTerm::is_opcode_equal_to(x, OpCode::rotate_rows)},
+  {x + (y << p) + (z << q) + (k << r),
+   x + ((y << p) + (z << q) + (k << r), !MatchingTerm::is_opcode_equal_to(x, OpCode::rotate_rows))},
+  {(x << p) + (y << p), (x + y) << p},
+  {(x << p) * (y << p), (x * y) << p},
+  {(x << p) - (y << p), (x - y) << p},
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p > q) && (p > 0) && (q > 0)},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q > p) && (p > 0) && (q > 0)},
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0)},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0)}};
+
+MatchingTerm plain1(fheco_trs::TermType::plaintextType);
+MatchingTerm plain2(fheco_trs::TermType::plaintextType);
+
+std::vector<RewriteRule> dummy_ruleset2 = {{(x + plain1) + plain2, x + MatchingTerm::fold(plain1 + plain2)}};
 
 } // namespace fheco_trs

@@ -138,7 +138,6 @@ void Term::clear_operands()
 
 void Term::replace_with(const Ptr &rhs)
 {
-  (*(rhs.get())).parents_labels = (*this).parents_labels;
   *this = *(rhs.get());
 }
 

@@ -91,7 +91,6 @@ bool TRS::evaluate_boolean_matching_term(
       auto ir_node_to_check_it = matching_map.find(matching_term.get_operands()[0].get_term_id());
       if (ir_node_to_check_it == matching_map.end())
       {
-        std::cout << "exception..\n";
         throw("no matching found for ir node to check attribute value");
       }
       return ir_node_to_check_it->second->get_opcode() == opcode_mapping[matching_term.get_opcode()];
@@ -390,27 +389,26 @@ std::shared_ptr<ir::Term> TRS::fold_term(const std::shared_ptr<ir::Term> &term)
     return term;
   }
 
-  return term;
+  bool is_lhs_a_const_plain = (folded_lhs->get_term_type() == ir::plaintextType) &&
+                              (program->type_of(folded_lhs->get_label()) == ir::ConstantTableEntryType::constant);
 
-  /*
-  bool is_lhs_const = program->type_of(folded_lhs->get_label()) == ir::ConstantTableEntryType::constant;
-  bool is_rhs_const = program->type_of(folded_rhs->get_label()) == ir::ConstantTableEntryType::constant;
+  bool is_rhs_a_const_plain = (folded_rhs->get_term_type() == ir::plaintextType) &&
+                              (program->type_of(folded_rhs->get_label()) == ir::ConstantTableEntryType::constant);
 
-  if (is_lhs_const == false || is_rhs_const == false)
+  if (is_lhs_a_const_plain && is_rhs_a_const_plain)
   {
-    term->clear_operands();
-    term->set_operands(std::vector<std::shared_ptr<ir::Term>>({folded_lhs, folded_rhs}));
+    std::shared_ptr<ir::Term> folded_term = ir::fold_const_plain(folded_lhs, folded_rhs, term->get_opcode(), program);
+    term->replace_with(folded_term);
     return term;
   }
-  */
+
+  return term;
 }
 
 std::vector<MatchingPair> TRS::apply_rule_on_ir_node(
   const std::shared_ptr<ir::Term> &ir_node, const RewriteRule &rule, bool &is_rule_applied)
 {
-  /*
-    Let's make this recursive
-  */
+
   auto matching_map = match_ir_node(ir_node, rule.get_lhs());
   if (matching_map != std::nullopt)
   {
@@ -467,7 +465,6 @@ bool TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const st
 
 void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
 {
-  size_t i = 0;
   auto &sorted_nodes = program->get_dataflow_sorted_nodes(true);
   for (auto &node : sorted_nodes)
   {
