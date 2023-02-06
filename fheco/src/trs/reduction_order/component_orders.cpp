@@ -1,25 +1,32 @@
 #include "component_orders.hpp"
-#include "utils.hpp"
 
 using namespace std;
 
 namespace fheco_trs
 {
-
 relation_type xdepth_order(const MatchingTerm &lhs, const MatchingTerm &rhs)
 {
-  size_t lhs_xdepth = 0;
-  size_t rhs_xdepth = 0;
+  int lhs_xdepth = 0;
+  int rhs_xdepth = 0;
   term_feature_map lhs_cipher_vars_xdepth = cipher_vars_xdepths(lhs, lhs_xdepth);
   term_feature_map rhs_cipher_vars_xdepth = cipher_vars_xdepths(rhs, rhs_xdepth);
-  if (!term_feature_map_ge(lhs_cipher_vars_xdepth, rhs_cipher_vars_xdepth))
+  if (term_feature_map_order(lhs_cipher_vars_xdepth, rhs_cipher_vars_xdepth) == relation_type::lt)
     return relation_type::lt;
 
-  int diff = 1;
-  int modified_rhs_xdepth = rhs_xdepth - diff;
-  if ((int)lhs_xdepth > modified_rhs_xdepth)
+  term_feature_map lhs_cipher_vars_occ;
+  count_leaves_class_occ(lhs, &is_ciphertext, lhs_cipher_vars_occ);
+  term_feature_map rhs_cipher_vars_occ;
+  count_leaves_class_occ(rhs, &is_ciphertext, rhs_cipher_vars_occ);
+  if (term_feature_map_order(lhs_cipher_vars_occ, rhs_cipher_vars_occ) == relation_type::lt)
+    return relation_type::lt;
+
+  size_t lhs_sum_leaves_xdepth = 0;
+  size_t rhs_sum_leaves_xdepth = 0;
+  sum_cipher_leaves_xdepth(lhs, 0, lhs_sum_leaves_xdepth);
+  sum_cipher_leaves_xdepth(rhs, 0, rhs_sum_leaves_xdepth);
+  if (lhs_sum_leaves_xdepth > rhs_sum_leaves_xdepth)
     return relation_type::gt;
-  if ((int)lhs_xdepth < modified_rhs_xdepth)
+  if (lhs_sum_leaves_xdepth < rhs_sum_leaves_xdepth)
     return relation_type::lt;
   return relation_type::eq;
 }
@@ -31,7 +38,7 @@ relation_type he_op_class_order(
   count_leaves_class_occ(lhs, &is_ciphertext, lhs_cipher_vars_occ);
   term_feature_map rhs_cipher_vars_occ;
   count_leaves_class_occ(rhs, &is_ciphertext, rhs_cipher_vars_occ);
-  if (!term_feature_map_ge(lhs_cipher_vars_occ, rhs_cipher_vars_occ))
+  if (term_feature_map_order(lhs_cipher_vars_occ, rhs_cipher_vars_occ) == relation_type::lt)
     return relation_type::lt;
 
   size_t he_mul_lhs = 0;
@@ -51,21 +58,26 @@ relation_type he_rotation_steps_order(const MatchingTerm &lhs, const MatchingTer
   count_leaves_class_occ(lhs, &is_ciphertext, lhs_cipher_vars_occ);
   term_feature_map rhs_cipher_vars_occ;
   count_leaves_class_occ(rhs, &is_ciphertext, rhs_cipher_vars_occ);
-  if (!term_feature_map_ge(lhs_cipher_vars_occ, rhs_cipher_vars_occ))
+  if (term_feature_map_order(lhs_cipher_vars_occ, rhs_cipher_vars_occ) == relation_type::lt)
     return relation_type::lt;
 
-  set<size_t> lhs_rotation_steps;
-  set<size_t> rhs_rotation_steps;
-  count_he_rotation_steps(lhs, lhs_rotation_steps);
-  count_he_rotation_steps(rhs, rhs_rotation_steps);
+  term_feature_map lhs_steps_vars_coeffs;
+  term_feature_map rhs_steps_vars_coeffs;
+  int lhs_folded_const = 0;
+  int rhs_folded_const = 0;
+  fold_he_rotation_steps(lhs, lhs_steps_vars_coeffs, lhs_folded_const);
+  fold_he_rotation_steps(rhs, rhs_steps_vars_coeffs, rhs_folded_const);
+  relation_type coeffs_rel = term_feature_map_order(lhs_steps_vars_coeffs, rhs_steps_vars_coeffs);
 
-  size_t lhs_steps_count = lhs_rotation_steps.size();
-  int diff = 1;
-  int modified_rhs_steps_count = rhs_rotation_steps.size() - diff;
-  if ((int)lhs_steps_count > modified_rhs_steps_count)
+  if (
+    (coeffs_rel == relation_type::eq && lhs_folded_const > rhs_folded_const) ||
+    (coeffs_rel == relation_type::gt && lhs_folded_const >= rhs_folded_const))
     return relation_type::gt;
-  if ((int)lhs_steps_count < modified_rhs_steps_count)
+
+  if (coeffs_rel == relation_type::lt || lhs_folded_const < rhs_folded_const)
     return relation_type::lt;
+
   return relation_type::eq;
 }
+
 } // namespace fheco_trs

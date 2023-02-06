@@ -16,19 +16,17 @@ int main()
   MatchingTerm u(TermType::ciphertextType);
   MatchingTerm n(fheco_trs::TermType::rawDataType);
   MatchingTerm m(fheco_trs::TermType::rawDataType);
-  MatchingTerm raw1(1);
-  MatchingTerm raw0(0);
 
-  //((x * y) * z) * x => square(x) * (y * z)
-  // rot(x, n) * rot(y, n) => rot(x*y, n)
-  // rot(rot(x, n), m) => rot(x, n+m)
+  MatchingTerm raw1(2);
+  MatchingTerm raw0(0);
 
   std::vector<RewriteRule> ruleset = {
     {x * x, square(x)},
     {x * y * x, square(x) * y},
     {x * y * z * x, square(x) * (y * z)},
     {(x << n) * (y << n), (x * y) << n},
-    {(x << n) << m, x << (n + m)},
+    {x << n << m, x << n + m},
+    {(x << n) * (y << m), (x << n - m) * y << m},
     {x * y + z * y, (x + z) * y},
     {x + x * y, x * (y + raw1)},
     {(u + x * y) - z * y, (x - z) * y},
@@ -37,20 +35,20 @@ int main()
     {x * (y * (z * u)), (x * y) * (z * u)}};
 
   vector<function<relation_type(const MatchingTerm &, const MatchingTerm &)>> component_orders{
+    &xdepth_order,
     [](const MatchingTerm &lhs, const MatchingTerm &rhs) -> relation_type {
       return he_op_class_order(lhs, rhs, &is_he_mul);
     },
     [](const MatchingTerm &lhs, const MatchingTerm &rhs) -> relation_type {
       return he_op_class_order(lhs, rhs, &is_he_square);
     },
-    &xdepth_order,
     [](const MatchingTerm &lhs, const MatchingTerm &rhs) -> relation_type {
       return he_op_class_order(lhs, rhs, &is_he_rotation);
     },
+    &he_rotation_steps_order,
     [](const MatchingTerm &lhs, const MatchingTerm &rhs) -> relation_type {
       return he_op_class_order(lhs, rhs, &is_he_add_sub);
     },
-    &he_rotation_steps_order,
   };
 
   int rule_id = 0;
