@@ -308,7 +308,7 @@ std::shared_ptr<ir::Term> subtract_const_plains(
   if (const_plains.size() == 1)
     return const_plains[0];
 
-  std::vector<double> const_plains_sum; // simd sum
+  std::vector<double> const_plains_sub; // simd subtraction
   for (size_t i = 0; i < const_plains.size(); i++)
   {
     auto &const_plain = const_plains[i];
@@ -325,15 +325,15 @@ std::shared_ptr<ir::Term> subtract_const_plains(
     std::vector<double> vector_value;
     get_constant_value_as_vector_of_double(const_value, vector_value);
     if (i == 0)
-      const_plains_sum = vector_value;
+      const_plains_sub = vector_value;
     else
     {
       // this is bad and better to avoid it
-      if (const_plains_sum.size() < vector_value.size())
-        const_plains_sum.resize(vector_value.size());
+      if (const_plains_sub.size() < vector_value.size())
+        const_plains_sub.resize(vector_value.size());
 
       for (size_t j = 0; j < vector_value.size(); j++)
-        const_plains_sum[j] -= vector_value[j];
+        const_plains_sub[j] -= vector_value[j];
     }
   }
   std::shared_ptr<ir::Term> plain_const_term = std::make_shared<ir::Term>(ir::TermType::plaintextType);
@@ -342,7 +342,7 @@ std::shared_ptr<ir::Term> subtract_const_plains(
   if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
   {
     std::vector<int64_t> const_plains_sum_int;
-    cast_double_vector_to_int(const_plains_sum, const_plains_sum_int);
+    cast_double_vector_to_int(const_plains_sub, const_plains_sum_int);
     ir::ConstantTableEntry const_table_entry(
       ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum_int});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
@@ -350,7 +350,7 @@ std::shared_ptr<ir::Term> subtract_const_plains(
   else
   {
     ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum});
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sub});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
   return plain_const_term;
@@ -366,7 +366,7 @@ std::shared_ptr<ir::Term> multiply_const_plains(
   if (const_plains.size() == 1)
     return const_plains[0];
 
-  std::vector<double> const_plains_sum; // simd sum
+  std::vector<double> const_plains_product; // simd product
   for (size_t i = 0; i < const_plains.size(); i++)
   {
     auto &const_plain = const_plains[i];
@@ -383,15 +383,15 @@ std::shared_ptr<ir::Term> multiply_const_plains(
     std::vector<double> vector_value;
     get_constant_value_as_vector_of_double(const_value, vector_value);
     if (i == 0)
-      const_plains_sum = vector_value;
+      const_plains_product = vector_value;
     else
     {
       // this is bad and better to avoid it
-      if (const_plains_sum.size() < vector_value.size())
-        const_plains_sum.resize(vector_value.size());
+      if (const_plains_product.size() < vector_value.size())
+        const_plains_product.resize(vector_value.size());
 
       for (size_t j = 0; j < vector_value.size(); j++)
-        const_plains_sum[j] *= vector_value[j];
+        const_plains_product[j] *= vector_value[j];
     }
   }
 
@@ -401,7 +401,7 @@ std::shared_ptr<ir::Term> multiply_const_plains(
   if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
   {
     std::vector<int64_t> const_plains_sum_int;
-    cast_double_vector_to_int(const_plains_sum, const_plains_sum_int);
+    cast_double_vector_to_int(const_plains_product, const_plains_sum_int);
     ir::ConstantTableEntry const_table_entry(
       ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum_int});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
@@ -409,7 +409,7 @@ std::shared_ptr<ir::Term> multiply_const_plains(
   else
   {
     ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum});
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_product});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
   return plain_const_term;
