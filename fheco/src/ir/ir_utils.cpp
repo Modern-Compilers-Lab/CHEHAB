@@ -341,10 +341,10 @@ std::shared_ptr<ir::Term> subtract_const_plains(
 
   if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
   {
-    std::vector<int64_t> const_plains_sum_int;
-    cast_double_vector_to_int(const_plains_sub, const_plains_sum_int);
+    std::vector<int64_t> const_plains_sub_int;
+    cast_double_vector_to_int(const_plains_sub, const_plains_sub_int);
     ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum_int});
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sub_int});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
   else
@@ -400,10 +400,10 @@ std::shared_ptr<ir::Term> multiply_const_plains(
 
   if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
   {
-    std::vector<int64_t> const_plains_sum_int;
-    cast_double_vector_to_int(const_plains_product, const_plains_sum_int);
+    std::vector<int64_t> cconst_plains_product_int;
+    cast_double_vector_to_int(const_plains_product, cconst_plains_product_int);
     ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum_int});
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), cconst_plains_product_int});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
   else
