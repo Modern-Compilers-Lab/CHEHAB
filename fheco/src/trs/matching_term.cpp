@@ -25,6 +25,10 @@ MatchingTerm::MatchingTerm(
 
 MatchingTerm::MatchingTerm(fheco_trs::TermType _term_type) : term_type(_term_type), id(term_id++) {}
 
+MatchingTerm::MatchingTerm(const std::string &_label, fheco_trs::TermType _term_type)
+  : label(_label), term_type(_term_type), id(term_id++)
+{}
+
 fheco_trs::TermType MatchingTerm::deduce_term_type(fheco_trs::TermType lhs_term_type, fheco_trs::TermType rhs_term_type)
 {
 

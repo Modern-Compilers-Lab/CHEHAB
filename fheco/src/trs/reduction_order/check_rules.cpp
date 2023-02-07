@@ -10,14 +10,14 @@ using namespace fheco_trs;
 
 int main()
 {
-  MatchingTerm x(TermType::ciphertextType);
-  MatchingTerm y(TermType::ciphertextType);
-  MatchingTerm z(TermType::ciphertextType);
-  MatchingTerm u(TermType::ciphertextType);
+  MatchingTerm x("x", TermType::ciphertextType);
+  MatchingTerm y("y", TermType::ciphertextType);
+  MatchingTerm z("z", TermType::ciphertextType);
+  MatchingTerm u("u", TermType::ciphertextType);
   MatchingTerm n(fheco_trs::TermType::rawDataType);
-  MatchingTerm m(fheco_trs::TermType::rawDataType);
+  MatchingTerm m("m", fheco_trs::TermType::rawDataType);
 
-  MatchingTerm raw1(2);
+  MatchingTerm raw1(1);
   MatchingTerm raw0(0);
 
   std::vector<RewriteRule> ruleset = {

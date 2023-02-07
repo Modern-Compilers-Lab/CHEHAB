@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <functional>
 #include <map>
+#include <string>
 
 namespace fheco_trs
 {
@@ -15,21 +16,24 @@ enum class relation_type
   gt
 };
 
-using term_feature_map = std::unordered_map<std::size_t, int>;
+using term_feature_map = std::unordered_map<std::string, int>;
 
-term_feature_map cipher_vars_xdepths(const MatchingTerm &term, int &result_term_xdepth);
+std::string create_key(const MatchingTerm &term);
 
-void sum_cipher_leaves_xdepth(const MatchingTerm &term, std::size_t init_xdepth, std::size_t &result);
+term_feature_map cipher_vars_xdepths(const MatchingTerm &term);
 
-void count_leaves_class_occ(
-  const MatchingTerm &term, std::function<bool(const MatchingTerm &)> node_checker, term_feature_map &result);
+std::size_t sum_cipher_leaves_xdepth(const MatchingTerm &term);
 
-void count_nodes_class(
-  const MatchingTerm &term, std::function<bool(const MatchingTerm &)> node_checker, std::size_t &result);
+term_feature_map count_leaves_class_occ(
+  const MatchingTerm &term, std::function<bool(const MatchingTerm &)> node_checker);
 
-void fold_he_rotation_steps(const MatchingTerm &term, term_feature_map &vars_coeffs, int &folded_const);
+std::size_t count_nodes_class(const MatchingTerm &term, std::function<bool(const MatchingTerm &)> node_checker);
+
+int fold_he_rotation_steps(const MatchingTerm &term, term_feature_map &vars_coeffs);
 
 relation_type term_feature_map_order(const term_feature_map &lhs, const term_feature_map &rhs);
+
+bool is_leaf(const MatchingTerm &term);
 
 bool is_ciphertext(const MatchingTerm &term);
 

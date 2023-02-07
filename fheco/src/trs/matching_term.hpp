@@ -3,6 +3,7 @@
 #include "trs_const.hpp"
 #include <memory>
 #include <optional>
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -18,6 +19,7 @@ private:
   std::optional<bool> fold_flag;
   size_t id;
   std::optional<ir::ConstantValue> value;
+  std::optional<std::string> label;
   std::vector<MatchingTerm> operands;
 
 public:
@@ -35,6 +37,7 @@ public:
   MatchingTerm(double);
   MatchingTerm(fheco_trs::OpCode, const std::vector<MatchingTerm> &, fheco_trs::TermType);
   MatchingTerm(fheco_trs::TermType); // a leaf node
+  MatchingTerm(const std::string &, fheco_trs::TermType);
 
   void set_fold_flag() { fold_flag = true; }
 
@@ -57,6 +60,7 @@ public:
   OpCode get_opcode() const { return opcode; }
   fheco_trs::TermType get_term_type() const { return term_type; }
   std::optional<ir::ConstantValue> get_value() const { return value; }
+  std::optional<std::string> get_label() const { return label; }
 };
 
 /*
