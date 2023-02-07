@@ -10,7 +10,8 @@ Ptr Program::insert_operation_node_in_dataflow(
 {
   Ptr new_term = std::make_shared<Term>(opcode, operands, label);
   new_term->set_term_type(term_type);
-
+  for (auto &operand : operands)
+    this->data_flow->insert_node(operand);
   this->data_flow->insert_node(new_term, this->type_of(new_term->get_label()) == ConstantTableEntryType::output);
   return new_term;
 }
