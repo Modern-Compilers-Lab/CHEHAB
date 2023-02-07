@@ -466,7 +466,9 @@ void Translator::convert_to_inplace_pass()
 
 void Translator::generate_rotation_keys(std::ofstream &os) const
 {
-  std::vector<int> rotation_steps = fheco_passes::get_unique_rotation_steps(program);
+  fheco_passes::RotationKeySelctionPass rotation_key_pass(program);
+
+  std::vector<int> rotation_steps = rotation_key_pass.get_unique_rotation_steps();
   if (!rotation_steps.empty())
   {
     generate_key_generator(os);

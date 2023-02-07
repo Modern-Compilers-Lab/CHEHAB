@@ -76,6 +76,8 @@ std::vector<RewriteRule> dummy_ruleset = {
 MatchingTerm plain1(fheco_trs::TermType::plaintextType);
 MatchingTerm plain2(fheco_trs::TermType::plaintextType);
 
-std::vector<RewriteRule> dummy_ruleset2 = {{(x + plain1) + plain2, x + MatchingTerm::fold(plain1 + plain2)}};
+std::vector<RewriteRule> dummy_ruleset2 = {
+  {(x + plain1) + plain2, x + MatchingTerm::fold(plain1 + plain2)},
+  {(x * plain1) * plain2, x *MatchingTerm::fold(plain1 *plain2)}};
 
 } // namespace fheco_trs

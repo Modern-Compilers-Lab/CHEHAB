@@ -7,6 +7,8 @@
 namespace fheco_passes
 {
 
+const size_t number_of_rotation_keys_threshold = 30; // This value must >= 2*log(poly_modulus_degree)
+
 inline std::unordered_set<ir::OpCode> rotation_intruction_set = {ir::OpCode::rotate, ir::OpCode::rotate_rows};
 
 inline std::unordered_set<ir::OpCode> arithmetic_instruction_set = {ir::OpCode::add,       ir::OpCode::mul,

@@ -21,10 +21,15 @@ int main()
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
-    fhecompiler::Plaintext plain1 = std::vector<int64_t>{1, 2, 4, 5};
-    fhecompiler::Plaintext plain2 = std::vector<int64_t>{1, 2, 4};
+    output1 = B;
 
-    output1 = (A + plain1) + plain2;
+    for (int32_t i = 0; i < 1000; i++)
+      output1 += (A << (i + 1));
+
+    output1 += (B << 777);
+    output1 += (B << 777);
+    output1 += (C << 777);
+    output1 += (D << 777);
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

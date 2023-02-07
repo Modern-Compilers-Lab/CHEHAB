@@ -51,27 +51,30 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     }
   }
 
-  utils::draw_ir(program, output_filename + "1.dot");
+  std::cout << "compact_assignement passed...\n";
 
-  fheco_trs::TRS trs(program);
-  fheco_passes::CSE cse_pass(program);
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset2);
-  //  cse_pass.apply_cse2(false);
-  //  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-  //  cse_pass.apply_cse2(true);
-  //  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-  cse_pass.apply_cse2(true);
+  // utils::draw_ir(program, output_filename + "1.dot");
+
+  // fheco_trs::TRS trs(program);
+  // fheco_passes::CSE cse_pass(program);
+  // trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset2);
+  // cse_pass.apply_cse2(true);
+
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
+  // /utils::draw_ir(program, output_filename + "2.dot");
 
+  fheco_passes::RotationKeySelctionPass rotation_key_pass(program);
+  std::vector<int> program_rotations_steps = rotation_key_pass.get_unique_rotation_steps();
+  std::cout << program_rotations_steps.size() << "\n";
+  for (auto &step : program_rotations_steps)
+    std::cout << step << " ";
+  std::cout << "\n";
+
+  utils::draw_ir(program, output_filename + "1.dot");
+  fheco_passes::CSE cse_pass(program);
+  cse_pass.apply_cse2(true);
   utils::draw_ir(program, output_filename + "2.dot");
-
-  /*
-    std::vector<int> program_rotations_steps = fheco_passes::get_unique_rotation_steps(program);
-    for (auto &step : program_rotations_steps)
-      std::cout << step << " ";
-    std::cout << "\n";
-  */
 
   translator::Translator tr(program, params);
   {
