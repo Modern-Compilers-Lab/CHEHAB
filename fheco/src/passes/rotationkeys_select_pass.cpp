@@ -105,9 +105,13 @@ void RotationKeySelctionPass::collect_program_rotations_steps()
     for (auto &e : rotation_steps)
       loss_by_step[e.first] = e.second * (naf_cache[e.first].size() - 1);
 
-    std::sort(rotations_steps_vec.begin(), rotations_steps_vec.end(), [&loss_by_step](int32_t lhs, int32_t rhs) {
-      return loss_by_step[lhs] > loss_by_step[rhs];
-    });
+    std::sort(
+      rotations_steps_vec.begin(), rotations_steps_vec.end(), [&loss_by_step, &naf_cache](int32_t lhs, int32_t rhs) {
+        if (loss_by_step[lhs] == loss_by_step[rhs])
+          return naf_cache[lhs].size() < naf_cache[rhs].size();
+        else
+          return loss_by_step[lhs] > loss_by_step[rhs];
+      });
 
     std::unordered_set<int32_t> steps_to_rewrite;
     std::unordered_set<int32_t> powers_of_2_steps;
