@@ -61,7 +61,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
 
-  fheco_passes::RotationKeySelctionPass rs_pass(program);
+  fheco_passes::RotationKeySelctionPass rs_pass(program, params);
   rs_pass.collect_program_rotations_steps();
 
   cse_pass.apply_cse2(true);

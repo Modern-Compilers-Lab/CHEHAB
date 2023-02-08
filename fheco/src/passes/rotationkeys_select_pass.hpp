@@ -1,5 +1,6 @@
 #pragma once
 
+#include "encryption_parameters.hpp"
 #include "program.hpp"
 
 namespace fheco_passes
@@ -10,7 +11,7 @@ class RotationKeySelctionPass
 
 private:
   ir::Program *program;
-
+  params_selector::EncryptionParameters *encryption_params;
   /*
     This function write a value in Non-Adjacent form (NAF)
   */
@@ -18,7 +19,9 @@ private:
   void rewrite_rotation_node_with_naf(const ir::Program::Ptr &node, const std::vector<int32_t> naf_components);
 
 public:
-  RotationKeySelctionPass(ir::Program *prgm) : program(prgm) {}
+  RotationKeySelctionPass(ir::Program *prgm, params_selector::EncryptionParameters *params)
+    : program(prgm), encryption_params(params)
+  {}
   /*
     For now this function targets SEAL backend where instead of generating all power of two keys and in order to avoid
     overhead that comes with rotation steps that are not a power of 2, the functions traverse the program and return

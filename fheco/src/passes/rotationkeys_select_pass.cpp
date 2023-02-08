@@ -110,7 +110,7 @@ void RotationKeySelctionPass::collect_program_rotations_steps()
     });
 
     std::unordered_set<int32_t> steps_to_rewrite;
-    std::unordered_map<int32_t, int32_t> powers_of_2_steps;
+    std::unordered_set<int32_t> powers_of_2_steps;
     // eviction and rewrite of rotation steps
     int32_t total_number_of_keys = rotations_steps_vec.size();
     while (total_number_of_keys > number_of_rotation_keys_threshold)
@@ -128,7 +128,7 @@ void RotationKeySelctionPass::collect_program_rotations_steps()
         if (powers_of_2_steps.find(power_of_2_step) == powers_of_2_steps.end())
           total_number_of_keys += 1;
 
-        powers_of_2_steps[power_of_2_step]++;
+        powers_of_2_steps.insert(power_of_2_step);
       }
     }
 
@@ -136,8 +136,8 @@ void RotationKeySelctionPass::collect_program_rotations_steps()
     for (auto &step : steps_to_rewrite)
       std::sort(naf_cache[step].begin(), naf_cache[step].end(), std::greater<int32_t>());
 
-    for (auto &e : powers_of_2_steps)
-      rotations_steps_vec.push_back(e.first);
+    for (auto &step : powers_of_2_steps)
+      rotations_steps_vec.push_back(step);
 
     // we do a rewrite pass for rotation steps in steps_to_rewrite
     for (auto &node : targeted_rotation_nodes)
@@ -183,8 +183,15 @@ void RotationKeySelctionPass::rewrite_rotation_node_with_naf(
 
   for (size_t i = 0; i < naf_components.size(); i++)
   {
-    std::string rotation_step = std::to_string(naf_components[i]);
-    ir::Program::Ptr rotation_step_node = std::make_shared<ir::Term>(rotation_step, ir::TermType::rawDataType);
+
+    int32_t rotation_step = naf_components[i]; // a power of 2 rotation step
+    if (
+      program->get_targeted_backend() == fhecompiler::Backend::SEAL &&
+      rotation_step == (encryption_params->poly_modulus_degree >> 1))
+      continue;
+
+    std::string rotation_step_raw = std::to_string(rotation_step);
+    ir::Program::Ptr rotation_step_node = std::make_shared<ir::Term>(rotation_step_raw, ir::TermType::rawDataType);
     ir::Program::Ptr node_to_rewrite_with = program->insert_operation_node_in_dataflow(
       node->get_opcode(), std::vector<ir::Program::Ptr>({input_node, rotation_step_node}), "", ir::ciphertextType);
     node_to_rewrite_with->set_a_default_label();
