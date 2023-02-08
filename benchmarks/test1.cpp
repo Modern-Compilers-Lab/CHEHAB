@@ -23,13 +23,8 @@ int main()
 
     output1 = B;
 
-    for (int32_t i = 0; i < 1000; i++)
+    for (int32_t i = 0; i < 32; i++)
       output1 += (A << (i + 1));
-
-    output1 += (B << 777);
-    output1 += (B << 777);
-    output1 += (C << 777);
-    output1 += (D << 777);
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

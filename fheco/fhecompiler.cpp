@@ -51,30 +51,22 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     }
   }
 
-  std::cout << "compact_assignement passed...\n";
-
   // utils::draw_ir(program, output_filename + "1.dot");
 
-  // fheco_trs::TRS trs(program);
-  // fheco_passes::CSE cse_pass(program);
-  // trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset2);
-  // cse_pass.apply_cse2(true);
+  fheco_trs::TRS trs(program);
+  fheco_passes::CSE cse_pass(program);
+  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset2);
+  cse_pass.apply_cse2(false);
 
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
-  // /utils::draw_ir(program, output_filename + "2.dot");
 
-  fheco_passes::RotationKeySelctionPass rotation_key_pass(program);
-  std::vector<int> program_rotations_steps = rotation_key_pass.get_unique_rotation_steps();
-  std::cout << program_rotations_steps.size() << "\n";
-  for (auto &step : program_rotations_steps)
-    std::cout << step << " ";
-  std::cout << "\n";
+  fheco_passes::RotationKeySelctionPass rs_pass(program);
+  rs_pass.collect_program_rotations_steps();
 
-  utils::draw_ir(program, output_filename + "1.dot");
-  fheco_passes::CSE cse_pass(program);
   cse_pass.apply_cse2(true);
-  utils::draw_ir(program, output_filename + "2.dot");
+
+  // utils::draw_ir(program, output_filename + "2.dot");
 
   translator::Translator tr(program, params);
   {
@@ -83,7 +75,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     if (!translation_os)
       throw("couldn't open file for translation.\n");
 
-    tr.translate(translation_os);
+    tr.translate_program(translation_os);
 
     translation_os.close();
   }

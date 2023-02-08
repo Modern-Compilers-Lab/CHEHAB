@@ -1,4 +1,5 @@
 #include "translator.hpp"
+#include "cse_pass.hpp"
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
 #include "program.hpp"
@@ -382,17 +383,19 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
   }
 }
 
-void Translator::translate(std::ofstream &os)
+void Translator::translate_program(std::ofstream &os)
 {
 
   os << headers_include;
 
   context_writer.write_context(os);
 
+  os << "\n";
+
+  write_rotations_steps_getter(program->get_rotations_steps(), os);
+
   generate_function_signature(os);
   os << "{" << '\n';
-
-  // generate_rotation_keys(os);
 
   convert_to_inplace_pass();
 
@@ -464,27 +467,6 @@ void Translator::convert_to_inplace_pass()
   }
 }
 
-void Translator::generate_rotation_keys(std::ofstream &os) const
-{
-  fheco_passes::RotationKeySelctionPass rotation_key_pass(program);
-
-  std::vector<int> rotation_steps = rotation_key_pass.get_unique_rotation_steps();
-  if (!rotation_steps.empty())
-  {
-    generate_key_generator(os);
-
-    os << galois_keys_type_literal << " " << galois_keys_identifier << ";\n";
-    os << key_generator_identifier << "." << create_galois_instruction << "({";
-    for (size_t i = 0; i < rotation_steps.size(); i++)
-    {
-      os << rotation_steps[i];
-      if (i < rotation_steps.size() - 1)
-        os << ",";
-    }
-    os << "}," << galois_keys_identifier << ");\n";
-  }
-}
-
 void Translator::generate_key_generator(std::ofstream &os) const
 {
   os << key_generator_type_literal << " " << key_generator_identifier << "(" << context_identifier << ");\n";
@@ -534,6 +516,22 @@ ir::OpCode Translator::deduce_opcode_to_generate(const Ptr &node) const
   }
   else
     throw("node with more than 2 operands in deduce_opcode_to_generate");
+}
+
+void Translator::write_rotations_steps_getter(const std::vector<int32_t> &steps, std::ostream &os)
+{
+  os << gen_steps_function_signature << "{\n";
+  os << "std::vector<" << rotation_step_type_literal << ">"
+     << " steps = {";
+  for (size_t i = 0; i < steps.size(); i++)
+  {
+    os << steps[i];
+    if (i < steps.size() - 1)
+      os << ",";
+    else
+      os << "};";
+  }
+  os << " return steps; }";
 }
 
 } // namespace translator

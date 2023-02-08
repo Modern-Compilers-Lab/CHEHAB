@@ -5,6 +5,18 @@
 namespace fheco_passes
 {
 
+inline std::string print_naf(const std::vector<int32_t> &naf_rep)
+{
+  std::string result = "";
+  for (size_t i = 0; i < naf_rep.size(); i++)
+  {
+    result += std::to_string(naf_rep[i]);
+    if (i < naf_rep.size() - 1 && naf_rep[i + 1] >= 0)
+      result += "+";
+  }
+  return result;
+}
+
 /*
   This is just an implementation of NAF, we got implementation below from
   (https://github.com/microsoft/SEAL/blob/82b07db635132e297282649e2ab5908999089ad2/native/src/seal/util/numth.h#L22)
@@ -30,13 +42,20 @@ std::vector<int> RotationKeySelctionPass::naf(int value)
   return res;
 }
 
-std::vector<int> RotationKeySelctionPass::get_unique_rotation_steps()
+void RotationKeySelctionPass::collect_program_rotations_steps()
 {
+
+  auto is_power_of_two = [](int32_t value) -> bool {
+    return __builtin_popcount(value) == 1;
+  };
 
   std::unordered_map<int32_t, int32_t> rotation_steps;
   /* rotate_columns is not included in rotation_intruction_set since this instruction doesn't take steps as input */
 
   auto sorted_nodes = program->get_dataflow_sorted_nodes(true);
+
+  std::vector<ir::Program::Ptr> targeted_rotation_nodes;
+
   for (auto &node : sorted_nodes)
   {
     if (node->is_operation_node() == false)
@@ -62,6 +81,8 @@ std::vector<int> RotationKeySelctionPass::get_unique_rotation_steps()
       throw("one of rotation operands must be a rawDataType in get_unique_rotation_steps function");
 
     rotation_steps[std::stoi(steps_raw_data)]++;
+    if (is_power_of_two(std::stoi(steps_raw_data)) == false)
+      targeted_rotation_nodes.push_back(node);
   }
 
   std::vector<int> rotations_steps_vec;
@@ -70,15 +91,12 @@ std::vector<int> RotationKeySelctionPass::get_unique_rotation_steps()
 
   if (rotation_steps.size() <= number_of_rotation_keys_threshold)
   {
-    return rotations_steps_vec;
+    program->set_rotations_steps(rotations_steps_vec);
+    return;
   }
   else
   {
     // we generate all necessary powers of 2 alongs with a given number S of additional non power of 2 steps
-    auto is_power_of_two = [](int32_t value) -> bool {
-      return __builtin_popcount(value) == 1;
-    };
-
     std::unordered_map<int32_t, std::vector<int32_t>> naf_cache;
     for (auto &x : rotations_steps_vec)
       naf_cache[x] = naf(x);
@@ -98,9 +116,13 @@ std::vector<int> RotationKeySelctionPass::get_unique_rotation_steps()
     while (total_number_of_keys > number_of_rotation_keys_threshold)
     {
       int32_t key_with_minimal_loss = rotations_steps_vec.back();
-      steps_to_rewrite.insert(key_with_minimal_loss);
+
+      if (is_power_of_two(key_with_minimal_loss) == false)
+        steps_to_rewrite.insert(key_with_minimal_loss);
+
       rotations_steps_vec.pop_back();
       total_number_of_keys -= 1;
+
       for (auto &power_of_2_step : naf_cache[key_with_minimal_loss])
       {
         if (powers_of_2_steps.find(power_of_2_step) == powers_of_2_steps.end())
@@ -110,7 +132,7 @@ std::vector<int> RotationKeySelctionPass::get_unique_rotation_steps()
       }
     }
 
-    // normalize to increase cse chances
+    // sort in descending order to increase chances of CSE, this greedy decision was made based on observation
     for (auto &step : steps_to_rewrite)
       std::sort(naf_cache[step].begin(), naf_cache[step].end(), std::greater<int32_t>());
 
@@ -118,50 +140,41 @@ std::vector<int> RotationKeySelctionPass::get_unique_rotation_steps()
       rotations_steps_vec.push_back(e.first);
 
     // we do a rewrite pass for rotation steps in steps_to_rewrite
-    for (auto &node : sorted_nodes)
+    for (auto &node : targeted_rotation_nodes)
     {
-      if (node->is_operation_node() == false)
-        continue;
-
-      if (rotation_intruction_set.find(node->get_opcode()) == rotation_intruction_set.end())
-        continue;
-
       auto &operands = node->get_operands();
       std::string steps_raw_data;
-      if (operands.size() != 2)
-        throw("rotation instruction with more than 2 operands in get_unique_rotation_steps function");
 
       if (operands[0]->get_term_type() == ir::rawDataType)
       {
         steps_raw_data = operands[0]->get_label();
       }
-      else if (operands[1]->get_term_type() == ir::rawDataType)
+      else
       {
         steps_raw_data = operands[1]->get_label();
       }
-      else
-        throw("one of rotation operands must be a rawDataType in get_unique_rotation_steps function");
 
       int32_t rotation_step = std::stoi(steps_raw_data);
 
       if (steps_to_rewrite.find(rotation_step) != steps_to_rewrite.end())
       {
         /*
-        this rotation step needs to be written in naf because it doesn't exists in rotations_step_vec while its naf
-        components are there
+          this rotation step needs to be written in naf because it doesn't exists in rotations_step_vec while its naf
+          components are there
         */
         std::vector<int32_t> naf_components = naf_cache[rotation_step];
         rewrite_rotation_node_with_naf(node, naf_components);
       }
     }
-
-    return rotations_steps_vec;
+    program->set_rotations_steps(rotations_steps_vec);
+    return;
   }
 }
 
 void RotationKeySelctionPass::rewrite_rotation_node_with_naf(
   const ir::Program::Ptr &node, const std::vector<int32_t> naf_components)
 {
+
   ir::Program::Ptr input_node;
   if (node->get_operands()[0]->get_term_type() == ir::ciphertextType)
     input_node = node->get_operands()[0];
@@ -170,7 +183,6 @@ void RotationKeySelctionPass::rewrite_rotation_node_with_naf(
 
   for (size_t i = 0; i < naf_components.size(); i++)
   {
-
     std::string rotation_step = std::to_string(naf_components[i]);
     ir::Program::Ptr rotation_step_node = std::make_shared<ir::Term>(rotation_step, ir::TermType::rawDataType);
     ir::Program::Ptr node_to_rewrite_with = program->insert_operation_node_in_dataflow(

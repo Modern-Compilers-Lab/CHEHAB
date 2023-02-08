@@ -28,7 +28,7 @@ public:
     scheme dependent as one might guess, it may differ from one implemention to another while the core idea is still the
     same (i.e, Galois Automorphisms).
   */
-  std::vector<int> get_unique_rotation_steps();
+  void collect_program_rotations_steps();
 };
 
 } // namespace fheco_passes

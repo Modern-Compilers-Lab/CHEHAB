@@ -90,7 +90,8 @@ private:
 
   size_t plain_modulus;
 
-  // size_t dimension;
+  // rotation steps in the program, this vector will be empty until rotation keys selection pass
+  std::vector<int32_t> rotations_steps;
 
 public:
   using Ptr = std::shared_ptr<Term>;
@@ -182,6 +183,10 @@ public:
   bool is_tracked_object(const std::string &label);
 
   void insert_created_node_in_dataflow(const Ptr &node);
+
+  void set_rotations_steps(std::vector<int32_t> &steps) { rotations_steps = steps; }
+
+  const std::vector<int32_t> &get_rotations_steps() const { return rotations_steps; }
 };
 
 } // namespace ir
