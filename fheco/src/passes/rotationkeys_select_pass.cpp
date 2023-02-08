@@ -187,7 +187,10 @@ void RotationKeySelctionPass::rewrite_rotation_node_with_naf(
     int32_t rotation_step = naf_components[i]; // a power of 2 rotation step
     if (
       program->get_targeted_backend() == fhecompiler::Backend::SEAL &&
-      rotation_step == (encryption_params->poly_modulus_degree >> 1))
+      std::abs(rotation_step) == (encryption_params->poly_modulus_degree >> 1))
+      continue;
+
+    else if (std::abs(rotation_step) == (encryption_params->poly_modulus_degree))
       continue;
 
     std::string rotation_step_raw = std::to_string(rotation_step);
