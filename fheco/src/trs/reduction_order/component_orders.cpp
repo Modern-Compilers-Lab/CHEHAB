@@ -46,17 +46,24 @@ relation_type he_op_class_order(
 
 relation_type he_rotation_steps_order(const MatchingTerm &lhs, const MatchingTerm &rhs)
 {
-  cout << "rotation steps domain: 0 <= step < nb_slots" << endl;
+  cout << "rotation steps domain (0 <= step < nb_slots) predicates:" << endl;
+  MatchingTerm tmp = lhs || rhs;
+  auto steps_terms = get_rotation_steps_terms(tmp);
+  for (const MatchingTerm &e : steps_terms)
+  {
+    auto [step_folded_const, step_vars_occ] = fold_raw_data_term(e);
+    auto cond1 = create_reduced_exprs(step_vars_occ, step_folded_const, {}, 0);
+    auto cond2 = create_reduced_exprs(step_vars_occ, step_folded_const, {{"nb_slots", 1}}, 0);
+    cout << get<0>(cond1) << " >= " << get<1>(cond1) << " && " << get<0>(cond2) << " < " << get<1>(cond2) << endl;
+  }
 
   term_feature_map lhs_cipher_vars_occ = count_leaves_class_occ(lhs, &is_ciphertext);
   term_feature_map rhs_cipher_vars_occ = count_leaves_class_occ(rhs, &is_ciphertext);
   if (term_feature_map_order(lhs_cipher_vars_occ, rhs_cipher_vars_occ) == relation_type::lt)
     return relation_type::lt;
 
-  term_feature_map lhs_steps_vars_coeffs;
-  int lhs_folded_const = fold_he_rotation_steps(lhs, lhs_steps_vars_coeffs);
-  term_feature_map rhs_steps_vars_coeffs;
-  int rhs_folded_const = fold_he_rotation_steps(rhs, rhs_steps_vars_coeffs);
+  auto [lhs_folded_const, lhs_steps_vars_coeffs] = fold_he_rotation_steps(lhs);
+  auto [rhs_folded_const, rhs_steps_vars_coeffs] = fold_he_rotation_steps(rhs);
   relation_type coeffs_rel = term_feature_map_order(lhs_steps_vars_coeffs, rhs_steps_vars_coeffs);
 
   if (
@@ -66,48 +73,9 @@ relation_type he_rotation_steps_order(const MatchingTerm &lhs, const MatchingTer
 
   if (coeffs_rel == relation_type::lt || lhs_folded_const < rhs_folded_const)
   {
-    reduce_feature_map_order(lhs_steps_vars_coeffs, rhs_steps_vars_coeffs);
-    string lhs_sum_expr, rhs_sum_expr;
-    string plus_sign = " + ";
-    for (const auto &e : lhs_steps_vars_coeffs)
-    {
-      auto create_var_expr = [&plus_sign](const string &var_id, int coeff) -> string {
-        if (coeff == 0)
-          return "";
-
-        if (coeff == 1)
-          return var_id + plus_sign;
-
-        return to_string(coeff) + "*" + var_id + plus_sign;
-      };
-      string var_id = e.first;
-      lhs_sum_expr += create_var_expr(var_id, lhs_steps_vars_coeffs[var_id]);
-      rhs_sum_expr += create_var_expr(var_id, rhs_steps_vars_coeffs[var_id]);
-    }
-    auto finalize_expr_without_folded_const = [&plus_sign](string &expr) -> void {
-      if (expr.length() != 0)
-        expr.erase(expr.length() - plus_sign.length());
-      else
-        expr += "0";
-    };
-
-    if (lhs_folded_const > rhs_folded_const)
-    {
-      lhs_sum_expr += to_string(lhs_folded_const - rhs_folded_const);
-      finalize_expr_without_folded_const(rhs_sum_expr);
-    }
-    else if (lhs_folded_const < rhs_folded_const)
-    {
-      rhs_sum_expr += to_string(rhs_folded_const - lhs_folded_const);
-      finalize_expr_without_folded_const(lhs_sum_expr);
-    }
-    else
-    {
-      finalize_expr_without_folded_const(lhs_sum_expr);
-      finalize_expr_without_folded_const(rhs_sum_expr);
-    }
-    cout << "rotation steps sum predicate: " << lhs_sum_expr << " > " << rhs_sum_expr << " ?" << endl;
-
+    auto [lhs_sum_expr, rhs_sum_expr] =
+      create_reduced_exprs(lhs_steps_vars_coeffs, lhs_folded_const, rhs_steps_vars_coeffs, rhs_folded_const);
+    cout << "rotation steps sum predicate: " << lhs_sum_expr << " > " << rhs_sum_expr << endl;
     return relation_type::lt;
   }
 
