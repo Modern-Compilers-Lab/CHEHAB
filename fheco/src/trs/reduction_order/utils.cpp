@@ -5,9 +5,14 @@ using namespace std;
 
 namespace fheco_trs
 {
-std::string create_key(const MatchingTerm &term)
+std::string make_key(const MatchingTerm &term)
 {
   return term.get_label().has_value() ? *term.get_label() : "#" + to_string(term.get_term_id());
+}
+
+int64_t get_term_value(const MatchingTerm &term)
+{
+  return get<int64_t>(get<ir::ScalarValue>(*term.get_value()));
 }
 
 term_feature_map cipher_vars_xdepths(const MatchingTerm &term)
@@ -15,7 +20,7 @@ term_feature_map cipher_vars_xdepths(const MatchingTerm &term)
   if (is_leaf(term))
   {
     if (is_ciphertext(term))
-      return {{create_key(term), 0}};
+      return {{make_key(term), 0}};
 
     return {{}};
   }
@@ -77,7 +82,7 @@ term_feature_map count_leaves_class_occ(const MatchingTerm &term, function<bool(
     {
       if (node_checker(term))
       {
-        string key = create_key(term);
+        string key = make_key(term);
         auto it = result.find(key);
         if (it == result.end())
           result.insert({key, 1});
@@ -113,77 +118,106 @@ size_t count_nodes_class(const MatchingTerm &term, function<bool(const MatchingT
   return result;
 }
 
-int fold_he_rotation_steps(const MatchingTerm &term, term_feature_map &vars_coeffs)
+int64_t fold_he_rotation_steps(const MatchingTerm &term, term_feature_map &vars_coeffs)
 {
-  function<term_feature_map(const MatchingTerm &, int &)> process_step_term =
-    [&process_step_term](const MatchingTerm &term, int &folded_const) -> term_feature_map {
+  function<term_feature_map(const MatchingTerm &, int64_t &, int64_t)> process_step_term =
+    [&process_step_term](const MatchingTerm &term, int64_t &folded_const, int64_t coeff) -> term_feature_map {
     if (term.get_term_type() != TermType::rawDataType)
       throw logic_error("invalid rotation step");
 
     if (is_leaf(term))
     {
       if (term.get_value().has_value())
-        folded_const += get<int64_t>(get<ir::ScalarValue>(*term.get_value()));
+        folded_const += get_term_value(term) * coeff;
       else
-        return {{create_key(term), 1}};
+        return {{make_key(term), coeff}};
     }
 
     OpCode opcode = term.get_opcode();
+    const vector<MatchingTerm> &operands = term.get_operands();
     term_feature_map vars_coeffs;
-    int operand_idx = 0;
-    for (const MatchingTerm &operand : term.get_operands())
+    if (opcode == OpCode::mul)
     {
-      for (const auto &e : process_step_term(operand, folded_const))
+      int raw_coeff_idx = 0;
+      while (raw_coeff_idx < 2)
       {
-        auto it = vars_coeffs.find(e.first);
-        if (opcode == OpCode::add)
+        if (is_leaf(operands[raw_coeff_idx]) && operands[raw_coeff_idx].get_value().has_value())
+          break;
+        ++raw_coeff_idx;
+      }
+      if (raw_coeff_idx < 2)
+      {
+        term_feature_map operand_vars_coeffs = process_step_term(
+          operands[(raw_coeff_idx + 1) % 2], folded_const, coeff * get_term_value(operands[raw_coeff_idx]));
+        for (const auto &e : operand_vars_coeffs)
         {
+          auto it = vars_coeffs.find(e.first);
           if (it == vars_coeffs.end())
             vars_coeffs.insert(e);
           else
             it->second += e.second;
         }
-        else if (opcode == OpCode::sub)
+      }
+      else
+        throw logic_error("unsupported rotation step term");
+    }
+    else
+    {
+      int operand_idx = 0;
+      for (const MatchingTerm &operand : operands)
+      {
+        for (const auto &e : process_step_term(operand, folded_const, coeff))
         {
-          if (operand_idx == 0)
+          auto it = vars_coeffs.find(e.first);
+          if (opcode == OpCode::add)
           {
             if (it == vars_coeffs.end())
               vars_coeffs.insert(e);
             else
               it->second += e.second;
           }
-          else
+          else if (opcode == OpCode::sub)
+          {
+            if (operand_idx == 0)
+            {
+              if (it == vars_coeffs.end())
+                vars_coeffs.insert(e);
+              else
+                it->second += e.second;
+            }
+            else
+            {
+              if (it == vars_coeffs.end())
+                vars_coeffs.insert({e.first, -e.second});
+              else
+                it->second -= e.second;
+            }
+          }
+          else if (opcode == OpCode::negate)
           {
             if (it == vars_coeffs.end())
               vars_coeffs.insert({e.first, -e.second});
             else
               it->second -= e.second;
           }
-        }
-        else if (opcode == OpCode::negate)
-        {
-          if (it == vars_coeffs.end())
-            vars_coeffs.insert({e.first, -e.second});
           else
-            it->second -= e.second;
+            throw logic_error("unsupported rotation step term");
         }
-        else
-          throw logic_error("unsupported rotation step term");
+        ++operand_idx;
       }
-      ++operand_idx;
     }
     return vars_coeffs;
   };
 
-  function<void(const MatchingTerm &, term_feature_map &, int &)> core_fold_he_rotation_steps =
-    [&process_step_term,
-     &core_fold_he_rotation_steps](const MatchingTerm &term, term_feature_map &vars_coeffs, int &folded_const) -> void {
+  function<void(const MatchingTerm &, term_feature_map &, int64_t &)> core_fold_he_rotation_steps =
+    [&process_step_term, &core_fold_he_rotation_steps](
+      const MatchingTerm &term, term_feature_map &vars_coeffs, int64_t &folded_const) -> void {
     bool he_rot = is_he_rotation(term);
     for (const MatchingTerm &operand : term.get_operands())
     {
       if (he_rot && operand.get_term_type() == TermType::rawDataType)
       {
-        term_feature_map operand_result = process_step_term(operand, folded_const);
+        term_feature_map operand_result = process_step_term(operand, folded_const, 1);
         for (const auto &e : operand_result)
         {
           auto it = vars_coeffs.find(e.first);
@@ -198,7 +232,7 @@ int fold_he_rotation_steps(const MatchingTerm &term, term_feature_map &vars_coef
     }
   };
 
-  int folded_const = 0;
+  int64_t folded_const = 0;
   core_fold_he_rotation_steps(term, vars_coeffs, folded_const);
   return folded_const;
 }
@@ -219,6 +253,29 @@ relation_type term_feature_map_order(const term_feature_map &lhs, const term_fea
     }
   }
   return eq ? relation_type::eq : relation_type::gt;
+}
+
+void reduce_feature_map_order(term_feature_map &lhs, term_feature_map &rhs)
+{
+  for (auto &e : lhs)
+  {
+    string var_id = e.first;
+    int lhs_coeff = e.second;
+    auto it = rhs.find(var_id);
+    if (it == rhs.end())
+      rhs.insert({var_id, 0});
+    int rhs_coeff = rhs[var_id];
+    if (lhs_coeff > rhs_coeff)
+    {
+      e.second -= rhs_coeff;
+      rhs[var_id] -= rhs_coeff;
+    }
+    else
+    {
+      e.second -= lhs_coeff;
+      rhs[var_id] -= lhs_coeff;
+    }
+  }
 }
 
 bool is_leaf(const MatchingTerm &term)

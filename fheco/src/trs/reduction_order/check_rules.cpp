@@ -14,7 +14,7 @@ int main()
   MatchingTerm y("y", TermType::ciphertextType);
   MatchingTerm z("z", TermType::ciphertextType);
   MatchingTerm u("u", TermType::ciphertextType);
-  MatchingTerm n(fheco_trs::TermType::rawDataType);
+  MatchingTerm n("n", fheco_trs::TermType::rawDataType);
   MatchingTerm m("m", fheco_trs::TermType::rawDataType);
 
   MatchingTerm raw1(1);
@@ -54,7 +54,7 @@ int main()
   int rule_id = 0;
   for (const RewriteRule &rule : ruleset)
   {
-    cout << "rule" << rule_id << ": ";
+    cout << "rule" << rule_id << ":" << endl;
     relation_type rel;
     int order_id = 0;
     for (const auto &order : component_orders)
@@ -70,7 +70,7 @@ int main()
       cout << "did not pass with order" << order_id;
     else
       cout << "undefined order";
-    cout << endl;
+    cout << endl << string(50, '-') << endl;
     ++rule_id;
   }
 }

@@ -18,7 +18,9 @@ enum class relation_type
 
 using term_feature_map = std::unordered_map<std::string, int>;
 
-std::string create_key(const MatchingTerm &term);
+std::string make_key(const MatchingTerm &term);
+
+int64_t get_term_value(const MatchingTerm &term);
 
 term_feature_map cipher_vars_xdepths(const MatchingTerm &term);
 
@@ -29,9 +31,11 @@ term_feature_map count_leaves_class_occ(
 
 std::size_t count_nodes_class(const MatchingTerm &term, std::function<bool(const MatchingTerm &)> node_checker);
 
-int fold_he_rotation_steps(const MatchingTerm &term, term_feature_map &vars_coeffs);
+int64_t fold_he_rotation_steps(const MatchingTerm &term, term_feature_map &vars_coeffs);
 
 relation_type term_feature_map_order(const term_feature_map &lhs, const term_feature_map &rhs);
+
+void reduce_feature_map_order(term_feature_map &lhs, term_feature_map &rhs);
 
 bool is_leaf(const MatchingTerm &term);
 
