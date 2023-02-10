@@ -1,4 +1,5 @@
 #include "fhecompiler/component_orders.hpp"
+#include "fhecompiler/program.hpp"
 #include "fhecompiler/rewrite_rule.hpp"
 #include "fhecompiler/utils.hpp"
 #include <functional>
@@ -14,6 +15,9 @@ int main()
   MatchingTerm y("y", TermType::ciphertextType);
   MatchingTerm z("z", TermType::ciphertextType);
   MatchingTerm u("u", TermType::ciphertextType);
+
+  MatchingTerm a("a", TermType::scalarType);
+
   MatchingTerm n("n", fheco_trs::TermType::rawDataType);
   MatchingTerm m("m", fheco_trs::TermType::rawDataType);
 
@@ -32,10 +36,24 @@ int main()
     {(u + x * y) - z * y, (x - z) * y},
     {x * raw0, raw0},
     {x * raw1, x},
-    {x * (y * (z * u)), (x * y) * (z * u)}};
+    {(x - y) + (y - z), x - z},
+    // {x * (y * (z * u)), (x * y) * (z * u)},
+    {a * x,
+     [&x, &a](const ir::Program *program, const RewriteRule::matching_term_ir_node_map &matching_map) -> MatchingTerm {
+       MatchingTerm rhs;
+       auto it = matching_map.find(a.get_term_id());
+       auto table_entry = program->get_const_entry_form_constants_table(it->second->get_label());
+       int64_t a_value = get<int64_t>(get<ir::ScalarValue>(*(*table_entry).get().get_const_entry_value().value));
+       for (int64_t i = 0; i < a_value; ++i)
+         rhs = rhs + x;
+       return rhs;
+     }}};
 
   vector<function<relation_type(const MatchingTerm &, const MatchingTerm &)>> component_orders{
     &xdepth_order,
+    [](const MatchingTerm &lhs, const MatchingTerm &rhs) -> relation_type {
+      return leaves_class_order(lhs, rhs, &is_ciphertext);
+    },
     [](const MatchingTerm &lhs, const MatchingTerm &rhs) -> relation_type {
       return he_op_class_order(lhs, rhs, &is_he_mul);
     },
@@ -55,11 +73,18 @@ int main()
   for (const RewriteRule &rule : ruleset)
   {
     cout << "rule" << rule_id << ":" << endl;
-    relation_type rel;
+    relation_type rel = relation_type::eq;
     int order_id = 0;
     for (const auto &order : component_orders)
     {
-      rel = order(rule.get_lhs(), rule.get_rhs());
+      MatchingTerm rhs;
+      if (rule.get_static_rhs().has_value())
+        rel = order(rule.get_lhs(), *rule.get_static_rhs());
+      else
+      {
+        cout << "need invariants" << endl;
+        break;
+      }
       if (rel != relation_type::eq)
         break;
       ++order_id;
@@ -71,6 +96,8 @@ int main()
     else
       cout << "undefined order";
     cout << endl << string(50, '-') << endl;
+    if (rel != relation_type::gt)
+      break;
     ++rule_id;
   }
 }

@@ -79,6 +79,16 @@ std::optional<std::reference_wrapper<ConstantTableEntry>> Program::get_entry_for
   return std::nullopt;
 }
 
+std::optional<std::reference_wrapper<const ConstantTableEntry>> Program::get_const_entry_form_constants_table(
+  const std::string &search_key) const
+{
+  // search key is the label/symbol of the object
+  auto it = constants_table.find(search_key);
+  if (it != constants_table.end())
+    return (*it).second;
+  return std::nullopt;
+}
+
 bool Program::insert_new_entry_from_existing(std::string new_entry_key, std::string exsisting_entry_key)
 {
   auto existing_entry_opt = get_entry_form_constants_table(exsisting_entry_key);

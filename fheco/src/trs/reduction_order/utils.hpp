@@ -28,9 +28,9 @@ term_feature_map cipher_vars_xdepths(const MatchingTerm &term);
 std::size_t sum_cipher_leaves_xdepth(const MatchingTerm &term);
 
 term_feature_map count_leaves_class_occ(
-  const MatchingTerm &term, std::function<bool(const MatchingTerm &)> node_checker);
+  const MatchingTerm &term, const std::function<bool(const MatchingTerm &)> &node_checker);
 
-std::size_t count_nodes_class(const MatchingTerm &term, std::function<bool(const MatchingTerm &)> node_checker);
+std::size_t count_nodes_class(const MatchingTerm &term, const std::function<bool(const MatchingTerm &)> &node_checker);
 
 std::tuple<int64_t, term_feature_map> fold_he_rotation_steps(const MatchingTerm &term);
 

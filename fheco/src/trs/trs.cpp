@@ -7,8 +7,7 @@
 namespace fheco_trs
 {
 
-double TRS::arithmetic_eval(
-  const MatchingTerm &term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map)
+double TRS::arithmetic_eval(const MatchingTerm &term, RewriteRule::matching_term_ir_node_map &matching_map)
 {
   /*
     This method evaluates arithmetic expressions that involve scalarType and rawDataType
@@ -71,7 +70,7 @@ double TRS::arithmetic_eval(
 }
 
 bool TRS::evaluate_boolean_matching_term(
-  const MatchingTerm &matching_term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map)
+  const MatchingTerm &matching_term, RewriteRule::matching_term_ir_node_map &matching_map)
 {
 
   // there could be arithmetic expressions but at this level all needs to be evaluated
@@ -228,7 +227,7 @@ bool TRS::evaluate_boolean_matching_term(
 
 std::vector<MatchingPair> TRS::substitute(
   std::shared_ptr<ir::Term> ir_node, const MatchingTerm &rewrite_rule_rhs,
-  std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map)
+  RewriteRule::matching_term_ir_node_map &matching_map)
 {
   /*
     We call this function after ir_node is matched with lhs of rewrite rule
@@ -252,14 +251,14 @@ std::vector<MatchingPair> TRS::substitute(
 }
 
 std::shared_ptr<ir::Term> TRS::make_ir_node_from_matching_term(
-  const MatchingTerm &matching_term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map)
+  const MatchingTerm &matching_term, RewriteRule::matching_term_ir_node_map &matching_map)
 {
   std::vector<MatchingPair> dummy_vector;
   return make_ir_node_from_matching_term(matching_term, matching_map, dummy_vector);
 }
 
 std::shared_ptr<ir::Term> TRS::make_ir_node_from_matching_term(
-  const MatchingTerm &matching_term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map,
+  const MatchingTerm &matching_term, RewriteRule::matching_term_ir_node_map &matching_map,
   std::vector<MatchingPair> &new_constants_matching_pairs)
 {
   auto it = matching_map.find(matching_term.get_term_id());
@@ -305,10 +304,10 @@ std::shared_ptr<ir::Term> TRS::make_ir_node_from_matching_term(
   }
 }
 
-std::optional<std::unordered_map<size_t, std::shared_ptr<ir::Term>>> TRS::match_ir_node(
+std::optional<RewriteRule::matching_term_ir_node_map> TRS::match_ir_node(
   std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term)
 {
-  std::unordered_map<size_t, std::shared_ptr<ir::Term>> macthing_map;
+  RewriteRule::matching_term_ir_node_map macthing_map;
   if (match_term(ir_node, matching_term, macthing_map))
     return macthing_map;
   else
@@ -317,7 +316,7 @@ std::optional<std::unordered_map<size_t, std::shared_ptr<ir::Term>>> TRS::match_
 
 bool TRS::match_term(
   std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term,
-  std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map)
+  RewriteRule::matching_term_ir_node_map &matching_map)
 {
 
   // Order of if statements is important !!!
@@ -421,7 +420,7 @@ std::vector<MatchingPair> TRS::apply_rule_on_ir_node(
       if (evaluate_boolean_matching_term(*(rule.get_rewrite_condition()), *matching_map))
       {
         is_rule_applied = true;
-        return substitute(ir_node, rule.get_rhs(), *matching_map);
+        return substitute(ir_node, rule.get_rhs(program, *matching_map), *matching_map);
       }
       else
       {
@@ -431,7 +430,7 @@ std::vector<MatchingPair> TRS::apply_rule_on_ir_node(
     else
     {
       is_rule_applied = true;
-      return substitute(ir_node, rule.get_rhs(), *matching_map);
+      return substitute(ir_node, rule.get_rhs(program, *matching_map), *matching_map);
     }
   }
   else

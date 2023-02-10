@@ -32,28 +32,28 @@ class TRS
 private:
   ir::Program *program;
 
-  std::optional<std::unordered_map<size_t, std::shared_ptr<ir::Term>>> match_ir_node(
+  std::optional<RewriteRule::matching_term_ir_node_map> match_ir_node(
     std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term);
 
   bool match_term(
     std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term,
-    std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map);
+    RewriteRule::matching_term_ir_node_map &matching_map);
 
-  double arithmetic_eval(const MatchingTerm &term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map);
+  double arithmetic_eval(const MatchingTerm &term, RewriteRule::matching_term_ir_node_map &matching_map);
 
   bool evaluate_boolean_matching_term(
-    const MatchingTerm &matching_term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map);
+    const MatchingTerm &matching_term, RewriteRule::matching_term_ir_node_map &matching_map);
 
   std::vector<MatchingPair> substitute(
     std::shared_ptr<ir::Term> ir_node, const MatchingTerm &rewrite_rule_rhs,
-    std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map);
+    RewriteRule::matching_term_ir_node_map &matching_map);
 
   std::shared_ptr<ir::Term> make_ir_node_from_matching_term(
-    const MatchingTerm &matching_term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map,
+    const MatchingTerm &matching_term, RewriteRule::matching_term_ir_node_map &matching_map,
     std::vector<MatchingPair> &new_constants_matching_pairs);
 
   std::shared_ptr<ir::Term> make_ir_node_from_matching_term(
-    const MatchingTerm &matching_term, std::unordered_map<size_t, std::shared_ptr<ir::Term>> &matching_map);
+    const MatchingTerm &matching_term, RewriteRule::matching_term_ir_node_map &matching_map);
 
   std::shared_ptr<ir::Term> fold_term(const std::shared_ptr<ir::Term> &const_term);
 

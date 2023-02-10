@@ -43,7 +43,7 @@ public:
 
   static MatchingTerm fold(MatchingTerm);
 
-  std::optional<bool> get_fold_flag() const { return fold_flag; }
+  const std::optional<bool> &get_fold_flag() const { return fold_flag; }
 
   void set_opcode(fheco_trs::OpCode _opcode) { opcode = _opcode; }
 
@@ -59,8 +59,8 @@ public:
   size_t get_term_id() const { return id; }
   OpCode get_opcode() const { return opcode; }
   fheco_trs::TermType get_term_type() const { return term_type; }
-  std::optional<ir::ConstantValue> get_value() const { return value; }
-  std::optional<std::string> get_label() const { return label; }
+  const std::optional<ir::ConstantValue> &get_value() const { return value; }
+  const std::optional<std::string> &get_label() const { return label; }
 };
 
 /*

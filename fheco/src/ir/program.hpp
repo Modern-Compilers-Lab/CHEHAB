@@ -66,6 +66,8 @@ public:
 
   EntryValue &get_entry_value() { return entry_value; }
 
+  const EntryValue &get_const_entry_value() const { return entry_value; }
+
   ConstantTableEntryType get_entry_type() const { return this->entry_type; }
 };
 
@@ -130,6 +132,7 @@ public:
   void update_tag_value_in_constants_table_entry(const std::string &entry_key, const std::string &tag_value);
 
   std::string get_tag_value_in_constants_table_entry(const std::string &entry_key);
+
   std::optional<std::string> get_tag_value_in_constants_table_entry_if_exists(const std::string &entry_key);
 
   void set_node_operands(const std::string &node_label, const std::vector<Ptr> &new_opreands);
@@ -163,6 +166,9 @@ public:
   const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const;
 
   std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(const std::string &);
+
+  std::optional<std::reference_wrapper<const ConstantTableEntry>> get_const_entry_form_constants_table(
+    const std::string &) const;
 
   const std::string &get_program_tag() const { return this->program_tag; }
 

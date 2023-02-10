@@ -74,12 +74,14 @@ size_t sum_cipher_leaves_xdepth(const MatchingTerm &term)
   return result;
 }
 
-term_feature_map count_leaves_class_occ(const MatchingTerm &term, function<bool(const MatchingTerm &)> node_checker)
+term_feature_map count_leaves_class_occ(
+  const MatchingTerm &term, const function<bool(const MatchingTerm &)> &node_checker)
 {
-  function<void(const MatchingTerm &, function<bool(const MatchingTerm &)>, term_feature_map &)>
-    kernel_count_leaves_class_occ =
-      [&kernel_count_leaves_class_occ](
-        const MatchingTerm &term, function<bool(const MatchingTerm &)> node_checker, term_feature_map &result) -> void {
+  function<void(const MatchingTerm &, const function<bool(const MatchingTerm &)> &, term_feature_map &)>
+    kernel_count_leaves_class_occ = [&kernel_count_leaves_class_occ](
+                                      const MatchingTerm &term,
+                                      const function<bool(const MatchingTerm &)> &node_checker,
+                                      term_feature_map &result) -> void {
     if (is_leaf(term))
     {
       if (node_checker(term))
@@ -103,11 +105,12 @@ term_feature_map count_leaves_class_occ(const MatchingTerm &term, function<bool(
   return result;
 }
 
-size_t count_nodes_class(const MatchingTerm &term, function<bool(const MatchingTerm &)> node_checker)
+size_t count_nodes_class(const MatchingTerm &term, const function<bool(const MatchingTerm &)> &node_checker)
 {
-  function<void(const MatchingTerm &, function<bool(const MatchingTerm &)>, size_t &)> kernel_count_nodes_class =
-    [&kernel_count_nodes_class](
-      const MatchingTerm &term, function<bool(const MatchingTerm &)> node_checker, size_t &result) -> void {
+  function<void(const MatchingTerm &, const function<bool(const MatchingTerm &)> &, size_t &)>
+    kernel_count_nodes_class =
+      [&kernel_count_nodes_class](
+        const MatchingTerm &term, const function<bool(const MatchingTerm &)> &node_checker, size_t &result) -> void {
     if (node_checker(term))
       ++result;
 
@@ -293,6 +296,8 @@ relation_type term_feature_map_order(const term_feature_map &lhs, const term_fea
       if (e.second > it->second)
         eq = false;
     }
+    else
+      eq = false;
   }
   return eq ? relation_type::eq : relation_type::gt;
 }

@@ -28,7 +28,7 @@ relation_type xdepth_order(const MatchingTerm &lhs, const MatchingTerm &rhs)
 }
 
 relation_type he_op_class_order(
-  const MatchingTerm &lhs, const MatchingTerm &rhs, function<bool(const MatchingTerm &)> op_class_checker)
+  const MatchingTerm &lhs, const MatchingTerm &rhs, const function<bool(const MatchingTerm &)> &op_class_checker)
 {
   term_feature_map lhs_cipher_vars_occ = count_leaves_class_occ(lhs, &is_ciphertext);
   term_feature_map rhs_cipher_vars_occ = count_leaves_class_occ(rhs, &is_ciphertext);
@@ -80,6 +80,14 @@ relation_type he_rotation_steps_order(const MatchingTerm &lhs, const MatchingTer
   }
 
   return relation_type::eq;
+}
+
+relation_type leaves_class_order(
+  const MatchingTerm &lhs, const MatchingTerm &rhs, const function<bool(const MatchingTerm &)> &leaf_checker)
+{
+  term_feature_map lhs_cipher_vars_occ = count_leaves_class_occ(lhs, leaf_checker);
+  term_feature_map rhs_cipher_vars_occ = count_leaves_class_occ(rhs, leaf_checker);
+  return term_feature_map_order(lhs_cipher_vars_occ, rhs_cipher_vars_occ);
 }
 
 } // namespace fheco_trs
