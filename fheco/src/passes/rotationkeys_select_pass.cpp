@@ -1,4 +1,5 @@
 #include "rotationkeys_select_pass.hpp"
+#include "ir_utils.hpp"
 #include "passes_const.hpp"
 #include <algorithm>
 
@@ -147,18 +148,7 @@ void RotationKeySelctionPass::collect_program_rotations_steps()
     for (auto &node : targeted_rotation_nodes)
     {
       auto &operands = node->get_operands();
-      std::string steps_raw_data;
-
-      if (operands[0]->get_term_type() == ir::rawDataType)
-      {
-        steps_raw_data = operands[0]->get_label();
-      }
-      else
-      {
-        steps_raw_data = operands[1]->get_label();
-      }
-
-      int32_t rotation_step = std::stoi(steps_raw_data);
+      int32_t rotation_step = ir::get_rotation_step(node);
 
       if (steps_to_rewrite.find(rotation_step) != steps_to_rewrite.end())
       {
@@ -171,6 +161,7 @@ void RotationKeySelctionPass::collect_program_rotations_steps()
       }
     }
     program->set_rotations_steps(rotations_steps_vec);
+
     return;
   }
 }
@@ -187,7 +178,6 @@ void RotationKeySelctionPass::rewrite_rotation_node_with_naf(
 
   for (size_t i = 0; i < naf_components.size(); i++)
   {
-
     int32_t rotation_step = naf_components[i]; // a power of 2 rotation step
     if (
       program->get_targeted_backend() == fhecompiler::Backend::SEAL &&
@@ -200,8 +190,8 @@ void RotationKeySelctionPass::rewrite_rotation_node_with_naf(
     std::string rotation_step_raw = std::to_string(rotation_step);
     ir::Program::Ptr rotation_step_node = std::make_shared<ir::Term>(rotation_step_raw, ir::TermType::rawDataType);
     ir::Program::Ptr node_to_rewrite_with = program->insert_operation_node_in_dataflow(
-      node->get_opcode(), std::vector<ir::Program::Ptr>({input_node, rotation_step_node}), "", ir::ciphertextType);
-    node_to_rewrite_with->set_a_default_label();
+      node->get_opcode(), std::vector<ir::Program::Ptr>({input_node, rotation_step_node}), "",
+      ir::TermType::ciphertextType);
 
     if (i == naf_components.size() - 1)
     {

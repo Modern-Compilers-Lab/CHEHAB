@@ -37,4 +37,8 @@ void cast_int_vector_to_double(const std::vector<int64_t> &int_vector, std::vect
 
 void cast_double_vector_to_int(const std::vector<double> &double_vector, std::vector<int64_t> &int_vector);
 
+ir::TermType deduce_ir_term_type(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs);
+
+int32_t get_rotation_step(const std::shared_ptr<ir::Term> &node);
+
 } // namespace ir

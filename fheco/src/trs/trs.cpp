@@ -277,9 +277,11 @@ std::shared_ptr<ir::Term> TRS::make_ir_node_from_matching_term(
     {
       operands.push_back(make_ir_node_from_matching_term(m_term_operand, matching_map, new_constants_matching_pairs));
     }
-    std::shared_ptr<ir::Term> ir_node =
-      std::make_shared<ir::Term>(opcode_mapping[matching_term.get_opcode()], operands, "");
-    ir_node->set_term_type(fheco_trs::term_type_map[matching_term.get_term_type()]);
+
+    std::shared_ptr<ir::Term> ir_node = program->insert_operation_node_in_dataflow(
+      opcode_mapping[matching_term.get_opcode()], operands, "",
+      fheco_trs::term_type_map[matching_term.get_term_type()]);
+
     ir_node->set_a_default_label();
 
     if (matching_term.get_fold_flag() == true)
@@ -409,6 +411,8 @@ std::vector<MatchingPair> TRS::apply_rule_on_ir_node(
   const std::shared_ptr<ir::Term> &ir_node, const RewriteRule &rule, bool &is_rule_applied)
 {
 
+  is_rule_applied = false;
+
   auto matching_map = match_ir_node(ir_node, rule.get_lhs());
   if (matching_map != std::nullopt)
   {
@@ -436,17 +440,20 @@ std::vector<MatchingPair> TRS::apply_rule_on_ir_node(
     return {};
 }
 
-bool TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const std::vector<RewriteRule> &rules)
+void TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const std::vector<RewriteRule> &rules)
 {
-  for (auto &rule : rules)
+  size_t curr_rule_index = 0;
+  while (curr_rule_index < rules.size())
   {
     /*
       new_nodes_matching_pairs supposed to contain matching pairs for constants only
     */
+
     bool was_rule_applied = false;
-    auto new_nodes_matching_pairs = apply_rule_on_ir_node(node, rule, was_rule_applied);
-    if (was_rule_applied)
+    auto &rule = rules[curr_rule_index];
+    do
     {
+      auto new_nodes_matching_pairs = apply_rule_on_ir_node(node, rule, was_rule_applied);
       for (auto &matching_pair : new_nodes_matching_pairs)
       {
         if (matching_pair.matching_term.get_value() == std::nullopt)
@@ -457,10 +464,11 @@ bool TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const st
           {matching_pair.ir_node->get_label(), *(matching_pair.matching_term.get_value())});
         program->insert_entry_in_constants_table({matching_pair.ir_node->get_label(), c_table_entry});
       }
-      return true;
-    }
+
+    } while (was_rule_applied == true);
+
+    curr_rule_index += 1;
   }
-  return false;
 }
 
 void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
@@ -470,11 +478,8 @@ void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
   {
     if (node->get_opcode() == ir::OpCode::undefined)
       continue;
-    while (true)
-    {
-      if (apply_rules_on_ir_node(node, rules) == false)
-        break;
-    }
+
+    apply_rules_on_ir_node(node, rules);
   }
 }
 

@@ -60,7 +60,7 @@ private:
   std::vector<MatchingPair> apply_rule_on_ir_node(
     const std::shared_ptr<ir::Term> &ir_node, const RewriteRule &rule, bool &is_rule_applied);
 
-  bool apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const std::vector<RewriteRule> &rules);
+  void apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const std::vector<RewriteRule> &rules);
 
 public:
   TRS(ir::Program *prgm) : program(prgm) {}

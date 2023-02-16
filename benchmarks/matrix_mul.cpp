@@ -1,27 +1,14 @@
 #include "fhecompiler/fhecompiler.hpp"
 
-int32_t clog(int32_t x)
-{
-  int32_t c = 0;
-  while (x > 1)
-  {
-    x /= 2;
-    c += 1;
-  }
-  return c;
-}
-
 inline fhecompiler::Ciphertext sum_all_slots(const fhecompiler::Ciphertext &x, int vector_size)
 {
   std::vector<fhecompiler::Ciphertext> rotated_ciphers = {x};
   fhecompiler::Ciphertext result = rotated_ciphers.back();
-  int32_t rotation_step = 1;
-  for (; rotation_step <= clog(vector_size) + 1;)
+  for (; vector_size > 0; vector_size--)
   {
-    fhecompiler::Ciphertext cipher_rotated = rotated_ciphers.back() << rotation_step;
+    fhecompiler::Ciphertext cipher_rotated = rotated_ciphers.back() << 1;
     result += cipher_rotated;
     rotated_ciphers.push_back(cipher_rotated);
-    rotation_step *= 2;
   }
   // result of sum will be in the first slot
   return result;
@@ -40,22 +27,19 @@ int main()
     std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
     std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
-    size_t N = 10;
-    size_t M = 10;
-    for (size_t i = 0; i < N; i++)
+    for (size_t i = 0; i < 10; i++)
     {
       std::vector<int64_t> line;
-      for (size_t j = 0; j < M; j++)
+      for (size_t j = 0; j < 10; j++)
       {
         line.push_back((i + 1) * (j + 1));
       }
       A.push_back(line);
     }
-
-    for (size_t i = 0; i < N; i++)
+    for (size_t i = 0; i < 10; i++)
     {
       std::vector<int64_t> line;
-      for (size_t j = 0; j < M; j++)
+      for (size_t j = 0; j < 10; j++)
       {
         line.push_back((i + 1) * (j + 1));
       }
@@ -96,7 +80,8 @@ int main()
         mask[0] = 1;
         fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_encrypted[j];
         fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product, A[0].size()) * mask;
-        temp_cipher >>= j;
+        if (j > 0)
+          temp_cipher >>= j;
         temp_ciphers.push_back(temp_cipher);
       }
       fhecompiler::Ciphertext c_line = temp_ciphers[0];

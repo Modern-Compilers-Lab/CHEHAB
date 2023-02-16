@@ -1,6 +1,7 @@
 #include "fhecompiler.hpp"
 #include "cse_pass.hpp"
 #include "draw_ir.hpp"
+#include "normalize_pass.hpp"
 #include "relin_pass.hpp"
 #include "rotationkeys_select_pass.hpp"
 #include "test/dummy_ruleset.hpp"
@@ -51,20 +52,29 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     }
   }
 
-  // utils::draw_ir(program, output_filename + "1.dot");
+  // utils::draw_ir(program, output_filename + "0.dot");
+
+  fheco_passes::CSE cse_pass(program);
+
+  fheco_passes::Normalizer normalizer(program);
+  normalizer.normalize();
+
+  utils::draw_ir(program, output_filename + "1.dot");
 
   fheco_trs::TRS trs(program);
-  fheco_passes::CSE cse_pass(program);
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset2);
-  cse_pass.apply_cse2(false);
 
-  fheco_passes::RelinPass relin_pass(program);
-  relin_pass.simple_relinearize();
+  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+  // trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+  cse_pass.apply_cse2(true);
 
+  // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
   fheco_passes::RotationKeySelctionPass rs_pass(program, params);
   rs_pass.collect_program_rotations_steps();
 
   cse_pass.apply_cse2(true);
+
+  fheco_passes::RelinPass relin_pass(program);
+  relin_pass.simple_relinearize();
 
   // utils::draw_ir(program, output_filename + "2.dot");
 

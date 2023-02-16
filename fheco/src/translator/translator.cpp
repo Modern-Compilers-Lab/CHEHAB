@@ -311,6 +311,9 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
   std::string lhs_identifier = get_identifier(operands[0]);
   std::string rhs_identifier = get_identifier(operands[1]);
 
+  if (lhs_identifier.empty() || rhs_identifier.empty())
+    std::cout << "empty lable operand\n";
+
   evaluation_writer.write_binary_operation(
     os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
 }

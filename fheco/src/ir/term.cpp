@@ -109,7 +109,6 @@ void Term::delete_operand_at_index(size_t index)
     operation_attribute->operands.pop_back();
     return;
   }
-
   size_t degree = operation_attribute->operands.size();
   operation_attribute->operands[index]->delete_parent(this->label);
   operation_attribute->operands[index] = operation_attribute->operands.back();
@@ -143,6 +142,9 @@ void Term::replace_with(const Ptr &rhs)
 
 void Term::set_a_default_label()
 {
+  if (term_type_str.find(type) == term_type_str.end())
+    throw("unrecognized term type in set_a_default_label");
+
   label = term_type_str[type] + std::to_string(term_id);
 }
 

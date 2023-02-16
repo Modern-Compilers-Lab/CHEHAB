@@ -438,4 +438,31 @@ std::shared_ptr<ir::Term> fold_const_plain(
   }
 }
 
+int32_t get_rotation_step(const std::shared_ptr<ir::Term> &node)
+{
+  if (node->get_operands()[0]->get_term_type() == ir::rawDataType)
+  {
+    return std::stoi(node->get_operands()[0]->get_label());
+  }
+  else if (node->get_operands()[1]->get_term_type() == ir::rawDataType)
+  {
+    return std::stoi(node->get_operands()[1]->get_label());
+  }
+  throw("invalid rotation node in get_rotation_step");
+}
+
+ir::TermType deduce_ir_term_type(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
+{
+  if (lhs->get_term_type() == rhs->get_term_type())
+    return lhs->get_term_type();
+
+  if (lhs->get_term_type() == ir::ciphertextType || rhs->get_term_type() == ir::ciphertextType)
+    return ir::ciphertextType;
+
+  if (lhs->get_term_type() == ir::plaintextType || rhs->get_term_type() == ir::plaintextType)
+    return ir::plaintextType;
+
+  throw("couldn't deduce ir term type");
+}
+
 } // namespace ir
