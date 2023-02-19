@@ -282,22 +282,18 @@ std::shared_ptr<ir::Term> TRS::make_ir_node_from_matching_term(
       opcode_mapping[matching_term.get_opcode()], operands, "",
       fheco_trs::term_type_map[matching_term.get_term_type()]);
 
-    ir_node->set_a_default_label();
-
+    // this needs to be changed later
     if (matching_term.get_fold_flag() == true)
     {
       ir_node = fold_term(ir_node);
     }
-
-    program->insert_created_node_in_dataflow(ir_node);
 
     return ir_node;
   }
   else
   {
     std::shared_ptr<ir::Term> ir_node =
-      std::make_shared<ir::Term>("", fheco_trs::term_type_map[matching_term.get_term_type()]);
-    ir_node->set_a_default_label();
+      std::make_shared<ir::Term>(fheco_trs::term_type_map[matching_term.get_term_type()]);
     new_constants_matching_pairs.push_back({matching_term, ir_node});
 
     program->insert_created_node_in_dataflow(ir_node);

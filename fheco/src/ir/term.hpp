@@ -26,7 +26,7 @@ public:
   using Ptr = std::shared_ptr<Term>;
 
 private:
-  TermType type;
+  TermType type = TermType::undefined;
 
   static size_t term_id;
 

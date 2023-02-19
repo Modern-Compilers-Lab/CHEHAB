@@ -142,10 +142,14 @@ void Term::replace_with(const Ptr &rhs)
 
 void Term::set_a_default_label()
 {
-  if (term_type_str.find(type) == term_type_str.end())
-    throw("unrecognized term type in set_a_default_label");
 
-  label = term_type_str[type] + std::to_string(term_id);
+  if (type == TermType::undefined)
+    throw("undefined term type in set_a_default_label");
+
+  if (type == TermType::rawDataType)
+    return; /* we don't change the label of a rawDataType node as it is the actual value
+             */
+  label = term_type_label_map[type] + std::to_string(term_id);
 }
 
 } // namespace ir

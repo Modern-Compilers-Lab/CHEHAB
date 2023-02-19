@@ -44,7 +44,6 @@ void Normalizer::normalize_rotations(const ir::Program::Ptr &node)
     return;
 
   std::vector<ir::Program::Ptr> rotation_nodes;
-  std::vector<ir::Program::Ptr> non_rotation_nodes;
   /*
     This step is to exclude first rotation element for normalization process or not as the latter could
     lead to re-arrangement of nodes which could lead by itself to wrong results in case of subtraction
@@ -69,7 +68,6 @@ void Normalizer::normalize_rotations(const ir::Program::Ptr &node)
   auto rot_comp = [](const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs) {
     return ir::get_rotation_step(lhs) < ir::get_rotation_step(rhs);
   };
-
   sort(rotation_nodes.begin(), rotation_nodes.end(), rot_comp);
   // for (auto &other_node : non_rotation_nodes)
   // node->add_operand(other_node);

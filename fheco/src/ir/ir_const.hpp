@@ -15,6 +15,7 @@ using ConstantValue = std::variant<ScalarValue, VectorValue>;
 
 enum TermType
 {
+  undefined,
   rawDataType,
   scalarType,
   ciphertextType,
@@ -54,7 +55,7 @@ enum class ConstantTableEntryType
   temp
 };
 
-inline std::unordered_map<ir::TermType, std::string> term_type_str = {
+inline std::unordered_map<ir::TermType, std::string> term_type_label_map = {
   {ir::scalarType, "scalar"}, {ir::plaintextType, "plaintext"}, {ir::ciphertextType, "ciphertext"}};
 
 inline std::unordered_map<ir::OpCode, std::string> str_opcode = {

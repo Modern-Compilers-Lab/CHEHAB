@@ -64,7 +64,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   fheco_trs::TRS trs(program);
 
   trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-  // trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+  //  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
   cse_pass.apply_cse2(true);
 
   // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
