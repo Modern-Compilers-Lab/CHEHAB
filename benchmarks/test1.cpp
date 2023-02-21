@@ -17,8 +17,6 @@ int main()
     fhecompiler::Ciphertext C("C", fhecompiler::VarType::input);
     fhecompiler::Ciphertext D("D", fhecompiler::VarType::input);
 
-    fhecompiler::Plaintext E("E", fhecompiler::VarType::input);
-
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
     output1 = B << 3;

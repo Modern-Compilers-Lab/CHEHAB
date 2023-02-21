@@ -1,6 +1,9 @@
 #pragma once
 #include "matching_term.hpp"
+#include "program.hpp"
+#include "trs_core.hpp"
 #include <optional>
+#include <unordered_map>
 
 namespace fheco_trs
 {
@@ -29,6 +32,14 @@ public:
   const MatchingTerm &get_lhs() const { return lhs; }
   const MatchingTerm &get_rhs() const { return rhs; }
   const std::optional<MatchingTerm> &get_rewrite_condition() const { return rewrite_condition; }
+
+  std::vector<core::MatchingPair> substitute_in_ir(
+    std::shared_ptr<ir::Term> ir_node, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
+    core::FunctionTable &functions_table);
+
+  bool evaluate_rewrite_condition(
+    std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
+    core::FunctionTable &functions_table);
 
   ~RewriteRule() {}
 };

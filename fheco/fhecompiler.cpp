@@ -6,6 +6,7 @@
 #include "rotationkeys_select_pass.hpp"
 #include "test/dummy_ruleset.hpp"
 #include "trs.hpp"
+#include "trs_util_functions.hpp"
 
 using namespace fhecompiler;
 
@@ -61,10 +62,12 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   utils::draw_ir(program, output_filename + "1.dot");
 
-  fheco_trs::TRS trs(program);
+  fheco_trs::TRS trs(program, fheco_trs::util_functions::functions_table);
 
   trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+
   //  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+
   cse_pass.apply_cse2(true);
 
   // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again

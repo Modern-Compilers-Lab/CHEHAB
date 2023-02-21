@@ -6,6 +6,17 @@
 namespace fheco_trs
 {
 
+enum class FunctionId
+{
+  undefined,
+  fold,
+  depth,
+  count_add,
+  count_mul,
+  count_rot,
+  get_opcode,
+};
+
 enum class TermType
 {
   rawDataType,
@@ -13,7 +24,8 @@ enum class TermType
   ciphertextType,
   plaintextType,
   booleanType,
-  opcodeAttribute
+  opcodeAttribute,
+  functionType
 };
 
 enum class OpCode
@@ -47,6 +59,7 @@ enum class OpCode
   _not
 };
 
+// types which can be in matchin condition term
 inline std::unordered_set<fheco_trs::TermType> rewrite_condition_types = {
   fheco_trs::TermType::rawDataType, fheco_trs::TermType::scalarType};
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "trs.hpp"
+#include "trs_util_functions.hpp"
 
 namespace fheco_trs
 {
@@ -58,19 +59,21 @@ std::vector<RewriteRule> dummy_ruleset = {
 
 std::vector<RewriteRule> dummy_ruleset = {
   {(x << p), x, p == 0},
-  /*
-  {((x << p) + y) + (z << q), ((x << p) + (z << q)) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
-  {(y + (x << p)) + (z << q), ((x << p) + (z << q)) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
-  {(x << p) + (y + (z << q)), ((x << p) + (z << q)) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
-  {(x << p) + ((z << q) + y), ((x << p) + (z << q)) + y, !MatchingTerm::is_opcode_equal_to(y, OpCode::rotate_rows)},
-  */
+  {((x << p) + y) + (z << q), ((x << p) + (z << q)) + y,
+   MatchingTerm::opcode_of(y) != static_cast<int>(ir::OpCode::rotate_rows)},
+  {(y + (x << p)) + (z << q), ((x << p) + (z << q)) + y,
+   MatchingTerm::opcode_of(y) != static_cast<int>(ir::OpCode::rotate_rows)},
+  {(x << p) + (y + (z << q)), ((x << p) + (z << q)) + y,
+   MatchingTerm::opcode_of(y) != static_cast<int>(ir::OpCode::rotate_rows)},
+  {(x << p) + ((z << q) + y), ((x << p) + (z << q)) + y,
+   MatchingTerm::opcode_of(y) != static_cast<int>(ir::OpCode::rotate_rows)},
   {(x << p) + (y << p), (x + y) << p},
   {(x << p) * (y << p), (x * y) << p},
   {(x << p) - (y << p), (x - y) << p},
-  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p > q) && (p > 0) && (q > 0)},
-  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q > p) && (p > 0) && (q > 0)},
-  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0)},
-  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0)}};
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p > q)},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q > p)},
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p < q)},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q < p)}};
 
 std::vector<RewriteRule> dummy_ruleset2 = {
   {(x << p), x, p == 0},

@@ -34,6 +34,8 @@ target_sources(fhecompiler PRIVATE
   ${SRC_TRS}/trs.cpp
   ${SRC_TRS}/matching_term.cpp
   ${SRC_TRS}/rewrite_rule.cpp
+  ${SRC_TRS}/trs_core.cpp
+  ${SRC_TRS}/trs_util_functions.cpp
   ${SRC_UTILS}/draw_ir.cpp
   ${SRC_PASSES}/normalize_pass.cpp
 )
@@ -63,6 +65,8 @@ install(FILES
   ${SRC_TRS}/trs.hpp
   ${SRC_TRS}/matching_term.hpp
   ${SRC_TRS}/rewrite_rule.hpp
+  ${SRC_TRS}/trs_core.hpp
+  ${SRC_TRS}/trs_util_functions.hpp
   DESTINATION ${HEADERS_INSTALL_DIR}
 )
 

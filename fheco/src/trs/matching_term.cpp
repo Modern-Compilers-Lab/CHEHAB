@@ -1,5 +1,6 @@
 #include "matching_term.hpp"
 #include "trs_const.hpp"
+#include <iostream>
 
 /*
   x*(y*z) -> (x*y)*z
@@ -13,6 +14,8 @@ size_t MatchingTerm::term_id = 0;
 MatchingTerm::MatchingTerm(int64_t _value) : term_type(fheco_trs::TermType::scalarType), value(_value), id(term_id++) {}
 MatchingTerm::MatchingTerm(int _value) : term_type(fheco_trs::TermType::scalarType), value(_value), id(term_id++) {}
 MatchingTerm::MatchingTerm(double _value) : term_type(fheco_trs::TermType::scalarType), value(_value), id(term_id++) {}
+
+MatchingTerm::MatchingTerm(FunctionId func_id) : term_type(fheco_trs::TermType::functionType), function_id(func_id) {}
 
 MatchingTerm::MatchingTerm(
   fheco_trs::OpCode _opcode, const std::vector<MatchingTerm> &_operands, fheco_trs::TermType _term_type)
@@ -165,6 +168,7 @@ MatchingTerm operator!=(const MatchingTerm &lhs, const MatchingTerm &rhs)
     rewrite_condition_types.find(lhs.get_term_type()) == rewrite_condition_types.end() ||
     rewrite_condition_types.find(rhs.get_term_type()) == rewrite_condition_types.end())
   {
+    std::cout << "wrong ... \n";
     throw("impossible to evaluate rewrite condition");
   }
 
@@ -257,6 +261,11 @@ MatchingTerm operator==(const MatchingTerm &lhs, const MatchingTerm &rhs)
   return new_term;
 }
 
+void MatchingTerm::push_operand(const MatchingTerm &operand)
+{
+  operands.push_back(operand);
+}
+
 /*
   Constant folding
 */
@@ -266,10 +275,19 @@ MatchingTerm MatchingTerm::fold(MatchingTerm term_to_fold)
   if (term_to_fold.get_term_type() == fheco_trs::TermType::ciphertextType)
     throw("cannot fold ciphertexts");
 
-  term_to_fold.set_fold_flag();
+  term_to_fold.set_function_id(FunctionId::fold);
   return term_to_fold;
 }
 
+MatchingTerm MatchingTerm::opcode_of(MatchingTerm term)
+{
+  MatchingTerm new_term(TermType::scalarType);
+  new_term.set_function_id(FunctionId::get_opcode);
+  new_term.push_operand(term);
+  return new_term;
+}
+
+/*
 MatchingTerm MatchingTerm::is_opcode_equal_to(const MatchingTerm &term, OpCode opcode)
 {
   MatchingTerm new_term(TermType::opcodeAttribute);
@@ -277,5 +295,6 @@ MatchingTerm MatchingTerm::is_opcode_equal_to(const MatchingTerm &term, OpCode o
   new_term.set_opcode(opcode);
   return new_term;
 }
+*/
 
 } // namespace fheco_trs
