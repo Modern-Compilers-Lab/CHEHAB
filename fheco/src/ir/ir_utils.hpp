@@ -29,6 +29,8 @@ std::shared_ptr<ir::Term> multiply_const_plains(
 std::shared_ptr<ir::Term> subtract_const_plains(
   const std::vector<std::shared_ptr<ir::Term>> &const_plains, ir::Program *program);
 
+std::shared_ptr<ir::Term> fold_ir_term(const std::shared_ptr<ir::Term> &term, ir::Program *program);
+
 double get_constant_value_as_double(ir::ConstantValue const_value);
 
 void get_constant_value_as_vector_of_double(ir::ConstantValue const_value, std::vector<double> &double_vector);

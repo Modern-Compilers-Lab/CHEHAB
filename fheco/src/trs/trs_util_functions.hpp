@@ -11,8 +11,6 @@ namespace fheco_trs
 
 namespace util_functions
 {
-  std::shared_ptr<ir::Term> fold_ir_term(const std::shared_ptr<ir::Term> &term, ir::Program *program);
-
   MatchingTerm fold(
     MatchingTerm term_to_fold, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program);
 
