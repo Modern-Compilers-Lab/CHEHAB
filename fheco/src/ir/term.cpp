@@ -109,7 +109,6 @@ void Term::delete_operand_at_index(size_t index)
     operation_attribute->operands.pop_back();
     return;
   }
-
   size_t degree = operation_attribute->operands.size();
   operation_attribute->operands[index]->delete_parent(this->label);
   operation_attribute->operands[index] = operation_attribute->operands.back();
@@ -138,13 +137,19 @@ void Term::clear_operands()
 
 void Term::replace_with(const Ptr &rhs)
 {
-  (*(rhs.get())).parents_labels = (*this).parents_labels;
   *this = *(rhs.get());
 }
 
 void Term::set_a_default_label()
 {
-  label = term_type_str[type] + std::to_string(term_id);
+
+  if (type == TermType::undefined)
+    throw("undefined term type in set_a_default_label");
+
+  if (type == TermType::rawDataType)
+    return; /* we don't change the label of a rawDataType node as it is the actual value
+             */
+  label = term_type_label_map[type] + std::to_string(term_id);
 }
 
 } // namespace ir

@@ -37,7 +37,6 @@ int main()
       }
       A.push_back(line);
     }
-
     for (size_t i = 0; i < 10; i++)
     {
       std::vector<int64_t> line;
@@ -83,7 +82,8 @@ int main()
         mask[0] = 1;
         fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_encrypted[j];
         fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product, A[0].size()) * mask;
-        temp_cipher >>= j;
+        if (j > 0)
+          temp_cipher >>= j;
         temp_ciphers.push_back(temp_cipher);
       }
       fhecompiler::Ciphertext c_line = temp_ciphers[0];

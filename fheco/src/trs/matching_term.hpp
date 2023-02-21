@@ -16,11 +16,11 @@ private:
   fheco_trs::TermType term_type;
   fheco_trs::OpCode opcode = fheco_trs::OpCode::undefined;
   static size_t term_id;
-  std::optional<bool> fold_flag;
   size_t id;
   std::optional<ir::ConstantValue> value;
   std::optional<std::string> label;
   std::vector<MatchingTerm> operands;
+  FunctionId function_id = FunctionId::undefined;
 
 public:
   MatchingTerm() = default;
@@ -38,18 +38,13 @@ public:
   MatchingTerm(fheco_trs::OpCode, const std::vector<MatchingTerm> &, fheco_trs::TermType);
   MatchingTerm(fheco_trs::TermType); // a leaf node
   MatchingTerm(const std::string &, fheco_trs::TermType);
+  MatchingTerm(FunctionId func_id);
 
-  void set_fold_flag() { fold_flag = true; }
-
-  static MatchingTerm fold(MatchingTerm);
-
-  const std::optional<bool> &get_fold_flag() const { return fold_flag; }
+  void set_value(ir::ConstantValue _value) { value = _value; }
 
   void set_opcode(fheco_trs::OpCode _opcode) { opcode = _opcode; }
 
   void set_operands(const std::vector<MatchingTerm> &new_operands) { operands = new_operands; }
-
-  static MatchingTerm is_opcode_equal_to(const MatchingTerm &term, OpCode opcode);
 
   static fheco_trs::TermType deduce_term_type(fheco_trs::TermType, fheco_trs::TermType);
 
@@ -59,8 +54,16 @@ public:
   size_t get_term_id() const { return id; }
   OpCode get_opcode() const { return opcode; }
   fheco_trs::TermType get_term_type() const { return term_type; }
-  const std::optional<ir::ConstantValue> &get_value() const { return value; }
+  std::optional<ir::ConstantValue> get_value() const { return value; }
   const std::optional<std::string> &get_label() const { return label; }
+  FunctionId get_function_id() const { return function_id; }
+  void set_function_id(FunctionId func_id) { function_id = func_id; }
+  void push_operand(const MatchingTerm &operand);
+
+  // utils functions
+
+  static MatchingTerm fold(MatchingTerm m_term);
+  static MatchingTerm opcode_of(MatchingTerm m_term);
 };
 
 /*

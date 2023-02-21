@@ -30,4 +30,28 @@ MatchingTerm RewriteRule::get_rhs(const ir::Program *program, const matching_ter
   return rhs_factory(program, matching_map);
 }
 
+std::vector<core::MatchingPair> RewriteRule::substitute_in_ir(
+  std::shared_ptr<ir::Term> ir_node, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
+  core::FunctionTable &functions_table)
+{
+  /*
+    We call this function after ir_node is matched with lhs of rewrite rule
+  */
+
+  std::vector<core::MatchingPair> new_constants_matching_pairs =
+    core::substitute(ir_node, rhs_factory(program, matching_map), matching_map, program, functions_table);
+
+  return new_constants_matching_pairs;
+}
+
+bool RewriteRule::evaluate_rewrite_condition(
+  std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
+  core::FunctionTable &functions_table)
+{
+  if (rewrite_condition == std::nullopt)
+    throw("rewrite condition is not defined");
+
+  return core::evaluate_boolean_matching_term(*rewrite_condition, matching_map, program, functions_table);
+}
+
 } // namespace fheco_trs

@@ -1,11 +1,12 @@
 #include "fhecompiler.hpp"
 #include "cse_pass.hpp"
 #include "draw_ir.hpp"
+#include "normalize_pass.hpp"
 #include "relin_pass.hpp"
-#include "rotation_rewrite_pass.hpp"
 #include "rotationkeys_select_pass.hpp"
 #include "test/dummy_ruleset.hpp"
 #include "trs.hpp"
+#include "trs_util_functions.hpp"
 
 using namespace fhecompiler;
 
@@ -52,43 +53,33 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     }
   }
 
-  utils::draw_ir(program, output_filename + "1.dot");
-
-  fheco_trs::TRS trs(program);
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+  // utils::draw_ir(program, output_filename + "0.dot");
 
   fheco_passes::CSE cse_pass(program);
-  cse_pass.apply_cse2();
+
+  fheco_passes::Normalizer normalizer(program);
+  normalizer.normalize();
+
+  utils::draw_ir(program, output_filename + "1.dot");
+
+  fheco_trs::TRS trs(program, fheco_trs::util_functions::functions_table);
+
+  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+
+  //  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+
+  cse_pass.apply_cse2(true);
+
+  // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
+  fheco_passes::RotationKeySelctionPass rs_pass(program, params);
+  rs_pass.collect_program_rotations_steps();
+
+  cse_pass.apply_cse2(true);
 
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
 
-  utils::draw_ir(program, output_filename + "2.dot");
-
-  // fheco_passes::RotationRewritePass rw_pass(program);
-  // rw_pass.apply_rewrite();
-
-  /*
-    std::vector<int> program_rotations_steps = fheco_passes::get_unique_rotation_steps(program);
-    for (auto &step : program_rotations_steps)
-      std::cout << step << " ";
-    std::cout << "\n";
-  */
-
-  /*
-  // convert to inplace pass
-  {
-    const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
-
-    for (auto &node_ptr : nodes_ptr)
-    {
-      program->convert_to_inplace(node_ptr);
-    }
-
-    // this needs to be the last pass and we must not do any new sorting of the graph
-  }
-  */
+  // utils::draw_ir(program, output_filename + "2.dot");
 
   translator::Translator tr(program, params);
   {
@@ -97,7 +88,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     if (!translation_os)
       throw("couldn't open file for translation.\n");
 
-    tr.translate(translation_os);
+    tr.translate_program(translation_os);
 
     translation_os.close();
   }

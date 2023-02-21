@@ -15,6 +15,7 @@ using ConstantValue = std::variant<ScalarValue, VectorValue>;
 
 enum TermType
 {
+  undefined,
   rawDataType,
   scalarType,
   ciphertextType,
@@ -40,7 +41,9 @@ enum class OpCode
   exponentiate,
   modswitch,
   relinearize,
-  rescale
+  rescale,
+  encode,
+  decode
 };
 
 enum class ConstantTableEntryType
@@ -52,7 +55,7 @@ enum class ConstantTableEntryType
   temp
 };
 
-inline std::unordered_map<ir::TermType, std::string> term_type_str = {
+inline std::unordered_map<ir::TermType, std::string> term_type_label_map = {
   {ir::scalarType, "scalar"}, {ir::plaintextType, "plaintext"}, {ir::ciphertextType, "ciphertext"}};
 
 inline std::unordered_map<ir::OpCode, std::string> str_opcode = {
@@ -70,6 +73,12 @@ inline std::unordered_map<ir::OpCode, std::string> str_opcode = {
   {OpCode::rescale, "rescale"},
   {OpCode::rotate, "rotate"},
   {OpCode::rotate_columns, "rotate_columns"},
-  {OpCode::rotate_rows, "rotate_rows"}};
+  {OpCode::rotate_rows, "rotate_rows"},
+  {OpCode::decode, "decode"},
+  {OpCode::encode, "encode"}};
+
+/*
+  Encode, Decode
+*/
 
 } // namespace ir

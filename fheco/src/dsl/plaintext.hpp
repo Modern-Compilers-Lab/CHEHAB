@@ -51,21 +51,11 @@ public:
 
   // friend Plaintext operator-(const Plaintext &rhs);
 
-  void reduce(std::uint64_t plaintext_modulus);
-
   std::string get_label() const { return this->label; }
 
   void set_label(std::string label_value) { this->label = label_value; }
 
-  friend inline void set_new_label(Plaintext &pt);
-
   void set_new_label();
-
-  bool is_constant() const;
-
-  bool is_output() const;
-
-  friend void compound_operate(Plaintext &lhs, const Plaintext &rhs, ir::OpCode);
 };
 
 } // namespace fhecompiler

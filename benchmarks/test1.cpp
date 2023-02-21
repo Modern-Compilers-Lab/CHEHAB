@@ -17,11 +17,12 @@ int main()
     fhecompiler::Ciphertext C("C", fhecompiler::VarType::input);
     fhecompiler::Ciphertext D("D", fhecompiler::VarType::input);
 
-    fhecompiler::Plaintext E("E", fhecompiler::VarType::input);
-
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
-    output1 = (B + ((A << 1) + ((C << 3))));
+    output1 = B << 3;
+
+    for (int32_t i = 0; i < 32; i++)
+      output1 += (A << (i + 1));
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

@@ -21,6 +21,8 @@ int main()
     fhecompiler::Ciphertext r7 = img << n;
     fhecompiler::Ciphertext r8 = img << n + 1;
     fhecompiler::Ciphertext output("output", fhecompiler::VarType::output);
+    fhecompiler::Ciphertext output2("output2", fhecompiler::VarType::output);
+
     output = 2 * img - (r0 + r1 + r2 + r3 + r4 + r5 + r6 + r7 + r8);
 
     size_t polynomial_modulus_degree = 4096;

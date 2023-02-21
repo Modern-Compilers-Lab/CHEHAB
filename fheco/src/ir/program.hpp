@@ -92,7 +92,8 @@ private:
 
   size_t plain_modulus;
 
-  // size_t dimension;
+  // rotation steps in the program, this vector will be empty until rotation keys selection pass
+  std::vector<int32_t> rotations_steps;
 
 public:
   using Ptr = std::shared_ptr<Term>;
@@ -164,8 +165,11 @@ public:
   const std::vector<Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
 
   const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const;
-
-  std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(const std::string &);
+  /*
+    Search key here is node label. In order to use just call get_label() method of the object you are manipulating
+  */
+  std::optional<std::reference_wrapper<ConstantTableEntry>> get_entry_form_constants_table(
+    const std::string &search_key);
 
   std::optional<std::reference_wrapper<const ConstantTableEntry>> get_const_entry_form_constants_table(
     const std::string &) const;
@@ -185,6 +189,10 @@ public:
   bool is_tracked_object(const std::string &label);
 
   void insert_created_node_in_dataflow(const Ptr &node);
+
+  void set_rotations_steps(std::vector<int32_t> &steps) { rotations_steps = steps; }
+
+  const std::vector<int32_t> &get_rotations_steps() const { return rotations_steps; }
 };
 
 } // namespace ir

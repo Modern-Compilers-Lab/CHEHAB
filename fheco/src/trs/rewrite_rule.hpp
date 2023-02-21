@@ -1,7 +1,9 @@
 #pragma once
 #include "matching_term.hpp"
-#include <functional>
+#include "program.hpp"
+#include "trs_core.hpp"
 #include <optional>
+#include <unordered_map>
 
 namespace ir
 {
@@ -50,6 +52,14 @@ public:
   MatchingTerm get_rhs(const ir::Program *program, const matching_term_ir_node_map &matching_map) const;
 
   const std::optional<MatchingTerm> &get_rewrite_condition() const { return rewrite_condition; }
+
+  std::vector<core::MatchingPair> substitute_in_ir(
+    std::shared_ptr<ir::Term> ir_node, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
+    core::FunctionTable &functions_table);
+
+  bool evaluate_rewrite_condition(
+    std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
+    core::FunctionTable &functions_table);
 
   ~RewriteRule() {}
 };

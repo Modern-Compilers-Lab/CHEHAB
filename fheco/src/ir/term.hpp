@@ -26,7 +26,7 @@ public:
   using Ptr = std::shared_ptr<Term>;
 
 private:
-  TermType type;
+  TermType type = TermType::undefined;
 
   static size_t term_id;
 
@@ -68,18 +68,32 @@ public:
 
   Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::scalarType) { term_id++; }
 
-  Term(OpCode _opcode, const std::vector<Ptr> &_operands, const std::string &label_value)
-    : operation_attribute({_operands}), label(label_value), opcode(_opcode)
+  Term(OpCode _opcode, const std::vector<Ptr> &_operands, const std::string &label_value, ir::TermType term_type)
+    : operation_attribute({_operands}), label(label_value), opcode(_opcode), type(term_type)
   {
 
     for (auto &operand : _operands)
       operand->add_parent_label(this->label);
 
     term_id++;
+
+    if (label_value.empty())
+      set_a_default_label();
   }
 
   // this constructure is useful in case of rawData where we store it in the lable as an int
-  Term(const std::string &symbol, TermType term_type) : label(symbol), type(term_type) { term_id++; }
+  Term(const std::string &symbol, TermType term_type) : label(symbol), type(term_type)
+  {
+    term_id++;
+    if (symbol.empty())
+      set_a_default_label();
+  }
+
+  Term(TermType term_type) : type(term_type)
+  {
+    term_id++;
+    set_a_default_label();
+  }
 
   void reverse_operands()
   {

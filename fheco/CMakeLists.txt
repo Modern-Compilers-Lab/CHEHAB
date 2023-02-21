@@ -29,15 +29,17 @@ target_sources(fhecompiler PRIVATE
   ${SRC_PASSES}/cse_pass.cpp
   ${SRC_PASSES}/relin_pass.cpp
   ${SRC_PASSES}/rotationkeys_select_pass.cpp
-  ${SRC_PASSES}/rotation_rewrite_pass.cpp
   ${SRC_PARAMS_SELECTOR}/params_selector.cpp
   ${SRC_TRANSLATOR}/translator.cpp
   ${SRC_TRS}/trs.cpp
   ${SRC_TRS}/matching_term.cpp
   ${SRC_TRS}/rewrite_rule.cpp
+  ${SRC_TRS}/trs_core.cpp
+  ${SRC_TRS}/trs_util_functions.cpp
   ${SRC_UTILS}/draw_ir.cpp
   ${SRC_TRS}/reduction_order/utils.cpp
   ${SRC_TRS}/reduction_order/component_orders.cpp
+  ${SRC_PASSES}/normalize_pass.cpp
 )
 
 install(FILES  
@@ -61,13 +63,15 @@ install(FILES
   ${SRC_TRANSLATOR}/translator_const.hpp
   ${SRC_UTILS}/fhecompiler_const.hpp
   ${SRC_PASSES}/rotationkeys_select_pass.hpp
-  ${SRC_PASSES}/rotation_rewrite_pass.hpp
+  ${SRC_PASSES}/normalize_pass.hpp
   ${SRC_TRS}/trs.hpp
   ${SRC_TRS}/matching_term.hpp
   ${SRC_TRS}/rewrite_rule.hpp
   ${SRC_TRS}/trs_const.hpp
   ${SRC_TRS}/reduction_order/utils.hpp
   ${SRC_TRS}/reduction_order/component_orders.hpp
+  ${SRC_TRS}/trs_core.hpp
+  ${SRC_TRS}/trs_util_functions.hpp
   DESTINATION ${HEADERS_INSTALL_DIR}
 )
 

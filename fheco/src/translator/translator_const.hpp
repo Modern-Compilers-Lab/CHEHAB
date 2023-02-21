@@ -112,7 +112,8 @@ INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::strin
 INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, ufhe::Plaintext>";
 INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, ufhe::Ciphertext>";
 INLINE const char *headers_include = "#include\"ufhe/ufhe.hpp\"\n#include<vector>\n#include<unordered_map>\n";
-INLINE const char *create_galois_instruction = "create_galois_key";
+INLINE const char *rotation_step_type_literal = "int32_t";
+INLINE const char *gen_steps_function_signature = "std::vector<int32_t> get_rotations_steps()";
 
 INLINE std::unordered_map<ir::TermType, const char *> outputs_class_identifier = {
   {ir::plaintextType, "encoded_outputs"}, {ir::ciphertextType, "encrypted_outputs"}};

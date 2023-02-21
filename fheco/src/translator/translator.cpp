@@ -1,4 +1,5 @@
 #include "translator.hpp"
+#include "cse_pass.hpp"
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
 #include "program.hpp"
@@ -197,7 +198,6 @@ void Translator::translate_constant_table_entry(
   ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
   ir::ConstantTableEntryType entry_type = table_entry.get_entry_type();
   std::string tag = entry_value.get_tag();
-
   // getting type
   std::string type_str;
 
@@ -230,12 +230,10 @@ void Translator::translate_constant_table_entry(
   }
   else if (entry_type == ir::ConstantTableEntryType::constant)
   {
-
     if (!encoding_writer.is_initialized())
     {
       encoding_writer.init(os);
     }
-
     if (term_type == ir::plaintextType)
     {
       // encoding
@@ -312,8 +310,12 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
   auto &operands = term_ptr->get_operands();
   std::string lhs_identifier = get_identifier(operands[0]);
   std::string rhs_identifier = get_identifier(operands[1]);
+
+  if (lhs_identifier.empty() || rhs_identifier.empty())
+    std::cout << "empty lable operand\n";
+
   evaluation_writer.write_binary_operation(
-    os, term_ptr->get_opcode(), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
+    os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
 }
 
 void Translator::translate_nary_operation(const Ptr &term_ptr, std::ofstream &os)
@@ -384,17 +386,19 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
   }
 }
 
-void Translator::translate(std::ofstream &os)
+void Translator::translate_program(std::ofstream &os)
 {
 
   os << headers_include;
 
   context_writer.write_context(os);
 
+  os << "\n";
+
+  write_rotations_steps_getter(program->get_rotations_steps(), os);
+
   generate_function_signature(os);
   os << "{" << '\n';
-
-  // generate_rotation_keys(os);
 
   convert_to_inplace_pass();
 
@@ -466,28 +470,71 @@ void Translator::convert_to_inplace_pass()
   }
 }
 
-void Translator::generate_rotation_keys(std::ofstream &os) const
-{
-  std::vector<int> rotation_steps = fheco_passes::get_unique_rotation_steps(program);
-  if (!rotation_steps.empty())
-  {
-    generate_key_generator(os);
-
-    os << galois_keys_type_literal << " " << galois_keys_identifier << ";\n";
-    os << key_generator_identifier << "." << create_galois_instruction << "({";
-    for (size_t i = 0; i < rotation_steps.size(); i++)
-    {
-      os << rotation_steps[i];
-      if (i < rotation_steps.size() - 1)
-        os << ",";
-    }
-    os << "}," << galois_keys_identifier << ");\n";
-  }
-}
-
 void Translator::generate_key_generator(std::ofstream &os) const
 {
-  // os << key_generator_type_literal << " " << key_generator_identifier << "(" << context_identifier << ");\n";
+  os << key_generator_type_literal << " " << key_generator_identifier << "(" << context_identifier << ");\n";
+}
+
+ir::OpCode Translator::deduce_opcode_to_generate(const Ptr &node) const
+{
+  if (node->is_operation_node() == false)
+    return node->get_opcode();
+
+  if (node->get_operands().size() == 1)
+    return node->get_opcode();
+
+  if (node->get_operands().size() == 2)
+  {
+    auto lhs = node->get_operands()[0];
+    auto rhs = node->get_operands()[1];
+
+    if (lhs->get_term_type() == rhs->get_term_type())
+      return node->get_opcode();
+
+    else if (
+      node->get_term_type() == ir::ciphertextType &&
+      (lhs->get_term_type() != ir::ciphertextType || rhs->get_term_type() != ir::ciphertextType))
+    {
+      switch (node->get_opcode())
+      {
+      case ir::OpCode::add:
+        return ir::OpCode::add_plain;
+        break;
+
+      case ir::OpCode::mul:
+        return ir::OpCode::mul_plain;
+        break;
+
+      case ir::OpCode::sub:
+        return ir::OpCode::sub_plain;
+        break;
+
+      default:
+        return node->get_opcode();
+        break;
+      }
+    }
+    else
+      return node->get_opcode();
+  }
+  else
+    throw("node with more than 2 operands in deduce_opcode_to_generate");
+}
+
+void Translator::write_rotations_steps_getter(const std::vector<int32_t> &steps, std::ostream &os)
+{
+  os << gen_steps_function_signature << "{\n";
+  os << "std::vector<" << rotation_step_type_literal << ">"
+     << " steps = {";
+  for (size_t i = 0; i < steps.size(); i++)
+  {
+    os << steps[i];
+    if (i < steps.size() - 1)
+      os << ",";
+    else
+      os << "};";
+  }
+  os << " return steps; }";
 }
 
 } // namespace translator
