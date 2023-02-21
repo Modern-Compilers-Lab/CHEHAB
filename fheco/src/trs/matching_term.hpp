@@ -3,6 +3,7 @@
 #include "trs_const.hpp"
 #include <memory>
 #include <optional>
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -17,6 +18,7 @@ private:
   static size_t term_id;
   size_t id;
   std::optional<ir::ConstantValue> value;
+  std::optional<std::string> label;
   std::vector<MatchingTerm> operands;
   FunctionId function_id = FunctionId::undefined;
 
@@ -30,11 +32,12 @@ public:
 
   ~MatchingTerm() {}
 
-  MatchingTerm(int64_t);
-  MatchingTerm(int);
+  MatchingTerm(int64_t, fheco_trs::TermType = TermType::scalarType);
+  MatchingTerm(int, fheco_trs::TermType = TermType::scalarType);
   MatchingTerm(double);
   MatchingTerm(fheco_trs::OpCode, const std::vector<MatchingTerm> &, fheco_trs::TermType);
   MatchingTerm(fheco_trs::TermType); // a leaf node
+  MatchingTerm(const std::string &, fheco_trs::TermType);
   MatchingTerm(FunctionId func_id);
 
   void set_value(ir::ConstantValue _value) { value = _value; }
@@ -52,6 +55,7 @@ public:
   OpCode get_opcode() const { return opcode; }
   fheco_trs::TermType get_term_type() const { return term_type; }
   std::optional<ir::ConstantValue> get_value() const { return value; }
+  const std::optional<std::string> &get_label() const { return label; }
   FunctionId get_function_id() const { return function_id; }
   void set_function_id(FunctionId func_id) { function_id = func_id; }
   void push_operand(const MatchingTerm &operand);

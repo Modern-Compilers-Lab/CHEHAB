@@ -1,0 +1,65 @@
+All 166, 45
+
+Halide 140, 39
+
+Mul : 15, 6
+Constant folding, algebraic simplification identities (neutral element,absorbing element,additive inverse), canonicalization : 15, 6
+(x * 0) => (0) | (x * 1) => (x) : 4
+((x + c0) * (x + c1)) => (x * (x + fold(c0 + c1)) + fold(c0 * c1)) : 4
+((x + c0) * c1) => (x * c1 + fold(c0 * c1)) : 2
+((0 - x) * y) => (0 - x*y) : 2
+((x * c0) * c1) => (x * fold(c0 * c1) : 1
+((x * c0) * y) => ((x * y) * c0) : 2
+
+Add : 37, 16
+Constant folding, algebraic simplification identities, canonicalization : 29, 14
+(x + 0) => (x) : 2
+(x + y*(-1)) => (x - y) : 2
+((x + c0) + c1) => (x + fold(c0 + c1)) : 1
+((x + c0) + y) => ((x + y) + c0) : 2
+((c0 - x) + c1) => (fold(c0 + c1) - x) : 1
+((c0 - x) + y) => ((y - x) + c0) : 1
+((x - y) + y) => (x) : 2
+(((x - y) + z) + y) => (x + z) : 4
+(x + (c0 - y)) => ((x - y) + c0) : 1
+((x - y) + (y - z)) => (x - z) : 2
+((x - y) + (y + z)) => (x + z) : 2
+(x + ((y - x) - z)) => (y - z) : 6
+(x + ((0 - y) - z)) => (x - (y + z)) : 2
+(((c0 - x) - y) + c1) => ((fold(c0 + c1) - y) - x) : 1
+Common factor (inv distributive law) : 8, 2
+(x*y + z*y) => ((x + z)*y) : 4
+(x + x*y) => (x*(y + 1)) : 4
+
+Sub : 88, 17
+Constant folding, algebraic simplification identities, canonicalization : 50, 14
+(x - 0) => x : 1
+(c0 - c1) => (fold(c0 - c1)) : 1
+(x - x) => 0 : 1
+((x + y) - x) => (y) : 5
+((x + c0) - c1) => (x + fold(c0 - c1)) : 9
+((x + y) - (x + z)) => (y - z) : 4
+((( x + y) + z) - x) => (y + z) : 4
+(x - (y + (x - z))) => (z - y) : 4
+(x - (y + (x + z))) => (0 - (y + z)) : 4
+((x + y) - (z + (w + x))) => (y - (z + w)) : 8
+((x - y) - (x + z)) => (0 - y - z) : 2
+(((x + y) - z) - x) => (y - z) : 2
+(0 - (x + (y - z))) => (z - (x + y)) : 2
+(((x - y) - z) - x) => (0 - (y + z)) : 1
+Common factor (inv distributive law) : 38, 3
+(x*y - z*y) => ((x - z)*y) : 4
+((u + x*y) - z*y) => (u + (x - z)*y) : 32
+(x*y - x) => (x*(y - 1)) : 4
+
+Other 22, 6
+Square, xdepth : 15, 3
+(x * x) => square(x)
+((x * y) * x) => (square(x) * y) : 4
+(((x * y) * z) * x) => (square(x) * (y * z)) : 9
+Rot : 4, 2
+(rot(x, n) + rot(y, n)) => (rot(x + y, n)) : 3
+(rot(rot(x, n), m)) => rot(x, n+m)
+
+xdepth: 4, 1
+(x * (y * (z * t))) => ((x * y) * (z * t)) : 4

@@ -11,8 +11,12 @@ namespace fheco_trs
 
 size_t MatchingTerm::term_id = 0;
 
-MatchingTerm::MatchingTerm(int64_t _value) : term_type(fheco_trs::TermType::scalarType), value(_value), id(term_id++) {}
-MatchingTerm::MatchingTerm(int _value) : term_type(fheco_trs::TermType::scalarType), value(_value), id(term_id++) {}
+MatchingTerm::MatchingTerm(int64_t _value, fheco_trs::TermType _term_type)
+  : term_type(_term_type), value(_value), id(term_id++)
+{}
+MatchingTerm::MatchingTerm(int _value, fheco_trs::TermType _term_type)
+  : term_type(_term_type), value(_value), id(term_id++)
+{}
 MatchingTerm::MatchingTerm(double _value) : term_type(fheco_trs::TermType::scalarType), value(_value), id(term_id++) {}
 
 MatchingTerm::MatchingTerm(FunctionId func_id) : term_type(fheco_trs::TermType::functionType), function_id(func_id) {}
@@ -23,6 +27,10 @@ MatchingTerm::MatchingTerm(
 {}
 
 MatchingTerm::MatchingTerm(fheco_trs::TermType _term_type) : term_type(_term_type), id(term_id++) {}
+
+MatchingTerm::MatchingTerm(const std::string &_label, fheco_trs::TermType _term_type)
+  : label(_label), term_type(_term_type), id(term_id++)
+{}
 
 fheco_trs::TermType MatchingTerm::deduce_term_type(fheco_trs::TermType lhs_term_type, fheco_trs::TermType rhs_term_type)
 {
