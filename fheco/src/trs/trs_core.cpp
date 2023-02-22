@@ -232,17 +232,15 @@ namespace core
     }
   }
 
-  std::vector<MatchingPair> substitute(
+  void substitute(
     std::shared_ptr<ir::Term> ir_node, const MatchingTerm &rewrite_rule_rhs,
     std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program, FunctionTable &functions_table)
   {
     /*
       We call this function after ir_node is matched with lhs of rewrite rule
     */
-    std::vector<MatchingPair> new_constants_matching_pairs;
-
-    std::shared_ptr<ir::Term> new_ir_node = make_ir_node_from_matching_term(
-      rewrite_rule_rhs, matching_map, new_constants_matching_pairs, program, functions_table);
+    std::shared_ptr<ir::Term> new_ir_node =
+      make_ir_node_from_matching_term(rewrite_rule_rhs, matching_map, program, functions_table);
     if (new_ir_node->is_operation_node())
     {
       ir_node->clear_operands();
@@ -253,8 +251,6 @@ namespace core
     {
       ir_node->replace_with(new_ir_node);
     }
-
-    return new_constants_matching_pairs;
   }
 
   std::shared_ptr<ir::Term> make_ir_node_from_matching_term(
@@ -285,6 +281,10 @@ namespace core
 
       matching_map[matching_term.get_term_id()] = ir_node;
 
+      /*
+        This needs to be called here, which means once the ir_node is created, cause basically the function that will
+        called it will be applied on an ir node
+      */
       if (matching_term.get_function_id() != FunctionId::undefined)
       {
         if (functions_table.find(matching_term.get_function_id()) == functions_table.end())
@@ -301,11 +301,30 @@ namespace core
     }
     else
     {
+
+      /*
+        at this stage it means that wa have a MatchingTerm with a value (a constant), and we will consider it a
+        temporary variable in IR
+      */
+
+      if (matching_term.get_value() == std::nullopt)
+        throw("only constant matching terms are expected at this stage");
+
       std::shared_ptr<ir::Term> ir_node =
         std::make_shared<ir::Term>(fheco_trs::term_type_map[matching_term.get_term_type()]);
       new_constants_matching_pairs.push_back({matching_term, ir_node});
 
+      /*
+        Insert node in dataflow graph
+      */
       program->insert_created_node_in_dataflow(ir_node);
+
+      /*
+        Insert in constants table
+      */
+      ir::ConstantTableEntry c_table_entry(
+        ir::ConstantTableEntryType::constant, {ir_node->get_label(), *(matching_term.get_value())});
+      program->insert_entry_in_constants_table({ir_node->get_label(), c_table_entry});
 
       return ir_node;
     }

@@ -69,7 +69,7 @@ std::shared_ptr<ir::Term> multiply_scalars(const std::vector<std::shared_ptr<ir:
     auto table_entry = program->get_entry_form_constants_table(scalar->get_label());
     if (table_entry == std::nullopt)
     {
-      throw("unexpected, scalar don't exist in constants table");
+      throw("unexpected, scalar doesnt exist in constants table");
     }
     else
     {
@@ -115,7 +115,7 @@ std::shared_ptr<ir::Term> sum_scalars(const std::vector<std::shared_ptr<ir::Term
     auto table_entry = program->get_entry_form_constants_table(scalar->get_label());
     if (table_entry == std::nullopt)
     {
-      throw("unexpected, scalar don't exist in constants table");
+      throw("unexpected, scalar doesnt exist in constants table");
     }
     else
     {
@@ -162,7 +162,7 @@ std::shared_ptr<ir::Term> subtract_scalars(const std::vector<std::shared_ptr<ir:
     auto table_entry = program->get_entry_form_constants_table(scalar->get_label());
     if (table_entry == std::nullopt)
     {
-      throw("unexpected, scalar don't exist in constants table");
+      throw("unexpected, scalar doesnt exist in constants table");
     }
     else
     {

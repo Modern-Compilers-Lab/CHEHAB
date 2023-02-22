@@ -10,17 +10,14 @@ RewriteRule::RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs, con
   : lhs(_lhs), rhs(_rhs), rewrite_condition(_condition), id(rule_id++)
 {}
 
-std::vector<core::MatchingPair> RewriteRule::substitute_in_ir(
+void RewriteRule::substitute_in_ir(
   std::shared_ptr<ir::Term> ir_node, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
   core::FunctionTable &functions_table) const
 {
   /*
     We call this function after ir_node is matched with lhs of rewrite rule
   */
-  std::vector<core::MatchingPair> new_constants_matching_pairs =
-    core::substitute(ir_node, rhs, matching_map, program, functions_table);
-
-  return new_constants_matching_pairs;
+  core::substitute(ir_node, rhs, matching_map, program, functions_table);
 }
 
 bool RewriteRule::evaluate_rewrite_condition(

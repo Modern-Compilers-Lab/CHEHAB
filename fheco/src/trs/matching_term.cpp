@@ -2,10 +2,6 @@
 #include "trs_const.hpp"
 #include <iostream>
 
-/*
-  x*(y*z) -> (x*y)*z
-*/
-
 namespace fheco_trs
 {
 

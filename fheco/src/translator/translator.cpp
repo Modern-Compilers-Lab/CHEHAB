@@ -395,7 +395,8 @@ void Translator::translate_program(std::ofstream &os)
 
   os << "\n";
 
-  write_rotations_steps_getter(program->get_rotations_steps(), os);
+  if (program->get_rotations_steps().size())
+    write_rotations_steps_getter(program->get_rotations_steps(), os);
 
   generate_function_signature(os);
   os << "{" << '\n';

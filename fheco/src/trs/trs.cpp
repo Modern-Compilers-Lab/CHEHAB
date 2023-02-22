@@ -10,7 +10,7 @@ namespace fheco_trs
 
 core::FunctionTable TRS::functions_table = util_functions::functions_table;
 
-std::vector<core::MatchingPair> TRS::apply_rule_on_ir_node(
+void TRS::apply_rule_on_ir_node(
   const std::shared_ptr<ir::Term> &ir_node, const RewriteRule &rule, bool &is_rule_applied)
 {
 
@@ -27,21 +27,15 @@ std::vector<core::MatchingPair> TRS::apply_rule_on_ir_node(
       if (rule.evaluate_rewrite_condition(*matching_map, program, functions_table))
       {
         is_rule_applied = true;
-        auto new_constants = rule.substitute_in_ir(ir_node, *matching_map, program, functions_table);
-        return new_constants;
+        rule.substitute_in_ir(ir_node, *matching_map, program, functions_table);
       }
-      else
-        return {};
     }
     else
     {
       is_rule_applied = true;
-      auto new_constants = rule.substitute_in_ir(ir_node, *matching_map, program, functions_table);
-      return new_constants;
+      rule.substitute_in_ir(ir_node, *matching_map, program, functions_table);
     }
   }
-  else
-    return {};
 }
 
 void TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const std::vector<RewriteRule> &rules)
@@ -56,18 +50,7 @@ void TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const st
     auto &rule = rules[curr_rule_index];
     do
     {
-      auto new_nodes_matching_pairs = apply_rule_on_ir_node(node, rule, was_rule_applied);
-      for (auto &matching_pair : new_nodes_matching_pairs)
-      {
-        if (matching_pair.matching_term.get_value() == std::nullopt)
-          throw("only constant are supposed to be inserted as new terms");
-
-        ir::ConstantTableEntry c_table_entry(
-          ir::ConstantTableEntryType::constant,
-          {matching_pair.ir_node->get_label(), *(matching_pair.matching_term.get_value())});
-        program->insert_entry_in_constants_table({matching_pair.ir_node->get_label(), c_table_entry});
-      }
-
+      apply_rule_on_ir_node(node, rule, was_rule_applied);
     } while (was_rule_applied == true);
 
     curr_rule_index += 1;

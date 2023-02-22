@@ -51,7 +51,7 @@ namespace core
     const MatchingTerm &matching_term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
     FunctionTable &functions_table);
 
-  std::vector<MatchingPair> substitute(
+  void substitute(
     std::shared_ptr<ir::Term> ir_node, const MatchingTerm &rewrite_rule_rhs,
     std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program, FunctionTable &functions_table);
 

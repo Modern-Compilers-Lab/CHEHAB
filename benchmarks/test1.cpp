@@ -19,10 +19,20 @@ int main()
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
 
+    /*
     output1 = B << 3;
 
     for (int32_t i = 0; i < 32; i++)
       output1 += (A << (i + 1));
+    */
+
+    fhecompiler::Plaintext pt1(std::vector<int64_t>({1, 2, 4, 5, 6}));
+
+    fhecompiler::Plaintext pt2(std::vector<int64_t>({10, 22, 34, 45, 56}));
+
+    fhecompiler::Scalar n = 3;
+
+    output1 = (A + n) + n;
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

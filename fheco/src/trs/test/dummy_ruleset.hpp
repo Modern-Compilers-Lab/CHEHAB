@@ -85,7 +85,8 @@ MatchingTerm plain1(fheco_trs::TermType::plaintextType);
 MatchingTerm plain2(fheco_trs::TermType::plaintextType);
 
 std::vector<RewriteRule> dummy_ruleset3 = {
+  {(x + plain1) - plain2, x + MatchingTerm::fold(plain1 - plain2)},
+  {(x + n) + n, x + MatchingTerm::fold(2 * n)},
   {(x + plain1) + plain2, x + MatchingTerm::fold(plain1 + plain2)},
   {(x * plain1) * plain2, x *MatchingTerm::fold(plain1 *plain2)}};
-
 } // namespace fheco_trs
