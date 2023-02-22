@@ -34,12 +34,13 @@ public:
   const std::optional<MatchingTerm> &get_rewrite_condition() const { return rewrite_condition; }
 
   void substitute_in_ir(
-    std::shared_ptr<ir::Term> ir_node, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
+    std::shared_ptr<ir::Term> ir_node, core::MatchingMap &matching_map, ir::Program *program,
     core::FunctionTable &functions_table) const;
 
   bool evaluate_rewrite_condition(
-    std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-    core::FunctionTable &functions_table) const;
+    core::MatchingMap &matching_map, ir::Program *program, core::FunctionTable &functions_table) const;
+
+  std::optional<core::MatchingMap> match_with_ir_node(const ir::Program::Ptr &ir_node) const;
 
   ~RewriteRule() {}
 };

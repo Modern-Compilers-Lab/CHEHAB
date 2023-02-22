@@ -7,10 +7,9 @@ namespace fheco_trs
 namespace core
 {
 
-  std::optional<std::unordered_map<size_t, ir::Program::Ptr>> match_ir_node(
-    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term)
+  std::optional<MatchingMap> match_ir_node(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term)
   {
-    std::unordered_map<size_t, ir::Program::Ptr> matching_map;
+    MatchingMap matching_map;
 
     if (match_term(ir_node, matching_term, matching_map))
       return matching_map;
@@ -18,9 +17,7 @@ namespace core
     return std::nullopt;
   }
 
-  bool match_term(
-    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term,
-    std::unordered_map<size_t, ir::Program::Ptr> &matching_map)
+  bool match_term(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, MatchingMap &matching_map)
   {
 
     // Order of if statements is important !!!
@@ -64,8 +61,7 @@ namespace core
   }
 
   double arithmetic_eval(
-    const MatchingTerm &term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-    FunctionTable &functions_table)
+    const MatchingTerm &term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table)
   {
     /*
       This method evaluates arithmetic expressions that involve scalarType and rawDataType
@@ -139,8 +135,7 @@ namespace core
   }
 
   bool evaluate_boolean_matching_term(
-    const MatchingTerm &matching_term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-    FunctionTable &functions_table)
+    const MatchingTerm &matching_term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table)
   {
 
     // there could be arithmetic expressions but at this level all needs to be evaluated
@@ -243,8 +238,8 @@ namespace core
   }
 
   void substitute(
-    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &rewrite_rule_rhs,
-    std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program, FunctionTable &functions_table)
+    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &rewrite_rule_rhs, MatchingMap &matching_map,
+    ir::Program *program, FunctionTable &functions_table)
   {
     /*
       We call this function after ir_node is matched with lhs of rewrite rule
@@ -264,8 +259,7 @@ namespace core
   }
 
   std::shared_ptr<ir::Term> make_ir_node_from_matching_term(
-    const MatchingTerm &matching_term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map,
-    std::vector<MatchingPair> &new_constants_matching_pairs, ir::Program *program, FunctionTable &functions_table)
+    const MatchingTerm &matching_term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table)
   {
     auto it = matching_map.find(matching_term.get_term_id());
     if (it != matching_map.end())
@@ -281,8 +275,7 @@ namespace core
       std::vector<std::shared_ptr<ir::Term>> operands;
       for (auto &m_term_operand : matching_term.get_operands())
       {
-        operands.push_back(make_ir_node_from_matching_term(
-          m_term_operand, matching_map, new_constants_matching_pairs, program, functions_table));
+        operands.push_back(make_ir_node_from_matching_term(m_term_operand, matching_map, program, functions_table));
       }
 
       std::shared_ptr<ir::Term> ir_node = program->insert_operation_node_in_dataflow(
@@ -322,7 +315,6 @@ namespace core
 
       std::shared_ptr<ir::Term> ir_node =
         std::make_shared<ir::Term>(fheco_trs::term_type_map[matching_term.get_term_type()]);
-      new_constants_matching_pairs.push_back({matching_term, ir_node});
 
       /*
         Insert node in dataflow graph
@@ -338,14 +330,6 @@ namespace core
 
       return ir_node;
     }
-  }
-
-  std::shared_ptr<ir::Term> make_ir_node_from_matching_term(
-    const MatchingTerm &matching_term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-    FunctionTable &functions_table)
-  {
-    std::vector<MatchingPair> dummy_vector;
-    return make_ir_node_from_matching_term(matching_term, matching_map, dummy_vector, program, functions_table);
   }
 
 } // namespace core

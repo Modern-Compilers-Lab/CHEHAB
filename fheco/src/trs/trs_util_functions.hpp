@@ -11,17 +11,13 @@ namespace fheco_trs
 
 namespace util_functions
 {
-  MatchingTerm fold(
-    MatchingTerm term_to_fold, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program);
+  MatchingTerm fold(MatchingTerm term_to_fold, core::MatchingMap &matching_map, ir::Program *program);
 
-  MatchingTerm get_opcode(
-    MatchingTerm term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program = nullptr);
+  MatchingTerm get_opcode(MatchingTerm term, core::MatchingMap &matching_map, ir::Program *program = nullptr);
 
-  MatchingTerm depth(
-    MatchingTerm term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program);
+  MatchingTerm depth(MatchingTerm term, core::MatchingMap &matching_map, ir::Program *program);
 
-  MatchingTerm isconst(
-    const MatchingTerm &term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program);
+  MatchingTerm isconst(const MatchingTerm &term, core::MatchingMap &matching_map, ir::Program *program);
 
   inline core::FunctionTable functions_table = {
     {FunctionId::fold, fold},

@@ -32,7 +32,11 @@ int main()
 
     fhecompiler::Scalar n = 3;
 
-    output1 = (A + pt2) - pt1;
+    /*
+      (x - (y + z)) + z => (x - y)
+    */
+
+    output1 = (A - (B + C)) + C;
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

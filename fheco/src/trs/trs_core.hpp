@@ -11,8 +11,9 @@ namespace fheco_trs
 namespace core
 {
 
-  typedef std::function<MatchingTerm(MatchingTerm, std::unordered_map<size_t, ir::Program::Ptr> &, ir::Program *)>
-    CallableFunction;
+  typedef std::unordered_map<size_t, ir::Program::Ptr> MatchingMap;
+
+  typedef std::function<MatchingTerm(MatchingTerm, MatchingMap &, ir::Program *)> CallableFunction;
 
   typedef std::unordered_map<FunctionId, CallableFunction> FunctionTable;
 
@@ -36,32 +37,22 @@ namespace core
     ~MatchingPair() {}
   };
 
-  std::optional<std::unordered_map<size_t, ir::Program::Ptr>> match_ir_node(
-    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term);
+  std::optional<MatchingMap> match_ir_node(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term);
 
-  bool match_term(
-    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term,
-    std::unordered_map<size_t, ir::Program::Ptr> &matching_map);
+  bool match_term(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, MatchingMap &matching_map);
 
   double arithmetic_eval(
-    const MatchingTerm &term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-    FunctionTable &functions_table);
+    const MatchingTerm &term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table);
 
   bool evaluate_boolean_matching_term(
-    const MatchingTerm &matching_term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-    FunctionTable &functions_table);
+    const MatchingTerm &matching_term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table);
 
   void substitute(
-    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &rewrite_rule_rhs,
-    std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program, FunctionTable &functions_table);
+    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &rewrite_rule_rhs, MatchingMap &matching_map,
+    ir::Program *program, FunctionTable &functions_table);
 
   std::shared_ptr<ir::Term> make_ir_node_from_matching_term(
-    const MatchingTerm &matching_term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map,
-    std::vector<MatchingPair> &new_constants_matching_pairs, ir::Program *program, FunctionTable &functions_table);
-
-  std::shared_ptr<ir::Term> make_ir_node_from_matching_term(
-    const MatchingTerm &matching_term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-    FunctionTable &functions_table);
+    const MatchingTerm &matching_term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table);
 
 } // namespace core
 

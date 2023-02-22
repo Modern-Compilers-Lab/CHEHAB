@@ -83,9 +83,14 @@ std::vector<RewriteRule> dummy_ruleset2 = {
 
 MatchingTerm plain1(fheco_trs::TermType::plaintextType);
 MatchingTerm plain2(fheco_trs::TermType::plaintextType);
-
+/*
+(x - (y + z)) + z => (x - y)
+*/
 std::vector<RewriteRule> dummy_ruleset3 = {
   {(x * y) * x, y *square(x)},
+  {(x - (y + z)) + z, x - y},
+  {(((plain1 - x) - y) + plain2), (MatchingTerm::fold(plain1 + plain2) - y) - x,
+   MatchingTerm::isconst(plain1) && MatchingTerm::isconst(plain2)},
   {(x + plain1) - plain2, x + MatchingTerm::fold(plain1 - plain2),
    MatchingTerm::isconst(plain1) && MatchingTerm::isconst(plain2)},
   {(x - n), x + MatchingTerm::fold(0 - n)},

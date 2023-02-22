@@ -6,8 +6,7 @@ namespace fheco_trs
 namespace util_functions
 {
 
-  MatchingTerm fold(
-    MatchingTerm term_to_fold, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program)
+  MatchingTerm fold(MatchingTerm term_to_fold, core::MatchingMap &matching_map, ir::Program *program)
   {
     ir::Program::Ptr folded_ir_node = ir::fold_ir_term(matching_map[term_to_fold.get_term_id()], program);
     matching_map[term_to_fold.get_term_id()] = folded_ir_node;
@@ -15,8 +14,7 @@ namespace util_functions
     return term_to_fold;
   }
 
-  MatchingTerm get_opcode(
-    MatchingTerm term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program)
+  MatchingTerm get_opcode(MatchingTerm term, core::MatchingMap &matching_map, ir::Program *program)
   {
     auto it = matching_map.find(term.get_term_id());
     if (it == matching_map.end())
@@ -27,8 +25,7 @@ namespace util_functions
     return static_cast<int>(it->second->get_opcode());
   }
 
-  MatchingTerm depth(
-    MatchingTerm term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program)
+  MatchingTerm depth(MatchingTerm term, core::MatchingMap &matching_map, ir::Program *program)
   {
     auto it = matching_map.find(term.get_term_id());
 
@@ -41,8 +38,7 @@ namespace util_functions
     return depth_of_ir_term;
   }
 
-  MatchingTerm isconst(
-    const MatchingTerm &term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program)
+  MatchingTerm isconst(const MatchingTerm &term, core::MatchingMap &matching_map, ir::Program *program)
   {
 
     auto it = matching_map.find(term.get_term_id());
