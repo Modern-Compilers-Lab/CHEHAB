@@ -69,7 +69,7 @@ std::vector<RewriteRule> dummy_ruleset = {
    MatchingTerm::opcode_of(y) != static_cast<int>(ir::OpCode::rotate_rows)},
   {(x << p) + (y << p), (x + y) << p},
   {(x << p) * (y << p), (x * y) << p},
-  {(x << p) - (y << p), (x - y) << p},
+  {(x << p) - (y << p), (x - y) << p, MatchingTerm::depth_of(x) == MatchingTerm::depth_of(y)},
   {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p > q)},
   {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q > p)},
   {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p < q)},

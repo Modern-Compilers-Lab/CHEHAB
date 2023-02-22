@@ -287,7 +287,6 @@ namespace core
 
       if (matching_term.get_function_id() != FunctionId::undefined)
       {
-
         if (functions_table.find(matching_term.get_function_id()) == functions_table.end())
         {
           throw("undefined function id in make_ir_node_from_matching_term");
@@ -297,14 +296,6 @@ namespace core
 
         return make_ir_node_from_matching_term(new_matching_term, matching_map, program, functions_table);
       }
-
-      // this needs to be changed later
-      /*
-        if (matching_term.get_fold_flag() == true)
-        {
-          ir_node = fold_term(ir_node);
-        }
-      */
 
       return ir_node;
     }

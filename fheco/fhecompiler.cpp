@@ -62,7 +62,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   utils::draw_ir(program, output_filename + "1.dot");
 
-  fheco_trs::TRS trs(program, fheco_trs::util_functions::functions_table);
+  fheco_trs::TRS trs(program);
 
   trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
 

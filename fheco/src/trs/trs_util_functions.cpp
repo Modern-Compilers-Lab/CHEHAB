@@ -27,6 +27,20 @@ namespace util_functions
     return static_cast<int>(it->second->get_opcode());
   }
 
+  MatchingTerm depth(
+    MatchingTerm term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program)
+  {
+    auto it = matching_map.find(term.get_term_id());
+
+    if (it == matching_map.end())
+      throw("term doesnt exist in matching_map in depth");
+
+    auto ir_term = it->second;
+    int32_t depth_of_ir_term = ir::compute_depth_of(ir_term);
+
+    return depth_of_ir_term;
+  }
+
 } // namespace util_functions
 
 } // namespace fheco_trs

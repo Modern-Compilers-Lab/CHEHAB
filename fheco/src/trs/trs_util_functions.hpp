@@ -17,7 +17,11 @@ namespace util_functions
   MatchingTerm get_opcode(
     MatchingTerm term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program = nullptr);
 
-  inline core::FunctionTable functions_table = {{FunctionId::fold, fold}, {FunctionId::get_opcode, get_opcode}};
+  MatchingTerm depth(
+    MatchingTerm term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program);
+
+  inline core::FunctionTable functions_table = {
+    {FunctionId::fold, fold}, {FunctionId::get_opcode, get_opcode}, {FunctionId::depth, depth}};
 } // namespace util_functions
 
 } // namespace fheco_trs

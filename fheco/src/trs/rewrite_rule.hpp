@@ -35,11 +35,11 @@ public:
 
   std::vector<core::MatchingPair> substitute_in_ir(
     std::shared_ptr<ir::Term> ir_node, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-    core::FunctionTable &functions_table);
+    core::FunctionTable &functions_table) const;
 
   bool evaluate_rewrite_condition(
     std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-    core::FunctionTable &functions_table);
+    core::FunctionTable &functions_table) const;
 
   ~RewriteRule() {}
 };

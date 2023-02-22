@@ -12,12 +12,11 @@ RewriteRule::RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs, con
 
 std::vector<core::MatchingPair> RewriteRule::substitute_in_ir(
   std::shared_ptr<ir::Term> ir_node, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-  core::FunctionTable &functions_table)
+  core::FunctionTable &functions_table) const
 {
   /*
     We call this function after ir_node is matched with lhs of rewrite rule
   */
-
   std::vector<core::MatchingPair> new_constants_matching_pairs =
     core::substitute(ir_node, rhs, matching_map, program, functions_table);
 
@@ -26,7 +25,7 @@ std::vector<core::MatchingPair> RewriteRule::substitute_in_ir(
 
 bool RewriteRule::evaluate_rewrite_condition(
   std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-  core::FunctionTable &functions_table)
+  core::FunctionTable &functions_table) const
 {
   if (rewrite_condition == std::nullopt)
     throw("rewrite condition is not defined");

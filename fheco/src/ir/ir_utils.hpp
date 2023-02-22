@@ -43,4 +43,6 @@ ir::TermType deduce_ir_term_type(const ir::Program::Ptr &lhs, const ir::Program:
 
 int32_t get_rotation_step(const std::shared_ptr<ir::Term> &node);
 
+int32_t compute_depth_of(const std::shared_ptr<ir::Term> &node);
+
 } // namespace ir

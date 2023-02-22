@@ -59,7 +59,8 @@ public:
   // utils functions
 
   static MatchingTerm fold(MatchingTerm m_term);
-  static MatchingTerm opcode_of(MatchingTerm m_term);
+  static MatchingTerm opcode_of(const MatchingTerm &m_term);
+  static MatchingTerm depth_of(const MatchingTerm &m_term);
 };
 
 /*

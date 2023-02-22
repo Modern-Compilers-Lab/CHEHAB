@@ -2,13 +2,16 @@
 #include "draw_ir.hpp"
 #include "ir_utils.hpp"
 #include "trs_const.hpp"
+#include "trs_util_functions.hpp"
 #include <variant>
 
 namespace fheco_trs
 {
 
+core::FunctionTable TRS::functions_table = util_functions::functions_table;
+
 std::vector<core::MatchingPair> TRS::apply_rule_on_ir_node(
-  const std::shared_ptr<ir::Term> &ir_node, RewriteRule &rule, bool &is_rule_applied)
+  const std::shared_ptr<ir::Term> &ir_node, const RewriteRule &rule, bool &is_rule_applied)
 {
 
   is_rule_applied = false;
@@ -41,7 +44,7 @@ std::vector<core::MatchingPair> TRS::apply_rule_on_ir_node(
     return {};
 }
 
-void TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, std::vector<RewriteRule> &rules)
+void TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const std::vector<RewriteRule> &rules)
 {
   size_t curr_rule_index = 0;
   while (curr_rule_index < rules.size())
@@ -71,7 +74,7 @@ void TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, std::vec
   }
 }
 
-void TRS::apply_rewrite_rules_on_program(std::vector<RewriteRule> &rules)
+void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
 {
   auto &sorted_nodes = program->get_dataflow_sorted_nodes(true);
   for (auto &node : sorted_nodes)

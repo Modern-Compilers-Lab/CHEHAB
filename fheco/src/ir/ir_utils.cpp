@@ -512,4 +512,9 @@ std::shared_ptr<ir::Term> fold_ir_term(const std::shared_ptr<ir::Term> &term, ir
   return term;
 }
 
+int32_t compute_depth_of(const std::shared_ptr<ir::Term> &node)
+{
+  return 1;
+}
+
 } // namespace ir

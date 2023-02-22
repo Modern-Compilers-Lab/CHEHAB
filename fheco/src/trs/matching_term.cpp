@@ -279,10 +279,18 @@ MatchingTerm MatchingTerm::fold(MatchingTerm term_to_fold)
   return term_to_fold;
 }
 
-MatchingTerm MatchingTerm::opcode_of(MatchingTerm term)
+MatchingTerm MatchingTerm::opcode_of(const MatchingTerm &term)
 {
   MatchingTerm new_term(TermType::scalarType);
   new_term.set_function_id(FunctionId::get_opcode);
+  new_term.push_operand(term);
+  return new_term;
+}
+
+MatchingTerm MatchingTerm::depth_of(const MatchingTerm &term)
+{
+  MatchingTerm new_term(TermType::scalarType);
+  new_term.set_function_id(FunctionId::depth);
   new_term.push_operand(term);
   return new_term;
 }
