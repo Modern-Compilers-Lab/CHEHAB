@@ -15,6 +15,7 @@ enum class FunctionId
   count_mul,
   count_rot,
   get_opcode,
+  isconst
 };
 
 enum class TermType

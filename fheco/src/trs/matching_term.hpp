@@ -61,6 +61,7 @@ public:
   static MatchingTerm fold(MatchingTerm m_term);
   static MatchingTerm opcode_of(const MatchingTerm &m_term);
   static MatchingTerm depth_of(const MatchingTerm &m_term);
+  static MatchingTerm isconst(const MatchingTerm &m_term);
 };
 
 /*

@@ -41,6 +41,18 @@ namespace util_functions
     return depth_of_ir_term;
   }
 
+  MatchingTerm isconst(
+    const MatchingTerm &term, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program)
+  {
+
+    auto it = matching_map.find(term.get_term_id());
+    if (it == matching_map.end())
+      throw("term doesnt exist in matching_map in isconst");
+
+    ir::Program::Ptr ir_node = it->second;
+
+    return (static_cast<int>(program->type_of(ir_node->get_label()) == ir::ConstantTableEntryType::constant) == 1);
+  }
 } // namespace util_functions
 
 } // namespace fheco_trs

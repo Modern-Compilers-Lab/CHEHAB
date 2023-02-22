@@ -164,7 +164,6 @@ MatchingTerm operator!=(const MatchingTerm &lhs, const MatchingTerm &rhs)
     rewrite_condition_types.find(lhs.get_term_type()) == rewrite_condition_types.end() ||
     rewrite_condition_types.find(rhs.get_term_type()) == rewrite_condition_types.end())
   {
-    std::cout << "wrong ... \n";
     throw("impossible to evaluate rewrite condition");
   }
 
@@ -266,6 +265,11 @@ void MatchingTerm::push_operand(const MatchingTerm &operand)
   Constant folding
 */
 
+/*
+  for checking condition you create a new MatchingTerm and push input as operand, however for substitution we can just
+  set the function id
+*/
+
 MatchingTerm MatchingTerm::fold(MatchingTerm term_to_fold)
 {
   if (term_to_fold.get_term_type() == fheco_trs::TermType::ciphertextType)
@@ -275,19 +279,27 @@ MatchingTerm MatchingTerm::fold(MatchingTerm term_to_fold)
   return term_to_fold;
 }
 
-MatchingTerm MatchingTerm::opcode_of(const MatchingTerm &term)
+MatchingTerm MatchingTerm::opcode_of(const MatchingTerm &m_term)
 {
   MatchingTerm new_term(TermType::scalarType);
   new_term.set_function_id(FunctionId::get_opcode);
-  new_term.push_operand(term);
+  new_term.push_operand(m_term);
   return new_term;
 }
 
-MatchingTerm MatchingTerm::depth_of(const MatchingTerm &term)
+MatchingTerm MatchingTerm::isconst(const MatchingTerm &m_term)
+{
+  MatchingTerm new_term(TermType::booleanType);
+  new_term.set_function_id(FunctionId::isconst);
+  new_term.push_operand(m_term);
+  return new_term;
+}
+
+MatchingTerm MatchingTerm::depth_of(const MatchingTerm &m_term)
 {
   MatchingTerm new_term(TermType::scalarType);
   new_term.set_function_id(FunctionId::depth);
-  new_term.push_operand(term);
+  new_term.push_operand(m_term);
   return new_term;
 }
 

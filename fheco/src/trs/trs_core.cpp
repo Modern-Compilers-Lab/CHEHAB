@@ -156,10 +156,20 @@ namespace core
 
     if (it != functions_table.end())
     {
-      auto next_term_to_evaluate = it->second(matching_term, matching_map, program);
+      /*
+        Here we don't care about calls with type as non booleanType because these concern arithmetic_eval and they are
+        leaves so it will be handled below and in arithmetic_eval
+      */
+      if (matching_term.get_term_type() == TermType::booleanType)
+      {
+        if (matching_term.get_operands().size() == 0)
+          throw("missing argument for function to call in evaluate_boolean_matching_term");
 
-      if (next_term_to_evaluate.get_term_type() == TermType::booleanType)
+        auto next_term_to_evaluate =
+          functions_table[matching_term.get_function_id()](matching_term.get_operands()[0], matching_map, program);
+
         return evaluate_boolean_matching_term(next_term_to_evaluate, matching_map, program, functions_table);
+      }
     }
 
     if (matching_term.get_opcode() == fheco_trs::OpCode::undefined)
