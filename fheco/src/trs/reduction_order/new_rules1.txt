@@ -1,0 +1,28 @@
+(x * x) => (square(x))
+
+((x * y) * x) => (square(x) * y)
+(x * (x * y)) => (square(x) * y)
+((x * y) * y) => (x * square(y))
+(y * (x * y)) => (x * square(y))
+
+(((x * y) * z) * x) => (square(x) * (y * z))
+(x * ((x * y) * z)) => (square(x) * (y * z))
+((z * (x * y)) * x) => ((z * y) * square(x))
+(x * (z * (x * y))) => ((z * y) * square(x))
+(((x * y) * z) * y) => ((x * z) * square(y))
+(y * ((x * y) * z)) => (square(y) * (x * z))
+(y * ((x * y) * z)) => (square(y) * (x * z))
+((z * (x * y)) * y) => (square(y) * (z * x))
+(y * (z * (x * y))) => (square(y) * (z * x))
+
+
+(x * (y * (z * t))) => ((x * y) * (z * t))
+(x * ((y * z) * t)) => ((x * y) * (z * t))
+(((x * y) * z) * t) => ((x * y) * (z * t))
+((x * (y * z)) * t) => ((x * y) * (z * t))
+
+Rot
+(rot(x, n) * rot(y, n)) => (rot(x*y, n))
+(rot(x, n) + rot(y, n)) => (rot(x + y, n))
+(rot(x, n) - rot(y, n)) => (rot(x - y, n))
+(rot(rot(x, n), m)) => rot(x, n+m)

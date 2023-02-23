@@ -6,6 +6,6 @@
 
 namespace utils
 {
-void draw_ir(ir::Program *prgm, std::string ofile_name);
+void draw_ir(ir::Program *program, std::string ofile_name);
 
 } // namespace utils

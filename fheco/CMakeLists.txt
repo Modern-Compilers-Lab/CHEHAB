@@ -15,7 +15,7 @@ set(FHECOMPILER_STATIC_INSTALL_DIR lib)
 
 add_library(fhecompiler fhecompiler.cpp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_IR} PUBLIC ${SRC_DSL} PUBLIC ${SRC_PASSES} PUBLIC ${SRC_PARAMS_SELECTOR} PUBLIC ${SRC_TRANSLATOR} ${SRC_UTILS} ${SRC_TRS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_IR} PUBLIC ${SRC_DSL} PUBLIC ${SRC_PASSES} PUBLIC ${SRC_PARAMS_SELECTOR} PUBLIC ${SRC_TRANSLATOR} PUBLIC ${SRC_UTILS} PUBLIC ${SRC_TRS} PUBLIC ${SRC_TRS}/reduction_order)
 
 target_sources(fhecompiler PRIVATE
   ${SRC_DSL}/ciphertext.cpp
@@ -37,6 +37,8 @@ target_sources(fhecompiler PRIVATE
   ${SRC_TRS}/trs_core.cpp
   ${SRC_TRS}/trs_util_functions.cpp
   ${SRC_UTILS}/draw_ir.cpp
+  ${SRC_TRS}/reduction_order/utils.cpp
+  ${SRC_TRS}/reduction_order/component_orders.cpp
   ${SRC_PASSES}/normalize_pass.cpp
 )
 
@@ -65,6 +67,9 @@ install(FILES
   ${SRC_TRS}/trs.hpp
   ${SRC_TRS}/matching_term.hpp
   ${SRC_TRS}/rewrite_rule.hpp
+  ${SRC_TRS}/trs_const.hpp
+  ${SRC_TRS}/reduction_order/utils.hpp
+  ${SRC_TRS}/reduction_order/component_orders.hpp
   ${SRC_TRS}/trs_core.hpp
   ${SRC_TRS}/trs_util_functions.hpp
   DESTINATION ${HEADERS_INSTALL_DIR}
