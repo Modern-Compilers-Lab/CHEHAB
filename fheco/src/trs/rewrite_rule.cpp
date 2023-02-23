@@ -25,33 +25,23 @@ RewriteRule::RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs, con
     rewrite_condition(_condition), id(rule_id++)
 {}
 
-<<<<<<< HEAD
-void RewriteRule::substitute_in_ir(
-  std::shared_ptr<ir::Term> ir_node, core::MatchingMap &matching_map, ir::Program *program,
-  core::FunctionTable &functions_table) const
-=======
 MatchingTerm RewriteRule::get_rhs(const ir::Program *program, const matching_term_ir_node_map &matching_map) const
 {
   return rhs_factory(program, matching_map);
 }
 
-std::vector<core::MatchingPair> RewriteRule::substitute_in_ir(
-  std::shared_ptr<ir::Term> ir_node, std::unordered_map<size_t, ir::Program::Ptr> &matching_map, ir::Program *program,
-  core::FunctionTable &functions_table)
->>>>>>> 3db2545bb6ca4b2c3f4edfa78ec7d2a9853932d4
+void RewriteRule::substitute_in_ir(
+  std::shared_ptr<ir::Term> ir_node, core::MatchingMap &matching_map, ir::Program *program,
+  core::FunctionTable &functions_table) const
 {
   /*
     We call this function after ir_node is matched with lhs of rewrite rule
   */
-<<<<<<< HEAD
-  core::substitute(ir_node, rhs, matching_map, program, functions_table);
-=======
 
-  std::vector<core::MatchingPair> new_constants_matching_pairs =
-    core::substitute(ir_node, rhs_factory(program, matching_map), matching_map, program, functions_table);
+  if (static_rhs == std::nullopt)
+    throw("undefined rhs in substitute_in_ir");
 
-  return new_constants_matching_pairs;
->>>>>>> 3db2545bb6ca4b2c3f4edfa78ec7d2a9853932d4
+  core::substitute(ir_node, *static_rhs, matching_map, program, functions_table);
 }
 
 bool RewriteRule::evaluate_rewrite_condition(
