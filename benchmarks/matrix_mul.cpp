@@ -14,6 +14,33 @@ inline fhecompiler::Ciphertext sum_all_slots(const fhecompiler::Ciphertext &x, i
   return result;
 }
 
+inline fhecompiler::Ciphertext sum_all_slots2(const fhecompiler::Ciphertext &x, int vector_size)
+{
+  fhecompiler::Ciphertext rotated_cipher = x;
+  fhecompiler::Ciphertext result = rotated_cipher;
+
+  auto clog2 = [](int32_t x) -> int32_t {
+    int32_t r = 0;
+    while (x > 1)
+    {
+      x /= 2;
+      r += 1;
+    }
+    return r;
+  };
+
+  int32_t rot_step = 1;
+  int32_t log2_of_vector_size = clog2(vector_size);
+  for (; rot_step <= log2_of_vector_size + 1; rot_step *= 2)
+  {
+    fhecompiler::Ciphertext new_rotated_cipher = rotated_cipher << rot_step;
+    result += new_rotated_cipher;
+    rotated_cipher = new_rotated_cipher;
+  }
+  // result of sum will be in the first slot
+  return result;
+}
+
 int main()
 {
 
@@ -81,7 +108,7 @@ int main()
         std::vector<int64_t> mask(A[0].size(), 0);
         mask[0] = 1;
         fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_encrypted[j];
-        fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product, A[0].size()) * mask;
+        fhecompiler::Ciphertext temp_cipher = sum_all_slots2(simd_product, A[0].size()) * mask;
         if (j > 0)
           temp_cipher >>= j;
         temp_ciphers.push_back(temp_cipher);
