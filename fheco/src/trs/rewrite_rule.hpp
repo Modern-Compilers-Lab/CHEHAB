@@ -27,6 +27,8 @@ private:
   std::optional<MatchingTerm> static_rhs;
   rhs_factory_function rhs_factory;
   std::optional<MatchingTerm> rewrite_condition;
+  bool saving_circuit_flag = false; /* this attribute is to indicate that the rule will be applied only if some
+                                     condition satisifed to avoid losing operands if they are already common*/
   /* by definition all variable in rhs must be in lhs */
 public:
   RewriteRule() = delete;
@@ -35,13 +37,17 @@ public:
   RewriteRule &operator=(const RewriteRule &) = default;
   RewriteRule &operator=(RewriteRule &&) = default;
 
-  RewriteRule(const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory);
+  RewriteRule(const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, bool _saving_circuit_flag = false);
 
-  RewriteRule(const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, const MatchingTerm &_condition);
+  RewriteRule(
+    const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, const MatchingTerm &_condition,
+    bool _saving_circuit_flag = false);
 
-  RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs);
+  RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs, bool _saving_circuit_flag = false);
 
-  RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs, const MatchingTerm &_condition);
+  RewriteRule(
+    const MatchingTerm &_lhs, const MatchingTerm &_rhs, const MatchingTerm &_condition,
+    bool _saving_circuit_flag = false);
 
   size_t get_id() const { return id; }
 
@@ -53,7 +59,7 @@ public:
 
   const std::optional<MatchingTerm> &get_rewrite_condition() const { return rewrite_condition; }
 
-  void substitute_in_ir(
+  bool substitute_in_ir(
     std::shared_ptr<ir::Term> ir_node, core::MatchingMap &matching_map, ir::Program *program,
     core::FunctionTable &functions_table) const;
 

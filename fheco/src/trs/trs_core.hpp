@@ -54,6 +54,10 @@ namespace core
   std::shared_ptr<ir::Term> make_ir_node_from_matching_term(
     const MatchingTerm &matching_term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table);
 
+  bool circuit_saving_condition(const ir::Program::Ptr &ir_node);
+
+  bool circuit_saving_condition_rewrite_rule_checker(const MatchingTerm &term, MatchingMap &matching_map);
+
 } // namespace core
 
 } // namespace fheco_trs

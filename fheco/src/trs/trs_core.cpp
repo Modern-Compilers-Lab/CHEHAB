@@ -140,6 +140,8 @@ namespace core
 
     // there could be arithmetic expressions but at this level all needs to be evaluated
 
+    std::cout << "checking ... \n";
+
     if (matching_term.get_opcode() == OpCode::_not)
     {
       auto next_term_to_evaluate = matching_term.get_operands()[0];
@@ -330,6 +332,37 @@ namespace core
 
       return ir_node;
     }
+  }
+
+  bool circuit_saving_condition(const ir::Program::Ptr &ir_node)
+  {
+    return (ir_node->is_operation_node() && ir_node->get_parents_labels().size() <= 1);
+  }
+
+  bool circuit_saving_condition_rewrite_rule_checker(const MatchingTerm &term, MatchingMap &matching_map)
+  {
+    {
+      auto it = matching_map.find(term.get_term_id());
+      if (it == matching_map.end())
+        throw("missing matched node in IR in circuit_saving_condition_rewrite_rule_checker");
+    }
+
+    for (auto &operand_term : term.get_operands())
+    {
+      if (operand_term.get_opcode() == fheco_trs::OpCode::undefined)
+        continue;
+      auto it = matching_map.find(operand_term.get_term_id());
+      if (it == matching_map.end())
+        throw("missing matched node in IR in circuit_saving_condition_rewrite_rule_checker");
+
+      if (circuit_saving_condition(it->second) == false)
+        return false;
+
+      // if (circuit_saving_condition_rewrite_rule_checker(operand_term, matching_map) == false)
+      // return false;
+    }
+
+    return true;
   }
 
 } // namespace core

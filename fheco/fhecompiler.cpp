@@ -53,14 +53,14 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     }
   }
 
-  // utils::draw_ir(program, output_filename + "0.dot");
+  utils::draw_ir(program, output_filename + "0.dot");
 
   fheco_passes::CSE cse_pass(program);
 
-  // cse_pass.apply_cse2(false);
+  cse_pass.apply_cse2(true);
 
-  fheco_passes::Normalizer normalizer(program);
-  normalizer.normalize();
+  // fheco_passes::Normalizer normalizer(program);
+  // normalizer.normalize();
 
   utils::draw_ir(program, output_filename + "1.dot");
 
@@ -68,9 +68,23 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
 
-  // trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+  cse_pass.apply_cse2(true);
+
+  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
 
   cse_pass.apply_cse2(true);
+
+  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+
+  cse_pass.apply_cse2(true);
+
+  /*
+  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+
+  cse_pass.apply_cse2(true);
+  */
+
+  utils::draw_ir(program, output_filename + "2.dot");
 
   // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
   fheco_passes::RotationKeySelctionPass rs_pass(program, params);
@@ -80,8 +94,6 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
-
-  // utils::draw_ir(program, output_filename + "2.dot");
 
   translator::Translator tr(program, params);
   {

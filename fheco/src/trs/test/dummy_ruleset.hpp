@@ -2,6 +2,8 @@
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
 
+#define CIRCUIT_SAVE_FLAG true
+
 namespace fheco_trs
 {
 
@@ -59,6 +61,7 @@ std::vector<RewriteRule> dummy_ruleset = {
 
 std::vector<RewriteRule> dummy_ruleset = {
   {(x << p), x, p == 0},
+  {(x << p) << q, x << MatchingTerm::fold(p + q)},
   {((x << p) + y) + (z << q), ((x << p) + (z << q)) + y,
    MatchingTerm::opcode_of(y) != static_cast<int>(ir::OpCode::rotate_rows)},
   {(y + (x << p)) + (z << q), ((x << p) + (z << q)) + y,
@@ -67,13 +70,58 @@ std::vector<RewriteRule> dummy_ruleset = {
    MatchingTerm::opcode_of(y) != static_cast<int>(ir::OpCode::rotate_rows)},
   {(x << p) + ((z << q) + y), ((x << p) + (z << q)) + y,
    MatchingTerm::opcode_of(y) != static_cast<int>(ir::OpCode::rotate_rows)},
+  {(x + (y << p)) + (z << q), x + (((y << MatchingTerm::fold(p - q)) + z) << q),
+   (p > q) && (p > 0) && (q > 0) && MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows),
+   CIRCUIT_SAVE_FLAG},
+  {((y << p) + x) + (z << q), x + (((y << MatchingTerm::fold(p - q)) + z) << q),
+   (p > q) && (p > 0) && (q > 0) && MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows),
+   CIRCUIT_SAVE_FLAG},
+  {(z << q) + (x + (y << p)), x + (((y << MatchingTerm::fold(p - q)) + z) << q),
+   (p > q) && (p > 0) && (q > 0) && MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows),
+   CIRCUIT_SAVE_FLAG},
+  {(z << q) + ((y << p) + x), x + (((y << MatchingTerm::fold(p - q)) + z) << q),
+   (p > q) && (p > 0) && (q > 0) && MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows),
+   CIRCUIT_SAVE_FLAG},
+  {(x + (y << p)) + (z << q), x + (((y << MatchingTerm::fold(p - q)) + z) << q),
+   (p < q) && (p < 0) && (q < 0) && MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows),
+   CIRCUIT_SAVE_FLAG},
+  {((y << p) + x) + (z << q), x + (((y << MatchingTerm::fold(p - q)) + z) << q),
+   (p < q) && (p < 0) && (q < 0) && MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows),
+   CIRCUIT_SAVE_FLAG},
+  {(z << q) + (x + (y << p)), x + (((y << MatchingTerm::fold(p - q)) + z) << q),
+   (p < q) && (p < 0) && (q < 0) && MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows),
+   CIRCUIT_SAVE_FLAG},
+  {(z << q) + ((y << p) + x), x + (((y << MatchingTerm::fold(p - q)) + z) << q),
+   (p < q) && (p < 0) && (q < 0) && MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows),
+   CIRCUIT_SAVE_FLAG},
+  {(x + (y << p)) + (z << p), x + ((y + z) << p),
+   MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows)},
+  {((y << p) + x) + (z << p), x + ((y + z) << p),
+   MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows)},
+  {(z << p) + (x + (y << p)), x + ((z + y) << p),
+   MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows)},
+  {(z << p) + ((y << p) + x), x + ((z + y) << p),
+   MatchingTerm::opcode_of(x) != static_cast<int>(ir::OpCode::rotate_rows)},
   {(x << p) + (y << p), (x + y) << p},
   {(x << p) * (y << p), (x * y) << p},
-  {(x << p) - (y << p), (x - y) << p, MatchingTerm::depth_of(x) == MatchingTerm::depth_of(y)},
-  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p > q)},
-  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q > p)},
-  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p < q)},
-  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q < p)}};
+  {(x << p) - (y << p), (x - y) << p},
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p > q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q > p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p < q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q < p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
+  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
+  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG}};
+
+/*
+
+  {(x + (y << p)) + (z << q), x + (((y << MatchingTerm::fold(p - q)) + z) << q), p>q},
+  {((y << p) + x) + (z << q), x + (((y << MatchingTerm::fold(p - q)) + z) << q), p>q},
+  {(z << q) + (x + (y << p)), x + (((y << MatchingTerm::fold(p - q)) + z) << q), p>q},
+  {(z << q) + ((y << p) + x), x + (((y << MatchingTerm::fold(p - q)) + z) << q), p>q},
+
+*/
 
 std::vector<RewriteRule> dummy_ruleset2 = {
   {(x << p), x, p == 0},

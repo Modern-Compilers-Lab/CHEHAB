@@ -16,9 +16,9 @@ inline fhecompiler::Ciphertext sum_all_slots(const fhecompiler::Ciphertext &x, i
 
 inline fhecompiler::Ciphertext sum_all_slots2(const fhecompiler::Ciphertext &x, int vector_size)
 {
-  fhecompiler::Ciphertext rotated_cipher = x;
-  fhecompiler::Ciphertext result = rotated_cipher;
+  fhecompiler::Ciphertext result = x;
 
+  vector_size = std::max(vector_size, 16); // I assume vector size is 10
   auto clog2 = [](int32_t x) -> int32_t {
     int32_t r = 0;
     while (x > 1)
@@ -30,12 +30,10 @@ inline fhecompiler::Ciphertext sum_all_slots2(const fhecompiler::Ciphertext &x, 
   };
 
   int32_t rot_step = 1;
-  int32_t log2_of_vector_size = clog2(vector_size);
-  for (; rot_step <= log2_of_vector_size + 1; rot_step *= 2)
+  for (; rot_step <= clog2(vector_size) + 1; rot_step *= 2)
   {
-    fhecompiler::Ciphertext new_rotated_cipher = rotated_cipher << rot_step;
+    fhecompiler::Ciphertext new_rotated_cipher = result << rot_step;
     result += new_rotated_cipher;
-    rotated_cipher = new_rotated_cipher;
   }
   // result of sum will be in the first slot
   return result;
@@ -51,10 +49,9 @@ int main()
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
 
-    std::vector<std::vector<int64_t>> A = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
-    std::vector<std::vector<int64_t>> B = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
+    std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
+    std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
-    /*
     for (size_t i = 0; i < 10; i++)
     {
       std::vector<int64_t> line;
@@ -73,7 +70,6 @@ int main()
       }
       B.push_back(line);
     }
-    */
 
     std::vector<fhecompiler::Ciphertext> A_encrypted;
     // encrypt by line for matrix A
@@ -108,7 +104,7 @@ int main()
         std::vector<int64_t> mask(A[0].size(), 0);
         mask[0] = 1;
         fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_encrypted[j];
-        fhecompiler::Ciphertext temp_cipher = sum_all_slots2(simd_product, A[0].size()) * mask;
+        fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product, A[0].size()) * mask;
         if (j > 0)
           temp_cipher >>= j;
         temp_ciphers.push_back(temp_cipher);
