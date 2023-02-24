@@ -36,8 +36,6 @@ int main()
     cout << e.first << ":" << e.second << endl;
 
   fheco_passes::CSE cse_pass(program);
-  // fheco_passes::Normalizer normalizer(program);
-  // normalizer.normalize();
   fheco_trs::TRS trs(program);
   trs.apply_rewrite_rules_on_program(fheco_trs::Ruleset::rules);
 
