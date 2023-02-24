@@ -38,10 +38,7 @@ void RewriteRule::substitute_in_ir(
     We call this function after ir_node is matched with lhs of rewrite rule
   */
 
-  if (static_rhs == std::nullopt)
-    throw("undefined rhs in substitute_in_ir");
-
-  core::substitute(ir_node, *static_rhs, matching_map, program, functions_table);
+  core::substitute(ir_node, rhs_factory(program, matching_map), matching_map, program, functions_table);
 }
 
 bool RewriteRule::evaluate_rewrite_condition(
