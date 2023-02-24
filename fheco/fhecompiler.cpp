@@ -4,7 +4,7 @@
 #include "normalize_pass.hpp"
 #include "relin_pass.hpp"
 #include "rotationkeys_select_pass.hpp"
-#include "test/dummy_ruleset.hpp"
+#include "ruleset.hpp"
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
 
@@ -66,9 +66,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   fheco_trs::TRS trs(program);
 
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-
-  // trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+  trs.apply_rewrite_rules_on_program(fheco_trs::Ruleset::rules);
 
   cse_pass.apply_cse2(true);
 
