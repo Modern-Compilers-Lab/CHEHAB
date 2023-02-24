@@ -2,18 +2,19 @@
 
 using namespace fheco_trs;
 
-MatchingTerm x(fheco_trs::TermType::ciphertextType);
-MatchingTerm y(fheco_trs::TermType::ciphertextType);
-MatchingTerm z(fheco_trs::TermType::ciphertextType);
-MatchingTerm k(fheco_trs::TermType::ciphertextType);
-MatchingTerm n(fheco_trs::TermType::scalarType);
-MatchingTerm m(fheco_trs::TermType::scalarType);
-MatchingTerm p(fheco_trs::TermType::rawDataType);
-MatchingTerm q(fheco_trs::TermType::rawDataType);
-MatchingTerm r(fheco_trs::TermType::rawDataType);
-MatchingTerm s(fheco_trs::TermType::rawDataType);
+MatchingTerm x("x", TermType::ciphertextType);
+MatchingTerm y("y", TermType::ciphertextType);
+MatchingTerm z("z", TermType::ciphertextType);
+MatchingTerm u("u", TermType::ciphertextType);
+
+MatchingTerm a("a", TermType::scalarType);
+
+MatchingTerm n("n", fheco_trs::TermType::rawDataType);
+MatchingTerm m("m", fheco_trs::TermType::rawDataType);
 
 std::vector<RewriteRule> Ruleset::rules = {
-  {(x << p) + (y << q), ((x << MatchingTerm::fold(p - q)) + y) << q, (p > q)},
-  {(x << p) + (y << q), ((y << MatchingTerm::fold(q - p)) + x) << p, (q > p)},
-  {(x << p), x, p == 0}};
+  {(x << n), x, n == 0},
+  {x << n << m, x << MatchingTerm::fold((n + m))},
+  {(x << n) + (y << n), (x + y) << n},
+  {(x << n) + (y << m), (x + (y << MatchingTerm::fold(m - n))) << n, n < m},
+  {(x << n) + (y << m), ((x << MatchingTerm::fold(n - m)) + y) << m, n > m}};
