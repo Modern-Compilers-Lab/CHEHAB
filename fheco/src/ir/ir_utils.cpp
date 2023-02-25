@@ -517,4 +517,80 @@ int32_t compute_depth_of(const std::shared_ptr<ir::Term> &node)
   return 1;
 }
 
+void print_ops_counters(Program *program)
+{
+  int32_t add_ct_pt(0), add_ct_ct(0), mul_ct_pt(0), mul_ct_ct(0), sub_ct_pt(0), sub_ct_ct(0), rot_ct(0);
+
+  auto &nodes = program->get_dataflow_sorted_nodes(true);
+
+  const char *operands_size_errormsg = "unexpected number of operands";
+
+  auto is_pt_ct = [&operands_size_errormsg](const Program::Ptr &node) -> bool {
+    auto &operands = node->get_operands();
+    if (operands.size() != 2)
+      throw operands_size_errormsg;
+
+    auto &lhs = operands[0];
+    auto &rhs = operands[1];
+
+    if ((lhs->get_term_type() == ir::plaintextType) || (lhs->get_term_type() == ir::scalarType))
+      return true;
+
+    if ((rhs->get_term_type() == ir::plaintextType) || (rhs->get_term_type() == ir::scalarType))
+      return true;
+
+    return false;
+  };
+
+  for (auto &node : nodes)
+  {
+    if (node->is_operation_node() == false)
+      continue;
+
+    if (node->get_term_type() == ir::TermType::ciphertextType)
+    {
+      switch ((node->get_opcode()))
+      {
+      case OpCode::add:
+        if (is_pt_ct(node))
+          add_ct_pt++;
+        else
+          add_ct_ct++;
+        break;
+      case OpCode::mul:
+        if (is_pt_ct(node))
+          mul_ct_pt++;
+        else
+          mul_ct_ct++;
+        break;
+      case OpCode::sub:
+        if (is_pt_ct(node))
+          sub_ct_pt++;
+        else
+          sub_ct_ct++;
+        break;
+
+      case OpCode::rotate_rows:
+        rot_ct++;
+        break;
+      case OpCode::rotate:
+        rot_ct++;
+        break;
+      default:
+        break;
+      }
+    }
+    else
+      continue;
+  }
+  std::cout << std::string(50, '-') << "\n";
+  std::cout << "#(ct-ct mul) = " << mul_ct_ct << "\n";
+  std::cout << "#(ct-ct add) = " << add_ct_ct << "\n";
+  std::cout << "#(ct-ct sub) = " << sub_ct_ct << "\n";
+  std::cout << "#(ct rotation) = " << rot_ct << "\n";
+  std::cout << "#(ct-pt mul) = " << mul_ct_pt << "\n";
+  std::cout << "#(ct-pt add) = " << add_ct_pt << "\n";
+  std::cout << "#(ct-pt sub) = " << sub_ct_pt << "\n";
+  std::cout << std::string(50, '-') << "\n";
+}
 } // namespace ir

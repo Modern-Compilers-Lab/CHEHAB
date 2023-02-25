@@ -12,6 +12,7 @@ class ParameterSelector
 private:
   ir::Program *program;
   EncryptionParameters encryption_parameters;
+  void check_nb_slots_with_vector_size(const EncryptionParameters &params);
 
 public:
   ParameterSelector(ir::Program *prgm) : program(prgm) {}

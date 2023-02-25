@@ -8,6 +8,9 @@
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
 
+#define NB_TRS_CSE_PASS 3
+#define ENABLE_OPTIMIZATION true
+
 using namespace fhecompiler;
 
 ir::Program *program;
@@ -15,7 +18,7 @@ ir::Program *program;
 namespace fhecompiler
 {
 
-void init(const std::string &program_name, Scheme program_scheme, Backend backend, double scale)
+void init(const std::string &program_name, Scheme program_scheme, Backend backend, size_t vector_size, double scale)
 {
 
   if (program != nullptr)
@@ -26,6 +29,7 @@ void init(const std::string &program_name, Scheme program_scheme, Backend backen
   program->set_scheme(program_scheme);
   program->set_targeted_backed(backend);
   program->set_scale(scale);
+  program->set_vector_size(vector_size);
   // program->set_number_of_slots(number_of_slots);
   if (program_scheme == Scheme::ckks && scale == 0.0)
   {
@@ -53,44 +57,41 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     }
   }
 
-  utils::draw_ir(program, output_filename + "0.dot");
+  // utils::draw_ir(program, output_filename + "0.dot");
 
   fheco_passes::CSE cse_pass(program);
 
-  cse_pass.apply_cse2(true);
+  if (ENABLE_OPTIMIZATION == true)
+    cse_pass.apply_cse2(true);
 
   // fheco_passes::Normalizer normalizer(program);
   // normalizer.normalize();
 
-  utils::draw_ir(program, output_filename + "1.dot");
+  // utils::draw_ir(program, output_filename + "1.dot");
 
   fheco_trs::TRS trs(program);
 
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
+  if (ENABLE_OPTIMIZATION)
+  {
+    for (size_t i = NB_TRS_CSE_PASS; i > 0; i--)
+    {
+      trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
 
-  cse_pass.apply_cse2(true);
+      cse_pass.apply_cse2(true);
+    }
+  }
 
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-
-  cse_pass.apply_cse2(true);
-
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-
-  cse_pass.apply_cse2(true);
-
-  /*
-  trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-
-  cse_pass.apply_cse2(true);
-  */
-
-  utils::draw_ir(program, output_filename + "2.dot");
+  // utils::draw_ir(program, output_filename + "2.dot");
 
   // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
+
   fheco_passes::RotationKeySelctionPass rs_pass(program, params);
   rs_pass.collect_program_rotations_steps();
 
-  cse_pass.apply_cse2(true);
+  if (ENABLE_OPTIMIZATION)
+    cse_pass.apply_cse2(true);
+
+  ir::print_ops_counters(program);
 
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();

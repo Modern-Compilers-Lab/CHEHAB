@@ -59,7 +59,36 @@ void ParameterSelector::fix_parameters(EncryptionParameters &params)
     for now we don't have a mechanism to validate a set of fixed parameters, but this will be done either using
     heuristic bounds and/or experimental data based on the multiplicative depth of the circuit and type of scheme ...
   */
-  program->set_number_of_slots(params.poly_modulus_degree);
+  check_nb_slots_with_vector_size(params);
+}
+
+void ParameterSelector::check_nb_slots_with_vector_size(const EncryptionParameters &params)
+{
+  size_t nb_slots;
+
+  const char *exc_message = "number of slots is greater than vector size";
+
+  switch (program->get_encryption_scheme())
+  {
+  case fhecompiler::Scheme::bfv:
+    nb_slots = params.poly_modulus_degree;
+    if (program->get_vector_size() > nb_slots)
+      throw exc_message;
+    break;
+
+  case fhecompiler::Scheme::bgv:
+    nb_slots = params.poly_modulus_degree;
+    if (program->get_vector_size() > nb_slots)
+      throw exc_message;
+    break;
+
+  case fhecompiler::Scheme::ckks:
+    nb_slots = params.poly_modulus_degree >> 1;
+    if (program->get_vector_size() > nb_slots)
+      throw exc_message;
+  default:
+    break;
+  }
 }
 
 } // namespace params_selector

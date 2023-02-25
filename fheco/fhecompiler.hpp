@@ -14,11 +14,15 @@
 #include <memory>
 #include <string>
 
+#define DEFAULT_VECTOR_SIZE 1024
+
 namespace fhecompiler
 {
 
 /*program init, scale is only for ckks*/
-void init(const std::string &program_name, Scheme program_scheme, Backend backend = Backend::SEAL, double scale = 0.0);
+void init(
+  const std::string &program_name, Scheme program_scheme, Backend backend = Backend::SEAL,
+  size_t vector_size = DEFAULT_VECTOR_SIZE, double scale = 0.0);
 
 // paramters selection manually
 

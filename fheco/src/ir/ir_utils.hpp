@@ -45,4 +45,6 @@ int32_t get_rotation_step(const std::shared_ptr<ir::Term> &node);
 
 int32_t compute_depth_of(const std::shared_ptr<ir::Term> &node);
 
+void print_ops_counters(Program *program);
+
 } // namespace ir

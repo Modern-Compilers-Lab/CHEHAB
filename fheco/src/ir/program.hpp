@@ -88,7 +88,7 @@ private:
 
   double scale = 0.0; // for ckks
 
-  size_t number_of_slots;
+  size_t vector_size;
 
   size_t plain_modulus;
 
@@ -182,9 +182,9 @@ public:
 
   double get_scale() { return scale; }
 
-  void set_number_of_slots(size_t nb_slots) { number_of_slots = nb_slots; }
+  void set_vector_size(size_t v_size) { vector_size = v_size; }
 
-  size_t get_number_of_slots() { return number_of_slots; }
+  size_t get_vector_size() const { return vector_size; }
 
   bool is_tracked_object(const std::string &label);
 

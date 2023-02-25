@@ -140,8 +140,6 @@ namespace core
 
     // there could be arithmetic expressions but at this level all needs to be evaluated
 
-    std::cout << "checking ... \n";
-
     if (matching_term.get_opcode() == OpCode::_not)
     {
       auto next_term_to_evaluate = matching_term.get_operands()[0];
@@ -336,11 +334,13 @@ namespace core
 
   bool circuit_saving_condition(const ir::Program::Ptr &ir_node)
   {
-    return (ir_node->is_operation_node() && ir_node->get_parents_labels().size() <= 1);
+    return (ir_node->is_operation_node() && ir_node->get_parents_labels().size() <= 1) ||
+           (ir_node->is_operation_node() == false);
   }
 
   bool circuit_saving_condition_rewrite_rule_checker(const MatchingTerm &term, MatchingMap &matching_map)
   {
+
     {
       auto it = matching_map.find(term.get_term_id());
       if (it == matching_map.end())
@@ -358,8 +358,8 @@ namespace core
       if (circuit_saving_condition(it->second) == false)
         return false;
 
-      // if (circuit_saving_condition_rewrite_rule_checker(operand_term, matching_map) == false)
-      // return false;
+      if (circuit_saving_condition_rewrite_rule_checker(operand_term, matching_map) == false)
+        return false;
     }
 
     return true;

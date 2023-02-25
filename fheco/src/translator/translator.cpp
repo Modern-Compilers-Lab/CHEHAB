@@ -264,15 +264,14 @@ void Translator::translate_constant_table_entry(
       {
         int64_t casted_value = static_cast<int64_t>(*value);
         encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(casted_value), type_str, std::to_string(program->get_number_of_slots()),
+          os, tag, std::to_string(casted_value), type_str, std::to_string(program->get_vector_size()),
           program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
       }
       else
       {
         double e_value = std::get<double>(scalar_value);
         encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(e_value), type_str, std::to_string(program->get_number_of_slots()),
-          program->get_scale());
+          os, tag, std::to_string(e_value), type_str, std::to_string(program->get_vector_size()), program->get_scale());
       }
       /*
       if (type_str == scalar_int)
