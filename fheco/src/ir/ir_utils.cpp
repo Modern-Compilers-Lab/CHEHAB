@@ -99,7 +99,9 @@ std::shared_ptr<ir::Term> multiply_scalars(const std::vector<std::shared_ptr<ir:
   ir::ConstantTableEntry entry(ir::ConstantTableEntryType::constant, entry_value);
   program->insert_entry_in_constants_table({new_scalar.get_label(), entry});
 
-  return std::make_shared<ir::Term>(new_scalar);
+  auto new_scalar_node = std::make_shared<ir::Term>(new_scalar);
+  program->insert_created_node_in_dataflow(new_scalar_node);
+  return new_scalar_node;
 }
 
 std::shared_ptr<ir::Term> sum_scalars(const std::vector<std::shared_ptr<ir::Term>> &scalars, ir::Program *program)
@@ -144,8 +146,9 @@ std::shared_ptr<ir::Term> sum_scalars(const std::vector<std::shared_ptr<ir::Term
   ir::ConstantTableEntry::EntryValue entry_value(new_scalar.get_label(), new_scalar_value);
   ir::ConstantTableEntry entry(ir::ConstantTableEntryType::constant, entry_value);
   program->insert_entry_in_constants_table({new_scalar.get_label(), entry});
-
-  return std::make_shared<ir::Term>(new_scalar);
+  auto new_scalar_node = std::make_shared<ir::Term>(new_scalar);
+  program->insert_created_node_in_dataflow(new_scalar_node);
+  return new_scalar_node;
 }
 
 std::shared_ptr<ir::Term> subtract_scalars(const std::vector<std::shared_ptr<ir::Term>> &scalars, ir::Program *program)
@@ -198,7 +201,9 @@ std::shared_ptr<ir::Term> subtract_scalars(const std::vector<std::shared_ptr<ir:
   ir::ConstantTableEntry entry(ir::ConstantTableEntryType::constant, entry_value);
   program->insert_entry_in_constants_table({new_scalar.get_label(), entry});
 
-  return std::make_shared<ir::Term>(new_scalar);
+  auto new_scalar_node = std::make_shared<ir::Term>(new_scalar);
+  program->insert_created_node_in_dataflow(new_scalar_node);
+  return new_scalar_node;
 }
 
 double get_constant_value_as_double(ir::ConstantValue const_value)
@@ -295,6 +300,7 @@ std::shared_ptr<ir::Term> sum_const_plains(
       ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
+  program->insert_created_node_in_dataflow(plain_const_term);
   return plain_const_term;
 }
 
@@ -353,6 +359,7 @@ std::shared_ptr<ir::Term> subtract_const_plains(
       ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sub});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
+  program->insert_created_node_in_dataflow(plain_const_term);
   return plain_const_term;
 }
 
@@ -412,6 +419,7 @@ std::shared_ptr<ir::Term> multiply_const_plains(
       ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_product});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
+  program->insert_created_node_in_dataflow(plain_const_term);
   return plain_const_term;
 }
 

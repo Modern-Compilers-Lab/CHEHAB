@@ -30,13 +30,20 @@ int main()
 
     fhecompiler::Plaintext pt2(std::vector<int64_t>({10, 22, 34, 45, 56}));
 
+    fhecompiler::Plaintext pt_input1("pt_input1", fhecompiler::VarType::input);
+    fhecompiler::Plaintext pt_input2("pt_input2", fhecompiler::VarType::input);
+
+    fhecompiler::Plaintext pt_output("pt_output", fhecompiler::VarType::output);
+
     fhecompiler::Scalar n = 3;
 
     /*
       (x - (y + z)) + z => (x - y)
     */
 
-    output1 = (A - (B + C)) + C;
+    pt_output = pt_input1 + pt_input2; //(A - (B + C)) + C;
+
+    output1 = (5 - A) + (pt1 * pt2);
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

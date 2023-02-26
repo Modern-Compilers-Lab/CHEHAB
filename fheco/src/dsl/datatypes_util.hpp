@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fhecompiler_const.hpp"
+#include "ir_utils.hpp"
 #include "program.hpp"
 #include "term.hpp"
 #include <memory>
@@ -73,6 +74,22 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
   {
     throw("operand is not defined, maybe it was only declared\n");
   }
+
+  if (
+    program->type_of(lhs_node_ptr->get_label()) == ir::ConstantTableEntryType::constant &&
+    program->type_of(rhs_node_ptr->get_label()) == ir::ConstantTableEntryType::constant)
+  {
+    if (lhs_node_ptr->get_term_type() == ir::plaintextType && rhs_node_ptr->get_term_type() == ir::plaintextType)
+    {
+      auto folded_term = ir::fold_const_plain(lhs_node_ptr, rhs_node_ptr, opcode, program);
+      T1 new_T("");
+      new_T.set_label(folded_term->get_label()); // this is the most important step
+      return new_T;
+    }
+    else
+      throw("for now only operations between plain plain constants");
+  }
+
   return operate<T1>(opcode, std::vector<std::shared_ptr<ir::Term>>({lhs_node_ptr, rhs_node_ptr}), term_type);
 }
 
