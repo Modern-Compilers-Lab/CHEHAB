@@ -27,11 +27,9 @@ Ciphertext::Ciphertext() : label(datatype::ct_label_prefix + std::to_string(Ciph
 
 Ciphertext &Ciphertext::operator=(Ciphertext &&ct_move)
 {
-  return operate_assignement<Ciphertext>(*this, ct_move, ir::ciphertextType);
-  /*
-  operate_move<Ciphertext>(*this, std::move(ct_move), ir::ciphertextType);
+  // return operate_assignement<Ciphertext>(*this, ct_move, ir::ciphertextType);
+  operate_move_assignement<Ciphertext>(*this, std::move(ct_move), ir::ciphertextType);
   return *this;
-  */
 }
 
 Ciphertext::Ciphertext(Ciphertext &&ct_move)
@@ -61,7 +59,7 @@ Ciphertext::Ciphertext(const std::string &tag, VarType var_type)
 
 Ciphertext &Ciphertext::operator=(const Ciphertext &ct_copy)
 {
-  return operate_assignement<Ciphertext>(*this, ct_copy, ir::ciphertextType);
+  return operate_copy_assignement<Ciphertext>(*this, ct_copy, ir::ciphertextType);
 }
 
 Ciphertext::Ciphertext(const Ciphertext &ct_copy) : label(datatype::ct_label_prefix + std::to_string(ciphertext_id++))

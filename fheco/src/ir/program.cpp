@@ -53,6 +53,28 @@ void Program::insert_entry_in_constants_table(std::pair<std::string, ConstantTab
   }
 }
 
+void Program::insert_or_update_entry_in_constants_table(
+  const std::string &label, const ir::ConstantValue &constant_value, bool is_a_constant)
+{
+
+  auto existing_entry = get_entry_form_constants_table(label);
+
+  if (existing_entry != std::nullopt)
+  {
+    // update
+    set_constant_value_value(label, constant_value);
+  }
+  else
+  {
+    ir::ConstantTableEntryType entry_type =
+      (is_a_constant ? ir::ConstantTableEntryType::constant : ir::ConstantTableEntryType::temp);
+
+    ir::ConstantTableEntry const_entry(entry_type, {constant_value});
+
+    insert_entry_in_constants_table({label, const_entry});
+  }
+}
+
 void Program::delete_node_from_outputs(const std::string &key)
 {
   this->data_flow->delete_node_from_outputs(key);
@@ -258,6 +280,35 @@ bool Program::is_tracked_object(const std::string &label)
 void Program::insert_created_node_in_dataflow(const Ptr &node)
 {
   data_flow->insert_node(node);
+}
+
+std::optional<ConstantValue> Program::get_entry_value_value(const std::string &key) const
+{
+  auto table_entry = get_const_entry_form_constants_table(key);
+  if (table_entry == std::nullopt)
+    return std::nullopt;
+  return (*table_entry).get().entry_value.value;
+}
+
+void Program::reset_constant_value_value(const std::string &key)
+{
+  auto table_entry_opt = get_entry_form_constants_table(key);
+  if (table_entry_opt == std::nullopt)
+    return;
+  (*table_entry_opt).get().entry_value.value = std::nullopt;
+}
+
+void Program::set_constant_value_value(const std::string &key, const ir::ConstantValue &value)
+{
+  auto table_entry = get_entry_form_constants_table(key);
+  if (table_entry == std::nullopt)
+    return;
+  (*table_entry).get().entry_value.value = value;
+}
+
+void Program::add_node_to_outputs_nodes(const Ptr &node)
+{
+  data_flow->insert_node(node, true);
 }
 
 } // namespace ir

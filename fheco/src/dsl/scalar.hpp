@@ -34,24 +34,24 @@ public:
   Scalar(const Scalar &sc_copy);
   Scalar &operator=(const Scalar &sc_copy);
 
-  Scalar(Scalar &&sc_move) = default;
-  Scalar &operator=(Scalar &&sc_move) = default;
+  Scalar(Scalar &&sc_move);
+  Scalar &operator=(Scalar &&sc_move);
 
-  // Scalar &operator+=(const Scalar &rhs);
+  Scalar &operator+=(const Scalar &rhs);
 
-  // Scalar &operator*=(const Scalar &rhs);
+  Scalar &operator*=(const Scalar &rhs);
 
-  // Scalar &operator-=(const Scalar &rhs);
+  Scalar &operator-=(const Scalar &rhs);
 
   Scalar operator-();
 
-  // friend Scalar operator+(const Scalar &lhs, const Scalar &rhs);
+  friend Scalar operator+(const Scalar &lhs, const Scalar &rhs);
 
-  // friend Scalar operator-(const Scalar &lhs, const Scalar &rhs);
+  friend Scalar operator-(const Scalar &lhs, const Scalar &rhs);
 
-  // friend Scalar operator*(const Scalar &lhs, const Scalar &rhs);
+  friend Scalar operator*(const Scalar &lhs, const Scalar &rhs);
 
-  // friend Scalar operator-(const Scalar &rhs);
+  friend Scalar operator-(const Scalar &rhs);
 
   void reduce(std::uint64_t plaintext_modulus);
 

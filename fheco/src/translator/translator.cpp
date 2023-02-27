@@ -228,7 +228,7 @@ void Translator::translate_constant_table_entry(
   {
     write_input(tag, term_type, os);
   }
-  else if (entry_type == ir::ConstantTableEntryType::constant)
+  else if (entry_type == ir::ConstantTableEntryType::constant || entry_value.value != std::nullopt)
   {
     if (!encoding_writer.is_initialized())
     {
@@ -414,10 +414,10 @@ void Translator::translate_program(std::ofstream &os)
 
   for (auto &output_node : program->get_outputs_nodes())
   {
-
-    if (output_node.second->is_operation_node() == false) /* Output node must be at least an assignement node */
+    /*
+    if (output_node.second->is_operation_node() == false)
       continue;
-
+    */
     write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
   }
 

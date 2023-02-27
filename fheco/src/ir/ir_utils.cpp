@@ -1,4 +1,5 @@
 #include "ir_utils.hpp"
+#include <cmath>
 
 namespace ir
 {
@@ -39,168 +40,62 @@ std::shared_ptr<ir::Term> fold_scalar(
 
   if (opcode == ir::OpCode::add)
   {
-    return sum_scalars({lhs, rhs}, program);
+    return fold_scalar_helper(lhs, rhs, add_scalars, program);
   }
   else if (opcode == ir::OpCode::mul)
   {
-    return multiply_scalars({lhs, rhs}, program);
+    return fold_scalar_helper(lhs, rhs, multiply_scalars, program);
   }
   else if (opcode == ir::OpCode::sub)
   {
-    return subtract_scalars({lhs, rhs}, program);
+    return fold_scalar_helper(lhs, rhs, subtract_scalars, program);
   }
   else
     throw("unsupported operation in fold_scalar");
 }
 
-std::shared_ptr<ir::Term> multiply_scalars(const std::vector<std::shared_ptr<ir::Term>> &scalars, ir::Program *program)
-{
-  if (scalars.size() == 1)
-    return scalars[0];
-
-  ir::Term new_scalar(ir::TermType::scalarType);
-  new_scalar.set_a_default_label();
-
-  using ScalarValue = ir::ScalarValue;
-
-  double product = 1;
-  for (auto &scalar : scalars)
-  {
-    auto table_entry = program->get_entry_form_constants_table(scalar->get_label());
-    if (table_entry == std::nullopt)
-    {
-      throw("unexpected, scalar doesnt exist in constants table");
-    }
-    else
-    {
-      ScalarValue scalar_value = std::get<ScalarValue>(*(*table_entry).get().get_entry_value().value);
-      if (auto double_value = std::get_if<double>(&scalar_value))
-      {
-        product *= (*double_value);
-      }
-      else
-      {
-        int64_t int_value = std::get<int64_t>(scalar_value);
-        product *= int_value;
-      }
-    }
-  }
-  ScalarValue new_scalar_value;
-  if (program->get_encryption_scheme() != fhecompiler::ckks)
-  {
-    int64_t to_int = product;
-    new_scalar_value = to_int;
-  }
-  else
-  {
-    new_scalar_value = product;
-  }
-  ir::ConstantTableEntry::EntryValue entry_value(new_scalar.get_label(), new_scalar_value);
-  ir::ConstantTableEntry entry(ir::ConstantTableEntryType::constant, entry_value);
-  program->insert_entry_in_constants_table({new_scalar.get_label(), entry});
-
-  auto new_scalar_node = std::make_shared<ir::Term>(new_scalar);
-  program->insert_created_node_in_dataflow(new_scalar_node);
-  return new_scalar_node;
-}
-
-std::shared_ptr<ir::Term> sum_scalars(const std::vector<std::shared_ptr<ir::Term>> &scalars, ir::Program *program)
+std::shared_ptr<ir::Term> fold_scalar_helper(
+  const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs,
+  const std::function<void(double &, double, int64_t)> &e_func, Program *program)
 {
   ir::Term new_scalar(ir::TermType::scalarType);
   new_scalar.set_a_default_label();
 
+  const char *nullopt_ex_msg = "unexpected nullopt in fold_scalar_helper";
+
+  auto lhs_const_value_opt = program->get_entry_value_value(lhs->get_label());
+
+  if (lhs_const_value_opt == std::nullopt)
+    throw(nullopt_ex_msg);
+
+  auto rhs_const_value_opt = program->get_entry_value_value(rhs->get_label());
+
+  if (rhs_const_value_opt == std::nullopt)
+    throw(nullopt_ex_msg);
+
+  auto lhs_const_value = *lhs_const_value_opt;
+  auto rhs_const_value = *rhs_const_value_opt;
+
+  double lhs_value = get_constant_value_as_double(lhs_const_value);
+  double rhs_value = get_constant_value_as_double(rhs_const_value);
+
+  e_func(lhs_value, rhs_value, program->get_plain_modulus());
+
   using ScalarValue = ir::ScalarValue;
 
-  double sum = 0;
-  for (auto &scalar : scalars)
-  {
-    auto table_entry = program->get_entry_form_constants_table(scalar->get_label());
-    if (table_entry == std::nullopt)
-    {
-      throw("unexpected, scalar doesnt exist in constants table");
-    }
-    else
-    {
-      ScalarValue scalar_value = std::get<ScalarValue>(*(*table_entry).get().get_entry_value().value);
-      if (auto double_value = std::get_if<double>(&scalar_value))
-      {
-        sum += (*double_value);
-      }
-      else
-      {
-        int64_t int_value = std::get<int64_t>(scalar_value);
-        sum += int_value;
-      }
-    }
-  }
   ScalarValue new_scalar_value;
   if (program->get_encryption_scheme() != fhecompiler::ckks)
   {
-    int64_t to_int = sum;
+    int64_t to_int = lhs_value;
     new_scalar_value = to_int;
   }
   else
   {
-    new_scalar_value = sum;
+    new_scalar_value = lhs_value;
   }
   ir::ConstantTableEntry::EntryValue entry_value(new_scalar.get_label(), new_scalar_value);
   ir::ConstantTableEntry entry(ir::ConstantTableEntryType::constant, entry_value);
   program->insert_entry_in_constants_table({new_scalar.get_label(), entry});
-  auto new_scalar_node = std::make_shared<ir::Term>(new_scalar);
-  program->insert_created_node_in_dataflow(new_scalar_node);
-  return new_scalar_node;
-}
-
-std::shared_ptr<ir::Term> subtract_scalars(const std::vector<std::shared_ptr<ir::Term>> &scalars, ir::Program *program)
-{
-  ir::Term new_scalar(ir::TermType::scalarType);
-  new_scalar.set_a_default_label();
-
-  using ScalarValue = ir::ScalarValue;
-
-  double subtraction = 0;
-  for (size_t i = 0; i < scalars.size(); i++)
-  {
-    auto scalar = scalars[i];
-    auto table_entry = program->get_entry_form_constants_table(scalar->get_label());
-    if (table_entry == std::nullopt)
-    {
-      throw("unexpected, scalar doesnt exist in constants table");
-    }
-    else
-    {
-      ScalarValue scalar_value = std::get<ScalarValue>(*(*table_entry).get().get_entry_value().value);
-      if (auto double_value = std::get_if<double>(&scalar_value))
-      {
-        if (i == 0)
-          subtraction = (*double_value);
-        else
-          subtraction -= (*double_value);
-      }
-      else
-      {
-        int64_t int_value = std::get<int64_t>(scalar_value);
-        if (i == 0)
-          subtraction = int_value;
-        else
-          subtraction -= int_value;
-      }
-    }
-  }
-  ScalarValue new_scalar_value;
-  if (program->get_encryption_scheme() != fhecompiler::ckks)
-  {
-    int64_t to_int = subtraction;
-    new_scalar_value = to_int;
-  }
-  else
-  {
-    new_scalar_value = subtraction;
-  }
-  ir::ConstantTableEntry::EntryValue entry_value(new_scalar.get_label(), new_scalar_value);
-  ir::ConstantTableEntry entry(ir::ConstantTableEntryType::constant, entry_value);
-  program->insert_entry_in_constants_table({new_scalar.get_label(), entry});
-
   auto new_scalar_node = std::make_shared<ir::Term>(new_scalar);
   program->insert_created_node_in_dataflow(new_scalar_node);
   return new_scalar_node;
@@ -245,178 +140,54 @@ void get_constant_value_as_vector_of_double(ir::ConstantValue const_value, std::
   }
 }
 
-std::shared_ptr<ir::Term> sum_const_plains(
-  const std::vector<std::shared_ptr<ir::Term>> &const_plains, ir::Program *program)
+std::shared_ptr<ir::Term> fold_const_plain_helper(
+  const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs,
+  const std::function<void(std::vector<double> &, const std::vector<double>, int64_t)> &e_func, Program *program)
 {
+  auto lhs_const_value_opt = program->get_entry_value_value(lhs->get_label());
 
-  if (const_plains.size() == 0)
-    throw("empty const_plains vector in sum_const_plains");
-
-  if (const_plains.size() == 1)
-    return const_plains[0];
-
-  std::vector<double> const_plains_sum; // simd sum
-  for (size_t i = 0; i < const_plains.size(); i++)
+  if (lhs_const_value_opt == std::nullopt || lhs->get_term_type() != ir::plaintextType)
   {
-    auto &const_plain = const_plains[i];
-    if (
-      program->type_of(const_plain->get_label()) != ir::ConstantTableEntryType::constant ||
-      const_plain->get_term_type() != ir::plaintextType)
-    {
-      throw("only constant plaintext are expected at sum_const_plains");
-    }
-
-    ir::ConstantValue const_value =
-      *(*program->get_entry_form_constants_table(const_plain->get_label())).get().get_entry_value().value;
-
-    std::vector<double> vector_value;
-    get_constant_value_as_vector_of_double(const_value, vector_value);
-    if (i == 0)
-      const_plains_sum = vector_value;
-    else
-    {
-      // this is bad and better to avoid it
-      if (const_plains_sum.size() < vector_value.size())
-        const_plains_sum.resize(vector_value.size());
-
-      for (size_t j = 0; j < vector_value.size(); j++)
-        const_plains_sum[j] += vector_value[j];
-    }
+    throw("only plaintexts with a value at compile time are expected at fold_const_plain_helper");
   }
-  std::shared_ptr<ir::Term> plain_const_term = std::make_shared<ir::Term>(ir::TermType::plaintextType);
-  plain_const_term->set_a_default_label();
 
-  if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
+  auto rhs_const_value_opt = program->get_entry_value_value(rhs->get_label());
+
+  if (rhs_const_value_opt == std::nullopt || rhs->get_term_type() != ir::plaintextType)
   {
-    std::vector<int64_t> const_plains_sum_int;
-    cast_double_vector_to_int(const_plains_sum, const_plains_sum_int);
-    ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum_int});
-    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
+    throw("only plaintexts with a value at compile time are expected at fold_const_plain_helper");
   }
-  else
-  {
-    ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum});
-    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
-  }
-  program->insert_created_node_in_dataflow(plain_const_term);
-  return plain_const_term;
-}
 
-std::shared_ptr<ir::Term> subtract_const_plains(
-  const std::vector<std::shared_ptr<ir::Term>> &const_plains, ir::Program *program)
-{
+  ir::ConstantValue lhs_const_value = *lhs_const_value_opt;
+  ir::ConstantValue rhs_const_value = *rhs_const_value_opt;
 
-  if (const_plains.size() == 0)
-    throw("empty const_plains vector in subtract_const_plains");
+  std::vector<double> lhs_vec;
+  get_constant_value_as_vector_of_double(lhs_const_value, lhs_vec);
 
-  if (const_plains.size() == 1)
-    return const_plains[0];
+  std::vector<double> rhs_vec;
+  get_constant_value_as_vector_of_double(rhs_const_value, rhs_vec);
 
-  std::vector<double> const_plains_sub; // simd subtraction
-  for (size_t i = 0; i < const_plains.size(); i++)
-  {
-    auto &const_plain = const_plains[i];
-    if (
-      program->type_of(const_plain->get_label()) != ir::ConstantTableEntryType::constant ||
-      const_plain->get_term_type() != ir::plaintextType)
-    {
-      throw("only constant plaintext are expected at subtract_const_plains");
-    }
+  // this is not good .. better to avoid it
+  if (lhs_vec.size() < rhs_vec.size())
+    lhs_vec.resize(rhs_vec.size());
 
-    ir::ConstantValue const_value =
-      *(*program->get_entry_form_constants_table(const_plain->get_label())).get().get_entry_value().value;
-
-    std::vector<double> vector_value;
-    get_constant_value_as_vector_of_double(const_value, vector_value);
-    if (i == 0)
-      const_plains_sub = vector_value;
-    else
-    {
-      // this is bad and better to avoid it
-      if (const_plains_sub.size() < vector_value.size())
-        const_plains_sub.resize(vector_value.size());
-
-      for (size_t j = 0; j < vector_value.size(); j++)
-        const_plains_sub[j] -= vector_value[j];
-    }
-  }
-  std::shared_ptr<ir::Term> plain_const_term = std::make_shared<ir::Term>(ir::TermType::plaintextType);
-  plain_const_term->set_a_default_label();
-
-  if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
-  {
-    std::vector<int64_t> const_plains_sub_int;
-    cast_double_vector_to_int(const_plains_sub, const_plains_sub_int);
-    ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sub_int});
-    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
-  }
-  else
-  {
-    ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sub});
-    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
-  }
-  program->insert_created_node_in_dataflow(plain_const_term);
-  return plain_const_term;
-}
-
-std::shared_ptr<ir::Term> multiply_const_plains(
-  const std::vector<std::shared_ptr<ir::Term>> &const_plains, ir::Program *program)
-{
-
-  if (const_plains.size() == 0)
-    throw("empty const_plains vector multiply_const_plains");
-
-  if (const_plains.size() == 1)
-    return const_plains[0];
-
-  std::vector<double> const_plains_product; // simd product
-  for (size_t i = 0; i < const_plains.size(); i++)
-  {
-    auto &const_plain = const_plains[i];
-    if (
-      program->type_of(const_plain->get_label()) != ir::ConstantTableEntryType::constant ||
-      const_plain->get_term_type() != ir::plaintextType)
-    {
-      throw("only constant plaintext are expected at multiply_const_plains");
-    }
-
-    ir::ConstantValue const_value =
-      *(*program->get_entry_form_constants_table(const_plain->get_label())).get().get_entry_value().value;
-
-    std::vector<double> vector_value;
-    get_constant_value_as_vector_of_double(const_value, vector_value);
-    if (i == 0)
-      const_plains_product = vector_value;
-    else
-    {
-      // this is bad and better to avoid it
-      if (const_plains_product.size() < vector_value.size())
-        const_plains_product.resize(vector_value.size());
-
-      for (size_t j = 0; j < vector_value.size(); j++)
-        const_plains_product[j] *= vector_value[j];
-    }
-  }
+  e_func(lhs_vec, rhs_vec, program->get_plain_modulus());
 
   std::shared_ptr<ir::Term> plain_const_term = std::make_shared<ir::Term>(ir::TermType::plaintextType);
   plain_const_term->set_a_default_label();
 
   if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
   {
-    std::vector<int64_t> cconst_plains_product_int;
-    cast_double_vector_to_int(const_plains_product, cconst_plains_product_int);
+    std::vector<int64_t> lhs_vec_casted;
+    cast_double_vector_to_int(lhs_vec, lhs_vec_casted);
     ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), cconst_plains_product_int});
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), lhs_vec_casted});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
   else
   {
     ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_product});
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), lhs_vec});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
   program->insert_created_node_in_dataflow(plain_const_term);
@@ -429,19 +200,95 @@ std::shared_ptr<ir::Term> fold_const_plain(
   switch (opcode)
   {
   case ir::OpCode::add:
-    return sum_const_plains({lhs, rhs}, program);
+    return fold_const_plain_helper(lhs, rhs, add_two_double_vectors, program);
     break;
 
   case ir::OpCode::mul:
-    return multiply_const_plains({lhs, rhs}, program);
+    return fold_const_plain_helper(lhs, rhs, multiply_two_double_vectors, program);
     break;
 
   case ir::OpCode::sub:
-    return subtract_const_plains({lhs, rhs}, program);
+    return fold_const_plain_helper(lhs, rhs, subtract_two_double_vectors, program);
     break;
 
   default:
     throw("unsuported operation in fold_const_plain");
+    break;
+  }
+}
+
+std::shared_ptr<ir::Term> fold_plain_scalar_helper(
+  const std::shared_ptr<ir::Term> &_lhs, const std::shared_ptr<ir::Term> &_rhs,
+  const std::function<void(std::vector<double> &, double, int64_t)> &op_func, Program *program)
+{
+  const char *nullopt_ex_msg = "unexpected nullopt in fold_plain_scalar_helper";
+
+  std::shared_ptr<ir::Term> lhs(_lhs), rhs(_rhs);
+
+  if (_lhs->get_term_type() == ir::scalarType)
+  {
+    lhs = _rhs;
+    rhs = _lhs;
+  }
+
+  auto plain_const_value_opt = program->get_entry_value_value(lhs->get_label());
+  if (plain_const_value_opt == std::nullopt)
+    throw(nullopt_ex_msg);
+  auto scalar_const_value_opt = program->get_entry_value_value(rhs->get_label());
+  if (scalar_const_value_opt == std::nullopt)
+    throw(nullopt_ex_msg);
+
+  ir::ConstantValue plain_const_value = *plain_const_value_opt;
+  ir::ConstantValue scalar_const_value = *scalar_const_value_opt;
+
+  std::vector<double> plain_vec;
+  get_constant_value_as_vector_of_double(plain_const_value, plain_vec);
+  double scalar_value = get_constant_value_as_double(scalar_const_value);
+
+  op_func(plain_vec, scalar_value, program->get_plain_modulus());
+
+  std::shared_ptr<ir::Term> const_node = std::make_shared<ir::Term>(TermType::plaintextType);
+  const_node->set_a_default_label();
+
+  if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
+  {
+    std::vector<int64_t> plain_vec_casted;
+    cast_double_vector_to_int(plain_vec, plain_vec_casted);
+    ir::ConstantTableEntry const_table_entry(
+      ir::ConstantTableEntryType::constant, {const_node->get_label(), plain_vec_casted});
+    program->insert_entry_in_constants_table({const_node->get_label(), const_table_entry});
+  }
+  else
+  {
+    ir::ConstantTableEntry const_table_entry(
+      ir::ConstantTableEntryType::constant, {const_node->get_label(), plain_vec});
+    program->insert_entry_in_constants_table({const_node->get_label(), const_table_entry});
+  }
+
+  program->insert_created_node_in_dataflow(const_node);
+
+  return const_node;
+}
+
+std::shared_ptr<ir::Term> fold_plain_scalar(
+  const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, OpCode opcode, Program *program)
+{
+  switch (opcode)
+  {
+  case OpCode::add:
+    return fold_plain_scalar_helper(lhs, rhs, add_double_to_vector_of_double, program);
+    break;
+
+  case OpCode::mul:
+    return fold_plain_scalar_helper(lhs, rhs, multiply_double_to_vector_of_double, program);
+    break;
+
+  case OpCode::sub:
+    return fold_plain_scalar_helper(lhs, rhs, subtract_double_to_vector_of_double, program);
+    break;
+
+  default:
+    throw("unsupported operation in fold_plain_scalar");
     break;
   }
 }
@@ -601,4 +448,88 @@ void print_ops_counters(Program *program)
   std::cout << "#(ct-pt sub) = " << sub_ct_pt << "\n";
   std::cout << std::string(50, '-') << "\n";
 }
+
+ConstantTableEntryType deduce_const_table_entry_table(
+  const Program::Ptr &lhs, const Program::Ptr &rhs, Program *program)
+{
+  ConstantTableEntryType lhs_entry_type = program->type_of(lhs->get_label());
+  ConstantTableEntryType rhs_entry_type = program->type_of(rhs->get_label());
+
+  if (lhs_entry_type == rhs_entry_type)
+    return lhs_entry_type;
+
+  else
+    return ir::ConstantTableEntryType::temp;
+}
+
+void swap(Program::Ptr &lhs, Program::Ptr &rhs)
+{
+  Program::Ptr t = lhs;
+  lhs = rhs;
+  rhs = t;
+}
+
+void add_double_to_vector_of_double(std::vector<double> &vec, double v, int64_t modulus)
+{
+  for (size_t i = 0; i < vec.size(); i++)
+  {
+    add_scalars(vec[i], v, modulus);
+  }
+}
+
+void multiply_double_to_vector_of_double(std::vector<double> &vec, double v, int64_t modulus)
+{
+  for (size_t i = 0; i < vec.size(); i++)
+  {
+    multiply_scalars(vec[i], v, modulus);
+  }
+}
+
+void subtract_double_to_vector_of_double(std::vector<double> &vec, double v, int64_t modulus)
+{
+  for (size_t i = 0; i < vec.size(); i++)
+  {
+    subtract_scalars(vec[i], v, modulus);
+  }
+}
+
+void add_scalars(double &lhs, double rhs, int64_t modulus)
+{
+  lhs = std::fmod(std::fmod(lhs, modulus) + std::fmod(rhs, modulus), modulus);
+}
+
+void subtract_scalars(double &lhs, double rhs, int64_t modulus)
+{
+  lhs = std::fmod(std::fmod(lhs, modulus) - std::fmod(rhs, modulus), modulus);
+}
+
+void multiply_scalars(double &lhs, double rhs, int64_t modulus)
+{
+  lhs = std::fmod(std::fmod(lhs, modulus) * std::fmod(rhs, modulus), modulus);
+}
+
+void add_two_double_vectors(std::vector<double> &lhs, const std::vector<double> &rhs, int64_t modulus)
+{
+  for (size_t i = 0; i < lhs.size(); i++)
+  {
+    add_scalars(lhs[i], rhs[i], modulus);
+  }
+}
+
+void subtract_two_double_vectors(std::vector<double> &lhs, const std::vector<double> &rhs, int64_t modulus)
+{
+  for (size_t i = 0; i < lhs.size(); i++)
+  {
+    subtract_scalars(lhs[i], rhs[i], modulus);
+  }
+}
+
+void multiply_two_double_vectors(std::vector<double> &lhs, const std::vector<double> &rhs, int64_t modulus)
+{
+  for (size_t i = 0; i < lhs.size(); i++)
+  {
+    multiply_scalars(lhs[i], rhs[i], modulus);
+  }
+}
+
 } // namespace ir

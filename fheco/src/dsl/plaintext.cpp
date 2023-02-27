@@ -27,7 +27,7 @@ Plaintext::Plaintext() : label(datatype::pt_label_prefix + std::to_string(Plaint
 
 Plaintext &Plaintext::operator=(Plaintext &&pt_move)
 {
-  operate_move<Plaintext>(*this, std::move(pt_move), ir::plaintextType);
+  operate_move_assignement<Plaintext>(*this, std::move(pt_move), ir::plaintextType);
   return *this;
 }
 
@@ -64,7 +64,7 @@ Plaintext::Plaintext(const std::string &tag, VarType var_type)
 
 Plaintext &Plaintext::operator=(const Plaintext &pt_copy)
 {
-  return operate_assignement<Plaintext>(*this, pt_copy, ir::plaintextType);
+  return operate_copy_assignement<Plaintext>(*this, pt_copy, ir::plaintextType);
 }
 
 Plaintext::Plaintext(const Plaintext &pt_copy) : label(datatype::pt_label_prefix + std::to_string(plaintext_id++))
@@ -111,12 +111,10 @@ Plaintext &Plaintext::operator-=(const Plaintext &rhs)
   // throw(datatype::eval_not_supported);
 }
 
-/*
 Plaintext Plaintext::operator-()
 {
   return operate_unary<Plaintext, Plaintext>(*this, ir::OpCode::negate, ir::plaintextType);
 }
-*/
 
 Plaintext operator+(const Plaintext &lhs, const Plaintext &rhs)
 {
@@ -148,11 +146,9 @@ Plaintext operator-(const Plaintext &lhs, const Plaintext &rhs)
   // throw(datatype::eval_not_supported);
 }
 
-/*
 Plaintext operator-(Plaintext &rhs)
 {
   return operate_unary<Plaintext, Plaintext>(rhs, ir::OpCode::negate, ir::plaintextType);
 }
-*/
 
 } // namespace fhecompiler

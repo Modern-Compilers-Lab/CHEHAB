@@ -55,17 +55,24 @@ Scalar::Scalar(const std::string &tag) : label(datatype::sc_label_prefix + std::
 
 Scalar &Scalar::operator=(const Scalar &sc_copy)
 {
-  return operate_assignement<Scalar>(*this, sc_copy, ir::scalarType);
+  return operate_copy_assignement<Scalar>(*this, sc_copy, ir::scalarType);
+}
+
+Scalar &Scalar::operator=(Scalar &&sc_move)
+{
+  return operate_move_assignement<Scalar>(*this, std::move(sc_move), ir::scalarType);
 }
 
 Scalar::Scalar(const Scalar &sc_copy) : label(datatype::sc_label_prefix + std::to_string(scalar_id++))
 {
-
-  auto sc_copy_node_ptr = program->insert_node_in_dataflow<Scalar>(sc_copy);
-  program->insert_operation_node_in_dataflow(ir::OpCode::assign, {sc_copy_node_ptr}, this->label, ir::scalarType);
-  // std::cout << this->label << " = " << sc_copy.get_label() << "\n";
+  operate_copy<Scalar>(*this, sc_copy, ir::scalarType);
 }
-/*
+
+Scalar::Scalar(Scalar &&sc_move) : label(datatype::sc_label_prefix + std::to_string(scalar_id++))
+{
+  operate_move<Scalar>(*this, std::move(sc_move), ir::scalarType);
+}
+
 Scalar &Scalar::operator+=(const Scalar &rhs)
 {
 
@@ -84,16 +91,11 @@ Scalar &Scalar::operator-=(const Scalar &rhs)
   compound_operate<Scalar, Scalar>(*this, rhs, ir::OpCode::sub, ir::scalarType);
   return *this;
 }
-*/
 
-/*
 Scalar Scalar::operator-()
 {
-  return operate_unary<Scalar, Scalar>(*this, ir::OpCode::negate, ir::scalarType);
+  return 0 - *this;
 }
-*/
-
-/*
 
 Scalar operator+(const Scalar &lhs, const Scalar &rhs)
 {
@@ -107,17 +109,12 @@ Scalar operator*(const Scalar &lhs, const Scalar &rhs)
 
 Scalar operator-(const Scalar &lhs, const Scalar &rhs)
 {
-
   return operate_binary<Scalar, Scalar, Scalar>(lhs, rhs, ir::OpCode::sub, ir::scalarType);
 }
 
-*/
-
-/*
 Scalar operator-(const Scalar &rhs)
 {
-  return operate_unary<Scalar, Scalar>(rhs, ir::OpCode::negate, ir::scalarType);
+  return 0 - rhs;
 }
-*/
 
 } // namespace fhecompiler

@@ -9,60 +9,43 @@
 namespace fhecompiler
 {
 
-// addition
+/* addition */
 Ciphertext &operator+=(Ciphertext &lhs, const Plaintext &rhs);
 Ciphertext operator+(const Ciphertext &lhs, const Plaintext &rhs);
-Ciphertext operator+(const Plaintext &lhs, const Ciphertext &rhs);
+Ciphertext &operator+=(Ciphertext &lhs, const Scalar &rhs);
+Ciphertext operator+(const Ciphertext &lhs, const Scalar &rhs);
 
-/*
+Ciphertext operator+(const Plaintext &lhs, const Ciphertext &rhs);
 Plaintext operator+(const Plaintext &lhs, const Scalar &rhs);
 Plaintext &operator+=(Plaintext &lhs, const Scalar &rhs);
-Plaintext operator+(const Scalar &rhs, const Plaintext &lhs);
-*/
 
-Ciphertext operator+(const Ciphertext &lhs, const Scalar &rhs);
-Ciphertext &operator+=(Ciphertext &lhs, const Scalar &rhs);
+Plaintext operator+(const Scalar &rhs, const Plaintext &lhs);
 Ciphertext operator+(const Scalar &lhs, const Ciphertext &rhs);
-// subtraction
+
+/* subtraction */
 Ciphertext operator-(const Ciphertext &lhs, const Plaintext &rhs);
 Ciphertext &operator-=(Ciphertext &lhs, const Plaintext &rhs);
-Ciphertext operator-(const Plaintext &lhs, const Ciphertext &rhs);
+Ciphertext operator-=(Ciphertext &lhs, const Scalar &rhs);
+Ciphertext operator-(const Ciphertext &lhs, const Scalar &rhs);
 
-/*
-Ciphertext operator-(const Plaintext &lhs, const Ciphertext &rhs);
-*/
-
-/*
 Plaintext operator-(const Plaintext &lhs, const Scalar &rhs);
+Ciphertext operator-(const Plaintext &lhs, const Ciphertext &rhs);
 Plaintext &operator-=(Plaintext &lhs, const Scalar &rhs);
 
-Plaintext operator-(const Scalar &lhs, const Plaintext &rhs);
-*/
-Ciphertext operator-(const Ciphertext &lhs, const Scalar &rhs);
-Ciphertext operator-(const Scalar &lhs, const Ciphertext &rhs);
-Ciphertext operator-=(Ciphertext &lhs, const Scalar &rhs);
-
-/*
-Ciphertext operator-(const Scalar &lhs, const Ciphertext &rhs);
-*/
-
-// multiplication
+/* multiplication */
 Ciphertext operator*(const Ciphertext &lhs, const Plaintext &rhs);
 Ciphertext &operator*=(Ciphertext &lhs, const Plaintext &rhs);
-Ciphertext operator*(const Plaintext &lhs, const Ciphertext &rhs);
-
 Ciphertext operator*(const Ciphertext &lhs, const Scalar &rhs);
-
-Ciphertext operator*(const Scalar &lhs, const Ciphertext &rhs);
 Ciphertext &operator*=(Ciphertext &lhs, const Scalar &rhs);
 
-/*
-
-Plaintext operator*(const Scalar &lhs, const Plaintext &rhs);
-Plaintext &operator*=(Plaintext &lhs, const Scalar &rhs);
+Ciphertext operator*(const Plaintext &lhs, const Ciphertext &rhs);
 Plaintext operator*(const Plaintext &lhs, const Scalar &rhs);
-*/
+Plaintext &operator*=(Plaintext &lhs, const Scalar &rhs);
 
+Ciphertext operator*(const Scalar &lhs, const Ciphertext &rhs);
+Plaintext operator*(const Scalar &lhs, const Plaintext &rhs);
+
+/*ciphertext operators*/
 Ciphertext operator+(const Ciphertext &lhs, const Ciphertext &rhs);
 Ciphertext operator-(const Ciphertext &lhs, const Ciphertext &rhs);
 Ciphertext operator*(const Ciphertext &lhs, const Ciphertext &rhs);

@@ -90,7 +90,7 @@ private:
 
   size_t vector_size;
 
-  size_t plain_modulus;
+  size_t plain_modulus = 786433; // 786433 is a good default value
 
   // rotation steps in the program, this vector will be empty until rotation keys selection pass
   std::vector<int32_t> rotations_steps;
@@ -142,6 +142,16 @@ public:
 
   void insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry);
 
+  /*
+    if is_a_constant is false, then the entry is for a temporary term
+  */
+  void insert_or_update_entry_in_constants_table(
+    const std::string &label, const ir::ConstantValue &constant_value, bool is_a_constant = false);
+
+  void reset_constant_value_value(const std::string &key);
+
+  void set_constant_value_value(const std::string &key, const ir::ConstantValue &value);
+
   bool delete_entry_from_constants_table(std::string entry_key);
 
   void delete_node_from_outputs(const std::string &key);
@@ -190,7 +200,13 @@ public:
 
   void insert_created_node_in_dataflow(const Ptr &node);
 
+  void add_node_to_outputs_nodes(const Ptr &node);
+
   void set_rotations_steps(std::vector<int32_t> &steps) { rotations_steps = steps; }
+  /*
+    key is the node label
+  */
+  std::optional<ConstantValue> get_entry_value_value(const std::string &key) const;
 
   const std::vector<int32_t> &get_rotations_steps() const { return rotations_steps; }
 };
