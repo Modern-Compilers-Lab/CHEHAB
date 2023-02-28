@@ -4,6 +4,7 @@
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
 #include "term.hpp"
+#include <cstddef>
 #include <list>
 #include <map>
 #include <memory>
@@ -88,9 +89,11 @@ private:
 
   double scale = 0.0; // for ckks
 
-  size_t number_of_slots;
+  std::size_t vector_size;
 
-  size_t plain_modulus;
+  std::size_t number_of_slots;
+
+  std::size_t plain_modulus;
 
   // rotation steps in the program, this vector will be empty until rotation keys selection pass
   std::vector<int32_t> rotations_steps;
@@ -152,15 +155,15 @@ public:
 
   ConstantTableEntryType type_of(const std::string &label);
 
-  void set_plain_modulus(size_t modulus) { this->plain_modulus = modulus; }
+  void set_plain_modulus(std::size_t modulus) { this->plain_modulus = modulus; }
 
-  size_t get_plain_modulus() const { return this->plain_modulus; }
+  std::size_t get_plain_modulus() const { return this->plain_modulus; }
 
-  // size_t get_dimension() const { return this->dimension; }
+  // std::size_t get_dimension() const { return this->dimension; }
 
   void compact_assignement(const ir::Term::Ptr &node_ptr);
 
-  void flatten_term_operand_by_one_level_at_index(const ir::Term::Ptr &term, size_t index);
+  void flatten_term_operand_by_one_level_at_index(const ir::Term::Ptr &term, std::size_t index);
 
   const std::vector<Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
 
@@ -182,9 +185,13 @@ public:
 
   double get_scale() { return scale; }
 
-  void set_number_of_slots(size_t nb_slots) { number_of_slots = nb_slots; }
+  void set_vector_size(std::size_t vec_size) { vector_size = vec_size; }
 
-  size_t get_number_of_slots() { return number_of_slots; }
+  std::size_t get_vector_size() const { return vector_size; }
+
+  void set_number_of_slots(std::size_t nb_slots) { number_of_slots = nb_slots; }
+
+  std::size_t get_number_of_slots() { return number_of_slots; }
 
   bool is_tracked_object(const std::string &label);
 

@@ -15,7 +15,7 @@ ir::Program *program;
 namespace fhecompiler
 {
 
-void init(const std::string &program_name, Scheme program_scheme, Backend backend, double scale)
+void init(const std::string &program_name, Scheme program_scheme, Backend backend, std::size_t vec_size, double scale)
 {
 
   if (program != nullptr)
@@ -26,6 +26,7 @@ void init(const std::string &program_name, Scheme program_scheme, Backend backen
   program->set_scheme(program_scheme);
   program->set_targeted_backed(backend);
   program->set_scale(scale);
+  program->set_vector_size(vec_size);
   // program->set_number_of_slots(number_of_slots);
   if (program_scheme == Scheme::ckks && scale == 0.0)
   {

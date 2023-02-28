@@ -214,10 +214,10 @@ Ciphertext rotate(const Ciphertext &lhs, int steps)
   else
     opcode = ir::OpCode::rotate;
 
-  steps = steps % program->get_number_of_slots();
+  steps = steps % program->get_vector_size();
 
   if (steps < 0)
-    steps = steps + program->get_number_of_slots();
+    steps = steps + program->get_vector_size();
 
   return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), opcode, ir::ciphertextType);
 }

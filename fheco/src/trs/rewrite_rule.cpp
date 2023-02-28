@@ -14,19 +14,17 @@ RewriteRule::RewriteRule(
 {}
 
 RewriteRule::RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs)
-  : lhs(_lhs), static_rhs(_rhs),
-    rhs_factory([this](const ir::Program *, const matching_term_ir_node_map &) -> MatchingTerm { return *static_rhs; }),
-    id(rule_id++)
+  : lhs(_lhs), static_rhs(_rhs), id(rule_id++)
 {}
 
 RewriteRule::RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs, const MatchingTerm &_condition)
-  : lhs(_lhs), static_rhs(_rhs),
-    rhs_factory([this](const ir::Program *, const matching_term_ir_node_map &) -> MatchingTerm { return *static_rhs; }),
-    rewrite_condition(_condition), id(rule_id++)
+  : lhs(_lhs), static_rhs(_rhs), rewrite_condition(_condition), id(rule_id++)
 {}
 
 MatchingTerm RewriteRule::get_rhs(const ir::Program *program, const matching_term_ir_node_map &matching_map) const
 {
+  if (static_rhs.has_value())
+    return *static_rhs;
   return rhs_factory(program, matching_map);
 }
 
@@ -38,7 +36,7 @@ void RewriteRule::substitute_in_ir(
     We call this function after ir_node is matched with lhs of rewrite rule
   */
 
-  core::substitute(ir_node, rhs_factory(program, matching_map), matching_map, program, functions_table);
+  core::substitute(ir_node, get_rhs(program, matching_map), matching_map, program, functions_table);
 }
 
 bool RewriteRule::evaluate_rewrite_condition(
