@@ -4,6 +4,7 @@
 #include "normalize_pass.hpp"
 #include "relin_pass.hpp"
 #include "rotationkeys_select_pass.hpp"
+#include "ruleset.hpp"
 #include "test/dummy_ruleset.hpp"
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
@@ -82,6 +83,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   }
 
   // utils::draw_ir(program, output_filename + std::to_string(NB_TRS_CSE_PASS) + ".dot");
+  trs.apply_rewrite_rules_on_program(fheco_trs::Ruleset::rules);
 
   // utils::draw_ir(program, output_filename + "2.dot");
 

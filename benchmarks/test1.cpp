@@ -1,4 +1,5 @@
 #include "fhecompiler/fhecompiler.hpp"
+#include "utils.hpp"
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -59,11 +60,14 @@ int main()
     output1 = (A + (5 - B)) + pt_output + pt_input1 + D + C + 1337; // * pt2 + (pt1 + pt2));
 
     params_selector::EncryptionParameters params;
+    benchmarks_utils::set_default_parameters(&params);
+    /*
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
 
     params.set_plaintext_modulus(plaintext_modulus);
     params.set_polynomial_modulus_degree(polynomial_modulus_degree);
+    */
 
     fhecompiler::compile("test1.hpp", &params);
   }
