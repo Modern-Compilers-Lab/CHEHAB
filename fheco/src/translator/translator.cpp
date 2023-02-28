@@ -311,7 +311,7 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
   std::string rhs_identifier = get_identifier(operands[1]);
 
   if (lhs_identifier.empty() || rhs_identifier.empty())
-    std::cout << "empty lable operand\n";
+    throw("empty lable operand");
 
   evaluation_writer.write_binary_operation(
     os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
@@ -367,7 +367,9 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
         encryption_writer.write_encryption(os, plaintext_id, destination_cipher);
       }
       else
+      {
         translate_unary_operation(term, os);
+      }
     }
     else if (operands.size() == 2)
     {
@@ -400,10 +402,11 @@ void Translator::translate_program(std::ofstream &os)
   generate_function_signature(os);
   os << "{" << '\n';
 
+  fix_operands_order_pass();
   convert_to_inplace_pass();
 
   {
-    const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(false);
+    auto &nodes_ptr = program->get_dataflow_sorted_nodes(false);
 
     // after doing all passes, now we do the last pass to translate and generate the code
     for (auto &node_ptr : nodes_ptr)
@@ -535,6 +538,63 @@ void Translator::write_rotations_steps_getter(const std::vector<int32_t> &steps,
       os << "};";
   }
   os << " return steps; }";
+}
+
+void Translator::order_operands(const ir::Program::Ptr &node)
+{
+  if (node->is_operation_node() == false)
+    return;
+
+  if (node->get_operands().size() != 2)
+    return;
+
+  ir::OpCode opcode = node->get_opcode();
+
+  if (node->get_term_type() == ir::ciphertextType)
+  {
+
+    if (
+      node->get_operands()[0]->get_term_type() != ir::ciphertextType &&
+      node->get_operands()[1]->get_term_type() != ir::ciphertextType)
+    {
+      throw("ciphertext node with non ciphertext operands");
+    }
+
+    if (opcode == ir::OpCode::add || opcode == ir::OpCode::mul)
+    {
+      if (node->get_operands()[0]->get_term_type() != ir::ciphertextType)
+        node->reverse_operands();
+    }
+    else if (opcode == ir::OpCode::sub)
+    {
+      ir::Program::Ptr lhs = node->get_operands()[0];
+      ir::Program::Ptr rhs = node->get_operands()[1];
+      ir::Program::Ptr node_copy = std::make_shared<ir::Term>(*node.get());
+
+      if (lhs->get_term_type() != ir::ciphertextType)
+      {
+        ir::Program::Ptr negate_node = program->insert_operation_node_in_dataflow(
+          ir::OpCode::negate, std::vector<ir::Program::Ptr>({rhs}), "", ir::ciphertextType);
+        node->set_opcode(ir::OpCode::add);
+        node->clear_operands();
+        node->set_operands(std::vector<ir::Program::Ptr>({negate_node, lhs}));
+      }
+    }
+  }
+  else if (node->get_term_type() == ir::scalarType)
+    throw("only plaintext and ciphertext operation terms are expected");
+}
+
+void Translator::fix_operands_order_pass()
+{
+  auto nodes = program->get_dataflow_sorted_nodes(true);
+  for (auto &node : nodes)
+  {
+    /*
+      Order of calling the two functions is important
+    */
+    order_operands(node);
+  }
 }
 
 } // namespace translator

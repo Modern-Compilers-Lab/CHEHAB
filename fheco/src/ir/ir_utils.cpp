@@ -40,15 +40,15 @@ std::shared_ptr<ir::Term> fold_scalar(
 
   if (opcode == ir::OpCode::add)
   {
-    return fold_scalar_helper(lhs, rhs, add_scalars, program);
+    return fold_scalar_helper(lhs, rhs, add_numbers, program);
   }
   else if (opcode == ir::OpCode::mul)
   {
-    return fold_scalar_helper(lhs, rhs, multiply_scalars, program);
+    return fold_scalar_helper(lhs, rhs, multiply_numbers, program);
   }
   else if (opcode == ir::OpCode::sub)
   {
-    return fold_scalar_helper(lhs, rhs, subtract_scalars, program);
+    return fold_scalar_helper(lhs, rhs, subtract_numbers, program);
   }
   else
     throw("unsupported operation in fold_scalar");
@@ -56,7 +56,7 @@ std::shared_ptr<ir::Term> fold_scalar(
 
 std::shared_ptr<ir::Term> fold_scalar_helper(
   const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs,
-  const std::function<void(double &, double, int64_t)> &e_func, Program *program)
+  const std::function<void(Number &, Number, Modulus)> &e_func, Program *program)
 {
   ir::Term new_scalar(ir::TermType::scalarType);
   new_scalar.set_a_default_label();
@@ -76,8 +76,8 @@ std::shared_ptr<ir::Term> fold_scalar_helper(
   auto lhs_const_value = *lhs_const_value_opt;
   auto rhs_const_value = *rhs_const_value_opt;
 
-  double lhs_value = get_constant_value_as_double(lhs_const_value);
-  double rhs_value = get_constant_value_as_double(rhs_const_value);
+  Number lhs_value = get_constant_value_as_number(lhs_const_value);
+  Number rhs_value = get_constant_value_as_number(rhs_const_value);
 
   e_func(lhs_value, rhs_value, program->get_plain_modulus());
 
@@ -86,12 +86,13 @@ std::shared_ptr<ir::Term> fold_scalar_helper(
   ScalarValue new_scalar_value;
   if (program->get_encryption_scheme() != fhecompiler::ckks)
   {
-    int64_t to_int = lhs_value;
+    int64_t to_int = static_cast<int64_t>(lhs_value);
     new_scalar_value = to_int;
   }
   else
   {
-    new_scalar_value = lhs_value;
+    double to_double = static_cast<double>(lhs_value);
+    new_scalar_value = to_double;
   }
   ir::ConstantTableEntry::EntryValue entry_value(new_scalar.get_label(), new_scalar_value);
   ir::ConstantTableEntry entry(ir::ConstantTableEntryType::constant, entry_value);
@@ -101,25 +102,25 @@ std::shared_ptr<ir::Term> fold_scalar_helper(
   return new_scalar_node;
 }
 
-double get_constant_value_as_double(ir::ConstantValue const_value)
+Number get_constant_value_as_number(ir::ConstantValue const_value)
 {
   ir::ScalarValue scalar_value = std::get<ScalarValue>(const_value);
   if (auto v = std::get_if<int64_t>(&scalar_value))
-    return static_cast<double>(*v);
+    return static_cast<Number>(*v);
   else
     return std::get<double>(scalar_value);
 }
 
-void cast_int_vector_to_double(const std::vector<int64_t> &int_vector, std::vector<double> &double_vector)
+void cast_int_vector_to_number(const std::vector<int64_t> &int_vector, std::vector<Number> &double_vector)
 {
   if (double_vector.size() < int_vector.size())
     double_vector.resize(int_vector.size());
 
   for (size_t i = 0; i < int_vector.size(); i++)
-    double_vector[i] = static_cast<double>(int_vector[i]);
+    double_vector[i] = static_cast<Number>(int_vector[i]);
 }
 
-void cast_double_vector_to_int(const std::vector<double> &double_vector, std::vector<int64_t> &int_vector)
+void cast_number_vector_to_int(const std::vector<Number> &double_vector, std::vector<int64_t> &int_vector)
 {
   if (int_vector.size() < double_vector.size())
     int_vector.resize(double_vector.size());
@@ -128,21 +129,25 @@ void cast_double_vector_to_int(const std::vector<double> &double_vector, std::ve
     int_vector[i] = static_cast<int64_t>(double_vector[i]);
 }
 
-void get_constant_value_as_vector_of_double(ir::ConstantValue const_value, std::vector<double> &double_vector)
+void get_constant_value_as_vector_of_number(ir::ConstantValue const_value, std::vector<Number> &double_vector)
 {
   ir::VectorValue vector_value = std::get<VectorValue>(const_value);
   if (auto v = std::get_if<std::vector<double>>(&vector_value))
-    double_vector = *v;
+  {
+    std::vector<Number> number_vec;
+    cast_vector_of_double_to_number(number_vec, *v);
+    double_vector = number_vec;
+  }
   else
   {
     auto int_vector = std::get<std::vector<int64_t>>(vector_value);
-    cast_int_vector_to_double(int_vector, double_vector);
+    cast_int_vector_to_number(int_vector, double_vector);
   }
 }
 
 std::shared_ptr<ir::Term> fold_const_plain_helper(
   const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs,
-  const std::function<void(std::vector<double> &, const std::vector<double>, int64_t)> &e_func, Program *program)
+  const std::function<void(std::vector<Number> &, const std::vector<Number>, Modulus)> &e_func, Program *program)
 {
   auto lhs_const_value_opt = program->get_entry_value_value(lhs->get_label());
 
@@ -161,11 +166,11 @@ std::shared_ptr<ir::Term> fold_const_plain_helper(
   ir::ConstantValue lhs_const_value = *lhs_const_value_opt;
   ir::ConstantValue rhs_const_value = *rhs_const_value_opt;
 
-  std::vector<double> lhs_vec;
-  get_constant_value_as_vector_of_double(lhs_const_value, lhs_vec);
+  std::vector<Number> lhs_vec;
+  get_constant_value_as_vector_of_number(lhs_const_value, lhs_vec);
 
-  std::vector<double> rhs_vec;
-  get_constant_value_as_vector_of_double(rhs_const_value, rhs_vec);
+  std::vector<Number> rhs_vec;
+  get_constant_value_as_vector_of_number(rhs_const_value, rhs_vec);
 
   // this is not good .. better to avoid it
   if (lhs_vec.size() < rhs_vec.size())
@@ -179,15 +184,17 @@ std::shared_ptr<ir::Term> fold_const_plain_helper(
   if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
   {
     std::vector<int64_t> lhs_vec_casted;
-    cast_double_vector_to_int(lhs_vec, lhs_vec_casted);
+    cast_number_vector_to_int(lhs_vec, lhs_vec_casted);
     ir::ConstantTableEntry const_table_entry(
       ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), lhs_vec_casted});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
   else
   {
+    std::vector<double> lhs_vec_casted;
+    cast_vector_of_number_to_double(lhs_vec_casted, lhs_vec);
     ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), lhs_vec});
+      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), lhs_vec_casted});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
   program->insert_created_node_in_dataflow(plain_const_term);
@@ -200,15 +207,15 @@ std::shared_ptr<ir::Term> fold_const_plain(
   switch (opcode)
   {
   case ir::OpCode::add:
-    return fold_const_plain_helper(lhs, rhs, add_two_double_vectors, program);
+    return fold_const_plain_helper(lhs, rhs, add_two_number_vectors, program);
     break;
 
   case ir::OpCode::mul:
-    return fold_const_plain_helper(lhs, rhs, multiply_two_double_vectors, program);
+    return fold_const_plain_helper(lhs, rhs, multiply_two_number_vectors, program);
     break;
 
   case ir::OpCode::sub:
-    return fold_const_plain_helper(lhs, rhs, subtract_two_double_vectors, program);
+    return fold_const_plain_helper(lhs, rhs, subtract_two_number_vectors, program);
     break;
 
   default:
@@ -218,32 +225,42 @@ std::shared_ptr<ir::Term> fold_const_plain(
 }
 
 std::shared_ptr<ir::Term> fold_plain_scalar_helper(
-  const std::shared_ptr<ir::Term> &_lhs, const std::shared_ptr<ir::Term> &_rhs,
-  const std::function<void(std::vector<double> &, double, int64_t)> &op_func, Program *program)
+  const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs,
+  const std::function<void(std::vector<Number> &, Number, Modulus)> &op_func, Program *program)
 {
   const char *nullopt_ex_msg = "unexpected nullopt in fold_plain_scalar_helper";
 
-  std::shared_ptr<ir::Term> lhs(_lhs), rhs(_rhs);
+  auto lhs_const_value_opt = program->get_entry_value_value(lhs->get_label());
+  if (lhs_const_value_opt == std::nullopt)
+    throw(nullopt_ex_msg);
+  auto rhs_const_value_opt = program->get_entry_value_value(rhs->get_label());
+  if (rhs_const_value_opt == std::nullopt)
+    throw(nullopt_ex_msg);
 
-  if (_lhs->get_term_type() == ir::scalarType)
+  ir::ConstantValue lhs_const_value = *lhs_const_value_opt;
+  ir::ConstantValue rhs_const_value = *rhs_const_value_opt;
+
+  std::vector<Number> plain_vec;
+  ir::Number scalar_value;
+
+  if (lhs->get_term_type() == ir::plaintextType)
   {
-    lhs = _rhs;
-    rhs = _lhs;
+    get_constant_value_as_vector_of_number(lhs_const_value, plain_vec);
+
+    if (rhs->get_term_type() != ir::scalarType)
+      throw("scalar expected at this stage in fold_plain_scalar_helper");
+
+    scalar_value = get_constant_value_as_number(rhs_const_value);
   }
+  else if (rhs->get_term_type() == ir::plaintextType)
+  {
+    get_constant_value_as_vector_of_number(rhs_const_value, plain_vec);
 
-  auto plain_const_value_opt = program->get_entry_value_value(lhs->get_label());
-  if (plain_const_value_opt == std::nullopt)
-    throw(nullopt_ex_msg);
-  auto scalar_const_value_opt = program->get_entry_value_value(rhs->get_label());
-  if (scalar_const_value_opt == std::nullopt)
-    throw(nullopt_ex_msg);
+    if (lhs->get_term_type() != ir::scalarType)
+      throw("scalar expected at this stage in fold_plain_scalar_helper");
 
-  ir::ConstantValue plain_const_value = *plain_const_value_opt;
-  ir::ConstantValue scalar_const_value = *scalar_const_value_opt;
-
-  std::vector<double> plain_vec;
-  get_constant_value_as_vector_of_double(plain_const_value, plain_vec);
-  double scalar_value = get_constant_value_as_double(scalar_const_value);
+    scalar_value = get_constant_value_as_number(lhs_const_value);
+  }
 
   op_func(plain_vec, scalar_value, program->get_plain_modulus());
 
@@ -253,15 +270,17 @@ std::shared_ptr<ir::Term> fold_plain_scalar_helper(
   if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
   {
     std::vector<int64_t> plain_vec_casted;
-    cast_double_vector_to_int(plain_vec, plain_vec_casted);
+    cast_number_vector_to_int(plain_vec, plain_vec_casted);
     ir::ConstantTableEntry const_table_entry(
       ir::ConstantTableEntryType::constant, {const_node->get_label(), plain_vec_casted});
     program->insert_entry_in_constants_table({const_node->get_label(), const_table_entry});
   }
   else
   {
+    std::vector<double> plain_vec_casted;
+    cast_vector_of_number_to_double(plain_vec_casted, plain_vec);
     ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {const_node->get_label(), plain_vec});
+      ir::ConstantTableEntryType::constant, {const_node->get_label(), plain_vec_casted});
     program->insert_entry_in_constants_table({const_node->get_label(), const_table_entry});
   }
 
@@ -276,15 +295,22 @@ std::shared_ptr<ir::Term> fold_plain_scalar(
   switch (opcode)
   {
   case OpCode::add:
-    return fold_plain_scalar_helper(lhs, rhs, add_double_to_vector_of_double, program);
+    return fold_plain_scalar_helper(lhs, rhs, add_number_to_vector_of_number, program);
     break;
 
   case OpCode::mul:
-    return fold_plain_scalar_helper(lhs, rhs, multiply_double_to_vector_of_double, program);
+    return fold_plain_scalar_helper(lhs, rhs, multiply_number_to_vector_of_number, program);
     break;
 
   case OpCode::sub:
-    return fold_plain_scalar_helper(lhs, rhs, subtract_double_to_vector_of_double, program);
+    if (lhs->get_term_type() == ir::scalarType)
+    {
+      return fold_plain_scalar_helper(lhs, rhs, subtract_vector_of_number_to_number, program);
+    }
+    else
+    {
+      return fold_plain_scalar_helper(lhs, rhs, subtract_number_to_vector_of_number, program);
+    }
     break;
 
   default:
@@ -469,67 +495,152 @@ void swap(Program::Ptr &lhs, Program::Ptr &rhs)
   rhs = t;
 }
 
-void add_double_to_vector_of_double(std::vector<double> &vec, double v, int64_t modulus)
+void add_number_to_vector_of_number(std::vector<Number> &vec, Number v, Modulus modulus)
 {
   for (size_t i = 0; i < vec.size(); i++)
   {
-    add_scalars(vec[i], v, modulus);
+    add_numbers(vec[i], v, modulus);
   }
 }
 
-void multiply_double_to_vector_of_double(std::vector<double> &vec, double v, int64_t modulus)
+void multiply_number_to_vector_of_number(std::vector<Number> &vec, Number v, Modulus modulus)
 {
   for (size_t i = 0; i < vec.size(); i++)
   {
-    multiply_scalars(vec[i], v, modulus);
+    multiply_numbers(vec[i], v, modulus);
   }
 }
 
-void subtract_double_to_vector_of_double(std::vector<double> &vec, double v, int64_t modulus)
+void subtract_number_to_vector_of_number(std::vector<Number> &vec, Number v, Modulus modulus)
 {
   for (size_t i = 0; i < vec.size(); i++)
   {
-    subtract_scalars(vec[i], v, modulus);
+    subtract_numbers(vec[i], v, modulus);
   }
 }
 
-void add_scalars(double &lhs, double rhs, int64_t modulus)
+void subtract_vector_of_number_to_number(std::vector<Number> &vec, Number v, Modulus modulus)
+{
+  for (size_t i = 0; i < vec.size(); i++)
+  {
+    Number v_copy = v;
+    subtract_numbers(v_copy, vec[i], modulus);
+    vec[i] = v_copy;
+  }
+}
+
+void add_numbers(Number &lhs, Number rhs, Modulus modulus)
 {
   lhs = std::fmod(std::fmod(lhs, modulus) + std::fmod(rhs, modulus), modulus);
 }
 
-void subtract_scalars(double &lhs, double rhs, int64_t modulus)
+void subtract_numbers(Number &lhs, Number rhs, Modulus modulus)
 {
   lhs = std::fmod(std::fmod(lhs, modulus) - std::fmod(rhs, modulus), modulus);
 }
 
-void multiply_scalars(double &lhs, double rhs, int64_t modulus)
+void multiply_numbers(Number &lhs, Number rhs, Modulus modulus)
 {
   lhs = std::fmod(std::fmod(lhs, modulus) * std::fmod(rhs, modulus), modulus);
 }
 
-void add_two_double_vectors(std::vector<double> &lhs, const std::vector<double> &rhs, int64_t modulus)
+void add_two_number_vectors(std::vector<Number> &lhs, const std::vector<Number> &rhs, Modulus modulus)
 {
   for (size_t i = 0; i < lhs.size(); i++)
   {
-    add_scalars(lhs[i], rhs[i], modulus);
+    add_numbers(lhs[i], rhs[i], modulus);
   }
 }
 
-void subtract_two_double_vectors(std::vector<double> &lhs, const std::vector<double> &rhs, int64_t modulus)
+void subtract_two_number_vectors(std::vector<Number> &lhs, const std::vector<Number> &rhs, Modulus modulus)
 {
   for (size_t i = 0; i < lhs.size(); i++)
   {
-    subtract_scalars(lhs[i], rhs[i], modulus);
+    subtract_numbers(lhs[i], rhs[i], modulus);
   }
 }
 
-void multiply_two_double_vectors(std::vector<double> &lhs, const std::vector<double> &rhs, int64_t modulus)
+void multiply_two_number_vectors(std::vector<Number> &lhs, const std::vector<Number> &rhs, Modulus modulus)
 {
   for (size_t i = 0; i < lhs.size(); i++)
   {
-    multiply_scalars(lhs[i], rhs[i], modulus);
+    multiply_numbers(lhs[i], rhs[i], modulus);
   }
+}
+
+void negate_value_if_possible(const std::string &label, Program *program)
+{
+  auto node_ptr = program->find_node_in_dataflow(label);
+
+  if (node_ptr->get_label() != label)
+    throw("fatal error, node label is different than dsl object label");
+
+  if (node_ptr->is_operation_node() == true)
+    return;
+
+  auto const_value_opt = program->get_entry_value_value(label);
+  if (const_value_opt == std::nullopt)
+    return;
+
+  ir::ConstantValue const_value = *const_value_opt;
+
+  if (node_ptr->get_term_type() == ir::plaintextType)
+  {
+    std::vector<Number> vec;
+    get_constant_value_as_vector_of_number(const_value, vec);
+    multiply_number_to_vector_of_number(vec, -1, program->get_plain_modulus());
+    if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
+    {
+      std::vector<int64_t> vec_casted;
+      cast_number_vector_to_int(vec, vec_casted);
+      program->set_constant_value_value(label, vec_casted);
+    }
+    else
+    {
+      std::vector<double> vec_casted;
+      cast_vector_of_number_to_double(vec_casted, vec);
+      program->set_constant_value_value(label, vec_casted);
+    }
+
+    return;
+  }
+  else if (node_ptr->get_term_type() == ir::scalarType)
+  {
+    Number value;
+    value = get_constant_value_as_number(const_value);
+    multiply_numbers(value, -1, program->get_plain_modulus());
+    if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
+    {
+      int64_t value_casted = static_cast<int64_t>(value);
+      program->set_constant_value_value(label, value_casted);
+    }
+    else
+    {
+      double value_casted = static_cast<double>(value);
+      program->set_constant_value_value(label, value_casted);
+    }
+
+    return;
+  }
+  throw("only scalars and plaintexts are expected in negate_value_if_possible");
+}
+
+void cast_vector_of_double_to_number(std::vector<Number> &number_vec, const std::vector<double> &double_vec)
+{
+  if (number_vec.size() < double_vec.size())
+    number_vec.resize(double_vec.size());
+  for (size_t i = 0; i < double_vec.size(); i++)
+  {
+    number_vec[i] = static_cast<Number>(double_vec[i]);
+  }
+}
+
+void cast_vector_of_number_to_double(std::vector<double> &double_vec, const std::vector<Number> &number_vec)
+{
+  if (double_vec.size() < number_vec.size())
+    double_vec.resize(number_vec.size());
+  for (size_t i = 0; i < number_vec.size(); i++)
+    double_vec[i] = static_cast<double>(number_vec[i]);
 }
 
 } // namespace ir

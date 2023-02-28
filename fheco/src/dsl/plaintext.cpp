@@ -113,6 +113,13 @@ Plaintext &Plaintext::operator-=(const Plaintext &rhs)
 
 Plaintext Plaintext::operator-()
 {
+  if (is_compile_time_evaluation_possible(*this, *this))
+  {
+    Plaintext this_copy = *this;
+    ir::negate_value_if_possible(this_copy.get_label(), program);
+    return this_copy;
+  }
+
   return operate_unary<Plaintext, Plaintext>(*this, ir::OpCode::negate, ir::plaintextType);
 }
 
@@ -148,6 +155,12 @@ Plaintext operator-(const Plaintext &lhs, const Plaintext &rhs)
 
 Plaintext operator-(Plaintext &rhs)
 {
+  if (is_compile_time_evaluation_possible(rhs, rhs))
+  {
+    Plaintext copy_rhs = rhs;
+    ir::negate_value_if_possible(copy_rhs.get_label(), program);
+    return copy_rhs;
+  }
   return operate_unary<Plaintext, Plaintext>(rhs, ir::OpCode::negate, ir::plaintextType);
 }
 

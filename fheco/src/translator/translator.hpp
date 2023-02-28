@@ -80,6 +80,10 @@ public:
   ir::OpCode deduce_opcode_to_generate(const Ptr &node) const;
 
   void translate_program(std::ofstream &os);
+
+  void order_operands(const ir::Program::Ptr &node);
+
+  void fix_operands_order_pass();
 };
 
 } // namespace translator

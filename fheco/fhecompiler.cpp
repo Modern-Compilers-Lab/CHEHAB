@@ -75,11 +75,13 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   {
     for (size_t i = NB_TRS_CSE_PASS; i > 0; i--)
     {
+      // utils::draw_ir(program, output_filename + std::to_string(i) + ".dot");
       trs.apply_rewrite_rules_on_program(fheco_trs::dummy_ruleset);
-
       cse_pass.apply_cse2(true);
     }
   }
+
+  // utils::draw_ir(program, output_filename + std::to_string(NB_TRS_CSE_PASS) + ".dot");
 
   // utils::draw_ir(program, output_filename + "2.dot");
 

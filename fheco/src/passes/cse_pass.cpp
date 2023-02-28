@@ -52,7 +52,7 @@ bool CSE::check_scalars_equality(const ir::Program::Ptr &lhs, const ir::Program:
   ir::ConstantValue lhs_const_value = *(*lhs_const_table_entry).get().get_entry_value().value;
   ir::ConstantValue rhs_const_value = *(*rhs_const_table_entry).get().get_entry_value().value;
 
-  return ir::get_constant_value_as_double(lhs_const_value) == ir::get_constant_value_as_double(rhs_const_value);
+  return ir::get_constant_value_as_number(lhs_const_value) == ir::get_constant_value_as_number(rhs_const_value);
 }
 
 bool CSE::check_plains_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
@@ -80,10 +80,10 @@ bool CSE::check_plains_equality(const ir::Program::Ptr &lhs, const ir::Program::
   ir::ConstantValue rhs_const_value = *(*rhs_const_table_entry).get().get_entry_value().value;
 
   // checks vectors equality
-  std::vector<double> lhs_vector;
-  ir::get_constant_value_as_vector_of_double(lhs_const_value, lhs_vector);
-  std::vector<double> rhs_vector;
-  ir::get_constant_value_as_vector_of_double(rhs_const_value, rhs_vector);
+  std::vector<ir::Number> lhs_vector;
+  ir::get_constant_value_as_vector_of_number(lhs_const_value, lhs_vector);
+  std::vector<ir::Number> rhs_vector;
+  ir::get_constant_value_as_vector_of_number(rhs_const_value, rhs_vector);
 
   if (lhs_vector.size() != rhs_vector.size())
     throw("const plains vectors must have the same size");

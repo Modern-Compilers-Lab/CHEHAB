@@ -39,28 +39,24 @@ int main()
 
     fhecompiler::Scalar n = 3;
 
-    /*
-      (x - (y + z)) + z => (x - y)
-    */
-
     fhecompiler::Scalar s(12);
 
-    fhecompiler::Plaintext pt_tmp = pt1 + pt2 + (23 + s);
+    fhecompiler::Plaintext pt_tmp = -pt1 + pt1 + (100 * s - pt2); // + pt2 + (23 + s);
 
     pt_output = pt_tmp;
     // pt_taged_tmp = pt_input1 + pt_input2;
 
     pt_output += 888;
 
-    // pt_output += pt_output;
+    pt_output += pt_output;
 
     pt_input1 += pt_input2;
 
     // pt_output = pt_input1 + pt_input2; //(A - (B + C)) + C;
 
-    pt_output += pt_output;
+    // pt_output += pt_output;
 
-    output1 = (A - 5) + pt_output; // * pt2 + (pt1 + pt2));
+    output1 = (A + (5 - B)) + pt_output + pt_input1 + D + C + 1337; // * pt2 + (pt1 + pt2));
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

@@ -80,7 +80,7 @@ namespace core
       // a constant term, it must be a MatchingTerm with a value or it matches with a scalarType or rawdataType ir node
       if (term.get_value() != std::nullopt)
       {
-        return ir::get_constant_value_as_double(*term.get_value());
+        return ir::get_constant_value_as_number(*term.get_value());
       }
       else
       {
@@ -98,7 +98,7 @@ namespace core
         {
           ir::ConstantValue constant_value =
             *(*program->get_entry_form_constants_table(ir_term_itr->second->get_label())).get().get_entry_value().value;
-          return ir::get_constant_value_as_double(constant_value);
+          return ir::get_constant_value_as_number(constant_value);
         }
         else
           throw("arithmetic evaluation impossible");
