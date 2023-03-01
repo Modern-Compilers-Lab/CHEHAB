@@ -47,7 +47,11 @@ namespace util_functions
 
     ir::Program::Ptr ir_node = it->second;
 
-    return (static_cast<int>(program->type_of(ir_node->get_label()) == ir::ConstantTableEntryType::constant) == 1);
+    if (ir_node->is_operation_node() == true)
+      return false;
+
+    return (static_cast<int>(program->type_of(ir_node->get_label()) == ir::ConstantTableEntryType::constant) == 1) ||
+           (program->get_entry_value_value(ir_node->get_label()) != std::nullopt);
   }
 } // namespace util_functions
 
