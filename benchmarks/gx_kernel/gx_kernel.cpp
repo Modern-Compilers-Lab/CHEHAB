@@ -1,3 +1,4 @@
+#include "../utils.hpp"
 #include "fhecompiler/cse_pass.hpp"
 #include "fhecompiler/draw_ir.hpp"
 #include "fhecompiler/fhecompiler.hpp"
@@ -33,6 +34,7 @@ int main()
   fhecompiler::Ciphertext output("output", fhecompiler::VarType::output);
   output = c12;
 
+  /*
   utils::draw_ir(program, "gx_kernel.hpp1.dot");
 
   auto count = utils::count_main_node_classes(program);
@@ -54,5 +56,12 @@ int main()
 
   delete program;
   program = nullptr;
+  */
+
+  params_selector::EncryptionParameters params;
+  benchmarks_utils::set_default_parameters(&params);
+
+  fhecompiler::compile("gx_kernel.hpp", &params);
+
   return 0;
 }

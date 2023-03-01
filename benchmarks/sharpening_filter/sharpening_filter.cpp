@@ -1,3 +1,4 @@
+#include "../utils.hpp"
 #include "fhecompiler/cse_pass.hpp"
 #include "fhecompiler/draw_ir.hpp"
 #include "fhecompiler/fhecompiler.hpp"
@@ -37,7 +38,7 @@ int main()
     output = 2 * img - (r0 + r1 + r2 + r3 + r4 + r5 + r6 + r7 + r8);
 
     params_selector::EncryptionParameters params;
-    benchmark_ut
+    benchmarks_utils::set_default_parameters(&params);
 
     /*
     utils::draw_ir(program, "sharpening_filter.hpp1.dot");
@@ -61,6 +62,7 @@ int main()
     delete program;
     program = nullptr;
     */
+    fhecompiler::compile("sharpening_filter.hpp", &params);
   }
   catch (const char *message)
   {

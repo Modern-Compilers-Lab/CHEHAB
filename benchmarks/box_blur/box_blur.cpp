@@ -1,11 +1,8 @@
-#include "fhecompiler/cse_pass.hpp"
+#include "../utils.hpp"
 #include "fhecompiler/draw_ir.hpp"
 #include "fhecompiler/fhecompiler.hpp"
 #include "fhecompiler/normalize_pass.hpp"
 #include "fhecompiler/quantify_ir.hpp"
-#include "fhecompiler/ruleset.hpp"
-#include "fhecompiler/trs.hpp"
-#include "fhecompiler/trs_util_functions.hpp"
 #include <iostream>
 
 using namespace std;
@@ -28,6 +25,7 @@ int main()
   fhecompiler::Ciphertext output("output", fhecompiler::VarType::output);
   output = c6;
 
+  /*
   utils::draw_ir(program, "box_blur.hpp1.dot");
 
   auto count = utils::count_main_node_classes(program);
@@ -49,6 +47,12 @@ int main()
 
   delete program;
   program = nullptr;
+  */
+
+  params_selector::EncryptionParameters params;
+  benchmarks_utils::set_default_parameters(&params);
+
+  fhecompiler::compile("box_blur.hpp", &params);
 
   return 0;
 }
