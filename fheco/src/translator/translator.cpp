@@ -411,19 +411,15 @@ void Translator::translate_program(std::ofstream &os)
     // after doing all passes, now we do the last pass to translate and generate the code
     for (auto &node_ptr : nodes_ptr)
     {
-      translate_term(node_ptr, os);
+      if (node_ptr->get_term_type() == ir::plaintextType)
+        translate_term(node_ptr, os);
     }
   }
-
   for (auto &output_node : program->get_outputs_nodes())
   {
-    /*
-    if (output_node.second->is_operation_node() == false)
-      continue;
-    */
-    write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
+    if (program->type_of(output_node.second->get_label()) == ir::ConstantTableEntryType::output)
+      write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
   }
-
   os << "}" << '\n';
 }
 
