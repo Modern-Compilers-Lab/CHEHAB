@@ -16,7 +16,7 @@ void TRS::apply_rule_on_ir_node(
 
   is_rule_applied = false;
 
-  auto matching_map = rule.match_with_ir_node(ir_node);
+  auto matching_map = rule.match_with_ir_node(ir_node, program);
 
   if (matching_map != std::nullopt)
   {

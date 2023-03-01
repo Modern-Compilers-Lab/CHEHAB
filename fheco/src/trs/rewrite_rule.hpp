@@ -37,11 +37,12 @@ public:
   RewriteRule &operator=(const RewriteRule &) = default;
   RewriteRule &operator=(RewriteRule &&) = default;
 
-  RewriteRule(const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, bool _saving_circuit_flag = false);
+  // explicit RewriteRule(
+  // const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, bool _saving_circuit_flag = false);
 
-  RewriteRule(
-    const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, const MatchingTerm &_condition,
-    bool _saving_circuit_flag = false);
+  // explicit RewriteRule(
+  // const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, const MatchingTerm &_condition,
+  // bool _saving_circuit_flag = false);
 
   RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs, bool _saving_circuit_flag = false);
 
@@ -66,7 +67,7 @@ public:
   bool evaluate_rewrite_condition(
     core::MatchingMap &matching_map, ir::Program *program, core::FunctionTable &functions_table) const;
 
-  std::optional<core::MatchingMap> match_with_ir_node(const ir::Program::Ptr &ir_node) const;
+  std::optional<core::MatchingMap> match_with_ir_node(const ir::Program::Ptr &ir_node, ir::Program *program) const;
 
   ~RewriteRule() {}
 };

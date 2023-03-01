@@ -4,16 +4,20 @@ namespace fheco_trs
 {
 size_t RewriteRule::rule_id = 0;
 
+/*
 RewriteRule::RewriteRule(const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, bool _saving_circuit_flag)
   : lhs(_lhs), rhs_factory(_rhs_factory), id(rule_id++), saving_circuit_flag(_saving_circuit_flag)
 {}
+*/
 
+/*
 RewriteRule::RewriteRule(
   const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, const MatchingTerm &_condition,
   bool _saving_circuit_flag)
   : lhs(_lhs), rhs_factory(_rhs_factory), rewrite_condition(_condition), id(rule_id++),
     saving_circuit_flag(_saving_circuit_flag)
 {}
+*/
 
 RewriteRule::RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs, bool _saving_circuit_flag)
   : lhs(_lhs), static_rhs(_rhs),
@@ -46,14 +50,8 @@ bool RewriteRule::substitute_in_ir(
   if (saving_circuit_flag && core::circuit_saving_condition_rewrite_rule_checker(lhs, matching_map) == false)
     return false;
 
-  if (static_rhs == std::nullopt)
-  {
-    core::substitute(ir_node, rhs_factory(program, matching_map), matching_map, program, functions_table);
-  }
-  else
-  {
-    core::substitute(ir_node, *static_rhs, matching_map, program, functions_table);
-  }
+  core::substitute(ir_node, *static_rhs, matching_map, program, functions_table);
+
   return true;
 }
 
@@ -67,11 +65,12 @@ bool RewriteRule::evaluate_rewrite_condition(
   return core::evaluate_boolean_matching_term(*rewrite_condition, matching_map, program, functions_table);
 }
 
-std::optional<core::MatchingMap> RewriteRule::match_with_ir_node(const ir::Program::Ptr &ir_node) const
+std::optional<core::MatchingMap> RewriteRule::match_with_ir_node(
+  const ir::Program::Ptr &ir_node, ir::Program *program) const
 {
 
   core::MatchingMap matching_map;
-  bool matching_result = core::match_term(ir_node, lhs, matching_map);
+  bool matching_result = core::match_term(ir_node, lhs, matching_map, program);
 
   if (matching_result)
     return matching_map;

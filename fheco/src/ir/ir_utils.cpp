@@ -346,6 +346,25 @@ ir::TermType deduce_ir_term_type(const ir::Program::Ptr &lhs, const ir::Program:
   throw("couldn't deduce ir term type");
 }
 
+ir::TermType deduce_ir_term_type(const std::vector<ir::Program::Ptr> &terms)
+{
+  if (terms.size() == 1)
+    return terms[0]->get_term_type();
+
+  if (terms.size() == 2)
+    return deduce_ir_term_type(terms[0], terms[1]);
+
+  for (size_t i = 0; i < terms.size(); i++)
+  {
+    if (terms[i]->get_term_type() == ir::ciphertextType)
+      return ciphertextType;
+
+    if (terms[i]->get_term_type() == ir::plaintextType)
+      return ir::plaintextType;
+  }
+  return terms[0]->get_term_type();
+}
+
 std::shared_ptr<ir::Term> fold_ir_term(const std::shared_ptr<ir::Term> &term, ir::Program *program)
 {
 
@@ -653,6 +672,15 @@ void cast_vector_of_number_to_double(std::vector<double> &double_vec, const std:
     double_vec.resize(number_vec.size());
   for (size_t i = 0; i < number_vec.size(); i++)
     double_vec[i] = static_cast<double>(number_vec[i]);
+}
+
+bool is_a_vector_of_value(const std::vector<Number> &number_vec, const ir::Number &value)
+{
+  for (size_t i = 0; i < number_vec.size(); i++)
+    if (number_vec[i] != value)
+      return false;
+
+  return true;
 }
 
 } // namespace ir

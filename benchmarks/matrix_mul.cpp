@@ -123,7 +123,7 @@ int main()
         std::vector<int64_t> mask(A[0].size(), 0);
         mask[0] = 1;
         fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_encrypted[j];
-        fhecompiler::Ciphertext temp_cipher = sum_all_slots2(simd_product, A[0].size()) * mask;
+        fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product, A[0].size()) * mask;
         if (j > 0)
           temp_cipher >>= j;
         temp_ciphers.push_back(temp_cipher);

@@ -55,11 +55,13 @@ int main()
 
     // pt_output = pt_input1 + pt_input2; //(A - (B + C)) + C;
 
-    // pt_output += pt_output;
+    pt_output += pt_output;
 
-    output1 = (A + (5 - B)) + pt_output + pt_input1 + D + C + 1337; // * pt2 + (pt1 + pt2));
+    // output1 = (A + (5 - B)) + pt_output + pt_input1 + D + C + 1337; // * pt2 + (pt1 + pt2));
 
-    output2 = (((A + pt_output) + pt_output) * pt_output) * (pt_output * 23);
+    // output2 = (((A + pt_output) + pt_output) * pt_output) * (pt_output * 23);
+
+    output2 = (A * 0);
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

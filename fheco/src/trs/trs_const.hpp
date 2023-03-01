@@ -15,11 +15,15 @@ enum class FunctionId
   count_mul,
   count_rot,
   get_opcode,
-  isconst
+  isconst,
+  isone,
+  iszero
 };
 
 enum class TermType
 {
+  constant,
+  variable,
   rawDataType,
   scalarType,
   ciphertextType,
@@ -61,10 +65,9 @@ enum class OpCode
 };
 
 // types which can be in matchin condition term
+
 inline std::unordered_set<fheco_trs::TermType> rewrite_condition_types = {
   fheco_trs::TermType::rawDataType, fheco_trs::TermType::scalarType};
-
-inline std::unordered_set<fheco_trs::TermType> term_types_attributes = {fheco_trs::TermType::opcodeAttribute};
 
 inline std::unordered_map<fheco_trs::OpCode, ir::OpCode> opcode_mapping = {
   {fheco_trs::OpCode::undefined, ir::OpCode::undefined},
@@ -83,10 +86,12 @@ inline std::unordered_map<fheco_trs::OpCode, ir::OpCode> opcode_mapping = {
   {fheco_trs::OpCode::rescale, ir::OpCode::rescale},
   {fheco_trs::OpCode::exponentiate, ir::OpCode::exponentiate}};
 
-inline std::unordered_map<fheco_trs::TermType, ir::TermType> term_type_map = {
-  {fheco_trs::TermType::ciphertextType, ir::TermType::ciphertextType},
-  {fheco_trs::TermType::plaintextType, ir::TermType::plaintextType},
-  {fheco_trs::TermType::scalarType, ir::TermType::scalarType},
-  {fheco_trs::TermType::rawDataType, ir::TermType::rawDataType}};
+inline std::unordered_map<fheco_trs::TermType, std::unordered_set<ir::TermType>> term_type_map = {
+  {fheco_trs::TermType::ciphertextType, {ir::TermType::ciphertextType}},
+  {fheco_trs::TermType::plaintextType, {ir::TermType::plaintextType}},
+  {fheco_trs::TermType::scalarType, {ir::TermType::scalarType}},
+  {fheco_trs::TermType::rawDataType, {ir::TermType::rawDataType}},
+  {fheco_trs::TermType::variable, {ir::TermType::ciphertextType, ir::TermType::plaintextType}},
+  {fheco_trs::TermType::constant, {ir::TermType::plaintextType, ir::TermType::scalarType, ir::TermType::rawDataType}}};
 
 } // namespace fheco_trs

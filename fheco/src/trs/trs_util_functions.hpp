@@ -19,11 +19,13 @@ namespace util_functions
 
   MatchingTerm isconst(const MatchingTerm &term, core::MatchingMap &matching_map, ir::Program *program);
 
-  inline core::FunctionTable functions_table = {
-    {FunctionId::fold, fold},
-    {FunctionId::get_opcode, get_opcode},
-    {FunctionId::depth, depth},
-    {FunctionId::isconst, isconst}};
+  MatchingTerm isone(const MatchingTerm &term, core::MatchingMap &matching_map, ir::Program *program);
+
+  MatchingTerm iszero(const MatchingTerm &term, core::MatchingMap &matching_map, ir::Program *program);
+
+  inline core::FunctionTable functions_table = {{FunctionId::fold, fold},     {FunctionId::get_opcode, get_opcode},
+                                                {FunctionId::depth, depth},   {FunctionId::isconst, isconst},
+                                                {FunctionId::iszero, iszero}, {FunctionId::isone, isone}};
 } // namespace util_functions
 
 } // namespace fheco_trs

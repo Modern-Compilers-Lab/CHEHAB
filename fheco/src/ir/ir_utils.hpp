@@ -45,6 +45,8 @@ void cast_number_vector_to_int(const std::vector<Number> &double_vector, std::ve
 
 ir::TermType deduce_ir_term_type(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs);
 
+ir::TermType deduce_ir_term_type(const std::vector<ir::Program::Ptr> &terms);
+
 int32_t get_rotation_step(const std::shared_ptr<ir::Term> &node);
 
 int32_t compute_depth_of(const std::shared_ptr<ir::Term> &node);
@@ -81,5 +83,7 @@ void negate_value_if_possible(const std::string &label, Program *program);
 void cast_vector_of_double_to_number(std::vector<Number> &number_vec, const std::vector<double> &double_vec);
 
 void cast_vector_of_number_to_double(std::vector<double> &double_vec, const std::vector<Number> &number_vec);
+
+bool is_a_vector_of_value(const std::vector<Number> &number_vec, const ir::Number &value);
 
 } // namespace ir
