@@ -411,8 +411,7 @@ void Translator::translate_program(std::ofstream &os)
     // after doing all passes, now we do the last pass to translate and generate the code
     for (auto &node_ptr : nodes_ptr)
     {
-      if (node_ptr->get_term_type() == ir::plaintextType)
-        translate_term(node_ptr, os);
+      translate_term(node_ptr, os);
     }
   }
   for (auto &output_node : program->get_outputs_nodes())
