@@ -683,4 +683,35 @@ bool is_a_vector_of_value(const std::vector<Number> &number_vec, const ir::Numbe
   return true;
 }
 
+bool check_constants_value_equality(const ConstantValue &lhs, const ConstantValue &rhs, ir::TermType term_type)
+{
+  if (lhs.index() != rhs.index())
+    return false;
+  else if (term_type == ir::plaintextType)
+  {
+    std::vector<ir::Number> lhs_v;
+    ir::get_constant_value_as_vector_of_number(lhs, lhs_v);
+    std::vector<ir::Number> rhs_v;
+    ir::get_constant_value_as_vector_of_number(rhs, rhs_v);
+
+    if (lhs_v.size() != rhs_v.size())
+      return false;
+
+    for (size_t i = 0; i < lhs_v.size(); i++)
+      if (lhs_v[i] != rhs_v[i])
+        return false;
+
+    return true;
+  }
+  else if (term_type == ir::scalarType)
+  {
+    ir::Number lhs_v = ir::get_constant_value_as_number(lhs);
+    ir::Number rhs_v = ir::get_constant_value_as_number(rhs);
+
+    return lhs_v == rhs_v;
+  }
+  else
+    throw("only scalars and plaintexts are allowed in check_constants_value_equality");
+}
+
 } // namespace ir

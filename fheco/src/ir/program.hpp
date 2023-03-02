@@ -113,8 +113,6 @@ public:
 
   Ptr find_node_in_dataflow(const std::string &label) const;
 
-  void set_symbol_as_output(const std::string &label, const std::string &tag);
-
   void delete_node_from_dataflow(const std::string &node_label);
 
   template <typename T>
@@ -129,6 +127,8 @@ public:
     this->data_flow->insert_node(new_term, this->type_of(new_term->get_label()) == ConstantTableEntryType::output);
     return new_term;
   }
+
+  void set_as_output(const Ptr &node);
 
   void update_tag_value_in_constants_table_entry(const std::string &entry_key, const std::string &tag_value);
 

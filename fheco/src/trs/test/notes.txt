@@ -1,0 +1,12 @@
+
+---------------------------------------------------------------------------------
+
+- rule 5 in add_ruleset might be removed later since it doesn't reduce number of operations and we don't know how it could be useful later.
+- rule 2 in sub rulset I don't think we need it.
+- we can use rule6 from add_ruleset to make another rule
+- rule 7 in add_ruleset might be removed later since it doesn't reduce number of operations and we don't know how it could be useful later.
+- rule 10 in add_ruleset might be removed later since it doesn't reduce number of operations and we don't know how it could be useful later.
+
+rules 5, 7, 10 need CIRCUIT_SAVE_FLAG
+
+---------------------------------------------------------------------------------

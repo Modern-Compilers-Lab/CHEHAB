@@ -21,7 +21,9 @@ private:
 public:
   TRS(ir::Program *prgm) : program(prgm) {}
 
-  void apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules);
+  void apply_rewrite_rules_on_program_from_static_ruleset();
+
+  void apply_rewrite_rules_on_program(const std::vector<RewriteRule> &ruleset);
 };
 
 } // namespace fheco_trs

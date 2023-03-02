@@ -61,5 +61,6 @@ Rot : 4, 2
 (rot(x, n) + rot(y, n)) => (rot(x + y, n)) : 3
 (rot(rot(x, n), m)) => rot(x, n+m)
 
+
 xdepth: 4, 1
 (x * (y * (z * t))) => ((x * y) * (z * t)) : 4

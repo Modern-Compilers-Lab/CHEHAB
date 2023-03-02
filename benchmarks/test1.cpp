@@ -57,11 +57,13 @@ int main()
 
     pt_output += pt_output;
 
-    // output1 = (A + (5 - B)) + pt_output + pt_input1 + D + C + 1337; // * pt2 + (pt1 + pt2));
+    fhecompiler::Plaintext pt_zero(std::vector<int64_t>({0, 0, 0}));
 
-    // output2 = (((A + pt_output) + pt_output) * pt_output) * (pt_output * 23);
+    // output1 = (pt_zero - A) * pt_input1;
 
-    output2 = (A * 0);
+    output1 = (A + (5 - B)) + pt_output + pt_input1 + D + C + 1337; // * pt2 + (pt1 + pt2));
+
+    output2 = (((A + pt_output) + pt_output) * pt_output) * (pt_output * 23);
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;
@@ -77,6 +79,5 @@ int main()
     std::cout << message << "\n";
   }
 
-  // initial noise_budget
   return 0;
 }

@@ -86,4 +86,6 @@ void cast_vector_of_number_to_double(std::vector<double> &double_vec, const std:
 
 bool is_a_vector_of_value(const std::vector<Number> &number_vec, const ir::Number &value);
 
+bool check_constants_value_equality(const ConstantValue &lhs, const ConstantValue &rhs, ir::TermType term_type);
+
 } // namespace ir

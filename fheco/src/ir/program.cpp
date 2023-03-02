@@ -311,4 +311,21 @@ void Program::add_node_to_outputs_nodes(const Ptr &node)
   data_flow->insert_node(node, true);
 }
 
+void Program::set_as_output(const Ptr &node)
+{
+  std::string label = node->get_label();
+  if (find_node_in_dataflow(label) == nullptr)
+    throw("node doesnt exist in dataflow in set_as_output");
+  auto const_table_entry_opt = get_entry_form_constants_table(label);
+  if (const_table_entry_opt != std::nullopt)
+  {
+    (*const_table_entry_opt).get().set_entry_type(ir::ConstantTableEntryType::output);
+  }
+  else
+  {
+    // insert new entry
+    insert_entry_in_constants_table({label, {ir::ConstantTableEntryType::output, {label}}});
+  }
+}
+
 } // namespace ir

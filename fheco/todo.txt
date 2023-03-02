@@ -1,0 +1,4 @@
+- handling case of outputs in rewrite, so if lhs is an output then we have to make the rhs as an output as well
+- after rewrite rule is applied node type could change, we need to consider that
+- convert exponentiate to multiplication with squares
+- replace rotate_rows by rotate in IR and later during code generation we generate rotate_rows if the backend is SEAL
