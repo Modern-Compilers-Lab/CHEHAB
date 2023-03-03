@@ -209,6 +209,14 @@ public:
   std::optional<ConstantValue> get_entry_value_value(const std::string &key) const;
 
   const std::vector<int32_t> &get_rotations_steps() const { return rotations_steps; }
+
+  /*
+    This method updates the entry in outputs_nodes map in data_flow, the reason is to keep the same identifier
+    introduced by the user but change the node associated to this identifier
+  */
+  bool update_if_output_entry(const std::string &output_label, const Ptr &node);
+
+  void replace_with(const Ptr &lhs, const Ptr &rhs);
 };
 
 } // namespace ir

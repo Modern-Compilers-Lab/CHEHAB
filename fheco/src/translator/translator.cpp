@@ -21,6 +21,18 @@ std::string Translator::get_identifier(const Ptr &term_ptr) const
     return term_ptr->get_label();
 }
 
+std::string Translator::get_output_identifier(const std::string &output_label)
+{
+  if (program->get_entry_form_constants_table(output_label) != std::nullopt)
+  {
+    ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(output_label));
+    ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
+    return entry_value.get_tag();
+  }
+  else
+    return output_label;
+}
+
 /*
 void Translator::compact_assignement(const ir::Term::Ptr &node_ptr)
 {
@@ -416,8 +428,10 @@ void Translator::translate_program(std::ofstream &os)
   }
   for (auto &output_node : program->get_outputs_nodes())
   {
-    if (program->type_of(output_node.second->get_label()) == ir::ConstantTableEntryType::output)
-      write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
+    // if (program->type_of(output_node.second->get_label()) == ir::ConstantTableEntryType::output)
+    write_output(
+      get_output_identifier(output_node.first), get_identifier(output_node.second),
+      (output_node.second)->get_term_type(), os);
   }
   os << "}" << '\n';
 }
@@ -445,11 +459,12 @@ void Translator::write_input(const std::string &input_identifier, ir::TermType t
      << stringfy_string(input_identifier) << "];" << '\n';
 }
 
-void Translator::write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os)
+void Translator::write_output(
+  const std::string &output_tag, const std::string &output_identifier, ir::TermType type, std::ostream &os)
 {
   // insert output in object
-  os << outputs_class_identifier[type] << "." << insert_object_instruction << "({" << stringfy_string(output_identifier)
-     << "," << output_identifier << "})"
+  os << outputs_class_identifier[type] << "." << insert_object_instruction << "({" << stringfy_string(output_tag) << ","
+     << output_identifier << "})"
      << ";" << '\n';
 }
 

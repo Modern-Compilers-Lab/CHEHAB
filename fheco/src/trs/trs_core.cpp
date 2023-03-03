@@ -294,20 +294,7 @@ namespace core
     }
     else
     {
-
-      bool isoutput = program->type_of(ir_node->get_label()) == ir::ConstantTableEntryType::output;
-
-      if (isoutput)
-        program->set_as_output(new_ir_node);
-
-      if (isoutput && ir_node->get_term_type() != new_ir_node->get_term_type())
-      {
-        throw("output term type changed after rewrite");
-        // if new_ir_node is a constant insert encode
-        // if ir_node is a ciphertext then insert encrypt
-      }
-
-      ir_node->replace_with(new_ir_node);
+      program->replace_with(ir_node, new_ir_node);
     }
   }
 

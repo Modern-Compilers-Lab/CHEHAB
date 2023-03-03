@@ -244,6 +244,7 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 template <typename T>
 void operate_copy(const T &lhs, const T &t_copy, ir::TermType term_type)
 {
+
   auto copy_node_ptr = program->insert_node_in_dataflow<T>(t_copy);
 
   // auto copy_node_ptr = program->find_node_in_dataflow(t_copy.get_label());
@@ -421,8 +422,9 @@ T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
     }
 
     if (is_lhs_output)
+    {
       program->delete_node_from_outputs(lhs_old_label);
-    // program->delete_node_from_dataflow(old_label);
+    }
   }
 
   operate_move<T>(lhs, std::move(rhs), term_type);
@@ -506,7 +508,9 @@ void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode op
     if (is_output || program->is_tracked_object(old_label))
     {
       if (is_output)
+      {
         program->delete_node_from_outputs(old_label);
+      }
 
       if (!is_input)
       {

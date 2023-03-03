@@ -68,7 +68,8 @@ public:
     std::ofstream &os, const std::string &lhs_id, const std::string &rhs_id, ir::TermType type);
 
   void write_input(const std::string &input_identifier, ir::TermType type, std::ostream &os);
-  void write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os);
+  void write_output(
+    const std::string &output_tag, const std::string &output_identifier, ir::TermType type, std::ostream &os);
 
   void write_rotations_steps_getter(const std::vector<int32_t> &steps, std::ostream &os);
 
@@ -84,6 +85,8 @@ public:
   void order_operands(const ir::Program::Ptr &node);
 
   void fix_operands_order_pass();
+
+  std::string get_output_identifier(const std::string &output_label);
 };
 
 } // namespace translator

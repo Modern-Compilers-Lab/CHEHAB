@@ -116,7 +116,9 @@ INLINE const char *rotation_step_type_literal = "int32_t";
 INLINE const char *gen_steps_function_signature = "std::vector<int32_t> get_rotations_steps()";
 
 INLINE std::unordered_map<ir::TermType, const char *> outputs_class_identifier = {
-  {ir::plaintextType, "encoded_outputs"}, {ir::ciphertextType, "encrypted_outputs"}};
+  {ir::plaintextType, "encoded_outputs"},
+  {ir::ciphertextType, "encrypted_outputs"},
+  {ir::scalarType, "encoded_outputs"}};
 
 INLINE std::unordered_map<ir::TermType, const char *> inputs_class_identifier = {
   {ir::plaintextType, "encoded_inputs"}, {ir::ciphertextType, "encrypted_inputs"}};
