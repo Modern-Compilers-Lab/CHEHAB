@@ -104,7 +104,7 @@ public:
   CSE(ir::Program *prgm) : program(prgm) {}
   // void apply_cse();
 
-  void apply_cse2(bool allow_assign_insertion = true);
+  void apply_cse2(bool allow_assign_insertion = false);
 };
 
 } // namespace fheco_passes

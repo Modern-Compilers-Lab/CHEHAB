@@ -97,7 +97,34 @@ Ciphertext &Ciphertext::square()
 
 Ciphertext &Ciphertext::exponentiate(uint64_t exponent)
 {
-  compound_operate_with_raw<Ciphertext>(*this, std::to_string(exponent), ir::OpCode::exponentiate, ir::ciphertextType);
+  // compound_operate_with_raw<Ciphertext>(*this, std::to_string(exponent), ir::OpCode::exponentiate,
+  // ir::ciphertextType); return *this;
+  // we convert exponentiate to squares
+  if (exponent == 1)
+    return *this;
+
+  Ciphertext unit_cipher = *this;
+  Ciphertext square_cipher = (*this).square();
+
+  Ciphertext exponentiation = square_cipher;
+  exponent -= 2;
+
+  while (exponent > 0)
+  {
+    if (exponent >= 2)
+    {
+      exponentiation *= square_cipher;
+      exponent -= 2;
+    }
+    else if (exponent == 1)
+    {
+      exponentiation *= unit_cipher;
+      exponent -= 1;
+    }
+  }
+
+  *this = exponentiation;
+
   return *this;
 }
 
@@ -178,7 +205,9 @@ Ciphertext operator-(const Ciphertext &rhs)
 
 Ciphertext exponentiate(const Ciphertext &lhs, uint32_t exponent)
 {
-  return operate_with_raw<Ciphertext>(lhs, std::to_string(exponent), ir::OpCode::exponentiate, ir::ciphertextType);
+  // return operate_with_raw<Ciphertext>(lhs, std::to_string(exponent), ir::OpCode::exponentiate, ir::ciphertextType);
+  Ciphertext lhs_copy = lhs;
+  return lhs_copy.exponentiate(exponent);
 }
 
 Ciphertext square(const Ciphertext &lhs)
