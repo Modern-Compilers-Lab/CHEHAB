@@ -26,7 +26,7 @@ std::string CSE::calculate_id(const ir::Program::Ptr &term)
 
 bool CSE::check_inputs_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
 {
-  return lhs == rhs;
+  return (lhs == rhs || lhs->get_label() == rhs->get_label());
 }
 
 bool CSE::check_raw_data_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
@@ -280,12 +280,15 @@ void CSE::apply_cse2(bool allow_assign_insertion)
             if the node doesn't have parents then in that case we convert the operation node to an assignement node. in
             best case will gain at most one operation each time we face this scenarion
           */
+          /*
           if (allow_assign_insertion)
           {
             node->set_opcode(ir::OpCode::assign);
             node->clear_operands();
             node->set_operands({it->second});
           }
+          */
+          program->replace_with(node, it->second);
         }
       }
       else

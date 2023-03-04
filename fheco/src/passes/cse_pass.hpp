@@ -62,7 +62,7 @@ struct SEidHash
     std::stringstream ss;
     if (seid.opcode == ir::OpCode::undefined)
     {
-      ss << seid.expr_ptr;
+      ss << seid.expr_ptr->get_label();
     }
     else
     {

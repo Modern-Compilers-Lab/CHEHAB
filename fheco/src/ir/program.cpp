@@ -338,12 +338,11 @@ void Program::replace_with(const Ptr &lhs, const Ptr &rhs)
       {
         auto new_encrypt_node =
           insert_operation_node_in_dataflow(OpCode::encrypt, std::vector<Ptr>{rhs}, "", ir::ciphertextType);
-        new_encrypt_node->set_a_default_label();
 
         update_if_output_entry(lhs->get_label(), new_encrypt_node);
       }
-      lhs->replace_with(rhs);
     }
+    lhs->replace_with(rhs);
   }
 }
 

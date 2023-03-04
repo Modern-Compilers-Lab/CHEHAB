@@ -152,4 +152,15 @@ void Term::set_a_default_label()
   label = term_type_label_map[type] + std::to_string(term_id);
 }
 
+void Term::rewrite_with_operation(const Ptr &node)
+{
+  // the term must be an operation
+  if (node->is_operation_node() == false)
+    throw("operation node expected in Term::rewrite_with_operation");
+
+  clear_operands();
+  set_opcode(node->get_opcode());
+  set_operands(node->get_operands());
+}
+
 } // namespace ir

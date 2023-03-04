@@ -288,9 +288,7 @@ namespace core
       make_ir_node_from_matching_term(rewrite_rule_rhs, matching_map, program, functions_table);
     if (new_ir_node->is_operation_node())
     {
-      ir_node->clear_operands();
-      ir_node->set_opcode(new_ir_node->get_opcode());
-      ir_node->set_operands(new_ir_node->get_operands());
+      ir_node->rewrite_with_operation(new_ir_node);
     }
     else
     {

@@ -19,6 +19,8 @@ int main()
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
     fhecompiler::Ciphertext output2("output2", VarType::output);
+    fhecompiler::Ciphertext output3("output3", VarType::output);
+    fhecompiler::Ciphertext output4("output4", VarType::output);
 
     /*
     output1 = B << 3;
@@ -67,9 +69,17 @@ int main()
 
     fhecompiler::Ciphertext tmp = A * 0;
 
-    output1 = A * 0;
+    output1 = B + A * 1;
+
+    output2 = B + A;
 
     pt_output = pt_input1 * 0;
+
+    A = B;
+
+    output3 = C + A;
+
+    output4 = C + B;
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

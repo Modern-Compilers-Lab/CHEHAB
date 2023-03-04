@@ -7,7 +7,7 @@
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
 
-#define NB_TRS_CSE_PASS 6
+#define NB_TRS_CSE_PASS 4
 #define ENABLE_OPTIMIZATION true
 
 using namespace fhecompiler;
