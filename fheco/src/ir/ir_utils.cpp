@@ -469,12 +469,14 @@ void print_ops_counters(Program *program)
         else
           add_ct_ct++;
         break;
+
       case OpCode::mul:
         if (is_pt_ct(node))
           mul_ct_pt++;
         else
           mul_ct_ct++;
         break;
+
       case OpCode::sub:
         if (is_pt_ct(node))
           sub_ct_pt++;
@@ -482,12 +484,14 @@ void print_ops_counters(Program *program)
           sub_ct_ct++;
         break;
 
-      case OpCode::rotate_rows:
-        rot_ct++;
-        break;
       case OpCode::rotate:
         rot_ct++;
         break;
+
+    case OpCode::rotate_rows:
+        rot_ct++;
+        break;
+
       default:
         break;
       }

@@ -82,9 +82,12 @@ public:
 
   void translate_program(std::ofstream &os);
 
-  void order_operands(const ir::Program::Ptr &node);
+  /*
+    every change that needs to be done on IR node before code generation happens in fix_ir_instruction
+  */
+  void fix_ir_instruction(const ir::Program::Ptr &node);
 
-  void fix_operands_order_pass();
+  void fix_ir_instructions_pass();
 
   std::string get_output_identifier(const std::string &output_label);
 };

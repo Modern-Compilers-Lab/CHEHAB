@@ -79,7 +79,7 @@ int main()
 
     output3 = C + A;
 
-    output4 = C + B + exponentiate(D, 5);
+    output4 = C + B + exponentiate(D, 5) + (A << 5);
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

@@ -414,7 +414,7 @@ void Translator::translate_program(std::ofstream &os)
   generate_function_signature(os);
   os << "{" << '\n';
 
-  fix_operands_order_pass();
+  fix_ir_instructions_pass();
   convert_to_inplace_pass();
 
   {
@@ -550,7 +550,7 @@ void Translator::write_rotations_steps_getter(const std::vector<int32_t> &steps,
   os << " return steps; }";
 }
 
-void Translator::order_operands(const ir::Program::Ptr &node)
+void Translator::fix_ir_instruction(const ir::Program::Ptr &node)
 {
   if (node->is_operation_node() == false)
     return;
@@ -590,12 +590,21 @@ void Translator::order_operands(const ir::Program::Ptr &node)
         node->set_operands(std::vector<ir::Program::Ptr>({negate_node, lhs}));
       }
     }
+    else if (node->get_opcode() == ir::OpCode::rotate)
+    {
+      if (
+        program->get_targeted_backend() == fhecompiler::Backend::SEAL &&
+        program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
+      {
+        node->set_opcode(ir::OpCode::rotate_rows);
+      }
+    }
   }
   else if (node->get_term_type() == ir::scalarType)
     throw("only plaintext and ciphertext operation terms are expected");
 }
 
-void Translator::fix_operands_order_pass()
+void Translator::fix_ir_instructions_pass()
 {
   auto nodes = program->get_dataflow_sorted_nodes(true);
   for (auto &node : nodes)
@@ -603,7 +612,7 @@ void Translator::fix_operands_order_pass()
     /*
       Order of calling the two functions is important
     */
-    order_operands(node);
+    fix_ir_instruction(node);
   }
 }
 

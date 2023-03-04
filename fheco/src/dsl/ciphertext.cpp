@@ -131,14 +131,16 @@ Ciphertext &Ciphertext::exponentiate(uint64_t exponent)
 Ciphertext &Ciphertext::rotate_rows(int steps)
 {
 
-  ir::OpCode opcode;
+  ir::OpCode opcode = ir::OpCode::rotate;
 
+  /*
   if (program->get_targeted_backend() != fhecompiler::Backend::SEAL)
   {
     opcode = ir::OpCode::rotate;
   }
   else
     opcode = ir::OpCode::rotate_rows;
+  */
 
   compound_operate_with_raw<Ciphertext>(*this, std::to_string(steps), opcode, ir::ciphertextType);
 
@@ -254,14 +256,16 @@ Ciphertext rotate(const Ciphertext &lhs, int steps)
 
 Ciphertext rotate_rows(const Ciphertext &lhs, int steps)
 {
-  ir::OpCode opcode;
+  ir::OpCode opcode = ir::OpCode::rotate;
 
+  /*
   if (program->get_targeted_backend() != Backend::SEAL)
   {
     opcode = ir::OpCode::rotate;
   }
   else
     opcode = ir::OpCode::rotate_rows;
+    */
 
   return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), opcode, ir::ciphertextType);
 }
