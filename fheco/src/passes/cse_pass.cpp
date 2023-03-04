@@ -26,7 +26,7 @@ std::string CSE::calculate_id(const ir::Program::Ptr &term)
 
 bool CSE::check_inputs_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
 {
-  return (lhs == rhs || lhs->get_label() == rhs->get_label());
+  return (lhs == rhs);
 }
 
 bool CSE::check_raw_data_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
@@ -234,7 +234,8 @@ void CSE::apply_cse2(bool allow_assign_insertion)
     auto node = nodes[i];
     auto parents_labels = node->get_parents_labels();
     bool cse_applied = false;
-    if (node->is_operation_node() == false && program->type_of(node->get_label()) != ir::ConstantTableEntryType::input)
+    auto const_value_opt = program->get_entry_value_value(node->get_label());
+    if (const_value_opt != std::nullopt)
     {
       for (auto &processed_constant : processed_constants)
       {
@@ -280,21 +281,35 @@ void CSE::apply_cse2(bool allow_assign_insertion)
             if the node doesn't have parents then in that case we convert the operation node to an assignement node. in
             best case will gain at most one operation each time we face this scenarion
           */
-          /*
           if (allow_assign_insertion)
           {
             node->set_opcode(ir::OpCode::assign);
             node->clear_operands();
             node->set_operands({it->second});
           }
-          */
-          program->replace_with(node, it->second);
+          else
+          {
+            program->replace_with(node, it->second);
+          }
         }
       }
       else
         calculated_expressions_ids[expression_id] = node;
     }
   }
+}
+
+std::string CSE::serialize_number(const ir::Number &scalar)
+{
+  std::string s_string = std::to_string(scalar);
+  return s_string;
+}
+
+void CSE::serialize_vector_of_numbers(const std::vector<ir::Number> &numbers, std::string &s_string)
+{
+  s_string.clear();
+  for (auto &n : numbers)
+    s_string += serialize_number(n);
 }
 
 } // namespace fheco_passes

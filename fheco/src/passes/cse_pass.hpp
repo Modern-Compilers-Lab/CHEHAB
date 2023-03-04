@@ -1,4 +1,5 @@
 #pragma once
+#include "ir_utils.hpp"
 #include "program.hpp"
 #include <sstream>
 
@@ -93,16 +94,17 @@ private:
 
   bool check_inputs_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs);
 
+  std::string serialize_number(const ir::Number &scalar);
+
+  void serialize_vector_of_numbers(const std::vector<ir::Number> &numbers, std::string &s_string);
+
   // std::string calculate_id(const ir::Program::Ptr &term);
 
 public:
   CSE(ir::Program *prgm) : program(prgm) {}
   // void apply_cse();
-  /*
-    This function apply CSE on the program (mainly IR). by allowing insertion of assign operator node you will gain one
-    instruction at most in the best case
-  */
-  void apply_cse2(bool allow_assign_insertion = false);
+
+  void apply_cse2(bool allow_assign_insertion = true);
 };
 
 } // namespace fheco_passes

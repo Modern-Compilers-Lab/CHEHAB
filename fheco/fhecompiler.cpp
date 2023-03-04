@@ -7,7 +7,7 @@
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
 
-#define NB_TRS_CSE_PASS 4
+#define NB_TRS_CSE_PASS 6
 #define ENABLE_OPTIMIZATION true
 
 using namespace fhecompiler;
@@ -61,7 +61,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   fheco_passes::CSE cse_pass(program);
 
   if (ENABLE_OPTIMIZATION == true)
-    cse_pass.apply_cse2(true);
+    cse_pass.apply_cse2();
 
   // fheco_passes::Normalizer normalizer(program);
   // normalizer.normalize();
@@ -76,7 +76,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     {
       // utils::draw_ir(program, output_filename + std::to_string(i) + ".dot");
       trs.apply_rewrite_rules_on_program_from_static_ruleset();
-      cse_pass.apply_cse2(true);
+      cse_pass.apply_cse2();
     }
   }
 
@@ -90,7 +90,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   rs_pass.collect_program_rotations_steps();
 
   if (ENABLE_OPTIMIZATION)
-    cse_pass.apply_cse2(true);
+    cse_pass.apply_cse2();
 
   ir::print_ops_counters(program);
 

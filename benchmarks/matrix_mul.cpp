@@ -64,10 +64,10 @@ int main()
     std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
     std::vector<std::vector<int64_t>> B; //= {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
-    const int N = 10;
-    const int M = 10;
-    const int P = 10;
-    const int Q = 10;
+    const int N = 50;
+    const int M = 50;
+    const int P = 50;
+    const int Q = 50;
 
     for (size_t i = 0; i < N; i++)
     {
