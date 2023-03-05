@@ -1,4 +1,5 @@
 #include "ir_utils.hpp"
+#include "fhecompiler_const.hpp"
 #include <cmath>
 
 namespace ir

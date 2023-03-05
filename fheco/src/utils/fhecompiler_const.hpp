@@ -33,4 +33,7 @@ enum class sec_level_type
   tc256
 };
 
+inline const char *program_not_init_msg =
+  "Program was not initialized properly, you need to call init function with all required arguments";
+
 } // namespace fhecompiler

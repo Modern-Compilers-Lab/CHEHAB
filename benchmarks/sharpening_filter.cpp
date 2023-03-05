@@ -9,7 +9,7 @@ int main()
 
     fhecompiler::Ciphertext img("img", fhecompiler::VarType::input);
 
-    int n = 720;
+    int n = 1024;
 
     fhecompiler::Ciphertext r0 = img * -8;
     fhecompiler::Ciphertext r1 = img << -n - 1;
