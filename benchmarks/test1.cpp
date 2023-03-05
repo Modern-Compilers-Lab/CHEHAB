@@ -67,6 +67,10 @@ int main()
 
     // output2 = (((A + pt_output) + pt_output) * pt_output) * (pt_output * 23);
 
+    std::vector<int64_t> zero_vector;
+    for (size_t i = 0; i < 124; i++)
+      zero_vector.push_back(0);
+
     fhecompiler::Ciphertext tmp = A * 0;
 
     output1 = B + A * 1;
@@ -77,7 +81,7 @@ int main()
 
     A = B;
 
-    output3 = C + A;
+    output3 = A * zero_vector;
 
     output4 = C + B + exponentiate(D, 5) + (A << 5);
 

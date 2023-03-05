@@ -41,14 +41,34 @@ Plaintext::Plaintext(const std::vector<int64_t> &message)
   */
 
   program->insert_node_in_dataflow<Plaintext>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
+  if (message.size() < program->get_vector_size())
+  {
+    auto message_resized = message;
+    message_resized.resize(program->get_vector_size());
+    program->insert_entry_in_constants_table(
+      {this->label, {ir::ConstantTableEntryType::constant, {label, message_resized}}});
+  }
+  else
+  {
+    program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
+  }
 }
 
 Plaintext::Plaintext(const std::vector<double> &message)
   : label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++))
 {
   program->insert_node_in_dataflow<Plaintext>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
+  if (message.size() < program->get_vector_size())
+  {
+    auto message_resized = message;
+    message_resized.resize(program->get_vector_size());
+    program->insert_entry_in_constants_table(
+      {this->label, {ir::ConstantTableEntryType::constant, {label, message_resized}}});
+  }
+  else
+  {
+    program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
+  }
 }
 
 Plaintext::Plaintext(const std::string &tag, VarType var_type)

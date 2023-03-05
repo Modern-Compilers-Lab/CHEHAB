@@ -90,7 +90,7 @@ namespace util_functions
     {
       std::vector<ir::Number> number_vec;
       ir::get_constant_value_as_vector_of_number(*const_value_opt, number_vec);
-      return ir::is_a_vector_of_value(number_vec, 1);
+      return ir::is_a_vector_of_value(number_vec, 1, program->get_vector_size());
     }
     return false;
   }
@@ -120,7 +120,7 @@ namespace util_functions
     {
       std::vector<ir::Number> number_vec;
       ir::get_constant_value_as_vector_of_number(*const_value_opt, number_vec);
-      return ir::is_a_vector_of_value(number_vec, 0);
+      return ir::is_a_vector_of_value(number_vec, 0, program->get_vector_size());
     }
     return false;
   }
