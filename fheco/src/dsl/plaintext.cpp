@@ -40,6 +40,9 @@ Plaintext::Plaintext(const std::vector<int64_t> &message)
     throw("Number of messages in one vector is larger than the expcted value ");
   */
 
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   program->insert_node_in_dataflow<Plaintext>(*this);
   if (message.size() < program->get_vector_size())
   {
@@ -57,6 +60,10 @@ Plaintext::Plaintext(const std::vector<int64_t> &message)
 Plaintext::Plaintext(const std::vector<double> &message)
   : label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++))
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   program->insert_node_in_dataflow<Plaintext>(*this);
   if (message.size() < program->get_vector_size())
   {
@@ -74,6 +81,10 @@ Plaintext::Plaintext(const std::vector<double> &message)
 Plaintext::Plaintext(const std::string &tag, VarType var_type)
   : label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++))
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   if (var_type == VarType::input)
   {
     program->insert_node_in_dataflow(*this);
@@ -175,6 +186,10 @@ Plaintext operator-(const Plaintext &lhs, const Plaintext &rhs)
 
 Plaintext operator-(Plaintext &rhs)
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   if (is_compile_time_evaluation_possible(rhs, rhs))
   {
     Plaintext copy_rhs = rhs;

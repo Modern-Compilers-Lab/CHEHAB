@@ -39,6 +39,9 @@ Ciphertext::Ciphertext(Ciphertext &&ct_move)
 
 Ciphertext Ciphertext::encrypt(const Plaintext &pt)
 {
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   auto pt_ptr = program->find_node_in_dataflow(pt.get_label());
   if (pt_ptr == nullptr)
   {
@@ -50,6 +53,10 @@ Ciphertext Ciphertext::encrypt(const Plaintext &pt)
 Ciphertext::Ciphertext(const std::string &tag, VarType var_type)
   : label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++))
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   if (var_type == VarType::input)
   {
     program->insert_node_in_dataflow(*this);
@@ -150,14 +157,10 @@ Ciphertext &Ciphertext::rotate_rows(int steps)
 Ciphertext &Ciphertext::rotate(int steps)
 {
 
-  ir::OpCode opcode;
+  if (program == nullptr)
+    throw(program_not_init_msg);
 
-  if (program->get_targeted_backend() == fhecompiler::Backend::SEAL)
-  {
-    opcode = ir::OpCode::rotate_rows;
-  }
-  else
-    opcode = ir::OpCode::rotate;
+  ir::OpCode opcode = ir::OpCode::rotate;
 
   compound_operate_with_raw<Ciphertext>(*this, std::to_string(steps), opcode, ir::ciphertextType);
 
@@ -166,6 +169,10 @@ Ciphertext &Ciphertext::rotate(int steps)
 
 Ciphertext &Ciphertext::rotate_columns()
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   if (program->get_targeted_backend() != Backend::SEAL)
     return *this;
   else
@@ -242,14 +249,7 @@ Ciphertext &Ciphertext::operator>>=(int steps)
 Ciphertext rotate(const Ciphertext &lhs, int steps)
 {
 
-  ir::OpCode opcode;
-
-  if (program->get_targeted_backend() == Backend::SEAL && program->get_encryption_scheme() != Scheme::ckks)
-  {
-    opcode = ir::OpCode::rotate_rows;
-  }
-  else
-    opcode = ir::OpCode::rotate;
+  ir::OpCode opcode = ir::OpCode::rotate;
 
   return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), opcode, ir::ciphertextType);
 }
@@ -272,6 +272,9 @@ Ciphertext rotate_rows(const Ciphertext &lhs, int steps)
 
 Ciphertext rotate_columns(const Ciphertext &lhs)
 {
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   if (program->get_targeted_backend() != Backend::SEAL)
     return lhs;
 
@@ -280,6 +283,10 @@ Ciphertext rotate_columns(const Ciphertext &lhs)
 
 std::string Ciphertext::get_term_tag()
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   auto table_entry = program->get_entry_form_constants_table(this->label);
   if (table_entry != std::nullopt)
   {
@@ -292,6 +299,8 @@ std::string Ciphertext::get_term_tag()
 
 bool Ciphertext::is_output() const
 {
+  if (program == nullptr)
+    throw(program_not_init_msg);
   return (program->type_of(this->label) == ir::ConstantTableEntryType::output);
 }
 

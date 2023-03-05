@@ -55,6 +55,9 @@ template <typename T1, typename T2>
 void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
 
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   auto lhs_node_ptr = program->find_node_in_dataflow(lhs.get_label());
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
 
@@ -149,6 +152,10 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
 template <typename T1, typename T2, typename T3>
 T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   auto lhs_node_ptr = program->find_node_in_dataflow(lhs.get_label());
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (lhs_node_ptr == nullptr || rhs_node_ptr == nullptr)
@@ -196,6 +203,10 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
 template <typename T1, typename T2>
 T1 operate_unary(const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (rhs_node_ptr == nullptr)
   {
@@ -276,6 +287,10 @@ void operate_copy(const T &lhs, const T &t_copy, ir::TermType term_type)
 template <typename T>
 void operate_move(T &lhs, T &&t_move, ir::TermType term_type)
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   // if (is_tracked_object(lhs.get_label()))
   //{
   Ptr move_node_ptr = program->insert_node_in_dataflow<T>(t_move);
@@ -315,6 +330,9 @@ void operate_move(T &lhs, T &&t_move, ir::TermType term_type)
 template <typename T>
 T &operate_copy_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
 
   if (lhs.get_label() == rhs.get_label())
     return lhs;
@@ -392,6 +410,9 @@ template <typename T>
 T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
 {
 
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   if (lhs.get_label() == rhs.get_label())
     return lhs;
 
@@ -462,6 +483,9 @@ T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
 inline void operate_in_constants_table(const std::string &label, const std::string &tag, fhecompiler::VarType var_type)
 {
 
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   if (tag.length() == 0 && var_type == fhecompiler::VarType::temp)
     return;
 
@@ -488,6 +512,9 @@ inline void operate_in_constants_table(const std::string &label, const std::stri
 template <typename T>
 void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode opcode, ir::TermType term_type)
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
 
   Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawDataType);
   Ptr lhs_term = program->find_node_in_dataflow(lhs.get_label());
@@ -522,6 +549,8 @@ void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode op
 template <typename T>
 T operate_with_raw(const T &lhs, datatype::rawData raw_data, ir::OpCode opcode, ir::TermType term_type)
 {
+  if (program == nullptr)
+    throw(program_not_init_msg);
 
   T new_T("");
   Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawDataType);

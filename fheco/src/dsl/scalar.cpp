@@ -22,6 +22,9 @@ void Scalar::set_new_label()
 
 Scalar::Scalar(int64_t _data) : data(_data), label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   program->insert_node_in_dataflow<Scalar>(*this);
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
 }
@@ -36,12 +39,18 @@ Scalar::Scalar(uint64_t _data) : data(_data), label(datatype::sc_label_prefix + 
 
 Scalar::Scalar(double _data) : data(_data), label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   program->insert_node_in_dataflow<Scalar>(*this);
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
 }
 
 Scalar::Scalar() : label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   program->insert_node_in_dataflow<Scalar>(*this);
   program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, this->data}}});
 }
