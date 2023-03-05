@@ -16,11 +16,13 @@ int main()
     fhecompiler::Ciphertext B("B", fhecompiler::VarType::input);
     fhecompiler::Ciphertext C("C", fhecompiler::VarType::input);
     fhecompiler::Ciphertext D("D", fhecompiler::VarType::input);
+    fhecompiler::Ciphertext E("E", fhecompiler::VarType::input);
 
     fhecompiler::Ciphertext output1("output1", VarType::output);
     fhecompiler::Ciphertext output2("output2", VarType::output);
     fhecompiler::Ciphertext output3("output3", VarType::output);
     fhecompiler::Ciphertext output4("output4", VarType::output);
+    fhecompiler::Ciphertext output5("output5", VarType::output);
 
     /*
     output1 = B << 3;
@@ -75,7 +77,7 @@ int main()
 
     output1 = B + A * 1;
 
-    output2 = B + A;
+    output2 = B + A + (A * A) + (pt_input1 * pt_input1);
 
     pt_output = pt_input1 * 0;
 
@@ -84,6 +86,8 @@ int main()
     output3 = A * zero_vector;
 
     output4 = C + B + exponentiate(D, 5) + (A << 5);
+
+    output5 = (E * (B * (C * D)));
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

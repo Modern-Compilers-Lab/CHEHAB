@@ -88,8 +88,13 @@ namespace ruleset
 
   T c0(TermType::constant);
   T c1(TermType::constant);
+  T t1(TermType::ciphertextType);
+  T t2(TermType::ciphertextType);
+  T t3(TermType::ciphertextType);
+  T t4(TermType::ciphertextType);
 
   std::vector<RewriteRule> mul_ruleset = {
+    {(t1 * (t2 * (t3 * t4))), ((t1 * t2) * (t3 * t4))},
     {x * c0, c0, T::iszero(c0)} /*rule1*/,
     {c0 * x, c0, T::iszero(c0)} /*rule1*/,
     {x * c0, x, T::isone(c0)} /*rule2*/,
@@ -112,6 +117,15 @@ namespace ruleset
     {((c0 * x) * y), ((x * y) * c0)} /*rule7*/,
     {(y * (x * c0)), ((x * y) * c0)} /*rule7*/,
     {(y * (c0 * x)), ((x * y) * c0)} /*rule7*/,
+    {(x * x), square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
+    {(x * y) * x, y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
+    {x * (x * y), y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
+    {(y * x) * x, y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
+    {x * (y * x), y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
+    {((x * y) * z) * x, (y * z) * square(x),
+     MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
+    {x * ((x * y) * z), (y * z) * square(x),
+     MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
     {(x * (y << p)) * (z << q), x *(((y << T::fold(p - q)) * z) << q),
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {((y << p) * x) * (z << q), x *(((y << T::fold(p - q)) * z) << q),

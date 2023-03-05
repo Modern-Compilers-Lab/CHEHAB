@@ -72,6 +72,7 @@ public:
   static MatchingTerm isconst(const MatchingTerm &m_term);
   static MatchingTerm iszero(const MatchingTerm &m_term);
   static MatchingTerm isone(const MatchingTerm &m_term);
+  static MatchingTerm type_of(const MatchingTerm &m_term);
 };
 
 /*

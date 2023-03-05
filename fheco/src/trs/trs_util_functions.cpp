@@ -124,6 +124,15 @@ namespace util_functions
     }
     return false;
   }
+
+  MatchingTerm type_of(const MatchingTerm &term, core::MatchingMap &matching_map, ir::Program *program)
+  {
+    auto it = matching_map.find(term.get_term_id());
+    if (it == matching_map.end())
+      throw("term doesn't exist in matching_map in type_of");
+
+    return static_cast<int>(it->second->get_term_type());
+  }
 } // namespace util_functions
 
 } // namespace fheco_trs

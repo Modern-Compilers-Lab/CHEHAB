@@ -339,4 +339,12 @@ MatchingTerm MatchingTerm::isone(const MatchingTerm &m_term)
   return new_term;
 }
 
+MatchingTerm MatchingTerm::type_of(const MatchingTerm &m_term)
+{
+  MatchingTerm new_term(TermType::scalarType);
+  new_term.set_function_id(FunctionId::type_of);
+  new_term.push_operand(m_term);
+  return new_term;
+}
+
 } // namespace fheco_trs

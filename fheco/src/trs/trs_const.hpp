@@ -17,7 +17,8 @@ enum class FunctionId
   get_opcode,
   isconst,
   isone,
-  iszero
+  iszero,
+  type_of
 };
 
 enum class TermType
