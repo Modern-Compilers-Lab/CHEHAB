@@ -84,7 +84,7 @@ void cast_vector_of_double_to_number(std::vector<Number> &number_vec, const std:
 
 void cast_vector_of_number_to_double(std::vector<double> &double_vec, const std::vector<Number> &number_vec);
 
-bool is_a_vector_of_value(const std::vector<Number> &number_vec, const ir::Number &value);
+bool is_a_vector_of_value(const std::vector<Number> &number_vec, const ir::Number &value, size_t vector_size);
 
 bool check_constants_value_equality(const ConstantValue &lhs, const ConstantValue &rhs, ir::TermType term_type);
 

@@ -488,7 +488,7 @@ void print_ops_counters(Program *program)
         rot_ct++;
         break;
 
-    case OpCode::rotate_rows:
+      case OpCode::rotate_rows:
         rot_ct++;
         break;
 
@@ -678,8 +678,12 @@ void cast_vector_of_number_to_double(std::vector<double> &double_vec, const std:
     double_vec[i] = static_cast<double>(number_vec[i]);
 }
 
-bool is_a_vector_of_value(const std::vector<Number> &number_vec, const ir::Number &value)
+bool is_a_vector_of_value(const std::vector<Number> &number_vec, const ir::Number &value, size_t vector_size)
 {
+
+  if (value != 0 && number_vec.size() < vector_size)
+    return false;
+
   for (size_t i = 0; i < number_vec.size(); i++)
     if (number_vec[i] != value)
       return false;
