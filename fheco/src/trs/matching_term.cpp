@@ -39,14 +39,14 @@ fheco_trs::TermType MatchingTerm::deduce_term_type(fheco_trs::TermType lhs_term_
   else if (lhs_term_type == fheco_trs::TermType::variable || rhs_term_type == fheco_trs::TermType::variable)
     return fheco_trs::TermType::variable;
 
-  else if (lhs_term_type == fheco_trs::TermType::constant || rhs_term_type == fheco_trs::TermType::constant)
-    return fheco_trs::TermType::constant;
-
   else if (lhs_term_type == fheco_trs::TermType::ciphertextType || rhs_term_type == fheco_trs::TermType::ciphertextType)
     return fheco_trs::TermType::ciphertextType;
 
   else if (lhs_term_type == fheco_trs::TermType::plaintextType || rhs_term_type == fheco_trs::TermType::plaintextType)
     return fheco_trs::TermType::plaintextType;
+
+  else if (lhs_term_type == fheco_trs::TermType::constant || rhs_term_type == fheco_trs::TermType::constant)
+    return fheco_trs::TermType::constant;
 
   else
     throw("cannot deduce term type");

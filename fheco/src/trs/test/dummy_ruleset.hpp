@@ -13,85 +13,23 @@ namespace ruleset
   using T = MatchingTerm;
 
   T x(TermType::variable);
-  /*
-    T x(TermType::ciphertextType);
-  */
   T y(TermType::variable);
-  /*
-    T y(TermType::plaintextType);
-  */
   T z(TermType::variable);
   T k(TermType::variable);
   T n(TermType::constant);
   T m(TermType::constant);
   T p(TermType::rawDataType);
   T q(TermType::rawDataType);
-
-  /*
-    std::vector<RewriteRule> dummy_ruleset = {
-      {(x << p), x, p == 0},
-      {(x << p) << q, x << T::fold(p + q)},
-      {(x + (y << p)) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
-       (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {((y << p) + x) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
-       (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {(z << q) + (x + (y << p)), x + (((y << T::fold(p - q)) + z) << q),
-       (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {(z << q) + ((y << p) + x), x + (((y << T::fold(p - q)) + z) << q),
-       (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {(x + (y << p)) + (z << q), x + (((z << T::fold(p - q)) + y) << q),
-       (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {((y << p) + x) + (z << q), x + (((z << T::fold(q - p)) + y) << q),
-       (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {(z << q) + (x + (y << p)), x + (((z << T::fold(q - p)) + y) << q),
-       (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {(z << q) + ((y << p) + x), x + (((z << T::fold(q - p)) + y) << q),
-       (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {(x + (y << p)) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
-       (p < q) && (p < 0) && (q < 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {((y << p) + x) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
-       (p < q) && (p < 0) && (q < 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {(z << q) + (x + (y << p)), x + (((y << T::fold(p - q)) + z) << q),
-       (p < q) && (p < 0) && (q < 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {(z << q) + ((y << p) + x), x + (((y << T::fold(p - q)) + z) << q),
-       (p < q) && (p < 0) && (q < 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate),
-    CIRCUIT_SAVE_FLAG},
-      {(x + (y << p)) + (z << p), x + ((y + z) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
-      {((y << p) + x) + (z << p), x + ((y + z) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
-      {(z << p) + (x + (y << p)), x + ((z + y) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
-      {(z << p) + ((y << p) + x), x + ((z + y) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
-      {(x << p) + (y << p), (x + y) << p},
-      {(x << p) * (y << p), (x * y) << p},
-      {(x << p) - (y << p), (x - y) << p},
-      {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p > q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-      {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q > p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-      {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p < q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-      {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q < p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-      {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
-      {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
-      {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
-      {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG}};
-    */
-
-  std::vector<RewriteRule> rotations_ruleset = {{(x << p), x, p == 0}, {(x << p) << q, x << T::fold(p + q)}};
-
   T c0(TermType::constant);
   T c1(TermType::constant);
   T t1(TermType::ciphertextType);
   T t2(TermType::ciphertextType);
   T t3(TermType::ciphertextType);
   T t4(TermType::ciphertextType);
+  T w(TermType::variable);
+  T u(TermType::variable);
+
+  std::vector<RewriteRule> rotations_ruleset = {{(x << p), x, p == 0}, {(x << p) << q, x << T::fold(p + q)}};
 
   std::vector<RewriteRule> mul_ruleset = {
     {(t1 * (t2 * (t3 * t4))), ((t1 * t2) * (t3 * t4))},
@@ -163,9 +101,6 @@ namespace ruleset
     {(x << p) * (y << q), ((y << T::fold(q - p)) * x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
     {(x << p) * (y << q), ((x << T::fold(p - q)) * y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
     {(x << p) * (y << q), ((y << T::fold(q - p)) * x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG}};
-
-  T w(TermType::variable);
-  T u(TermType::variable);
 
   std::vector<RewriteRule> sub_ruleset = {
     {x - c0, x, T::iszero(c0)} /*rule1*/,
