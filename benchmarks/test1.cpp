@@ -42,6 +42,7 @@ int main()
 
     fhecompiler::Plaintext pt_taged_tmp("pt_const", fhecompiler::VarType::temp);
 
+    /*
     fhecompiler::Scalar n = 3;
 
     fhecompiler::Scalar s(12);
@@ -88,6 +89,13 @@ int main()
     output4 = C + B + exponentiate(D, 5) + (A << 5);
 
     output5 = (E * (B * (C * D)));
+    */
+
+    std::vector<fhecompiler::Ciphertext> vec_test;
+
+    vec_test.push_back(fhecompiler::Ciphertext::encrypt(std::vector<int64_t>({1, 2, 3})));
+
+    output1 = square(vec_test[0]); // + A;
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

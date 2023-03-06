@@ -1,4 +1,5 @@
 #include "relin_pass.hpp"
+#include "matching_term.hpp"
 #include "trs.hpp"
 
 namespace fheco_passes
@@ -19,7 +20,8 @@ void RelinPass::simple_relinearize()
 
   fheco_trs::MatchingTerm x(fheco_trs::TermType::ciphertextType);
   fheco_trs::MatchingTerm y(fheco_trs::TermType::ciphertextType);
-  std::vector<fheco_trs::RewriteRule> relin_rules = {{x * y, fheco_trs::relin(x * y)}};
+  std::vector<fheco_trs::RewriteRule> relin_rules = {
+    {x * y, fheco_trs::relin(x * y)}, {fheco_trs::square(x), fheco_trs::relin(square(x))}};
   trs.apply_rewrite_rules_on_program(relin_rules);
 }
 

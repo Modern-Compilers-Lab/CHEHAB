@@ -61,10 +61,13 @@ int main()
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
 
-    std::vector<std::vector<int64_t>> A = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
-    std::vector<std::vector<int64_t>> B = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
+    std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
+    std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
     /*
+
+      Matrix A is encrypted matrix and B is plaintext matrix (matrix of scalars)
+
 
     {1, 2, 3, -2}
     {-5, 3, 2, 0}
@@ -77,12 +80,14 @@ int main()
     {1, 9, 0}
     {-8, 2, 18}
 
+
+
     4x3
 
-    {1, -5, 1, 5, 5}
-    {2, 3, 0, 3, 3}
-    {3, 2, 1, 2, 2}
-    {-2, 0, -3, 0, 0}
+    {1, -5, 1, 5, 5} 0
+    {2, 3, 0, 3, 3} -7
+    {3, 2, 1, 2, 2} 1
+    {-2, 0, -3, 0, 0} -8
 
     {0}
 
@@ -95,7 +100,6 @@ int main()
     const int P = 10;
     const int Q = 10;
 
-    /*
     for (size_t i = 0; i < N; i++)
     {
       std::vector<int64_t> line;
@@ -114,53 +118,34 @@ int main()
       }
       B.push_back(line);
     }
-    */
 
-    std::vector<fhecompiler::Ciphertext> A_encrypted;
-    // encrypt by line for matrix A
-    for (std::vector<int64_t> line : A)
+    std::vector<fhecompiler::Ciphertext> A_encrypted_by_column;
+    // encrypt by column
+    for (size_t j = 0; j < A[0].size(); j++)
     {
-      fhecompiler::Ciphertext line_encrypted = fhecompiler::Ciphertext::encrypt(line);
-      A_encrypted.push_back(line_encrypted);
+      std::vector<int64_t> column(A.size());
+      for (size_t i = 0; i < A.size(); i++)
+      {
+        column[i] = A[i][j];
+      }
+      A_encrypted_by_column.push_back(fhecompiler::Ciphertext::encrypt(column));
     }
-    // transpose of B
-    std::vector<std::vector<int64_t>> B_transpose;
-    for (size_t column_index = 0; column_index < B[0].size(); column_index++)
+    // B stays as it is, a matrix of scalars
+    for (size_t j = 0; j < B[0].size(); j++)
     {
-      std::vector<int64_t> column_data;
+      // for each column of scalars matrix we computed a row of result matrix
+      std::vector<fhecompiler::Ciphertext> tmp_ciphers;
       for (size_t i = 0; i < B.size(); i++)
       {
-        column_data.push_back(B[i][column_index]);
+        fhecompiler::Ciphertext tmp_cipher = A_encrypted_by_column[i] * B[i][j];
+        tmp_ciphers.push_back(tmp_cipher);
       }
-      B_transpose.push_back(column_data);
+      fhecompiler::Ciphertext output("output" + std::to_string(j), fhecompiler::VarType::output);
+      output = tmp_ciphers[0];
+      for (size_t i = 1; i < B.size(); i++)
+        output += tmp_ciphers[i];
     }
-
-    // C contains result of multiplication
-    std::vector<fhecompiler::Ciphertext> C_encrypted;
-    // make outputs
-    std::vector<fhecompiler::Ciphertext> outputs;
-
-    for (size_t i = 0; i < A.size(); i++)
-    {
-      std::vector<fhecompiler::Ciphertext> temp_ciphers;
-      for (size_t j = 0; j < B[0].size(); j++)
-      {
-        std::vector<int64_t> mask(A[0].size(), 0);
-        mask[0] = 1;
-        fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_transpose[j];
-        fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product, A[0].size()) * mask;
-        if (j > 0)
-          temp_cipher >>= j;
-        temp_ciphers.push_back(temp_cipher);
-      }
-      fhecompiler::Ciphertext c_line = temp_ciphers[0];
-      for (size_t k = 1; k < temp_ciphers.size(); k++)
-        c_line += temp_ciphers[k];
-
-      fhecompiler::Ciphertext output("output" + std::to_string(i), fhecompiler::VarType::output);
-      output = c_line;
-    }
-
+    // result matrix needs to be transposed after decryption
     params_selector::EncryptionParameters params;
     params.set_plaintext_modulus(plaintext_modulus);
     params.set_polynomial_modulus_degree(polynomial_modulus_degree);
