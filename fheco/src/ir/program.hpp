@@ -217,6 +217,8 @@ public:
   bool update_if_output_entry(const std::string &output_label, const Ptr &node);
 
   void replace_with(const Ptr &lhs, const Ptr &rhs);
+
+  bool is_output_node(const std::string &label);
 };
 
 } // namespace ir

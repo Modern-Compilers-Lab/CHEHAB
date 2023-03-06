@@ -197,4 +197,10 @@ bool DAG::update_if_output_entry(const std::string &output_label, const Ptr &nod
   return false;
 }
 
+bool DAG::is_output_node(const std::string &label)
+{
+  auto it = outputs_nodes.find(label);
+  return it != outputs_nodes.end();
+}
+
 } // namespace ir

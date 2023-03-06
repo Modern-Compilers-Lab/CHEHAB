@@ -56,13 +56,39 @@ int main()
 
   try
   {
-    fhecompiler::init("matrix_mul_plain", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
+    fhecompiler::init("matrix_mul2", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
 
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
 
     std::vector<std::vector<int64_t>> A = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
     std::vector<std::vector<int64_t>> B = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
+
+    /*
+
+    {1, 2, 3, -2}
+    {-5, 3, 2, 0}
+    {1, 0, 1, -3}
+    {5, 3, 2, 0}
+    {5, 3, 2, 0}
+
+    {0, 1, 9}
+    {-7, -10, 2}
+    {1, 9, 0}
+    {-8, 2, 18}
+
+    4x3
+
+    {1, -5, 1, 5, 5}
+    {2, 3, 0, 3, 3}
+    {3, 2, 1, 2, 2}
+    {-2, 0, -3, 0, 0}
+
+    {0}
+
+    4x5
+
+    */
 
     const int N = 10;
     const int M = 10;
@@ -139,7 +165,7 @@ int main()
     params.set_plaintext_modulus(plaintext_modulus);
     params.set_polynomial_modulus_degree(polynomial_modulus_degree);
 
-    fhecompiler::compile("matrix_mul_plain.hpp", &params);
+    fhecompiler::compile("matrix_mul2.hpp", &params);
   }
   catch (const char *message)
   {

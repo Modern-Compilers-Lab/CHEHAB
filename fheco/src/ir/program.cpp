@@ -351,4 +351,9 @@ bool Program::update_if_output_entry(const std::string &output_label, const Ptr 
   return data_flow->update_if_output_entry(output_label, node);
 }
 
+bool Program::is_output_node(const std::string &label)
+{
+  return data_flow->is_output_node(label);
+}
+
 } // namespace ir

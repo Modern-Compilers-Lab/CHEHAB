@@ -39,6 +39,8 @@ public:
 
   void add_output(const Ptr &node);
 
+  bool is_output_node(const std::string &label);
+
   const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const { return outputs_nodes; }
 
   const std::vector<Ptr> &get_outputs_nodes_topsorted() const { return sorted_nodes; }

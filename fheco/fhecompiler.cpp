@@ -82,7 +82,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   // utils::draw_ir(program, output_filename + std::to_string(NB_TRS_CSE_PASS) + ".dot");
 
-  // utils::draw_ir(program, output_filename + "2.dot");
+  utils::draw_ir(program, output_filename + "2.dot");
 
   // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
 
