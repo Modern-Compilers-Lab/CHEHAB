@@ -63,7 +63,7 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
 
   if (rhs_node_ptr == nullptr || lhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined maybe it was only declared, in operate_move_assignement");
   }
 
   Ptr new_lhs_node;
@@ -160,7 +160,7 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (lhs_node_ptr == nullptr || rhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined maybe it was only declared, in operate_binary");
   }
 
   auto is_evaluation_possible = is_compile_time_evaluation_possible<T2, T3>(lhs, rhs);
@@ -210,7 +210,7 @@ T1 operate_unary(const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (rhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined, maybe it was only declared, in operate_unary");
   }
   return operate<T1>(opcode, std::vector<Ptr>({rhs_node_ptr}), term_type);
 }
@@ -221,7 +221,7 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (rhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined, maybe it was only declared, compound_operate_unary");
   }
   std::string old_label = rhs.get_label();
 
@@ -297,7 +297,6 @@ void operate_move(T &lhs, T &&t_move, ir::TermType term_type)
 
   if (move_node_ptr->is_operation_node() == false)
   {
-
     auto const_value = program->get_entry_value_value(move_node_ptr->get_label());
     if (const_value != std::nullopt)
     {
@@ -341,7 +340,7 @@ T &operate_copy_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 
   if (rhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined, maybe it was only declared in operate_copy_assignement");
   }
 
   std::string lhs_old_label = lhs.get_label(); // this will be used to keep track of tag
@@ -422,7 +421,7 @@ T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
 
   if (rhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined, maybe it was only declared in operate_move_assignement");
   }
 
   std::string lhs_old_label = lhs.get_label(); // this will be used to keep track of tag

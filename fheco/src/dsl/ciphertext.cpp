@@ -33,6 +33,7 @@ Ciphertext &Ciphertext::operator=(Ciphertext &&ct_move)
 }
 
 Ciphertext::Ciphertext(Ciphertext &&ct_move)
+  : label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++))
 {
   operate_move<Ciphertext>(*this, std::move(ct_move), ir::ciphertextType);
 }
