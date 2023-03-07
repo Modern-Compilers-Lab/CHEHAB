@@ -47,7 +47,7 @@ Plaintext::Plaintext(const std::vector<int64_t> &message)
   if (message.size() < program->get_vector_size())
   {
     auto message_resized = message;
-    message_resized.resize(program->get_vector_size());
+    // message_resized.resize(program->get_vector_size());
     program->insert_entry_in_constants_table(
       {this->label, {ir::ConstantTableEntryType::constant, {label, message_resized}}});
   }
@@ -68,7 +68,7 @@ Plaintext::Plaintext(const std::vector<double> &message)
   if (message.size() < program->get_vector_size())
   {
     auto message_resized = message;
-    message_resized.resize(program->get_vector_size());
+    // message_resized.resize(program->get_vector_size());
     program->insert_entry_in_constants_table(
       {this->label, {ir::ConstantTableEntryType::constant, {label, message_resized}}});
   }
