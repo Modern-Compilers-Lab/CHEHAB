@@ -62,7 +62,7 @@ int main()
     size_t plaintext_modulus = 786433;
 
     std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
-    std::vector<std::vector<int64_t>> B; //= {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
+    std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
     const int N = 50;
     const int M = 50;
@@ -121,7 +121,7 @@ int main()
         std::vector<int64_t> mask(A[0].size(), 0);
         mask[0] = 1;
         fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_encrypted[j];
-        fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product, A[0].size()) * mask;
+        fhecompiler::Ciphertext temp_cipher = sum_all_slots2(simd_product, A[0].size()) * mask;
         if (j > 0)
           temp_cipher >>= j;
         temp_ciphers.push_back(temp_cipher);

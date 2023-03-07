@@ -7,7 +7,7 @@
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
 
-#define NB_TRS_CSE_PASS 6
+#define NB_TRS_CSE_PASS 1
 #define ENABLE_OPTIMIZATION true
 
 using namespace fhecompiler;
@@ -42,6 +42,9 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   params_selector::ParameterSelector parameters_selector(program);
   params_selector::EncryptionParameters params = parameters_selector.select_parameters();
   */
+
+  std::cout << "compilation...\n";
+
   params_selector::ParameterSelector parameters_selector(program);
 
   parameters_selector.fix_parameters(*params);
@@ -58,15 +61,17 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   // utils::draw_ir(program, output_filename + "0.dot");
 
+  // utils::draw_ir(program, output_filename + "1.dot");
+
   fheco_passes::CSE cse_pass(program);
 
   if (ENABLE_OPTIMIZATION == true)
     cse_pass.apply_cse2();
 
+  std::cout << "cse passed...\n";
+
   // fheco_passes::Normalizer normalizer(program);
   // normalizer.normalize();
-
-  // utils::draw_ir(program, output_filename + "1.dot");
 
   fheco_trs::TRS trs(program);
 
@@ -82,15 +87,15 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   // utils::draw_ir(program, output_filename + std::to_string(NB_TRS_CSE_PASS) + ".dot");
 
-  utils::draw_ir(program, output_filename + "2.dot");
+  // utils::draw_ir(program, output_filename + "2.dot");
 
   // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
 
   fheco_passes::RotationKeySelctionPass rs_pass(program, params);
   rs_pass.collect_program_rotations_steps();
 
-  if (ENABLE_OPTIMIZATION)
-    cse_pass.apply_cse2();
+  // if (ENABLE_OPTIMIZATION)
+  // cse_pass.apply_cse2();
 
   ir::print_ops_counters(program);
 

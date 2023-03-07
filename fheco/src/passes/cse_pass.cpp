@@ -237,11 +237,6 @@ void CSE::apply_cse2(bool allow_assign_insertion)
     SEid expression_id(node, program);
     if (const_value_opt != std::nullopt)
     {
-      // for (auto &processed_constant : processed_constants)
-      // {
-      // if (check_syntactical_equality(processed_constant, node))
-      // {
-      // all parents of node needs to point to processed_node instead of node
       auto it = constants_map.find(expression_id);
       if (it != constants_map.end())
       {
@@ -253,12 +248,8 @@ void CSE::apply_cse2(bool allow_assign_insertion)
 
           parent_node->replace_operand_with(node, it->second);
         }
-        cse_applied = true;
       }
-      // break;
-      // }
-      // }
-      if (!cse_applied)
+      else
         constants_map[expression_id] = node;
     }
     else

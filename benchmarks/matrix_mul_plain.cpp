@@ -61,15 +61,14 @@ int main()
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
 
-    std::vector<std::vector<int64_t>> A = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
-    std::vector<std::vector<int64_t>> B = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
+    std::vector<std::vector<int64_t>> A; //= {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
+    std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
-    const int N = 10;
-    const int M = 10;
-    const int P = 10;
-    const int Q = 10;
+    const int N = 50;
+    const int M = 50;
+    const int P = 50;
+    const int Q = 50;
 
-    /*
     for (size_t i = 0; i < N; i++)
     {
       std::vector<int64_t> line;
@@ -88,7 +87,6 @@ int main()
       }
       B.push_back(line);
     }
-    */
 
     std::vector<fhecompiler::Ciphertext> A_encrypted;
     // encrypt by line for matrix A
@@ -122,7 +120,7 @@ int main()
         std::vector<int64_t> mask(A[0].size(), 0);
         mask[0] = 1;
         fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_transpose[j];
-        fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product, A[0].size()) * mask;
+        fhecompiler::Ciphertext temp_cipher = sum_all_slots2(simd_product, A[0].size()) * mask;
         if (j > 0)
           temp_cipher >>= j;
         temp_ciphers.push_back(temp_cipher);

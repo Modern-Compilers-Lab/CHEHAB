@@ -12,6 +12,7 @@ add_executable(reduction reduction.cpp)
 add_executable(linear_regression linear_regression.cpp)
 add_executable(matrix_mul_plain matrix_mul_plain.cpp)
 add_executable(matrix_mul2 matrix_mul2.cpp)
+add_executable(matrix_mul3 matrix_mul3.cpp)
 
 
 target_link_libraries(test1 fhecompiler)
@@ -24,4 +25,4 @@ target_link_libraries(reduction fhecompiler)
 target_link_libraries(linear_regression fhecompiler)
 target_link_libraries(matrix_mul_plain fhecompiler)
 target_link_libraries(matrix_mul2 fhecompiler)
-
+target_link_libraries(matrix_mul3 fhecompiler)

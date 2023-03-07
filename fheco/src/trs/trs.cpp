@@ -79,9 +79,6 @@ void TRS::apply_rewrite_rules_on_program_from_static_ruleset()
       apply_rules_on_ir_node(node, ruleset::mul_ruleset);
       break;
 
-    case ir::OpCode::rotate_rows:
-      apply_rules_on_ir_node(node, ruleset::rotations_ruleset);
-
     case ir::OpCode::rotate:
       apply_rules_on_ir_node(node, ruleset::rotations_ruleset);
       break;
