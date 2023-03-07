@@ -23,7 +23,6 @@ std::string CSE::calculate_id(const ir::Program::Ptr &term)
   return ss.str();
 }
 */
-
 bool CSE::check_inputs_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
 {
   return (lhs == rhs);
@@ -225,7 +224,7 @@ void CSE::apply_cse2(bool allow_assign_insertion)
 
   // Please note that this pass may insert assign operation nodes
 
-  std::unordered_set<ir::Program::Ptr> processed_constants;
+  std::unordered_map<SEid, ir::Program::Ptr, SEidHash> constants_map;
   std::unordered_map<SEid, ir::Program::Ptr, SEidHash> calculated_expressions_ids;
 
   auto nodes = program->get_dataflow_sorted_nodes(true);
@@ -235,31 +234,35 @@ void CSE::apply_cse2(bool allow_assign_insertion)
     auto parents_labels = node->get_parents_labels();
     bool cse_applied = false;
     auto const_value_opt = program->get_entry_value_value(node->get_label());
+    SEid expression_id(node, program);
     if (const_value_opt != std::nullopt)
     {
-      for (auto &processed_constant : processed_constants)
+      // for (auto &processed_constant : processed_constants)
+      // {
+      // if (check_syntactical_equality(processed_constant, node))
+      // {
+      // all parents of node needs to point to processed_node instead of node
+      auto it = constants_map.find(expression_id);
+      if (it != constants_map.end())
       {
-        if (check_syntactical_equality(processed_constant, node))
+        for (auto &parent_label : parents_labels)
         {
-          // all parents of node needs to point to processed_node instead of node
-          for (auto &parent_label : parents_labels)
-          {
-            auto parent_node = program->find_node_in_dataflow(parent_label);
-            if (parent_node == nullptr)
-              continue;
+          auto parent_node = program->find_node_in_dataflow(parent_label);
+          if (parent_node == nullptr)
+            continue;
 
-            parent_node->replace_operand_with(node, processed_constant);
-          }
-          cse_applied = true;
-          break;
+          parent_node->replace_operand_with(node, it->second);
         }
+        cse_applied = true;
       }
+      // break;
+      // }
+      // }
       if (!cse_applied)
-        processed_constants.insert(node);
+        constants_map[expression_id] = node;
     }
     else
     {
-      SEid expression_id = node;
       auto it = calculated_expressions_ids.find(expression_id);
       if (it != calculated_expressions_ids.end())
       {
