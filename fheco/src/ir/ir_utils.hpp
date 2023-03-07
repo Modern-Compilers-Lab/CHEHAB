@@ -88,4 +88,8 @@ bool is_a_vector_of_value(const std::vector<Number> &number_vec, const ir::Numbe
 
 bool check_constants_value_equality(const ConstantValue &lhs, const ConstantValue &rhs, ir::TermType term_type);
 
+size_t hash_number(const ir::Number number);
+
+size_t hash_vector_of_numbers(const std::vector<ir::Number> &v);
+
 } // namespace ir

@@ -723,4 +723,22 @@ bool check_constants_value_equality(const ConstantValue &lhs, const ConstantValu
     throw("only scalars and plaintexts are allowed in check_constants_value_equality");
 }
 
+size_t hash_number(const ir::Number number)
+{
+  return std::hash<ir::Number>{}(number);
+}
+
+size_t hash_vector_of_numbers(const std::vector<ir::Number> &vec)
+{
+  if (vec.size() == 0)
+    return 0;
+
+  size_t hash_value = hash_number(vec[0]);
+  for (size_t i = 1; i < vec.size(); i++)
+  {
+    hash_value = (hash_value ^ hash_number(vec[i]));
+  }
+  return hash_value;
+}
+
 } // namespace ir
