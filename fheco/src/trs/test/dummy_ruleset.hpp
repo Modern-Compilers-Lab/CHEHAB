@@ -32,7 +32,7 @@ namespace ruleset
   std::vector<RewriteRule> rotations_ruleset = {{(x << p), x, p == 0}, {(x << p) << q, x << T::fold(p + q)}};
 
   std::vector<RewriteRule> mul_ruleset = {
-    /*{(t1 * (t2 * (t3 * t4))), ((t1 * t2) * (t3 * t4))},*/
+    {(t1 * (t2 * (t3 * t4))), ((t1 * t2) * (t3 * t4))},
     {x * c0, c0, T::iszero(c0)} /*rule1*/,
     {c0 * x, c0, T::iszero(c0)} /*rule1*/,
     {x * c0, x, T::isone(c0)} /*rule2*/,
@@ -208,6 +208,12 @@ namespace ruleset
     {(x * y + x), (x * (y + 1))} /*rule17*/,
     {(x + y * x), (x * (y + 1))} /*rule17*/,
     {(y * x + x), (x * (y + 1))} /*rule17*/,
+    {c0 * x + c0 * y, c0 *(x + y)},
+    {c0 * x + y * c0, c0 *(x + y)},
+    {x * c0 + y * c0, c0 *(x + y)},
+    {(c0 * x) + (c0 * y), c0 *(x + y)},
+    {(c0 * x) + (y * c0), c0 *(x + y)},
+    {(x * c0) + (y * c0), c0 *(x + y)},
     {(x + (y << p)) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {((y << p) + x) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
