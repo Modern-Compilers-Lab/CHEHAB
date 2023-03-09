@@ -238,7 +238,7 @@ template <typename T>
 void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode opcode, ir::TermType term_type)
 {
 
-  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawDataType);
+  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawData);
   Ptr lhs_term = program->find_node_in_dataflow(lhs.get_label());
 
   if (lhs_term == nullptr)
@@ -273,7 +273,7 @@ T operate_with_raw(const T &lhs, datatype::rawData raw_data, ir::OpCode opcode, 
 {
 
   T new_T("");
-  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawDataType);
+  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawData);
   Ptr lhs_term = program->find_node_in_dataflow(lhs.get_label());
   if (lhs_term == nullptr)
     throw(" operand not defined, maybe it is a temporary and it is only declared \n");

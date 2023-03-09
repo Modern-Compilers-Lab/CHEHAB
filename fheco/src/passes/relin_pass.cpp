@@ -17,8 +17,8 @@ void RelinPass::simple_relinearize()
 
   fheco_trs::TRS trs(program);
 
-  fheco_trs::MatchingTerm x(fheco_trs::TermType::ciphertextType);
-  fheco_trs::MatchingTerm y(fheco_trs::TermType::ciphertextType);
+  fheco_trs::MatchingTerm x(fheco_trs::TermType::ciphertext);
+  fheco_trs::MatchingTerm y(fheco_trs::TermType::ciphertext);
   std::vector<fheco_trs::RewriteRule> relin_rules = {{x * y, fheco_trs::relin(x * y)}};
   trs.apply_rewrite_rules_on_program(relin_rules);
 }

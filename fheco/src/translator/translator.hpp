@@ -1,11 +1,11 @@
 #pragma once
 
-#include "encryption_parameters.hpp"
 #include "program.hpp"
 #include "term.hpp"
 #include "translator_const.hpp"
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <string>
 
 namespace translator
@@ -18,7 +18,6 @@ class Translator
 
 private:
   ir::Program *program;
-  params_selector::EncryptionParameters *encryption_parameters;
 
   EncodingWriter encoding_writer;
   EncryptionWriter encryption_writer;
@@ -44,16 +43,15 @@ private:
   // void compact_assignement(const ir::Term::Ptr &node_ptr);
 
 public:
-  Translator(ir::Program *prgm, params_selector::EncryptionParameters *params)
-    : program(prgm), encryption_parameters(params),
-      encoding_writer(
-        program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? ckks_encoder_type_literal
-                                                                      : bv_encoder_type_literal,
-        encoder_type_identifier, context_identifier, encode_literal),
+  Translator(ir::Program *prgm)
+    : program(prgm), encoding_writer(
+                       program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? ckks_encoder_type_literal
+                                                                                     : bv_encoder_type_literal,
+                       encoder_type_identifier, context_identifier, encode_literal),
       encryption_writer(
         encryptor_type_literal, encryptor_type_identifier, encrypt_literal, public_key_identifier, context_identifier),
       evaluation_writer(evaluator_type_literal, evaluator_identifier, context_identifier),
-      context_writer(this->encryption_parameters, program->get_encryption_scheme())
+      context_writer(program->get_params(), program->get_scheme(), program->get_sec_level())
   {}
 
   ~Translator() {}
@@ -70,7 +68,7 @@ public:
   void write_input(const std::string &input_identifier, ir::TermType type, std::ostream &os);
   void write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os);
 
-  void write_rotations_steps_getter(const std::vector<int32_t> &steps, std::ostream &os);
+  void write_rotations_steps_getter(const std::set<int> &steps, std::ostream &os);
 
   /*
     This function deduce the OpCode to be used by the translator in order to generate the instruction for the backend.an

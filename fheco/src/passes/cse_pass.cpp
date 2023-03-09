@@ -36,7 +36,7 @@ bool CSE::check_raw_data_equality(const ir::Program::Ptr &lhs, const ir::Program
 
 bool CSE::check_scalars_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
 {
-  if (lhs->get_term_type() != ir::scalarType || rhs->get_term_type() != ir::scalarType)
+  if (lhs->get_term_type() != ir::TermType::scalar || rhs->get_term_type() != ir::TermType::scalar)
     throw("both lhs and rhs must be scalars in check_scalars_equality");
 
   auto lhs_const_table_entry = program->get_entry_form_constants_table(lhs->get_label());
@@ -57,7 +57,7 @@ bool CSE::check_scalars_equality(const ir::Program::Ptr &lhs, const ir::Program:
 
 bool CSE::check_plains_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
 {
-  if (lhs->get_term_type() != ir::plaintextType || rhs->get_term_type() != ir::plaintextType)
+  if (lhs->get_term_type() != ir::TermType::plaintext || rhs->get_term_type() != ir::TermType::plaintext)
     throw("both lhs and rhs must be scalars in check_scalars_equality");
 
   if (program->type_of(lhs->get_label()) != ir::ConstantTableEntryType::constant)
@@ -108,11 +108,11 @@ bool CSE::check_constants_equality(const ir::Program::Ptr &lhs, const ir::Progra
 
   ir::TermType type = lhs->get_term_type(); // same as rhs->get_term_type()
 
-  if (type == ir::scalarType)
+  if (type == ir::TermType::scalar)
   {
     return check_scalars_equality(lhs, rhs);
   }
-  else if (type == ir::plaintextType)
+  else if (type == ir::TermType::plaintext)
   {
     return check_plains_equality(lhs, rhs);
   }
@@ -132,7 +132,7 @@ bool CSE::check_syntactical_equality(const ir::Program::Ptr &lhs, const ir::Prog
   if (lhs->get_term_type() != rhs->get_term_type())
     return false;
 
-  if (lhs->get_term_type() == ir::rawDataType)
+  if (lhs->get_term_type() == ir::TermType::rawData)
   {
     return check_raw_data_equality(lhs, rhs);
   }

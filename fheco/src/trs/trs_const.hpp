@@ -20,13 +20,13 @@ enum class FunctionId
 
 enum class TermType
 {
-  rawDataType,
-  scalarType,
-  ciphertextType,
-  plaintextType,
-  booleanType,
+  rawData,
+  scalar,
+  ciphertext,
+  plaintext,
+  boolean,
   opcodeAttribute,
-  functionType
+  function
 };
 
 enum class OpCode
@@ -62,7 +62,7 @@ enum class OpCode
 
 // types which can be in matchin condition term
 inline std::unordered_set<fheco_trs::TermType> rewrite_condition_types = {
-  fheco_trs::TermType::rawDataType, fheco_trs::TermType::scalarType};
+  fheco_trs::TermType::rawData, fheco_trs::TermType::scalar};
 
 inline std::unordered_set<fheco_trs::TermType> term_types_attributes = {fheco_trs::TermType::opcodeAttribute};
 
@@ -84,9 +84,9 @@ inline std::unordered_map<fheco_trs::OpCode, ir::OpCode> opcode_mapping = {
   {fheco_trs::OpCode::exponentiate, ir::OpCode::exponentiate}};
 
 inline std::unordered_map<fheco_trs::TermType, ir::TermType> term_type_map = {
-  {fheco_trs::TermType::ciphertextType, ir::TermType::ciphertextType},
-  {fheco_trs::TermType::plaintextType, ir::TermType::plaintextType},
-  {fheco_trs::TermType::scalarType, ir::TermType::scalarType},
-  {fheco_trs::TermType::rawDataType, ir::TermType::rawDataType}};
+  {fheco_trs::TermType::ciphertext, ir::TermType::ciphertext},
+  {fheco_trs::TermType::plaintext, ir::TermType::plaintext},
+  {fheco_trs::TermType::scalar, ir::TermType::scalar},
+  {fheco_trs::TermType::rawData, ir::TermType::rawData}};
 
 } // namespace fheco_trs

@@ -131,7 +131,7 @@ tuple<int64_t, term_feature_map> fold_he_rotation_steps(const MatchingTerm &term
     bool he_rot = is_he_rotation(term);
     for (const MatchingTerm &operand : term.get_operands())
     {
-      if (he_rot && operand.get_term_type() == TermType::rawDataType)
+      if (he_rot && operand.get_term_type() == TermType::rawData)
       {
         auto [operand_folded_const, operand_vars_coeffs] = fold_raw_data_term(operand);
         folded_const += operand_folded_const;
@@ -159,7 +159,7 @@ tuple<int64_t, term_feature_map> fold_raw_data_term(const MatchingTerm &term)
 {
   function<term_feature_map(const MatchingTerm &, int64_t &, int64_t)> kernel_fold_raw_data_term =
     [&kernel_fold_raw_data_term](const MatchingTerm &term, int64_t &folded_const, int64_t coeff) -> term_feature_map {
-    if (term.get_term_type() != TermType::rawDataType)
+    if (term.get_term_type() != TermType::rawData)
       throw logic_error("invalid rotation step");
 
     if (is_leaf(term))
@@ -261,7 +261,7 @@ vector<reference_wrapper<const MatchingTerm>> get_rotation_steps_terms(const Mat
     bool he_rot = is_he_rotation(term);
     for (const MatchingTerm &operand : term.get_operands())
     {
-      if (he_rot && operand.get_term_type() == TermType::rawDataType)
+      if (he_rot && operand.get_term_type() == TermType::rawData)
       {
         string key = make_key(operand);
         auto it = terms_keys.find(key);
@@ -414,7 +414,7 @@ bool is_he_add_sub(const MatchingTerm &term)
 
 bool is_ciphertext(const MatchingTerm &term)
 {
-  return term.get_term_type() == TermType::ciphertextType;
+  return term.get_term_type() == TermType::ciphertext;
 }
 
 } // namespace fheco_trs

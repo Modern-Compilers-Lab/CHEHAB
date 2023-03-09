@@ -1,7 +1,7 @@
 set(SRC_DSL src/dsl)
 set(SRC_IR src/ir)
 set(SRC_PASSES src/passes)
-set(SRC_PARAMS_SELECTOR src/params_selector)
+set(SRC_PARAMS_SELECTOR src/param_selector)
 set(SRC_TRANSLATOR src/translator)
 set(SRC_UTILS src/utils)
 set(SRC_TRS src/trs)
@@ -29,7 +29,8 @@ target_sources(fhecompiler PRIVATE
   ${SRC_PASSES}/cse_pass.cpp
   ${SRC_PASSES}/relin_pass.cpp
   ${SRC_PASSES}/rotationkeys_select_pass.cpp
-  ${SRC_PARAMS_SELECTOR}/params_selector.cpp
+  ${SRC_PARAMS_SELECTOR}/param_selector.cpp
+  ${SRC_PARAMS_SELECTOR}/encryption_parameters.cpp
   ${SRC_TRANSLATOR}/translator.cpp
   ${SRC_TRS}/trs.cpp
   ${SRC_TRS}/matching_term.cpp
@@ -60,7 +61,7 @@ install(FILES
   ${SRC_PASSES}/cse_pass.hpp
   ${SRC_PASSES}/relin_pass.hpp
   ${SRC_PARAMS_SELECTOR}/encryption_parameters.hpp
-  ${SRC_PARAMS_SELECTOR}/params_selector.hpp
+  ${SRC_PARAMS_SELECTOR}/param_selector.hpp
   ${SRC_TRANSLATOR}/translator.hpp
   ${SRC_TRANSLATOR}/translator_const.hpp
   ${SRC_UTILS}/fhecompiler_const.hpp

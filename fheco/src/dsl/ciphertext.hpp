@@ -50,12 +50,6 @@ public:
 
   Ciphertext &exponentiate(uint64_t rhs);
 
-  Ciphertext &rotate(int steps);
-
-  Ciphertext &rotate_rows(int steps);
-
-  Ciphertext &rotate_columns();
-
   Ciphertext operator-();
 
   std::string get_label() const { return this->label; }

@@ -1,7 +1,6 @@
-digraph "matrix_mul" {
+digraph "matrix_mul2" {
 node [shape=circle width=1 margin=0]
 edge [dir=back]
--2 [label="-2" style=solid]
 plaintext19 [label="plaintext19" style=dotted color=darkgreen fontcolor=darkgreen]
 2 [label="2" style=solid]
 1 [label="1" style=solid]
@@ -22,10 +21,10 @@ ciphertext157 -> ciphertext16
 ciphertext157 -> ciphertext23
 ciphertext158 [label="=" style=dashed]
 ciphertext158 -> ciphertext157
-ciphertext160 [label="rot_rows" style=dashed]
+ciphertext160 [label="rot" style=dashed]
 ciphertext160 -> ciphertext158
 ciphertext160 -> 1
-ciphertext162 [label="rot_rows" style=dashed]
+ciphertext162 [label="rot" style=dashed]
 ciphertext162 -> ciphertext160
 ciphertext162 -> 2
 ciphertext159 [label="=" style=dashed]
@@ -39,12 +38,8 @@ ciphertext163 -> ciphertext162
 ciphertext164 [label="*" style=dashed]
 ciphertext164 -> ciphertext163
 ciphertext164 -> plaintext19
-ciphertext165 [label="rot_rows" style=dashed]
-ciphertext165 -> ciphertext164
-ciphertext165 -> -2
 ciphertext166 [label="=" style=dashed]
-ciphertext166 -> ciphertext165
--1 [label="-1" style=solid]
+ciphertext166 -> ciphertext164
 plaintext18 [label="plaintext18" style=dotted color=darkgreen fontcolor=darkgreen]
 2 [label="2" style=solid]
 1 [label="1" style=solid]
@@ -60,10 +55,10 @@ ciphertext146 -> ciphertext16
 ciphertext146 -> ciphertext25
 ciphertext147 [label="=" style=dashed]
 ciphertext147 -> ciphertext146
-ciphertext149 [label="rot_rows" style=dashed]
+ciphertext149 [label="rot" style=dashed]
 ciphertext149 -> ciphertext147
 ciphertext149 -> 1
-ciphertext151 [label="rot_rows" style=dashed]
+ciphertext151 [label="rot" style=dashed]
 ciphertext151 -> ciphertext149
 ciphertext151 -> 2
 ciphertext148 [label="=" style=dashed]
@@ -77,11 +72,8 @@ ciphertext152 -> ciphertext151
 ciphertext153 [label="*" style=dashed]
 ciphertext153 -> ciphertext152
 ciphertext153 -> plaintext18
-ciphertext154 [label="rot_rows" style=dashed]
-ciphertext154 -> ciphertext153
-ciphertext154 -> -1
 ciphertext155 [label="=" style=dashed]
-ciphertext155 -> ciphertext154
+ciphertext155 -> ciphertext153
 ciphertext168 [label="=" style=dashed]
 ciphertext168 -> ciphertext155
 plaintext17 [label="plaintext17" style=dotted color=darkgreen fontcolor=darkgreen]
@@ -101,10 +93,10 @@ ciphertext137 -> ciphertext16
 ciphertext137 -> ciphertext24
 ciphertext138 [label="=" style=dashed]
 ciphertext138 -> ciphertext137
-ciphertext140 [label="rot_rows" style=dashed]
+ciphertext140 [label="rot" style=dashed]
 ciphertext140 -> ciphertext138
 ciphertext140 -> 1
-ciphertext142 [label="rot_rows" style=dashed]
+ciphertext142 [label="rot" style=dashed]
 ciphertext142 -> ciphertext140
 ciphertext142 -> 2
 ciphertext139 [label="=" style=dashed]
@@ -134,7 +126,6 @@ ciphertext171 -> ciphertext170
 ciphertext171 -> ciphertext166
 ciphertext173 [label="=" style=dashed color=red fontcolor=red]
 ciphertext173 -> ciphertext171
--2 [label="-2" style=solid]
 plaintext16 [label="plaintext16" style=dotted color=darkgreen fontcolor=darkgreen]
 2 [label="2" style=solid]
 1 [label="1" style=solid]
@@ -150,10 +141,10 @@ ciphertext120 -> ciphertext15
 ciphertext120 -> ciphertext23
 ciphertext121 [label="=" style=dashed]
 ciphertext121 -> ciphertext120
-ciphertext123 [label="rot_rows" style=dashed]
+ciphertext123 [label="rot" style=dashed]
 ciphertext123 -> ciphertext121
 ciphertext123 -> 1
-ciphertext125 [label="rot_rows" style=dashed]
+ciphertext125 [label="rot" style=dashed]
 ciphertext125 -> ciphertext123
 ciphertext125 -> 2
 ciphertext122 [label="=" style=dashed]
@@ -167,12 +158,8 @@ ciphertext126 -> ciphertext125
 ciphertext127 [label="*" style=dashed]
 ciphertext127 -> ciphertext126
 ciphertext127 -> plaintext16
-ciphertext128 [label="rot_rows" style=dashed]
-ciphertext128 -> ciphertext127
-ciphertext128 -> -2
 ciphertext129 [label="=" style=dashed]
-ciphertext129 -> ciphertext128
--1 [label="-1" style=solid]
+ciphertext129 -> ciphertext127
 plaintext15 [label="plaintext15" style=dotted color=darkgreen fontcolor=darkgreen]
 2 [label="2" style=solid]
 1 [label="1" style=solid]
@@ -181,10 +168,10 @@ ciphertext109 -> ciphertext15
 ciphertext109 -> ciphertext25
 ciphertext110 [label="=" style=dashed]
 ciphertext110 -> ciphertext109
-ciphertext112 [label="rot_rows" style=dashed]
+ciphertext112 [label="rot" style=dashed]
 ciphertext112 -> ciphertext110
 ciphertext112 -> 1
-ciphertext114 [label="rot_rows" style=dashed]
+ciphertext114 [label="rot" style=dashed]
 ciphertext114 -> ciphertext112
 ciphertext114 -> 2
 ciphertext111 [label="=" style=dashed]
@@ -198,11 +185,8 @@ ciphertext115 -> ciphertext114
 ciphertext116 [label="*" style=dashed]
 ciphertext116 -> ciphertext115
 ciphertext116 -> plaintext15
-ciphertext117 [label="rot_rows" style=dashed]
-ciphertext117 -> ciphertext116
-ciphertext117 -> -1
 ciphertext118 [label="=" style=dashed]
-ciphertext118 -> ciphertext117
+ciphertext118 -> ciphertext116
 ciphertext131 [label="=" style=dashed]
 ciphertext131 -> ciphertext118
 plaintext14 [label="plaintext14" style=dotted color=darkgreen fontcolor=darkgreen]
@@ -213,10 +197,10 @@ ciphertext100 -> ciphertext15
 ciphertext100 -> ciphertext24
 ciphertext101 [label="=" style=dashed]
 ciphertext101 -> ciphertext100
-ciphertext103 [label="rot_rows" style=dashed]
+ciphertext103 [label="rot" style=dashed]
 ciphertext103 -> ciphertext101
 ciphertext103 -> 1
-ciphertext105 [label="rot_rows" style=dashed]
+ciphertext105 [label="rot" style=dashed]
 ciphertext105 -> ciphertext103
 ciphertext105 -> 2
 ciphertext102 [label="=" style=dashed]
@@ -246,7 +230,6 @@ ciphertext134 -> ciphertext133
 ciphertext134 -> ciphertext129
 ciphertext136 [label="=" style=dashed color=red fontcolor=red]
 ciphertext136 -> ciphertext134
--2 [label="-2" style=solid]
 plaintext13 [label="plaintext13" style=dotted color=darkgreen fontcolor=darkgreen]
 2 [label="2" style=solid]
 1 [label="1" style=solid]
@@ -264,10 +247,10 @@ ciphertext83 -> ciphertext14
 ciphertext83 -> ciphertext23
 ciphertext84 [label="=" style=dashed]
 ciphertext84 -> ciphertext83
-ciphertext86 [label="rot_rows" style=dashed]
+ciphertext86 [label="rot" style=dashed]
 ciphertext86 -> ciphertext84
 ciphertext86 -> 1
-ciphertext88 [label="rot_rows" style=dashed]
+ciphertext88 [label="rot" style=dashed]
 ciphertext88 -> ciphertext86
 ciphertext88 -> 2
 ciphertext85 [label="=" style=dashed]
@@ -281,12 +264,8 @@ ciphertext89 -> ciphertext88
 ciphertext90 [label="*" style=dashed]
 ciphertext90 -> ciphertext89
 ciphertext90 -> plaintext13
-ciphertext91 [label="rot_rows" style=dashed]
-ciphertext91 -> ciphertext90
-ciphertext91 -> -2
 ciphertext92 [label="=" style=dashed]
-ciphertext92 -> ciphertext91
--1 [label="-1" style=solid]
+ciphertext92 -> ciphertext90
 plaintext12 [label="plaintext12" style=dotted color=darkgreen fontcolor=darkgreen]
 2 [label="2" style=solid]
 1 [label="1" style=solid]
@@ -295,10 +274,10 @@ ciphertext72 -> ciphertext14
 ciphertext72 -> ciphertext25
 ciphertext73 [label="=" style=dashed]
 ciphertext73 -> ciphertext72
-ciphertext75 [label="rot_rows" style=dashed]
+ciphertext75 [label="rot" style=dashed]
 ciphertext75 -> ciphertext73
 ciphertext75 -> 1
-ciphertext77 [label="rot_rows" style=dashed]
+ciphertext77 [label="rot" style=dashed]
 ciphertext77 -> ciphertext75
 ciphertext77 -> 2
 ciphertext74 [label="=" style=dashed]
@@ -312,11 +291,8 @@ ciphertext78 -> ciphertext77
 ciphertext79 [label="*" style=dashed]
 ciphertext79 -> ciphertext78
 ciphertext79 -> plaintext12
-ciphertext80 [label="rot_rows" style=dashed]
-ciphertext80 -> ciphertext79
-ciphertext80 -> -1
 ciphertext81 [label="=" style=dashed]
-ciphertext81 -> ciphertext80
+ciphertext81 -> ciphertext79
 ciphertext94 [label="=" style=dashed]
 ciphertext94 -> ciphertext81
 plaintext11 [label="plaintext11" style=dotted color=darkgreen fontcolor=darkgreen]
@@ -327,10 +303,10 @@ ciphertext63 -> ciphertext14
 ciphertext63 -> ciphertext24
 ciphertext64 [label="=" style=dashed]
 ciphertext64 -> ciphertext63
-ciphertext66 [label="rot_rows" style=dashed]
+ciphertext66 [label="rot" style=dashed]
 ciphertext66 -> ciphertext64
 ciphertext66 -> 1
-ciphertext68 [label="rot_rows" style=dashed]
+ciphertext68 [label="rot" style=dashed]
 ciphertext68 -> ciphertext66
 ciphertext68 -> 2
 ciphertext65 [label="=" style=dashed]
@@ -360,7 +336,6 @@ ciphertext97 -> ciphertext96
 ciphertext97 -> ciphertext92
 ciphertext99 [label="=" style=dashed color=red fontcolor=red]
 ciphertext99 -> ciphertext97
--2 [label="-2" style=solid]
 plaintext22 [label="plaintext22" style=dotted color=darkgreen fontcolor=darkgreen]
 2 [label="2" style=solid]
 1 [label="1" style=solid]
@@ -374,10 +349,10 @@ ciphertext194 -> ciphertext12
 ciphertext194 -> ciphertext23
 ciphertext195 [label="=" style=dashed]
 ciphertext195 -> ciphertext194
-ciphertext197 [label="rot_rows" style=dashed]
+ciphertext197 [label="rot" style=dashed]
 ciphertext197 -> ciphertext195
 ciphertext197 -> 1
-ciphertext199 [label="rot_rows" style=dashed]
+ciphertext199 [label="rot" style=dashed]
 ciphertext199 -> ciphertext197
 ciphertext199 -> 2
 ciphertext196 [label="=" style=dashed]
@@ -391,12 +366,8 @@ ciphertext200 -> ciphertext199
 ciphertext201 [label="*" style=dashed]
 ciphertext201 -> ciphertext200
 ciphertext201 -> plaintext22
-ciphertext202 [label="rot_rows" style=dashed]
-ciphertext202 -> ciphertext201
-ciphertext202 -> -2
 ciphertext203 [label="=" style=dashed]
-ciphertext203 -> ciphertext202
--1 [label="-1" style=solid]
+ciphertext203 -> ciphertext201
 plaintext21 [label="plaintext21" style=dotted color=darkgreen fontcolor=darkgreen]
 2 [label="2" style=solid]
 1 [label="1" style=solid]
@@ -405,10 +376,10 @@ ciphertext183 -> ciphertext12
 ciphertext183 -> ciphertext25
 ciphertext184 [label="=" style=dashed]
 ciphertext184 -> ciphertext183
-ciphertext186 [label="rot_rows" style=dashed]
+ciphertext186 [label="rot" style=dashed]
 ciphertext186 -> ciphertext184
 ciphertext186 -> 1
-ciphertext188 [label="rot_rows" style=dashed]
+ciphertext188 [label="rot" style=dashed]
 ciphertext188 -> ciphertext186
 ciphertext188 -> 2
 ciphertext185 [label="=" style=dashed]
@@ -422,11 +393,8 @@ ciphertext189 -> ciphertext188
 ciphertext190 [label="*" style=dashed]
 ciphertext190 -> ciphertext189
 ciphertext190 -> plaintext21
-ciphertext191 [label="rot_rows" style=dashed]
-ciphertext191 -> ciphertext190
-ciphertext191 -> -1
 ciphertext192 [label="=" style=dashed]
-ciphertext192 -> ciphertext191
+ciphertext192 -> ciphertext190
 ciphertext205 [label="=" style=dashed]
 ciphertext205 -> ciphertext192
 plaintext20 [label="plaintext20" style=dotted color=darkgreen fontcolor=darkgreen]
@@ -437,10 +405,10 @@ ciphertext174 -> ciphertext12
 ciphertext174 -> ciphertext24
 ciphertext175 [label="=" style=dashed]
 ciphertext175 -> ciphertext174
-ciphertext177 [label="rot_rows" style=dashed]
+ciphertext177 [label="rot" style=dashed]
 ciphertext177 -> ciphertext175
 ciphertext177 -> 1
-ciphertext179 [label="rot_rows" style=dashed]
+ciphertext179 [label="rot" style=dashed]
 ciphertext179 -> ciphertext177
 ciphertext179 -> 2
 ciphertext176 [label="=" style=dashed]
@@ -470,7 +438,6 @@ ciphertext208 -> ciphertext207
 ciphertext208 -> ciphertext203
 ciphertext210 [label="=" style=dashed color=red fontcolor=red]
 ciphertext210 -> ciphertext208
--2 [label="-2" style=solid]
 plaintext10 [label="plaintext10" style=dotted color=darkgreen fontcolor=darkgreen]
 2 [label="2" style=solid]
 1 [label="1" style=solid]
@@ -490,10 +457,10 @@ ciphertext46 -> ciphertext13
 ciphertext46 -> ciphertext23
 ciphertext47 [label="=" style=dashed]
 ciphertext47 -> ciphertext46
-ciphertext49 [label="rot_rows" style=dashed]
+ciphertext49 [label="rot" style=dashed]
 ciphertext49 -> ciphertext47
 ciphertext49 -> 1
-ciphertext51 [label="rot_rows" style=dashed]
+ciphertext51 [label="rot" style=dashed]
 ciphertext51 -> ciphertext49
 ciphertext51 -> 2
 ciphertext48 [label="=" style=dashed]
@@ -507,12 +474,8 @@ ciphertext52 -> ciphertext51
 ciphertext53 [label="*" style=dashed]
 ciphertext53 -> ciphertext52
 ciphertext53 -> plaintext10
-ciphertext54 [label="rot_rows" style=dashed]
-ciphertext54 -> ciphertext53
-ciphertext54 -> -2
 ciphertext55 [label="=" style=dashed]
-ciphertext55 -> ciphertext54
--1 [label="-1" style=solid]
+ciphertext55 -> ciphertext53
 plaintext9 [label="plaintext9" style=dotted color=darkgreen fontcolor=darkgreen]
 2 [label="2" style=solid]
 1 [label="1" style=solid]
@@ -521,10 +484,10 @@ ciphertext35 -> ciphertext13
 ciphertext35 -> ciphertext25
 ciphertext36 [label="=" style=dashed]
 ciphertext36 -> ciphertext35
-ciphertext38 [label="rot_rows" style=dashed]
+ciphertext38 [label="rot" style=dashed]
 ciphertext38 -> ciphertext36
 ciphertext38 -> 1
-ciphertext40 [label="rot_rows" style=dashed]
+ciphertext40 [label="rot" style=dashed]
 ciphertext40 -> ciphertext38
 ciphertext40 -> 2
 ciphertext37 [label="=" style=dashed]
@@ -538,11 +501,8 @@ ciphertext41 -> ciphertext40
 ciphertext42 [label="*" style=dashed]
 ciphertext42 -> ciphertext41
 ciphertext42 -> plaintext9
-ciphertext43 [label="rot_rows" style=dashed]
-ciphertext43 -> ciphertext42
-ciphertext43 -> -1
 ciphertext44 [label="=" style=dashed]
-ciphertext44 -> ciphertext43
+ciphertext44 -> ciphertext42
 ciphertext57 [label="=" style=dashed]
 ciphertext57 -> ciphertext44
 plaintext8 [label="plaintext8" style=dotted color=darkgreen fontcolor=darkgreen]
@@ -553,10 +513,10 @@ ciphertext26 -> ciphertext13
 ciphertext26 -> ciphertext24
 ciphertext27 [label="=" style=dashed]
 ciphertext27 -> ciphertext26
-ciphertext29 [label="rot_rows" style=dashed]
+ciphertext29 [label="rot" style=dashed]
 ciphertext29 -> ciphertext27
 ciphertext29 -> 1
-ciphertext31 [label="rot_rows" style=dashed]
+ciphertext31 [label="rot" style=dashed]
 ciphertext31 -> ciphertext29
 ciphertext31 -> 2
 ciphertext28 [label="=" style=dashed]

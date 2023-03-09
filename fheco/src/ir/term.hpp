@@ -62,11 +62,11 @@ public:
   Term(Term &&term_move) = default;
   Term &operator=(Term &&term_move) = default;
 
-  Term(const fhecompiler::Ciphertext &ct) : label(ct.get_label()), type(ir::ciphertextType) { term_id++; }
+  Term(const fhecompiler::Ciphertext &ct) : label(ct.get_label()), type(ir::TermType::ciphertext) { term_id++; }
 
-  Term(const fhecompiler::Plaintext &pt) : label(pt.get_label()), type(ir::plaintextType) { term_id++; }
+  Term(const fhecompiler::Plaintext &pt) : label(pt.get_label()), type(ir::TermType::plaintext) { term_id++; }
 
-  Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::scalarType) { term_id++; }
+  Term(const fhecompiler::Scalar &sc) : label(sc.get_label()), type(ir::TermType::scalar) { term_id++; }
 
   Term(OpCode _opcode, const std::vector<Ptr> &_operands, const std::string &label_value, ir::TermType term_type)
     : operation_attribute({_operands}), label(label_value), opcode(_opcode), type(term_type)

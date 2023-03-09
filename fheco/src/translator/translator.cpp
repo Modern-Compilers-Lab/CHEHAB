@@ -4,7 +4,9 @@
 #include "ir_const.hpp"
 #include "program.hpp"
 #include "rotationkeys_select_pass.hpp"
+#include <cstddef>
 #include <fstream>
+#include <vector>
 
 namespace translator
 {
@@ -151,8 +153,8 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     bool is_rhs_an_input = program->type_of(operands[1]->get_label()) == ir::ConstantTableEntryType::input;
 
     if (
-      commutative && operands[0]->get_term_type() == ir::ciphertextType &&
-      operands[1]->get_term_type() == ir::ciphertextType &&
+      commutative && operands[0]->get_term_type() == ir::TermType::ciphertext &&
+      operands[1]->get_term_type() == ir::TermType::ciphertext &&
       operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size() && !is_rhs_an_output &&
       !is_rhs_an_input)
     {
@@ -198,31 +200,6 @@ void Translator::translate_constant_table_entry(
   ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
   ir::ConstantTableEntryType entry_type = table_entry.get_entry_type();
   std::string tag = entry_value.get_tag();
-  // getting type
-  std::string type_str;
-
-  if (term_type == ir::TermType::scalarType)
-  {
-    fhecompiler::Scheme scheme = program->get_encryption_scheme();
-    if (scheme == fhecompiler::bfv || scheme == fhecompiler::bgv)
-      type_str = scalar_int;
-    else if (scheme == fhecompiler::ckks)
-    {
-      /*
-      using ScalarValue = ir::ConstantTableEntry::ScalarValue;
-      ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
-      if (auto scalar_constant = std::get_if<int64_t>(&scalar_value))
-      {
-        type_str = scalar_int;
-      }
-      */
-      type_str = scalar_float;
-    }
-    else
-      throw("scheme not supported\n");
-  }
-  else
-    type_str = types_map[term_type];
 
   if (entry_type == ir::ConstantTableEntryType::input)
   {
@@ -234,46 +211,49 @@ void Translator::translate_constant_table_entry(
     {
       encoding_writer.init(os);
     }
-    if (term_type == ir::plaintextType)
+    if (term_type == ir::TermType::plaintext)
     {
       // encoding
       using VectorValue = ir::VectorValue;
       VectorValue vector_value = std::get<VectorValue>(*(entry_value.value));
-      using VectorInt = std::vector<int64_t>;
+      using VectorInt = std::vector<std::int64_t>;
+      using VectorUInt = std::vector<std::uint64_t>;
       using VectorFloat = std::vector<double>;
-
-      type_str = (program->get_encryption_scheme() == fhecompiler::ckks ? scalar_float : scalar_int);
 
       if (auto _vector_value = std::get_if<VectorInt>(&vector_value))
         encoding_writer.write_vector_encoding(
-          os, tag, *_vector_value, type_str,
+          os, tag, *_vector_value, scalar_int,
+          program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
+      else if (auto _vector_value = std::get_if<VectorUInt>(&vector_value))
+        encoding_writer.write_vector_encoding(
+          os, tag, *_vector_value, scalar_uint,
           program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
       else if (auto vector_literal = std::get_if<VectorFloat>(&vector_value))
-        encoding_writer.write_vector_encoding(os, tag, *_vector_value, type_str, program->get_scale());
+        encoding_writer.write_vector_encoding(os, tag, *_vector_value, scalar_float, program->get_scale());
       else
         throw("unsupported data type by schemes\n");
     }
 
-    else if (term_type == ir::scalarType)
+    else if (term_type == ir::TermType::scalar)
     {
       // don't forget to reduce
       using ScalarValue = ir::ScalarValue;
       ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
 
-      if (auto value = std::get_if<int64_t>(&scalar_value))
-      {
-        int64_t casted_value = static_cast<int64_t>(*value);
+      if (auto value = std::get_if<std::int64_t>(&scalar_value))
         encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(casted_value), type_str, std::to_string(program->get_number_of_slots()),
+          os, tag, std::to_string(*value), scalar_int, std::to_string(program->get_vector_size()),
           program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
-      }
-      else
-      {
-        double e_value = std::get<double>(scalar_value);
+      else if (auto value = std::get_if<std::uint64_t>(&scalar_value))
         encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(e_value), type_str, std::to_string(program->get_number_of_slots()),
+          os, tag, std::to_string(*value), scalar_uint, std::to_string(program->get_vector_size()),
+          program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
+      else if (auto value = std::get_if<double>(&scalar_value))
+        encoding_writer.write_scalar_encoding(
+          os, tag, std::to_string(*value), scalar_float, std::to_string(program->get_vector_size()),
           program->get_scale());
-      }
+      else
+        throw("unsupported data type by schemes\n");
       /*
       if (type_str == scalar_int)
       {
@@ -395,8 +375,8 @@ void Translator::translate_program(std::ofstream &os)
 
   os << "\n";
 
-  if (program->get_rotations_steps().size())
-    write_rotations_steps_getter(program->get_rotations_steps(), os);
+  if (program->get_rotations_keys_steps().size())
+    write_rotations_steps_getter(program->get_rotations_keys_steps(), os);
 
   generate_function_signature(os);
   os << "{" << '\n';
@@ -430,10 +410,13 @@ void Translator::generate_function_signature(std::ofstream &os) const
   ArgumentList argument_list;
   os << "void " << program->get_program_tag()
      << argument_list(
-          {{encrypted_inputs_class_literal, inputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
-           {encoded_inputs_class_literal, inputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
-           {encrypted_outputs_class_literal, outputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
-           {encoded_outputs_class_literal, outputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
+          {{encrypted_inputs_class_literal, inputs_class_identifier[ir::TermType::ciphertext],
+            AccessType::readAndModify},
+           {encoded_inputs_class_literal, inputs_class_identifier[ir::TermType::plaintext], AccessType::readAndModify},
+           {encrypted_outputs_class_literal, outputs_class_identifier[ir::TermType::ciphertext],
+            AccessType::readAndModify},
+           {encoded_outputs_class_literal, outputs_class_identifier[ir::TermType::plaintext],
+            AccessType::readAndModify},
            {context_type_literal, context_identifier, AccessType::readOnly},
            {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
            {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
@@ -493,8 +476,8 @@ ir::OpCode Translator::deduce_opcode_to_generate(const Ptr &node) const
       return node->get_opcode();
 
     else if (
-      node->get_term_type() == ir::ciphertextType &&
-      (lhs->get_term_type() != ir::ciphertextType || rhs->get_term_type() != ir::ciphertextType))
+      node->get_term_type() == ir::TermType::ciphertext &&
+      (lhs->get_term_type() != ir::TermType::ciphertext || rhs->get_term_type() != ir::TermType::ciphertext))
     {
       switch (node->get_opcode())
       {
@@ -522,15 +505,16 @@ ir::OpCode Translator::deduce_opcode_to_generate(const Ptr &node) const
     throw("node with more than 2 operands in deduce_opcode_to_generate");
 }
 
-void Translator::write_rotations_steps_getter(const std::vector<int32_t> &steps, std::ostream &os)
+void Translator::write_rotations_steps_getter(const std::set<int> &steps, std::ostream &os)
 {
   os << gen_steps_function_signature << "{\n";
   os << "std::vector<" << rotation_step_type_literal << ">"
      << " steps = {";
-  for (size_t i = 0; i < steps.size(); i++)
+  std::vector<int> steps_vector(steps.begin(), steps.end());
+  for (size_t i = 0; i < steps_vector.size(); i++)
   {
-    os << steps[i];
-    if (i < steps.size() - 1)
+    os << steps_vector[i];
+    if (i < steps_vector.size() - 1)
       os << ",";
     else
       os << "};";

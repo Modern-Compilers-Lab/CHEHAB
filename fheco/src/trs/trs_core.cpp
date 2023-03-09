@@ -90,11 +90,11 @@ namespace core
           throw("arithmetic evaluation impossible");
         }
 
-        if (ir_term_itr->second->get_term_type() == ir::rawDataType)
+        if (ir_term_itr->second->get_term_type() == ir::TermType::rawData)
         {
           return std::stod(ir_term_itr->second->get_label());
         }
-        else if (ir_term_itr->second->get_term_type() == ir::scalarType)
+        else if (ir_term_itr->second->get_term_type() == ir::TermType::scalar)
         {
           ir::ConstantValue constant_value =
             *(*program->get_entry_form_constants_table(ir_term_itr->second->get_label())).get().get_entry_value().value;
@@ -155,7 +155,7 @@ namespace core
         Here we don't care about calls with type as non booleanType because these concern arithmetic_eval and they are
         leaves so it will be handled below and in arithmetic_eval
       */
-      if (matching_term.get_term_type() == TermType::booleanType)
+      if (matching_term.get_term_type() == TermType::boolean)
       {
         if (matching_term.get_operands().size() == 0)
           throw("missing argument for function to call in evaluate_boolean_matching_term");
@@ -172,7 +172,7 @@ namespace core
 
     if (
       matching_term.get_opcode() != fheco_trs::OpCode::undefined &&
-      matching_term.get_term_type() != fheco_trs::TermType::booleanType)
+      matching_term.get_term_type() != fheco_trs::TermType::boolean)
       return false;
 
     MatchingTerm lhs = matching_term.get_operands()[0];

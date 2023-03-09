@@ -3,6 +3,7 @@
 #include "datatypes_const.hpp"
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <variant>
@@ -13,18 +14,18 @@ namespace fhecompiler
 
 class Plaintext
 {
-
-public:
-  using MessageType = std::variant<int64_t, double>;
-
 private:
   std::string label; // symbol
 
-  static size_t plaintext_id;
+  static std::size_t plaintext_id;
 
 public:
   Plaintext();
-  Plaintext(const std::vector<int64_t> &message);
+
+  Plaintext(const std::vector<std::int64_t> &message);
+
+  Plaintext(const std::vector<std::uint64_t> &message);
+
   Plaintext(const std::vector<double> &message);
 
   Plaintext(const std::string &tag, VarType var_type = VarType::temp);

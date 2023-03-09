@@ -4,15 +4,15 @@
 using namespace fheco_trs;
 using namespace std;
 
-MatchingTerm Ruleset::x = MatchingTerm("x", TermType::ciphertextType);
-MatchingTerm Ruleset::y = MatchingTerm("y", TermType::ciphertextType);
-MatchingTerm Ruleset::z = MatchingTerm("z", TermType::ciphertextType);
-MatchingTerm Ruleset::u = MatchingTerm("u", TermType::ciphertextType);
+MatchingTerm Ruleset::x = MatchingTerm("x", TermType::ciphertext);
+MatchingTerm Ruleset::y = MatchingTerm("y", TermType::ciphertext);
+MatchingTerm Ruleset::z = MatchingTerm("z", TermType::ciphertext);
+MatchingTerm Ruleset::u = MatchingTerm("u", TermType::ciphertext);
 
-MatchingTerm Ruleset::a = MatchingTerm("a", TermType::scalarType);
+MatchingTerm Ruleset::a = MatchingTerm("a", TermType::scalar);
 
-MatchingTerm Ruleset::n = MatchingTerm("n", fheco_trs::TermType::rawDataType);
-MatchingTerm Ruleset::m = MatchingTerm("m", fheco_trs::TermType::rawDataType);
+MatchingTerm Ruleset::n = MatchingTerm("n", fheco_trs::TermType::rawData);
+MatchingTerm Ruleset::m = MatchingTerm("m", fheco_trs::TermType::rawData);
 
 function<MatchingTerm(const ir::Program *prgm, const RewriteRule::matching_term_ir_node_map &)> Ruleset::
   gen_rhs_scalar_mul_to_sum(const MatchingTerm &a, const MatchingTerm &x)
@@ -41,8 +41,8 @@ function<MatchingTerm(const ir::Program *prgm, const RewriteRule::matching_term_
 }
 
 std::vector<RewriteRule> Ruleset::rules = {
-  {a * x, gen_rhs_scalar_mul_to_sum(a, x)},
-  {x * a, gen_rhs_scalar_mul_to_sum(a, x)},
+  // {a * x, gen_rhs_scalar_mul_to_sum(a, x)},
+  // {x * a, gen_rhs_scalar_mul_to_sum(a, x)},
   {(x << n), x, n == 0},
   {x << n << m, x << MatchingTerm::fold((n + m))},
   {(x << n) + (y << n), (x + y) << n},

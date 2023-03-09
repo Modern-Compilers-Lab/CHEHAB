@@ -5,6 +5,7 @@ namespace fhecompiler
 
 enum Scheme
 {
+  none,
   bfv,
   bgv,
   ckks
@@ -25,7 +26,7 @@ enum class Backend
   OpenFHE
 };
 
-enum class sec_level_type
+enum class SecurityLevel
 {
   none,
   tc128, // minimum according to he standard

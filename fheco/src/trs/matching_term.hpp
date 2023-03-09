@@ -32,8 +32,8 @@ public:
 
   ~MatchingTerm() {}
 
-  MatchingTerm(int64_t, fheco_trs::TermType = TermType::scalarType);
-  MatchingTerm(int, fheco_trs::TermType = TermType::scalarType);
+  MatchingTerm(int64_t, fheco_trs::TermType = TermType::scalar);
+  MatchingTerm(int, fheco_trs::TermType = TermType::scalar);
   MatchingTerm(double);
   MatchingTerm(fheco_trs::OpCode, const std::vector<MatchingTerm> &, fheco_trs::TermType);
   MatchingTerm(fheco_trs::TermType); // a leaf node

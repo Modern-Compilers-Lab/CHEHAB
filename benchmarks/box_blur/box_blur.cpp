@@ -2,6 +2,7 @@
 #include "fhecompiler/draw_ir.hpp"
 #include "fhecompiler/fhecompiler.hpp"
 #include "fhecompiler/normalize_pass.hpp"
+#include "fhecompiler/param_selector.hpp"
 #include "fhecompiler/quantify_ir.hpp"
 #include "fhecompiler/ruleset.hpp"
 #include "fhecompiler/trs.hpp"
@@ -15,8 +16,7 @@ extern ir::Program *program;
 int main()
 {
 
-  fhecompiler::init("box_blur", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
-  program->set_number_of_slots(8192);
+  fhecompiler::init("box_blur", 15);
 
   fhecompiler::Ciphertext c0("c0", fhecompiler::VarType::input);
 
@@ -44,9 +44,24 @@ int main()
 
   cout << endl;
 
+  param_selector::ParameterSelector param_selector(program);
+  param_selector.select_params();
+
   count = utils::count_main_node_classes(program);
   for (const auto &e : count)
     cout << e.first << ": " << e.second << endl;
+
+  translator::Translator tr(program);
+  {
+    std::ofstream translation_os("box_blur.hpp");
+
+    if (!translation_os)
+      throw("couldn't open file for translation.\n");
+
+    tr.translate_program(translation_os);
+
+    translation_os.close();
+  }
 
   delete program;
   program = nullptr;

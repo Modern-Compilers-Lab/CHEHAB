@@ -49,10 +49,10 @@ void utils::draw_ir(ir::Program *program, std::string ofile_name)
   ofile << "edge [dir=back]" << endl;
 
   unordered_map<ir::TermType, string> format_by_termtype = {
-    {ir::TermType::ciphertextType, "style=dashed"},
-    {ir::TermType::plaintextType, "style=dotted"},
-    {ir::TermType::scalarType, "style=solid"},
-    {ir::TermType::rawDataType, "style=solid"}};
+    {ir::TermType::ciphertext, "style=dashed"},
+    {ir::TermType::plaintext, "style=dotted"},
+    {ir::TermType::scalar, "style=solid"},
+    {ir::TermType::rawData, "style=solid"}};
   unordered_map<ir::ConstantTableEntryType, string> format_by_vartype = {
     {ir::ConstantTableEntryType::input, "color=blue fontcolor=blue"},
     {ir::ConstantTableEntryType::output, "color=red fontcolor=red"},
