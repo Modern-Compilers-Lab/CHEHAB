@@ -169,7 +169,6 @@ void RotationKeySelctionPass::collect_program_rotations_steps()
 void RotationKeySelctionPass::rewrite_rotation_node_with_naf(
   const ir::Program::Ptr &node, const std::vector<int32_t> naf_components)
 {
-
   ir::Program::Ptr input_node;
   if (node->get_operands()[0]->get_term_type() == ir::ciphertextType)
     input_node = node->get_operands()[0];

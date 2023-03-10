@@ -7,7 +7,7 @@
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
 
-#define NB_TRS_CSE_PASS 1
+#define NB_TRS_CSE_PASS 16
 #define ENABLE_OPTIMIZATION true
 
 using namespace fhecompiler;
@@ -94,8 +94,8 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   fheco_passes::RotationKeySelctionPass rs_pass(program, params);
   rs_pass.collect_program_rotations_steps();
 
-  // if (ENABLE_OPTIMIZATION)
-  // cse_pass.apply_cse2();
+  if (ENABLE_OPTIMIZATION)
+    cse_pass.apply_cse2();
 
   ir::print_ops_counters(program);
 

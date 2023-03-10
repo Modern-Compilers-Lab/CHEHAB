@@ -96,7 +96,7 @@ int main()
     vec_test.push_back(fhecompiler::Ciphertext::encrypt(std::vector<int64_t>({1, 2, 3})));
     vec_test.push_back(fhecompiler::Ciphertext::encrypt(std::vector<int64_t>({1, 2, 3})));
 
-    output1 = square(vec_test[0]) + vec_test[1]; // + A;
+    output1 = 23 * square(vec_test[0]) + 23 * vec_test[1]; // + A;
 
     params_selector::EncryptionParameters params;
     size_t polynomial_modulus_degree = 4096;

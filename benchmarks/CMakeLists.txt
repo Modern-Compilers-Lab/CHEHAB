@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.22.1)
 
 set(CMAKE_CXX_STANDARD 17)
 
+add_subdirectory(./matrix_mul_poc)
+
 add_executable(test1 test1.cpp)
 add_executable(dot_product dot_product.cpp)
 add_executable(matrix_mul matrix_mul.cpp)

@@ -23,7 +23,7 @@ int main()
       std::vector<int64_t> line;
       for (size_t j = 0; j < M; j++)
       {
-        line.push_back((i + 1) * (i + 1));
+        line.push_back((i + 1) * (j + 1));
       }
       A.push_back(line);
     }
@@ -32,19 +32,19 @@ int main()
       std::vector<int64_t> line;
       for (size_t j = 0; j < Q; j++)
       {
-        line.push_back((i + 1) * (j + 1));
+        line.push_back((j + 1) * (i + 1));
       }
       B.push_back(line);
     }
 
     std::vector<std::vector<fhecompiler::Ciphertext>> A_encrypted(
       A.size(), std::vector<fhecompiler::Ciphertext>(A[0].size()));
-
     for (size_t i = 0; i < A.size(); i++)
     {
       for (size_t j = 0; j < A[0].size(); j++)
       {
         fhecompiler::Ciphertext input("input" + std::to_string(i) + std::to_string(j), fhecompiler::VarType::input);
+        std::vector<int64_t> ee = {A[i][j]};
         A_encrypted[i][j] = input; // fhecompiler::Ciphertext::encrypt(ee);
       }
     }

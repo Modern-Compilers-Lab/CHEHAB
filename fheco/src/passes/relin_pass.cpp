@@ -5,8 +5,6 @@
 namespace fheco_passes
 {
 
-size_t RelinPass::relin_instruction_id = 0;
-
 void RelinPass::simple_relinearize()
 {
   /*
