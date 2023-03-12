@@ -72,7 +72,7 @@ namespace ruleset
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {(z << q) * ((y << p) * x), x *(((y << T::fold(p - q)) * z) << q),
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
-    {(x * (y << p)) * (z << q), x *(((z << T::fold(p - q)) * y) << q),
+    {(x * (y << p)) * (z << q), x *(((z << T::fold(q - p)) * y) << q),
      (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {((y << p) * x) * (z << q), x *(((z << T::fold(q - p)) * y) << q),
      (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
@@ -95,10 +95,6 @@ namespace ruleset
     {(x << p) * (y << p), (x * y) << p},
     {(x << p) * (y << q), ((x << T::fold(p - q)) * y) << q, (p > q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
     {(x << p) * (y << q), ((y << T::fold(q - p)) * x) << p, (q > p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) * (y << q), ((x << T::fold(p - q)) * y) << q, (p < q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) * (y << q), ((y << T::fold(q - p)) * x) << p, (q < p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) * (y << q), ((x << T::fold(p - q)) * y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) * (y << q), ((y << T::fold(q - p)) * x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
     {(x << p) * (y << q), ((x << T::fold(p - q)) * y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
     {(x << p) * (y << q), ((y << T::fold(q - p)) * x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG}};
 
@@ -150,19 +146,11 @@ namespace ruleset
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {(z << q) - ((y << p) - x), (((y << T::fold(p - q)) - z) << q) - x,
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
-    {((y << p) - x) - (z << q), (((z << T::fold(p - q)) - y) << q) - x,
-     (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {((y << p) - x) - (z << p), ((y - z) << p) - x, T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
     {(z << p) - ((y << p) - x), ((z - y) << p) - x, T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
     {(x << p) - (y << p), (x - y) << p},
     {(x << p) - (y << q), ((x << T::fold(p - q)) - y) << q, (p > q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) - (y << q), ((y << T::fold(q - p)) - x) << p, (q > p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) - (y << q), ((x << T::fold(p - q)) - y) << q, (p < q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) - (y << q), ((y << T::fold(q - p)) - x) << p, (q < p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) - (y << q), ((x << T::fold(p - q)) - y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) - (y << q), ((y << T::fold(q - p)) - x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) - (y << q), ((x << T::fold(p - q)) - y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) - (y << q), ((y << T::fold(q - p)) - x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG}};
+    {(x << p) - (y << q), ((x << T::fold(p - q)) - y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG}};
 
   std::vector<RewriteRule> add_ruleset = {
     {x + c0, x, T::iszero(c0)} /*rule1*/,
@@ -220,6 +208,7 @@ namespace ruleset
     {(c0 * x) + (c0 * y), c0 *(x + y)},
     {(c0 * x) + (y * c0), c0 *(x + y)},
     {(x * c0) + (y * c0), c0 *(x + y)},
+
     {(x + (y << p)) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {((y << p) + x) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
@@ -228,14 +217,16 @@ namespace ruleset
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {(z << q) + ((y << p) + x), x + (((y << T::fold(p - q)) + z) << q),
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
-    {(x + (y << p)) + (z << q), x + (((z << T::fold(p - q)) + y) << q),
+    {(x + (y << p)) + (z << q), x + (((z << T::fold(q - p)) + y) << p),
      (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
-    {((y << p) + x) + (z << q), x + (((z << T::fold(q - p)) + y) << q),
+    {((y << p) + x) + (z << q), x + (((z << T::fold(q - p)) + y) << p),
      (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
-    {(z << q) + (x + (y << p)), x + (((z << T::fold(q - p)) + y) << q),
+    {(z << q) + (x + (y << p)), x + (((z << T::fold(q - p)) + y) << p),
      (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
-    {(z << q) + ((y << p) + x), x + (((z << T::fold(q - p)) + y) << q),
+    {(z << q) + ((y << p) + x), x + (((z << T::fold(q - p)) + y) << p),
      (p < q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
+
+    /*
     {(x + (y << p)) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
      (p < q) && (p < 0) && (q < 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {((y << p) + x) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
@@ -244,6 +235,8 @@ namespace ruleset
      (p < q) && (p < 0) && (q < 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {(z << q) + ((y << p) + x), x + (((y << T::fold(p - q)) + z) << q),
      (p < q) && (p < 0) && (q < 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
+     */
+
     {(x + (y << p)) + (z << p), x + ((y + z) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
     {((y << p) + x) + (z << p), x + ((y + z) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
     {(z << p) + (x + (y << p)), x + ((z + y) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
@@ -251,10 +244,6 @@ namespace ruleset
     {(x << p) + (y << p), (x + y) << p},
     {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p > q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
     {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q > p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p < q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q < p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
     {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
     {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG}};
 
