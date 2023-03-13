@@ -2,13 +2,11 @@
 
 inline fhecompiler::Ciphertext sum_all_slots(const fhecompiler::Ciphertext &x, int vector_size)
 {
-  std::vector<fhecompiler::Ciphertext> rotated_ciphers = {x};
-  fhecompiler::Ciphertext result = rotated_ciphers.back();
-  for (; vector_size > 0; vector_size--)
+  fhecompiler::Ciphertext result = x;
+  int step = vector_size - 1;
+  for (; step >= 1;)
   {
-    fhecompiler::Ciphertext cipher_rotated = rotated_ciphers.back() << 1;
-    result += cipher_rotated;
-    rotated_ciphers.push_back(cipher_rotated);
+    result += (x << (step--));
   }
   // result of sum will be in the first slot
   return result;
@@ -78,14 +76,15 @@ int main()
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
 
-    std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
-    std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
+    std::vector<std::vector<int64_t>> A = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
+    std::vector<std::vector<int64_t>> B = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
     const int N = 64;
     const int M = 64;
     const int P = 64;
     const int Q = 256;
 
+    /*
     for (size_t i = 0; i < N; i++)
     {
       std::vector<int64_t> line;
@@ -104,6 +103,7 @@ int main()
       }
       B.push_back(line);
     }
+    */
 
     std::vector<fhecompiler::Ciphertext> A_encrypted;
     // encrypt by line for matrix A
@@ -129,13 +129,12 @@ int main()
     std::vector<fhecompiler::Ciphertext> C_encrypted;
     // make outputs
     std::vector<fhecompiler::Ciphertext> outputs;
-
-    for (size_t i = 0; i < A.size(); i++)
+    for (size_t i = 0; i < A_encrypted.size(); i++)
     {
       std::vector<fhecompiler::Ciphertext> temp_ciphers;
       // A.size() pt-ct multiplications
       // A.size() copying
-      for (size_t j = 0; j < B[0].size(); j++)
+      for (size_t j = 0; j < B_encrypted.size(); j++)
       {
         std::vector<int64_t> mask(A[0].size(), 0);
         mask[0] = 1;
@@ -152,9 +151,6 @@ int main()
       fhecompiler::Ciphertext output("output" + std::to_string(i), fhecompiler::VarType::output);
       output = c_line;
     }
-    /*
-
-    */
 
     params_selector::EncryptionParameters params;
     params.set_plaintext_modulus(plaintext_modulus);

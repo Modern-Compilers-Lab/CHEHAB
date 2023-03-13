@@ -7,7 +7,7 @@
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
 
-#define NB_TRS_CSE_PASS 16
+#define NB_TRS_CSE_PASS 20
 #define ENABLE_OPTIMIZATION true
 
 using namespace fhecompiler;
@@ -65,8 +65,8 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   fheco_passes::CSE cse_pass(program);
 
-  if (ENABLE_OPTIMIZATION == true)
-    cse_pass.apply_cse2();
+  // if (ENABLE_OPTIMIZATION == true)
+  cse_pass.apply_cse2();
 
   std::cout << "cse passed...\n";
 
@@ -82,12 +82,13 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
       // utils::draw_ir(program, output_filename + std::to_string(i) + ".dot");
       trs.apply_rewrite_rules_on_program_from_static_ruleset();
       cse_pass.apply_cse2();
+      std::cout << "pass# " << i << "\n";
     }
   }
 
   // utils::draw_ir(program, output_filename + std::to_string(NB_TRS_CSE_PASS) + ".dot");
 
-  // utils::draw_ir(program, output_filename + "2.dot");
+  utils::draw_ir(program, output_filename + "2.dot");
 
   // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
 

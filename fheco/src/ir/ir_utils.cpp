@@ -455,8 +455,13 @@ void print_ops_counters(Program *program)
     return false;
   };
 
+  std::unordered_set<ir::Program::Ptr> visited;
+
   for (auto &node : nodes)
   {
+    if (visited.find(node) != visited.end())
+      continue;
+
     if (node->is_operation_node() == false)
       continue;
 
@@ -497,8 +502,7 @@ void print_ops_counters(Program *program)
         break;
       }
     }
-    else
-      continue;
+    visited.insert(node);
   }
   std::cout << std::string(50, '-') << "\n";
   std::cout << "#(ct-ct mul) = " << mul_ct_ct << "\n";

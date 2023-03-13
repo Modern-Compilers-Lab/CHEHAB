@@ -209,6 +209,17 @@ namespace ruleset
     {(c0 * x) + (y * c0), c0 *(x + y)},
     {(x * c0) + (y * c0), c0 *(x + y)},
 
+    {(x + (y << p)) + (z << p), x + ((y + z) << p) /*, T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)*/},
+    {((y << p) + x) + (z << p), x + ((y + z) << p) /*, T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)*/},
+    {(z << p) + (x + (y << p)), x + ((z + y) << p) /*, T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)*/},
+    {(z << p) + ((y << p) + x), x + ((z + y) << p) /*, T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)*/},
+    {(x << p) + (y << p), (x + y) << p},
+
+    {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p > q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
+    {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q > p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
+    {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
+    {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
+
     {(x + (y << p)) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {((y << p) + x) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
@@ -236,16 +247,7 @@ namespace ruleset
     {(z << q) + ((y << p) + x), x + (((y << T::fold(p - q)) + z) << q),
      (p < q) && (p < 0) && (q < 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
      */
-
-    {(x + (y << p)) + (z << p), x + ((y + z) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
-    {((y << p) + x) + (z << p), x + ((y + z) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
-    {(z << p) + (x + (y << p)), x + ((z + y) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
-    {(z << p) + ((y << p) + x), x + ((z + y) << p), T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate)},
-    {(x << p) + (y << p), (x + y) << p},
-    {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p > q) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q > p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
-    {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG}};
+  };
 
 } // namespace ruleset
 

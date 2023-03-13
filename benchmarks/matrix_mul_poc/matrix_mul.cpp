@@ -3,11 +3,13 @@
 inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int number_slots_to_rotate)
 {
   fhecompiler::Ciphertext result = x;
-  for (; number_slots_to_rotate > 0; number_slots_to_rotate--)
+  int step = number_slots_to_rotate - 1;
+  fhecompiler::Ciphertext t = x;
+  x <<= step;
+  for (; step > 0;)
   {
     // fhecompiler::Ciphertext cipher_rotated = rotated_ciphers.back() << 1;
-    x <<= 1;
-    result += x;
+    result += (t << (step--));
   }
   // result of sum will be in the first slot
   return result;
@@ -127,7 +129,7 @@ int main()
       A_encrypted.push_back(fhecompiler::Ciphertext::encrypt(lines_flattened));
     }
     //  encrypt by column for matrix B
-    std::vector<fhecompiler::Ciphertext> B_encrypted;
+    std::vector<fhecompiler::Plaintext> B_encoded;
     for (size_t column_index = 0; column_index < B[0].size(); column_index++)
     {
       std::vector<int64_t> column_data;
@@ -141,8 +143,8 @@ int main()
         for (auto &v : column_data)
           column_duplicated.push_back(v);
       }
-      fhecompiler::Ciphertext column_encrypted = fhecompiler::Ciphertext::encrypt(column_duplicated);
-      B_encrypted.push_back(column_encrypted);
+      // fhecompiler::Ciphertext column_encrypted = fhecompiler::Ciphertext::encrypt(column_duplicated);
+      B_encoded.push_back(column_duplicated);
     }
     // C contains result of multiplication
     std::vector<fhecompiler::Ciphertext> C_encrypted;
@@ -152,22 +154,21 @@ int main()
 
     for (size_t i = 0; i < A_encrypted.size(); i++) // 8
     {
-      for (size_t j = 0; j < B_encrypted.size(); j++) // 256
+      for (size_t j = 0; j < B_encoded.size(); j++) // 256
       {
-        fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_encrypted[j];
-
+        fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_encoded[j];
         /*
           making outputs
           simd_product is now something like [X,X,X,X,X,Y,Y,Y,Y,Y,Z,Z,Z,Z,Z, .....]
           we want to sum up X's with each other and the same thing for Z's and Y's. Same letter means that elements will
           be used to create same entry in result matrix, frequency of each letter is equal to B.size() or A[0].size()
         */
+        std::vector<int64_t> mask(vector_size, 0);
+        mask[0] = 1;
         for (size_t k = 0; k < nb_lines_to_pack_in_one_ciphertext; k++) // 8192
         {
           size_t number_of_slots_to_sum = A[0].size(); // = B.size()
           fhecompiler::Ciphertext slots_sum = sum_all_slots(simd_product, number_of_slots_to_sum);
-          std::vector<int64_t> mask(vector_size, 0);
-          mask[0] = 1;
           fhecompiler::Ciphertext cipher_with_first_slot_only = slots_sum * mask;
 
           size_t corresponding_line = i * nb_lines_to_pack_in_one_ciphertext + k;
@@ -185,6 +186,7 @@ int main()
       {
         output_line += (lines_of_C_encrypted[i][j] >> j);
       }
+      C_encrypted.push_back(output_line);
     }
 
     params_selector::EncryptionParameters params;
