@@ -4,10 +4,10 @@
 #include <vector>
 seal::SEALContext create_context()
 {
-  seal::EncryptionParameters params(seal::scheme_type::bgv);
-  params.set_poly_modulus_degree(1024);
-  params.set_plain_modulus(seal::PlainModulus::Batching(1024, 17));
-  params.set_coeff_modulus(seal::CoeffModulus::Create(1024, {32, 32, 32}));
+  seal::EncryptionParameters params(seal::scheme_type::bfv);
+  params.set_poly_modulus_degree(8192);
+  params.set_plain_modulus(seal::PlainModulus::Batching(8192, 17));
+  params.set_coeff_modulus(seal::CoeffModulus::Create(8192, {60, 60}));
   seal::SEALContext context(params, true, seal::sec_level_type::tc128);
   return context;
 }
