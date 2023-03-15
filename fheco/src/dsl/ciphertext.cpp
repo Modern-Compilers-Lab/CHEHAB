@@ -98,12 +98,12 @@ Ciphertext &Ciphertext::square()
   return *this;
 }
 
-Ciphertext &Ciphertext::exponentiate(uint64_t exponent)
-{
-  compound_operate_with_raw<Ciphertext>(
-    *this, std::to_string(exponent), ir::OpCode::exponentiate, ir::TermType::ciphertext);
-  return *this;
-}
+// Ciphertext &Ciphertext::exponentiate(uint64_t exponent)
+// {
+//   compound_operate_with_raw<Ciphertext>(
+//     *this, std::to_string(exponent), ir::OpCode::exponentiate, ir::TermType::ciphertext);
+//   return *this;
+// }
 
 Ciphertext Ciphertext::operator-()
 {

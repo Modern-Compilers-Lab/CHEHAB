@@ -66,7 +66,7 @@ Ciphertext &operator-=(Ciphertext &lhs, const Plaintext &rhs)
 
 Ciphertext operator-(const Plaintext &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Plaintext, Ciphertext>(lhs, rhs, ir::OpCode::sub_plain, ir::TermType::ciphertext);
+  return operate_binary<Ciphertext, Plaintext, Ciphertext>(lhs, rhs, ir::OpCode::sub, ir::TermType::ciphertext);
 }
 
 Plaintext operator-(const Plaintext &lhs, const Scalar &rhs)
@@ -98,7 +98,7 @@ Ciphertext operator-=(Ciphertext &lhs, const Scalar &rhs)
 
 Ciphertext operator-(const Scalar &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Scalar, Ciphertext>(lhs, rhs, ir::OpCode::sub_plain, ir::TermType::ciphertext);
+  return operate_binary<Ciphertext, Scalar, Ciphertext>(lhs, rhs, ir::OpCode::sub, ir::TermType::ciphertext);
 }
 
 // multiplication
@@ -170,11 +170,11 @@ Ciphertext operator-(const Ciphertext &rhs)
   return operate_unary<Ciphertext, Ciphertext>(rhs, ir::OpCode::negate, ir::TermType::ciphertext);
 }
 
-Ciphertext exponentiate(const Ciphertext &lhs, uint32_t exponent)
-{
-  return operate_with_raw<Ciphertext>(
-    lhs, std::to_string(exponent), ir::OpCode::exponentiate, ir::TermType::ciphertext);
-}
+// Ciphertext exponentiate(const Ciphertext &lhs, uint32_t exponent)
+// {
+//   return operate_with_raw<Ciphertext>(
+//     lhs, std::to_string(exponent), ir::OpCode::exponentiate, ir::TermType::ciphertext);
+// }
 
 Ciphertext square(const Ciphertext &lhs)
 {
