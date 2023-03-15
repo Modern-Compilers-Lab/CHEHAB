@@ -93,8 +93,8 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     return;
 
   std::unordered_set<ir::OpCode> instructions_to_be_converted = {
-    ir::OpCode::relinearize, ir::OpCode::modswitch}; // these instructions needs to be converted since those  are
-                                                     // usually applied directly on a ciphertext
+    ir::OpCode::relinearize}; // these instructions needs to be converted since those  are
+                              // usually applied directly on a ciphertext
 
   bool conversion_condition =
     (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end());
