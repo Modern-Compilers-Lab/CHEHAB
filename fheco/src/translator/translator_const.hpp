@@ -410,6 +410,7 @@ private:
   param_selector::EncryptionParameters params;
   fhecompiler::Scheme scheme_type;
   fhecompiler::SecurityLevel sec_level;
+  bool uses_mod_switch;
 
   const std::vector<std::string> scheme_type_str = {"none", "bfv", "bgv", "ckks"};
   const std::vector<std::string> security_level_str = {"none", "tc128", "tc192", "tc256"};
@@ -418,9 +419,9 @@ public:
   bool is_defined = false;
 
   ContextWriter(
-    const param_selector::EncryptionParameters &_params, fhecompiler::Scheme scheme_t,
+    const param_selector::EncryptionParameters &_params, fhecompiler::Scheme scheme_t, bool uses_mod_switch,
     fhecompiler::SecurityLevel sec_level)
-    : params(_params), scheme_type(scheme_t), sec_level(sec_level)
+    : params(_params), scheme_type(scheme_t), uses_mod_switch(uses_mod_switch), sec_level(sec_level)
   {}
 
   void write_plaintext_modulus(std::ostream &os)
@@ -465,7 +466,12 @@ public:
     os << context_type_literal << " " << context_function_name << "()"
        << "{" << '\n';
     write_parameters(os);
-    os << context_type_literal << " " << context_identifier << "(" << params_identifier_literal << ",true,"
+    os << context_type_literal << " " << context_identifier << "(" << params_identifier_literal << ",";
+    if (uses_mod_switch)
+      os << "true";
+    else
+      os << "false";
+    os << ","
        << "seal::sec_level_type::" << security_level_str[static_cast<int>(sec_level)] << ");" << '\n';
     os << "return " << context_identifier << ";" << '\n';
     os << "}" << '\n';

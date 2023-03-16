@@ -55,7 +55,7 @@ void ParameterSelector::select_params_bfv(bool use_mod_switch)
   if (plain_mod_noise_estimates_it->second.empty())
     throw logic_error("empty per polynomial modulus degree estimates map for the given plaintext modulus size");
 
-  size_t poly_modulus_degree = program_->get_vector_size();
+  size_t poly_modulus_degree = program_->get_vector_size() << 1;
   auto poly_modulus_degree_noise_estimates_it = plain_mod_noise_estimates_it->second.find(poly_modulus_degree);
 
   while (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end() &&
@@ -107,10 +107,12 @@ void ParameterSelector::select_params_bfv(bool use_mod_switch)
   else
     params.increase_coeff_mod_bit_sizes(MOD_BIT_COUNT_MAX);
 
+  bool used_mod_switch = false;
   if (use_mod_switch)
-    insert_mod_switch_bfv(
+    used_mod_switch = insert_mod_switch_bfv(
       params.coeff_mod_data_level_bit_sizes(), nodes_noise, poly_modulus_degree_noise_estimates_it->second.fresh_noise);
 
+  program_->set_uses_mod_switch(used_mod_switch);
   program_->set_params(params);
 }
 
@@ -232,9 +234,11 @@ int ParameterSelector::simulate_noise_bfv(
   return circuit_noise;
 }
 
-void ParameterSelector::insert_mod_switch_bfv(
+bool ParameterSelector::insert_mod_switch_bfv(
   const vector<int> &data_level_primes_sizes, unordered_map<string, int> &nodes_noise, int safety_margin)
 {
+  bool used_mod_switch = false;
+
   auto make_leveled_node_label = [](const string &node_label, int level) -> string {
     return node_label + "_level" + to_string(level);
   };
@@ -396,6 +400,7 @@ void ParameterSelector::insert_mod_switch_bfv(
 
       if (node_level < operands_level)
       {
+        used_mod_switch = true;
         for (const auto &parent_label : node_old_parents)
         {
           ir::Program::Ptr parent = program_->find_node_in_dataflow(parent_label);
@@ -409,6 +414,7 @@ void ParameterSelector::insert_mod_switch_bfv(
       nodes_level_data.insert({mod_switch_arg->get_label(), {node_level, node_level}});
     }
   }
+  return used_mod_switch;
 }
 
 void apply_mod_switch_schedule(

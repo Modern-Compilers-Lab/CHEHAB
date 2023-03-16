@@ -102,6 +102,8 @@ private:
 
   param_selector::EncryptionParameters params;
 
+  bool uses_mod_switch = false;
+
 public:
   using Ptr = std::shared_ptr<Term>;
 
@@ -208,6 +210,10 @@ public:
   void set_params(const param_selector::EncryptionParameters &params) { this->params = params; }
 
   const param_selector::EncryptionParameters &get_params() const { return params; }
+
+  void set_uses_mod_switch(bool uses_mod_switch) { this->uses_mod_switch = uses_mod_switch; }
+
+  bool get_uses_mod_switch() const { return uses_mod_switch; }
 };
 
 } // namespace ir
