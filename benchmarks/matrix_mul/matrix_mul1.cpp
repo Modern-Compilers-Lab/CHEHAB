@@ -114,10 +114,14 @@ int main()
   fheco_trs::TRS trs(program);
   trs.apply_rewrite_rules_on_program(fheco_trs::Ruleset::rules);
 
+  utils::draw_ir(program, "matrix_mul1.hpp2.dot");
+
   cse_pass.apply_cse2(true);
 
   param_selector::ParameterSelector param_selector(program);
   param_selector.select_params();
+
+  utils::draw_ir(program, "matrix_mul1.hpp3.dot");
 
   cout << endl;
 

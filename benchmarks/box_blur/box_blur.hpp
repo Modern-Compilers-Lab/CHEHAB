@@ -21,15 +21,13 @@ void box_blur(
 {
   seal::Ciphertext c0 = encrypted_inputs["c0"];
   seal::Evaluator evaluator(context);
-  seal::Ciphertext ciphertext3;
-  evaluator.rotate_vector(c0, 6, galois_keys, ciphertext3);
-  seal::Ciphertext ciphertext2;
-  evaluator.rotate_vector(c0, 5, galois_keys, ciphertext2);
-  evaluator.add_inplace(ciphertext2, ciphertext3);
-  seal::Ciphertext ciphertext1;
-  evaluator.rotate_vector(c0, 1, galois_keys, ciphertext1);
-  evaluator.add_inplace(ciphertext1, c0);
-  evaluator.add_inplace(ciphertext1, ciphertext2);
-  seal::Ciphertext output = ciphertext1;
+  seal::Ciphertext ciphertext14;
+  evaluator.rotate_vector(c0, 1, galois_keys, ciphertext14);
+  seal::Ciphertext ciphertext15;
+  evaluator.add(c0, ciphertext14, ciphertext15);
+  evaluator.rotate_vector_inplace(ciphertext15, 5, galois_keys);
+  evaluator.add_inplace(ciphertext14, c0);
+  evaluator.add_inplace(ciphertext14, ciphertext15);
+  seal::Ciphertext output = ciphertext14;
   encrypted_outputs.insert({"output", output});
 }
