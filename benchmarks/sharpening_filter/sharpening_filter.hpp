@@ -5,9 +5,9 @@
 seal::SEALContext create_context()
 {
   seal::EncryptionParameters params(seal::scheme_type::bfv);
-  params.set_poly_modulus_degree(8192);
-  params.set_plain_modulus(seal::PlainModulus::Batching(8192, 17));
-  params.set_coeff_modulus(seal::CoeffModulus::Create(8192, {60, 60}));
+  params.set_poly_modulus_degree(4096);
+  params.set_plain_modulus(seal::PlainModulus::Batching(4096, 17));
+  params.set_coeff_modulus(seal::CoeffModulus::Create(4096, {54, 55}));
   seal::SEALContext context(params, false, seal::sec_level_type::tc128);
   return context;
 }
