@@ -29,11 +29,23 @@ EncryptionParameters bfv_no_security_params_heuristic(size_t poly_mod, int init_
   vector<int> coeff_mod_primes_sizes(nb_data_level_primes + 1, MOD_BIT_COUNT_MAX);
 
   // Create coeff modulus primes using coeff_mod_primes_sizes
-  vector<Modulus> coeff_mod = CoeffModulus::Create(poly_mod, coeff_mod_primes_sizes);
+  vector<Modulus> coeff_mod;
+  // If there is a prime in coeff_mod having the same size as plain_mod, we will have coprimality issue
+  if (plain_mod.bit_count() == MOD_BIT_COUNT_MAX)
+  {
+    vector<int> all_mod_primes_sizes(coeff_mod_primes_sizes);
+    // Add plain_mod_size
+    all_mod_primes_sizes.push_back(MOD_BIT_COUNT_MAX);
+    coeff_mod = CoeffModulus::Create(poly_mod, all_mod_primes_sizes);
+    plain_mod = coeff_mod.back();
+    coeff_mod.pop_back();
+  }
+  else
+    coeff_mod = CoeffModulus::Create(poly_mod, coeff_mod_primes_sizes);
   EncryptionParameters params(scheme_type::bfv);
   params.set_poly_modulus_degree(poly_mod);
-  params.set_coeff_modulus(coeff_mod);
   params.set_plain_modulus(plain_mod);
+  params.set_coeff_modulus(coeff_mod);
   return params;
 }
 
@@ -113,9 +125,11 @@ NoiseEstimatesValue estimate_noise_growth(const SEALContext &context, int xdepth
   return noise_estimates;
 }
 
-void serialize_bfv_noise_experiments(const bfv_noise_experiments_map &bfv_noise_experiments, const string &file_name)
+void serialize_bfv_noise_experiments(
+  const bfv_noise_experiments_map &bfv_noise_experiments, int repeat, int xdepth, const string &file_name)
 {
   ofstream file(file_name);
+  file << "repeat " << repeat << ", xdepth" << xdepth << endl;
   file << "{" << endl;
   for (const auto &per_plain_mod_estimates : bfv_noise_experiments)
   {
@@ -135,4 +149,52 @@ void serialize_bfv_noise_experiments(const bfv_noise_experiments_map &bfv_noise_
   }
   file << "}" << endl;
   file.close();
+}
+void print_parameters(const SEALContext &context)
+{
+  auto &context_data = *context.key_context_data();
+
+  std::string scheme_name;
+  switch (context_data.parms().scheme())
+  {
+  case seal::scheme_type::bfv:
+    scheme_name = "BFV";
+    break;
+  case seal::scheme_type::ckks:
+    scheme_name = "CKKS";
+    break;
+  case seal::scheme_type::bgv:
+    scheme_name = "BGV";
+    break;
+  default:
+    throw std::invalid_argument("unsupported scheme");
+  }
+  std::cout << "/" << std::endl;
+  std::cout << "| Encryption parameters :" << std::endl;
+  std::cout << "|   scheme: " << scheme_name << std::endl;
+  size_t poly_mod = context_data.parms().poly_modulus_degree();
+  std::cout << "|   poly_mod: " << poly_mod << " (" << util::get_significant_bit_count(poly_mod) << " bits)"
+            << std::endl;
+
+  std::cout << "|   coeff_mod size: ";
+  auto coeff_mod = context_data.parms().coeff_modulus();
+  int total_bit_count = context_data.total_coeff_modulus_bit_count();
+  std::cout << total_bit_count << " (" << total_bit_count - coeff_mod.back().bit_count() << " + "
+            << coeff_mod.back().bit_count() << ") (";
+  std::size_t coeff_mod_size = coeff_mod.size();
+  for (std::size_t i = 0; i < coeff_mod_size - 1; ++i)
+  {
+    std::cout << coeff_mod[i].bit_count() << " + ";
+  }
+  std::cout << coeff_mod.back().bit_count();
+  std::cout << ") bits" << std::endl;
+
+  if (
+    context_data.parms().scheme() == seal::scheme_type::bfv || context_data.parms().scheme() == seal::scheme_type::bgv)
+  {
+    Modulus plain_mod = context_data.parms().plain_modulus();
+    std::cout << "|   plain_mod: " << plain_mod.value() << " (" << plain_mod.bit_count() << " bits)" << std::endl;
+  }
+
+  std::cout << "\\" << std::endl;
 }

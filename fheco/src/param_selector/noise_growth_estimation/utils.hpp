@@ -23,4 +23,6 @@ seal::Modulus create_plain_mod(std::size_t poly_mod, int plain_mod_init_size);
 NoiseEstimatesValue estimate_noise_growth(const seal::SEALContext &context, int xdepth);
 
 void serialize_bfv_noise_experiments(
-  const bfv_noise_experiments_map &bfv_noise_experiments, const std::string &file_name);
+  const bfv_noise_experiments_map &bfv_noise_experiments, int repeat, int xdepth, const std::string &file_name);
+
+void print_parameters(const seal::SEALContext &context);
