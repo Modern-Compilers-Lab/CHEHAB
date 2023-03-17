@@ -1,6 +1,7 @@
 #include "utils.hpp"
 #include <cmath>
 #include <fstream>
+#include <iostream>
 #include <random>
 #include <stdexcept>
 #include <vector>
@@ -65,10 +66,8 @@ Modulus create_plain_mod(size_t poly_mod, int plain_mod_init_size)
   } while (true);
 }
 
-OpsNoiseGrowth estimate_noise_growth_bfv(const SEALContext &context, int xdepth)
+void estimate_noise_growth_bfv(const SEALContext &context, int xdepth, OpsNoiseGrowth &noise_estimates)
 {
-  OpsNoiseGrowth noise_estimates;
-
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
   const SecretKey &secret_key = keygen.secret_key();
@@ -81,14 +80,6 @@ OpsNoiseGrowth estimate_noise_growth_bfv(const SEALContext &context, int xdepth)
   Encryptor encryptor(context, public_key);
   Evaluator evaluator(context);
   Decryptor decryptor(context, secret_key);
-
-  auto get_invariant_noise_budget = [&decryptor](const Ciphertext &cipher) -> int {
-    int inv_noise_budget = decryptor.invariant_noise_budget(cipher);
-    if (inv_noise_budget == 0)
-      throw logic_error("insufficient initial noise budget");
-
-    return inv_noise_budget;
-  };
 
   auto &context_data = *context.first_context_data();
 
@@ -107,7 +98,7 @@ OpsNoiseGrowth estimate_noise_growth_bfv(const SEALContext &context, int xdepth)
   encryptor.encrypt(plain, cipher);
   Ciphertext tmp;
 
-  noise_estimates.encrypt = init_noise_budget - get_invariant_noise_budget(cipher);
+  noise_estimates.encrypt = init_noise_budget - get_invariant_noise_budget(decryptor, cipher);
   int prev_noise_budget = init_noise_budget - noise_estimates.encrypt;
   for (int i = 0; i < xdepth; ++i)
   {
@@ -115,37 +106,88 @@ OpsNoiseGrowth estimate_noise_growth_bfv(const SEALContext &context, int xdepth)
 
     // mul_plain
     evaluator.multiply_plain(cipher, plain, tmp);
-    noise_growth = prev_noise_budget - get_invariant_noise_budget(tmp);
+    noise_growth = prev_noise_budget - get_invariant_noise_budget(decryptor, tmp);
     noise_estimates.mul_plain = max(noise_estimates.mul_plain, noise_growth);
 
     // add
     evaluator.add(cipher, cipher, tmp);
-    noise_growth = prev_noise_budget - get_invariant_noise_budget(tmp);
+    noise_growth = prev_noise_budget - get_invariant_noise_budget(decryptor, tmp);
     noise_estimates.add = max(noise_estimates.add, noise_growth);
 
     // add_plain
     evaluator.add_plain(cipher, plain, tmp);
-    noise_growth = prev_noise_budget - get_invariant_noise_budget(tmp);
+    noise_growth = prev_noise_budget - get_invariant_noise_budget(decryptor, tmp);
     noise_estimates.add_plain = max(noise_estimates.add_plain, noise_growth);
 
     // rotate
     evaluator.rotate_rows(cipher, 1, galois_keys, tmp);
-    noise_growth = prev_noise_budget - get_invariant_noise_budget(tmp);
+    noise_growth = prev_noise_budget - get_invariant_noise_budget(decryptor, tmp);
     noise_estimates.rotate = max(noise_estimates.rotate, noise_growth);
 
     // mul
     evaluator.multiply_inplace(cipher, cipher);
-    noise_growth = prev_noise_budget - get_invariant_noise_budget(cipher);
+    noise_growth = prev_noise_budget - get_invariant_noise_budget(decryptor, cipher);
     noise_estimates.mul = max(noise_estimates.mul, noise_growth);
     prev_noise_budget = prev_noise_budget - noise_growth;
 
     // relin
     evaluator.relinearize_inplace(cipher, relin_keys);
-    noise_growth = prev_noise_budget - get_invariant_noise_budget(cipher);
+    noise_growth = prev_noise_budget - get_invariant_noise_budget(decryptor, cipher);
     noise_estimates.relin = max(noise_estimates.relin, noise_growth);
     prev_noise_budget = prev_noise_budget - noise_growth;
   }
-  return noise_estimates;
+}
+
+void analyze_mod_switch_impact_on_noise_budget(const SEALContext &context, vector<int> &budget_loss_per_noise)
+{
+  BatchEncoder batch_encoder(context);
+  KeyGenerator keygen(context);
+  const SecretKey &secret_key = keygen.secret_key();
+  PublicKey public_key;
+  keygen.create_public_key(public_key);
+  Encryptor encryptor(context, public_key);
+  Evaluator evaluator(context);
+  Decryptor decryptor(context, secret_key);
+
+  auto &context_data = *context.first_context_data();
+  int init_noise_budget =
+    context_data.total_coeff_modulus_bit_count() - context_data.parms().plain_modulus().bit_count();
+
+  size_t slot_count = batch_encoder.slot_count();
+  vector<uint64_t> random_data(slot_count);
+  random_device rd;
+  for (size_t i = 0; i < slot_count; ++i)
+    random_data[i] = context_data.parms().plain_modulus().reduce(rd());
+
+  Plaintext plain;
+  batch_encoder.encode(random_data, plain);
+  Ciphertext cipher;
+  encryptor.encrypt(plain, cipher);
+  Ciphertext tmp;
+
+  int curr_noise_budget = get_invariant_noise_budget(decryptor, cipher);
+  int fresh_noise = init_noise_budget - curr_noise_budget;
+  for (int i = 0; i < budget_loss_per_noise.size(); ++i)
+  {
+    evaluator.mod_switch_to_next(cipher, tmp);
+
+    int noise = init_noise_budget - curr_noise_budget;
+    int budget_after_mod_switch = get_invariant_noise_budget(decryptor, tmp);
+    budget_loss_per_noise[noise - fresh_noise] =
+      min(budget_loss_per_noise[noise - fresh_noise], budget_after_mod_switch - curr_noise_budget);
+
+    evaluator.add_inplace(cipher, cipher);
+    curr_noise_budget = get_invariant_noise_budget(decryptor, cipher);
+  }
+}
+
+int get_invariant_noise_budget(Decryptor &decryptor, const Ciphertext &cipher)
+{
+  int inv_noise_budget = decryptor.invariant_noise_budget(cipher);
+  if (inv_noise_budget == 0)
+    throw logic_error("insufficient initial noise budget");
+
+  return inv_noise_budget;
 }
 
 void serialize_bfv_noise_experiments(
