@@ -1,6 +1,7 @@
 #include "trs_core.hpp"
 #include "ir_utils.hpp"
 #include "trs_const.hpp"
+#include <stdexcept>
 
 namespace fheco_trs
 {
@@ -254,7 +255,17 @@ namespace core
     }
     else
     {
-      ir_node->replace_with(new_ir_node);
+      auto node_parents = ir_node->get_parents_labels();
+      for (const auto &parent_label : node_parents)
+      {
+        ir::Program::Ptr parent = program->find_node_in_dataflow(parent_label);
+        if (parent == nullptr)
+          throw std::logic_error("node parent not found");
+
+        parent->delete_operand_term(ir_node->get_label());
+        parent->add_operand(new_ir_node);
+      }
+      ir_node->clear_operands();
     }
   }
 
