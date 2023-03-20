@@ -6,6 +6,22 @@
 using namespace std;
 using namespace seal;
 
+template <typename T>
+inline void print_vector(const std::vector<T> &v, std::size_t print_size)
+{
+  if (v.size() < 2 * print_size)
+    throw std::invalid_argument("vector size must at least twice print_size");
+
+  std::size_t size = v.size();
+  std::cout << "[";
+  for (std::size_t i = 0; i < print_size; i++)
+    std::cout << v[i] << ", ";
+  if (v.size() > 2 * print_size)
+    std::cout << " ..., ";
+  for (std::size_t i = size - print_size; i < size; i++)
+    std::cout << v[i] << ((i != size - 1) ? ", " : "]\n");
+}
+
 int main()
 {
   SEALContext context = create_context();
@@ -26,13 +42,13 @@ int main()
   auto &context_data = *context.first_context_data();
 
   size_t slot_count = batch_encoder.slot_count();
-  vector<uint64_t> random_data(slot_count);
-  random_device rd;
+  vector<int64_t> c0_clear = {-12, -61, 1, -22, -54, -64, 38, -5};
+  vector<int64_t> c0_clear_prepared(slot_count);
   for (size_t i = 0; i < slot_count; ++i)
-    random_data[i] = context_data.parms().plain_modulus().reduce(rd());
+    c0_clear_prepared[i] = c0_clear[i % c0_clear.size()];
 
   Plaintext c0_plain;
-  batch_encoder.encode(random_data, c0_plain);
+  batch_encoder.encode(c0_clear_prepared, c0_plain);
   Ciphertext c0_cipher;
   encryptor.encrypt(c0_plain, c0_cipher);
 
@@ -72,5 +88,10 @@ int main()
     int remaining_noise_budget = decryptor.invariant_noise_budget(output.second);
     int noise_upper_bound = init_noise_budget - remaining_noise_budget;
     cout << output.first << ": " << level << ", " << remaining_noise_budget << ", " << noise_upper_bound << endl;
+    Plaintext output_plain;
+    decryptor.decrypt(output.second, output_plain);
+    vector<int64_t> output_clear;
+    batch_encoder.decode(output_plain, output_clear);
+    print_vector(output_clear, 4);
   }
 }
