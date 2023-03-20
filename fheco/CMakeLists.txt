@@ -39,6 +39,7 @@ target_sources(fhecompiler PRIVATE
   ${SRC_TRS}/trs_util_functions.cpp
   ${SRC_UTILS}/draw_ir.cpp
   ${SRC_UTILS}/quantify_ir.cpp
+  ${SRC_UTILS}/evaluate_on_clear.cpp
   ${SRC_TRS}/reduction_order/utils.cpp
   ${SRC_TRS}/reduction_order/component_orders.cpp
   ${SRC_TRS}/ruleset.cpp
@@ -78,6 +79,8 @@ install(FILES
   ${SRC_TRS}/ruleset.hpp
   ${SRC_UTILS}/draw_ir.hpp
   ${SRC_UTILS}/quantify_ir.hpp
+  ${SRC_UTILS}/clear_data_evaluator.hpp
+  ${SRC_UTILS}/evaluate_on_clear.hpp
   DESTINATION ${HEADERS_INSTALL_DIR}
 )
 

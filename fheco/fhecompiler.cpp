@@ -8,8 +8,10 @@
 #include "ruleset.hpp"
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
+#include <stdexcept>
 
 using namespace fhecompiler;
+using namespace std;
 
 ir::Program *program;
 
@@ -17,8 +19,8 @@ namespace fhecompiler
 {
 
 void init(
-  const std::string &name, int bit_width, bool signedness, std::size_t vec_size, SecurityLevel sec_level, Scheme scheme,
-  double scale)
+  const std::string &name, int bit_width, bool signedness, std::size_t vector_size, SecurityLevel sec_level,
+  Scheme scheme, double scale)
 {
 
   if (program != nullptr)
@@ -26,9 +28,16 @@ void init(
 
   program = new ir::Program(name);
 
+  if (bit_width < 11 || bit_width > 60)
+    throw invalid_argument("bit_width must be in [11, 60]");
   program->set_bit_width(bit_width);
+
   program->set_signedness(signedness);
-  program->set_vector_size(vec_size);
+
+  if (vector_size == 0 || (vector_size & (vector_size - 1)) != 0)
+    throw invalid_argument("vector_size must be a power of two");
+  program->set_vector_size(vector_size);
+
   program->set_sec_level(sec_level);
   program->set_scheme(scheme);
   program->set_scale(scale);
