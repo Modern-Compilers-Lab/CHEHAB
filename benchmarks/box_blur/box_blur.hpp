@@ -12,9 +12,9 @@ seal::SEALContext create_context()
   return context;
 }
 
-std::vector<int32_t> get_rotations_steps()
+std::vector<int> get_rotations_steps()
 {
-  std::vector<int32_t> steps = {1, 5};
+  std::vector<int> steps = {1, 5};
   return steps;
 }
 void box_blur(

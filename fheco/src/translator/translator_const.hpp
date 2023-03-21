@@ -116,8 +116,8 @@ INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::stri
 INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, seal::Ciphertext>";
 INLINE const char *headers_include =
   "#include\"seal/seal.h\"\n#include<vector>\n#include<unordered_map>\n#include<cstdint>\n";
-INLINE const char *rotation_step_type_literal = "int32_t";
-INLINE const char *gen_steps_function_signature = "std::vector<int32_t> get_rotations_steps()";
+INLINE const char *rotation_step_type_literal = "int";
+INLINE const char *gen_steps_function_signature = "std::vector<int> get_rotations_steps()";
 
 INLINE std::unordered_map<ir::TermType, const char *> outputs_class_identifier = {
   {ir::TermType::plaintext, "encoded_outputs"}, {ir::TermType::ciphertext, "encrypted_outputs"}};
