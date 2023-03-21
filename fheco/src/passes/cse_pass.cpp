@@ -1,6 +1,7 @@
 #include "cse_pass.hpp"
 #include "ir_utils.hpp"
 #include <sstream>
+#include <stdexcept>
 
 namespace fheco_passes
 {
@@ -258,9 +259,9 @@ void CSE::apply_cse2(bool allow_assign_insertion)
     }
     else
     {
-      SEid expression_id = node;
-      auto it = calculated_expressions_ids.find(expression_id);
-      if (it != calculated_expressions_ids.end())
+      SEid expression_id(node);
+      auto [it, is_inserted] = calculated_expressions_ids.insert({expression_id, node});
+      if (!is_inserted)
       {
         // all parents of node needs to point to processed_node instead of node
         if (parents_labels.size())
@@ -269,7 +270,7 @@ void CSE::apply_cse2(bool allow_assign_insertion)
           {
             auto parent_node = program->find_node_in_dataflow(parent_label);
             if (parent_node == nullptr)
-              continue;
+              throw std::logic_error("parent node not found");
 
             parent_node->replace_operand_with(node, it->second);
           }
@@ -288,8 +289,6 @@ void CSE::apply_cse2(bool allow_assign_insertion)
           }
         }
       }
-      else
-        calculated_expressions_ids[expression_id] = node;
     }
   }
 }

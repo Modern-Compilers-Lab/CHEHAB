@@ -33,7 +33,24 @@ struct SEid
     expr_ptr = term_node;
   }
 
-  bool operator==(const SEid &id) const { return (lhs == id.lhs && rhs == id.rhs && opcode == id.opcode); }
+  bool operator==(const SEid &id) const
+  {
+    if (opcode == id.opcode)
+    {
+      // binary operations
+      if (lhs && rhs)
+      {
+        // not commutative
+        if (opcode == ir::OpCode::sub)
+          return lhs == id.lhs && rhs == id.rhs;
+        else
+          return (lhs == id.lhs && rhs == id.rhs) || (lhs == id.rhs && rhs == id.lhs);
+      }
+      else
+        return lhs == id.lhs;
+    }
+    return false;
+  }
 
   ~SEid() {}
 };
@@ -67,8 +84,20 @@ struct SEidHash
     }
     else
     {
-      if (seid.lhs && seid.rhs) // binary operations
-        ss << seid.lhs << ir::str_opcode[seid.opcode] << seid.rhs;
+      // binary operations
+      if (seid.lhs && seid.rhs)
+      {
+        // not commutative
+        if (seid.opcode == ir::OpCode::sub)
+          ss << seid.lhs << ir::str_opcode[seid.opcode] << seid.rhs;
+        else
+        {
+          if (seid.lhs <= seid.rhs)
+            ss << seid.lhs << ir::str_opcode[seid.opcode] << seid.rhs;
+          else
+            ss << seid.rhs << ir::str_opcode[seid.opcode] << seid.lhs;
+        }
+      }
 
       else if (seid.lhs) // unary operations
         ss << ir::str_opcode[seid.opcode] << seid.lhs;

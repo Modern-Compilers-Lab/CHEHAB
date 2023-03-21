@@ -31,10 +31,8 @@ void box_blur(
   evaluator.add(c0, ciphertext14, ciphertext15);
   seal::Ciphertext ciphertext5;
   evaluator.rotate_rows(ciphertext15, 5, galois_keys, ciphertext5);
-  seal::Ciphertext ciphertext4;
-  evaluator.add(ciphertext14, c0, ciphertext4);
   seal::Ciphertext ciphertext6;
-  evaluator.add(ciphertext4, ciphertext5, ciphertext6);
+  evaluator.add(ciphertext15, ciphertext5, ciphertext6);
   seal::Ciphertext output = ciphertext6;
   encrypted_outputs.insert({"output", output});
 }

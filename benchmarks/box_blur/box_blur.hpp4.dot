@@ -13,11 +13,8 @@ ciphertext15 -> ciphertext14
 ciphertext5 [label="rotate" style=dashed]
 ciphertext5 -> ciphertext15
 ciphertext5 -> 5
-ciphertext4 [label="+" style=dashed]
-ciphertext4 -> ciphertext14
-ciphertext4 -> ciphertext0
 ciphertext6 [label="+" style=dashed]
-ciphertext6 -> ciphertext4
+ciphertext6 -> ciphertext15
 ciphertext6 -> ciphertext5
 ciphertext8 [label="=" style=dashed color=red fontcolor=red]
 ciphertext8 -> ciphertext6
