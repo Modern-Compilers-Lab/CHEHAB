@@ -6,12 +6,17 @@ seal::SEALContext create_context()
 {
   seal::EncryptionParameters params(seal::scheme_type::bfv);
   params.set_poly_modulus_degree(4096);
-  params.set_plain_modulus(seal::PlainModulus::Batching(4096, 17));
+  params.set_plain_modulus(seal::PlainModulus::Batching(4096, 18));
   params.set_coeff_modulus(seal::CoeffModulus::Create(4096, {54, 55}));
   seal::SEALContext context(params, false, seal::sec_level_type::tc128);
   return context;
 }
 
+std::vector<int32_t> get_rotations_steps()
+{
+  std::vector<int32_t> steps = {1, 5};
+  return steps;
+}
 void box_blur(
   std::unordered_map<std::string, seal::Ciphertext> &encrypted_inputs,
   std::unordered_map<std::string, seal::Plaintext> &encoded_inputs,
@@ -24,9 +29,12 @@ void box_blur(
   evaluator.rotate_rows(c0, 1, galois_keys, ciphertext14);
   seal::Ciphertext ciphertext15;
   evaluator.add(c0, ciphertext14, ciphertext15);
-  evaluator.rotate_rows_inplace(ciphertext15, 5, galois_keys);
-  evaluator.add_inplace(ciphertext14, c0);
-  evaluator.add_inplace(ciphertext14, ciphertext15);
-  seal::Ciphertext output = ciphertext14;
+  seal::Ciphertext ciphertext5;
+  evaluator.rotate_rows(ciphertext15, 5, galois_keys, ciphertext5);
+  seal::Ciphertext ciphertext4;
+  evaluator.add(ciphertext14, c0, ciphertext4);
+  seal::Ciphertext ciphertext6;
+  evaluator.add(ciphertext4, ciphertext5, ciphertext6);
+  seal::Ciphertext output = ciphertext6;
   encrypted_outputs.insert({"output", output});
 }

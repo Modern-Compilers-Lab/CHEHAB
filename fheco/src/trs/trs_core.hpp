@@ -11,7 +11,7 @@ namespace fheco_trs
 namespace core
 {
 
-  typedef std::unordered_map<size_t, ir::Program::Ptr> MatchingMap;
+  typedef std::unordered_map<size_t, ir::Term::Ptr> MatchingMap;
 
   typedef std::function<MatchingTerm(MatchingTerm, MatchingMap &, ir::Program *)> CallableFunction;
 

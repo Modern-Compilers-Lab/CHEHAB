@@ -13,11 +13,12 @@ set(HEADERS_INSTALL_DIR include/fhecompiler)
 
 set(FHECOMPILER_STATIC_INSTALL_DIR lib)
 
-add_library(fhecompiler fhecompiler.cpp)
+add_library(fhecompiler)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_IR} PUBLIC ${SRC_DSL} PUBLIC ${SRC_PASSES} PUBLIC ${SRC_PARAMS_SELECTOR} PUBLIC ${SRC_TRANSLATOR} PUBLIC ${SRC_UTILS} PUBLIC ${SRC_TRS} PUBLIC ${SRC_TRS}/reduction_order)
 
 target_sources(fhecompiler PRIVATE
+  ${SRC_DSL}/compiler.cpp
   ${SRC_DSL}/ciphertext.cpp
   ${SRC_DSL}/plaintext.cpp
   ${SRC_DSL}/scalar.cpp
@@ -46,8 +47,9 @@ target_sources(fhecompiler PRIVATE
   ${SRC_PASSES}/normalize_pass.cpp
 )
 
-install(FILES  
-  fhecompiler.hpp
+install(FILES
+  src/fhecompiler.hpp
+  ${SRC_DSL}/compiler.hpp
   ${SRC_DSL}/ciphertext.hpp 
   ${SRC_DSL}/datatypes_const.hpp
   ${SRC_DSL}/datatypes_util.hpp 

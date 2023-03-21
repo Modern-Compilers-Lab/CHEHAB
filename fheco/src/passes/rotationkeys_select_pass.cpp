@@ -44,7 +44,7 @@ std::vector<int> RotationKeySelctionPass::naf(int value)
   return res;
 }
 
-void RotationKeySelctionPass::decompose_rotations()
+std::set<int> RotationKeySelctionPass::decompose_rotations()
 {
 
   auto is_power_of_two = [](int value) -> bool {
@@ -56,7 +56,7 @@ void RotationKeySelctionPass::decompose_rotations()
 
   auto sorted_nodes = program->get_dataflow_sorted_nodes(true);
 
-  std::vector<ir::Program::Ptr> targeted_rotation_nodes;
+  std::vector<ir::Term::Ptr> targeted_rotation_nodes;
 
   for (auto &node : sorted_nodes)
   {
@@ -92,10 +92,7 @@ void RotationKeySelctionPass::decompose_rotations()
     rotations_steps_vec.push_back(e.first);
 
   if (rotation_steps.size() <= number_of_rotation_keys_threshold)
-  {
-    program->set_rotations_keys_steps(std::set(rotations_steps_vec.begin(), rotations_steps_vec.end()));
-    return;
-  }
+    return std::set(rotations_steps_vec.begin(), rotations_steps_vec.end());
   else
   {
     // we generate all necessary powers of 2 alongs with a given number S of additional non power of 2 steps
@@ -160,17 +157,15 @@ void RotationKeySelctionPass::decompose_rotations()
         rewrite_rotation_node_with_naf(node, naf_components);
       }
     }
-    program->set_rotations_keys_steps(std::set(rotations_steps_vec.begin(), rotations_steps_vec.end()));
-
-    return;
+    return std::set(rotations_steps_vec.begin(), rotations_steps_vec.end());
   }
 }
 
 void RotationKeySelctionPass::rewrite_rotation_node_with_naf(
-  const ir::Program::Ptr &node, const std::vector<int> naf_components)
+  const ir::Term::Ptr &node, const std::vector<int> naf_components)
 {
 
-  ir::Program::Ptr input_node;
+  ir::Term::Ptr input_node;
   if (node->get_operands()[0]->get_term_type() == ir::TermType::ciphertext)
     input_node = node->get_operands()[0];
   else
@@ -183,10 +178,9 @@ void RotationKeySelctionPass::rewrite_rotation_node_with_naf(
       continue;
 
     std::string rotation_step_raw = std::to_string(rotation_step);
-    ir::Program::Ptr rotation_step_node = std::make_shared<ir::Term>(rotation_step_raw, ir::TermType::rawData);
-    ir::Program::Ptr node_to_rewrite_with = program->insert_operation_node_in_dataflow(
-      node->get_opcode(), std::vector<ir::Program::Ptr>({input_node, rotation_step_node}), "",
-      ir::TermType::ciphertext);
+    ir::Term::Ptr rotation_step_node = std::make_shared<ir::Term>(rotation_step_raw, ir::TermType::rawData);
+    ir::Term::Ptr node_to_rewrite_with = program->insert_operation_node_in_dataflow(
+      node->get_opcode(), std::vector<ir::Term::Ptr>({input_node, rotation_step_node}), "", ir::TermType::ciphertext);
 
     if (i == naf_components.size() - 1)
     {

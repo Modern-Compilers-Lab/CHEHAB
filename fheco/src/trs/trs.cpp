@@ -24,16 +24,16 @@ void TRS::apply_rule_on_ir_node(
     if (rule.get_rewrite_condition() != std::nullopt)
     {
       // std::cout << "checking condition ...\n";
-      if (rule.evaluate_rewrite_condition(*matching_map, program, functions_table))
+      if (rule.evaluate_rewrite_condition(*matching_map, program.get(), functions_table))
       {
         is_rule_applied = true;
-        rule.substitute_in_ir(ir_node, *matching_map, program, functions_table);
+        rule.substitute_in_ir(ir_node, *matching_map, program.get(), functions_table);
       }
     }
     else
     {
       is_rule_applied = true;
-      rule.substitute_in_ir(ir_node, *matching_map, program, functions_table);
+      rule.substitute_in_ir(ir_node, *matching_map, program.get(), functions_table);
     }
   }
 }

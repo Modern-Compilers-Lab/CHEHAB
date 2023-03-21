@@ -8,7 +8,7 @@ namespace util_functions
 
   MatchingTerm fold(MatchingTerm term_to_fold, core::MatchingMap &matching_map, ir::Program *program)
   {
-    ir::Program::Ptr folded_ir_node = ir::fold_ir_term(matching_map[term_to_fold.get_term_id()], program);
+    ir::Term::Ptr folded_ir_node = ir::fold_ir_term(matching_map[term_to_fold.get_term_id()], program);
     matching_map[term_to_fold.get_term_id()] = folded_ir_node;
 
     return term_to_fold;
@@ -45,7 +45,7 @@ namespace util_functions
     if (it == matching_map.end())
       throw("term doesnt exist in matching_map in isconst");
 
-    ir::Program::Ptr ir_node = it->second;
+    ir::Term::Ptr ir_node = it->second;
 
     return (static_cast<int>(program->type_of(ir_node->get_label()) == ir::ConstantTableEntryType::constant) == 1);
   }

@@ -48,7 +48,7 @@ bool RewriteRule::evaluate_rewrite_condition(
   return core::evaluate_boolean_matching_term(*rewrite_condition, matching_map, program, functions_table);
 }
 
-std::optional<core::MatchingMap> RewriteRule::match_with_ir_node(const ir::Program::Ptr &ir_node) const
+std::optional<core::MatchingMap> RewriteRule::match_with_ir_node(const ir::Term::Ptr &ir_node) const
 {
 
   core::MatchingMap matching_map;

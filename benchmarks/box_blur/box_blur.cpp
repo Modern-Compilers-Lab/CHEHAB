@@ -1,28 +1,14 @@
-#include "fhecompiler/cse_pass.hpp"
-#include "fhecompiler/draw_ir.hpp"
-#include "fhecompiler/evaluate_on_clear.hpp"
 #include "fhecompiler/fhecompiler.hpp"
-#include "fhecompiler/normalize_pass.hpp"
-#include "fhecompiler/param_selector.hpp"
-#include "fhecompiler/quantify_ir.hpp"
-#include "fhecompiler/ruleset.hpp"
-#include "fhecompiler/trs.hpp"
-#include "fhecompiler/trs_util_functions.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
-#include <variant>
 #include <vector>
 
 using namespace std;
 
-extern ir::Program *program;
-
 int main()
 {
-
-  fhecompiler::init("box_blur", 15, true, 8, fhecompiler::SecurityLevel::tc128, fhecompiler::Scheme::bfv);
+  fhecompiler::Compiler::create_func("box_blur", 8);
 
   fhecompiler::Ciphertext c0("c0", fhecompiler::VarType::input);
 
@@ -42,60 +28,16 @@ int main()
 
   utils::print_variables_values(inputs_values);
 
-  utils::draw_ir(program, "box_blur.hpp1.dot");
+  auto clear_outputs1 = fhecompiler::Compiler::evaluate_on_clear(inputs_values);
 
-  auto clear_outputs1 = utils::evaluate_on_clear(program, inputs_values);
+  fhecompiler::Compiler::compile("box_blur.hpp");
 
-  // auto count = utils::count_main_node_classes(program);
-  // for (const auto &e : count)
-  //   cout << e.first << ":" << e.second << endl;
-
-  fheco_passes::CSE cse_pass(program);
-
-  fheco_trs::TRS trs(program);
-  trs.apply_rewrite_rules_on_program(fheco_trs::Ruleset::rules);
-
-  cse_pass.apply_cse2(true);
-
-  utils::draw_ir(program, "box_blur.hpp2.dot");
-
-  auto clear_outputs2 = utils::evaluate_on_clear(program, inputs_values);
+  auto clear_outputs2 = fhecompiler::Compiler::evaluate_on_clear(inputs_values);
 
   if (clear_outputs1 != clear_outputs2)
     throw logic_error("clear_outputs1 != clear_outputs2");
 
-  // cout << endl;
-
-  param_selector::ParameterSelector param_selector(program);
-  param_selector.select_params();
-
-  utils::draw_ir(program, "box_blur.hpp3.dot");
-
-  auto clear_outputs3 = utils::evaluate_on_clear(program, inputs_values);
-
-  if (clear_outputs2 != clear_outputs3)
-    throw logic_error("clear_outputs2 != clear_outputs3");
-
-  utils::print_variables_values(clear_outputs3);
-
-  // count = utils::count_main_node_classes(program);
-  // for (const auto &e : count)
-  //   cout << e.first << ": " << e.second << endl;
-
-  translator::Translator tr(program);
-  {
-    std::ofstream translation_os("box_blur.hpp");
-
-    if (!translation_os)
-      throw("couldn't open file for translation.\n");
-
-    tr.translate_program(translation_os);
-
-    translation_os.close();
-  }
-
-  delete program;
-  program = nullptr;
+  utils::print_variables_values(clear_outputs2);
 
   return 0;
 }

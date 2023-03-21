@@ -6,7 +6,7 @@ namespace fheco_passes
 {
 
 /*
-std::string CSE::calculate_id(const ir::Program::Ptr &term)
+std::string CSE::calculate_id(const ir::Term::Ptr &term)
 {
   std::stringstream ss;
   if (term->is_operation_node() == false)
@@ -24,17 +24,17 @@ std::string CSE::calculate_id(const ir::Program::Ptr &term)
 }
 */
 
-bool CSE::check_inputs_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
+bool CSE::check_inputs_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs)
 {
   return lhs == rhs;
 }
 
-bool CSE::check_raw_data_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
+bool CSE::check_raw_data_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs)
 {
   return lhs->get_label() == rhs->get_label();
 }
 
-bool CSE::check_scalars_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
+bool CSE::check_scalars_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs)
 {
   if (lhs->get_term_type() != ir::TermType::scalar || rhs->get_term_type() != ir::TermType::scalar)
     throw("both lhs and rhs must be scalars in check_scalars_equality");
@@ -55,7 +55,7 @@ bool CSE::check_scalars_equality(const ir::Program::Ptr &lhs, const ir::Program:
   return ir::get_constant_value_as_double(lhs_const_value) == ir::get_constant_value_as_double(rhs_const_value);
 }
 
-bool CSE::check_plains_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
+bool CSE::check_plains_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs)
 {
   if (lhs->get_term_type() != ir::TermType::plaintext || rhs->get_term_type() != ir::TermType::plaintext)
     throw("both lhs and rhs must be scalars in check_scalars_equality");
@@ -95,7 +95,7 @@ bool CSE::check_plains_equality(const ir::Program::Ptr &lhs, const ir::Program::
   return true;
 }
 
-bool CSE::check_constants_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
+bool CSE::check_constants_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs)
 {
   if (program->type_of(lhs->get_label()) != ir::ConstantTableEntryType::constant)
     throw("lhs must be a constant in check_constants_equality");
@@ -120,7 +120,7 @@ bool CSE::check_constants_equality(const ir::Program::Ptr &lhs, const ir::Progra
   return false;
 }
 
-bool CSE::check_syntactical_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
+bool CSE::check_syntactical_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs)
 {
   // this function is implemented in which we assume that it is called during a bottom-up pass for performance reasons
 
@@ -176,7 +176,7 @@ bool CSE::check_syntactical_equality(const ir::Program::Ptr &lhs, const ir::Prog
 void CSE::apply_cse()
 {
 
-  std::unordered_set<ir::Program::Ptr> processed_nodes;
+  std::unordered_set<ir::Term::Ptr> processed_nodes;
 
   auto nodes = program->get_dataflow_sorted_nodes(true);
 
@@ -225,8 +225,8 @@ void CSE::apply_cse2(bool allow_assign_insertion)
 
   // Please note that this pass may insert assign operation nodes
 
-  std::unordered_set<ir::Program::Ptr> processed_constants;
-  std::unordered_map<SEid, ir::Program::Ptr, SEidHash> calculated_expressions_ids;
+  std::unordered_set<ir::Term::Ptr> processed_constants;
+  std::unordered_map<SEid, ir::Term::Ptr, SEidHash> calculated_expressions_ids;
 
   auto nodes = program->get_dataflow_sorted_nodes(true);
   for (size_t i = 0; i < nodes.size(); i++)

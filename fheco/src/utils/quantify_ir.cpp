@@ -11,8 +11,8 @@ map<tuple<ir::OpCode, ir::TermType, ir::TermType>, size_t> utils::count_node_typ
   if (program == nullptr)
     return result;
 
-  const vector<ir::Program::Ptr> &nodes = program->get_dataflow_sorted_nodes(true);
-  for (const ir::Program::Ptr &node : nodes)
+  const vector<ir::Term::Ptr> &nodes = program->get_dataflow_sorted_nodes(true);
+  for (const ir::Term::Ptr &node : nodes)
   {
     if (node->is_operation_node() == false)
     {

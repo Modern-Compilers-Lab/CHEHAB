@@ -1,38 +1,38 @@
 #pragma once
 
+#include "encryption_parameters.hpp"
 #include "program.hpp"
 #include "term.hpp"
 #include "translator_const.hpp"
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <set>
 #include <string>
 
 namespace translator
 {
 
-using Ptr = std::shared_ptr<ir::Term>;
-
 class Translator
 {
 
 private:
-  ir::Program *program;
+  std::shared_ptr<ir::Program> program;
 
   EncodingWriter encoding_writer;
   EncryptionWriter encryption_writer;
   EvaluationWriter evaluation_writer;
   ContextWriter context_writer;
 
-  void translate_binary_operation(const Ptr &term_ptr, std::ofstream &os);
-  void translate_nary_operation(const Ptr &term_ptr, std::ofstream &os);
-  void translate_unary_operation(const Ptr &term_ptr, std::ofstream &os);
+  void translate_binary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os);
+  void translate_nary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os);
+  void translate_unary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os);
 
   void translate_constant_table_entry(ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os);
 
-  void translate_term(const Ptr &term_ptr, std::ofstream &os);
+  void translate_term(const ir::Term::Ptr &term_ptr, std::ofstream &os);
 
-  std::string get_identifier(const Ptr &term_ptr) const;
+  std::string get_identifier(const ir::Term::Ptr &term_ptr) const;
 
   void convert_to_inplace(const ir::Term::Ptr &node_ptr);
 
@@ -43,7 +43,9 @@ private:
   // void compact_assignement(const ir::Term::Ptr &node_ptr);
 
 public:
-  Translator(ir::Program *prgm)
+  Translator(
+    const std::shared_ptr<ir::Program> &prgm, fhecompiler::SecurityLevel sec_level,
+    const param_selector::EncryptionParameters &params, bool uses_mod_switch)
     : program(prgm), encoding_writer(
                        program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? ckks_encoder_type_literal
                                                                                      : bv_encoder_type_literal,
@@ -51,11 +53,8 @@ public:
       encryption_writer(
         encryptor_type_literal, encryptor_type_identifier, encrypt_literal, public_key_identifier, context_identifier),
       evaluation_writer(evaluator_type_literal, evaluator_identifier, context_identifier),
-      context_writer(
-        program->get_params(), program->get_scheme(), program->get_uses_mod_switch(), program->get_sec_level())
+      context_writer(params, program->get_encryption_scheme(), uses_mod_switch, sec_level)
   {}
-
-  ~Translator() {}
 
   void generate_function_signature(std::ofstream &os) const;
 
@@ -76,9 +75,9 @@ public:
     example of deduction is that the function can deduce add_plain from add if one of the operands is a ciphertext and
     the other one is a plaintext/scalar.
   */
-  ir::OpCode deduce_opcode_to_generate(const Ptr &node) const;
+  ir::OpCode deduce_opcode_to_generate(const ir::Term::Ptr &node) const;
 
-  void translate_program(std::ofstream &os);
+  void translate_program(std::ofstream &os, const std::set<int> &rotations_keys_steps);
 };
 
 } // namespace translator

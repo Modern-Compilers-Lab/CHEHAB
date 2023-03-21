@@ -1,12 +1,8 @@
 #include "scalar.hpp"
+#include "compiler.hpp"
 #include "datatypes_util.hpp"
-#include "program.hpp"
 #include "term.hpp"
 #include <memory>
-
-using namespace datatype;
-
-extern ir::Program *program;
 
 namespace fhecompiler
 {
@@ -22,35 +18,40 @@ void Scalar::set_new_label()
 
 Scalar::Scalar(std::int64_t _data) : data(_data), label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
-  program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
+  Compiler::get_active()->insert_node_in_dataflow<Scalar>(*this);
+  Compiler::get_active()->insert_entry_in_constants_table(
+    {this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
 }
 
 Scalar::Scalar(std::uint64_t _data)
   : data(_data), label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
-  program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
+  Compiler::get_active()->insert_node_in_dataflow<Scalar>(*this);
+  Compiler::get_active()->insert_entry_in_constants_table(
+    {this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
 }
 
 /*
 Scalar::Scalar(uint64_t _data) : data(_data), label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
-  program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
+  Compiler::get_active()->insert_node_in_dataflow<Scalar>(*this);
+  Compiler::get_active()->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label,
+_data}}});
 }
 */
 
 Scalar::Scalar(double _data) : data(_data), label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
-  program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
+  Compiler::get_active()->insert_node_in_dataflow<Scalar>(*this);
+  Compiler::get_active()->insert_entry_in_constants_table(
+    {this->label, {ir::ConstantTableEntryType::constant, {label, _data}}});
 }
 
 Scalar::Scalar() : label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
 {
-  program->insert_node_in_dataflow<Scalar>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, data}}});
+  Compiler::get_active()->insert_node_in_dataflow<Scalar>(*this);
+  Compiler::get_active()->insert_entry_in_constants_table(
+    {this->label, {ir::ConstantTableEntryType::constant, {label, data}}});
 }
 
 Scalar::Scalar(const std::string &tag) : label(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
@@ -68,8 +69,9 @@ Scalar &Scalar::operator=(const Scalar &sc_copy)
 Scalar::Scalar(const Scalar &sc_copy) : label(datatype::sc_label_prefix + std::to_string(scalar_id++))
 {
 
-  auto sc_copy_node_ptr = program->insert_node_in_dataflow<Scalar>(sc_copy);
-  program->insert_operation_node_in_dataflow(ir::OpCode::assign, {sc_copy_node_ptr}, this->label, ir::TermType::scalar);
+  auto sc_copy_node_ptr = Compiler::get_active()->insert_node_in_dataflow<Scalar>(sc_copy);
+  Compiler::get_active()->insert_operation_node_in_dataflow(
+    ir::OpCode::assign, {sc_copy_node_ptr}, this->label, ir::TermType::scalar);
   // std::cout << this->label << " = " << sc_copy.get_label() << "\n";
 }
 

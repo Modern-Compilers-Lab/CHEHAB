@@ -1,6 +1,8 @@
 #pragma once
 
 #include "program.hpp"
+#include <memory>
+#include <set>
 
 namespace fheco_passes
 {
@@ -9,15 +11,15 @@ class RotationKeySelctionPass
 {
 
 private:
-  ir::Program *program;
+  std::shared_ptr<ir::Program> program;
   /*
     This function write a value in Non-Adjacent form (NAF)
   */
   std::vector<int> naf(int value);
-  void rewrite_rotation_node_with_naf(const ir::Program::Ptr &node, const std::vector<int32_t> naf_components);
+  void rewrite_rotation_node_with_naf(const ir::Term::Ptr &node, const std::vector<int32_t> naf_components);
 
 public:
-  RotationKeySelctionPass(ir::Program *prgm) : program(prgm) {}
+  RotationKeySelctionPass(const std::shared_ptr<ir::Program> &prgm) : program(prgm) {}
   /*
     For now this function targets SEAL backend where instead of generating all power of two keys and in order to avoid
     overhead that comes with rotation steps that are not a power of 2, the functions traverse the program and return
@@ -27,7 +29,7 @@ public:
     scheme dependent as one might guess, it may differ from one implemention to another while the core idea is still the
     same (i.e, Galois Automorphisms).
   */
-  void decompose_rotations();
+  std::set<int> decompose_rotations();
 };
 
 } // namespace fheco_passes

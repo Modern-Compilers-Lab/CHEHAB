@@ -1,5 +1,4 @@
 #include "param_selector.hpp"
-#include "encryption_parameters.hpp"
 #include "fhecompiler_const.hpp"
 #include "term.hpp"
 #include <iostream>
@@ -10,12 +9,12 @@ using namespace std;
 namespace param_selector
 {
 
-unordered_map<fhecompiler::SecurityLevel, unordered_map<size_t, int>> ParameterSelector::security_standard = {
+const unordered_map<fhecompiler::SecurityLevel, unordered_map<size_t, int>> ParameterSelector::security_standard = {
   {fhecompiler::SecurityLevel::tc128, {{1024, 27}, {2048, 54}, {4096, 109}, {8192, 218}, {16384, 438}, {32768, 881}}},
   {fhecompiler::SecurityLevel::tc192, {{1024, 19}, {2048, 37}, {4096, 75}, {8192, 152}, {16384, 305}, {32768, 612}}},
   {fhecompiler::SecurityLevel::tc256, {{1024, 14}, {2048, 29}, {4096, 58}, {8192, 118}, {16384, 237}, {32768, 476}}}};
 
-map<int, map<size_t, ParameterSelector::NoiseEstimatesValue>> ParameterSelector::bfv_noise_estimates_seal = {
+const map<int, map<size_t, ParameterSelector::NoiseEstimatesValue>> ParameterSelector::bfv_noise_estimates_seal = {
   {14, {{1024, {6, 25, 18}}, {2048, {7, 26, 18}}}},
   {15, {{1024, {6, 25, 18}}}},
   {16, {{1024, {6, 27, 20}}, {2048, {7, 28, 20}}, {4096, {7, 28, 20}}}},
@@ -316,14 +315,14 @@ map<int, map<size_t, ParameterSelector::NoiseEstimatesValue>> ParameterSelector:
     {16384, {9, 75, 66}},
     {32768, {9, 76, 66}}}}};
 
-void ParameterSelector::select_params(bool use_mod_switch)
+EncryptionParameters ParameterSelector::select_params(bool &use_mod_switch)
 {
   program_->get_dataflow_sorted_nodes(true);
 
-  switch (program_->get_scheme())
+  switch (program_->get_encryption_scheme())
   {
   case fhecompiler::Scheme::bfv:
-    select_params_bfv(use_mod_switch);
+    return select_params_bfv(use_mod_switch);
     break;
 
   case fhecompiler::Scheme::none:
@@ -335,7 +334,7 @@ void ParameterSelector::select_params(bool use_mod_switch)
   }
 }
 
-void ParameterSelector::select_params_bfv(bool use_mod_switch)
+EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
 {
   int plain_mod_size = program_->get_bit_width() + 1;
   if (program_->get_signedness())
@@ -379,10 +378,10 @@ void ParameterSelector::select_params_bfv(bool use_mod_switch)
     int coeff_mod_data_level_size = plain_mod_size + circuit_noise;
     params = EncryptionParameters(poly_modulus_degree, plain_mod_size, coeff_mod_data_level_size);
 
-    if (program_->get_sec_level() == fhecompiler::SecurityLevel::none)
+    if (sec_level_ == fhecompiler::SecurityLevel::none)
       break;
 
-    auto sec_level_he_standard_it = security_standard.find(program_->get_sec_level());
+    auto sec_level_he_standard_it = security_standard.find(sec_level_);
     if (sec_level_he_standard_it == security_standard.end())
       throw logic_error("program security level is not included in the HE security standard");
 
@@ -403,21 +402,27 @@ void ParameterSelector::select_params_bfv(bool use_mod_switch)
        << "nb_primes=" << params.coeff_mod_bit_sizes().size() << ", "
        << "min_total_bit_count=" << params.coeff_mod_bit_count() << endl;
 
-  if (program_->get_sec_level() != fhecompiler::SecurityLevel::none)
+  if (sec_level_ != fhecompiler::SecurityLevel::none)
   {
-    int max_coeff_mod_bit_count = security_standard[program_->get_sec_level()][poly_modulus_degree];
+    auto security_standard_sec_level_it = security_standard.find(sec_level_);
+    if (security_standard_sec_level_it == security_standard.end())
+      throw logic_error("sec_level_ not included in security_standard");
+
+    auto security_standard_poly_modulus_degree_it = security_standard_sec_level_it->second.find(poly_modulus_degree);
+    if (security_standard_poly_modulus_degree_it == security_standard_sec_level_it->second.end())
+      throw logic_error("poly_modulus_degree not included in security_standard");
+
+    int max_coeff_mod_bit_count = security_standard_poly_modulus_degree_it->second;
     params.increase_coeff_mod_bit_sizes(max_coeff_mod_bit_count - params.coeff_mod_bit_count());
   }
   else
     params.increase_coeff_mod_bit_sizes(MOD_BIT_COUNT_MAX);
 
-  bool used_mod_switch = false;
   if (use_mod_switch)
-    used_mod_switch = insert_mod_switch_bfv(
+    use_mod_switch = insert_mod_switch_bfv(
       params.coeff_mod_data_level_bit_sizes(), nodes_noise, poly_modulus_degree_noise_estimates_it->second.fresh_noise);
 
-  program_->set_uses_mod_switch(used_mod_switch);
-  program_->set_params(params);
+  return params;
 }
 
 int ParameterSelector::simulate_noise_bfv(
@@ -594,7 +599,7 @@ bool ParameterSelector::insert_mod_switch_bfv(
 
           if (arg1_level_data.justified_level > arg2_level_data.justified_level)
           {
-            ir::Program::Ptr arg1_lowest_level =
+            ir::Term::Ptr arg1_lowest_level =
               program_->find_node_in_dataflow(make_leveled_node_label(arg1->get_label(), arg1_level_data.lowest_level));
             if (arg1_lowest_level == nullptr)
               throw logic_error("node lowest level not found in the data flow");
@@ -604,13 +609,13 @@ bool ParameterSelector::insert_mod_switch_bfv(
             while (arg1_level_data.lowest_level > arg2_level_data.justified_level)
             {
               --arg1_level_data.lowest_level;
-              ir::Program::Ptr mod_switch_node = program_->insert_operation_node_in_dataflow(
-                ir::OpCode::modswitch, vector<ir::Program::Ptr>({arg1_lowest_level}),
+              ir::Term::Ptr mod_switch_node = program_->insert_operation_node_in_dataflow(
+                ir::OpCode::modswitch, vector<ir::Term::Ptr>({arg1_lowest_level}),
                 make_leveled_node_label(arg1->get_label(), arg1_level_data.lowest_level), ir::TermType::ciphertext);
               arg1_lowest_level->add_parent_label(mod_switch_node->get_label());
               arg1_lowest_level = mod_switch_node;
             }
-            ir::Program::Ptr arg1_matching_level = program_->find_node_in_dataflow(
+            ir::Term::Ptr arg1_matching_level = program_->find_node_in_dataflow(
               make_leveled_node_label(arg1->get_label(), arg2_level_data.justified_level));
             if (arg1_matching_level == nullptr)
               throw logic_error("leveled version of node supposed to be present");
@@ -619,7 +624,7 @@ bool ParameterSelector::insert_mod_switch_bfv(
           }
           else if (arg1_level_data.justified_level < arg2_level_data.justified_level)
           {
-            ir::Program::Ptr arg2_lowest_level =
+            ir::Term::Ptr arg2_lowest_level =
               program_->find_node_in_dataflow(make_leveled_node_label(arg2->get_label(), arg2_level_data.lowest_level));
             if (arg2_lowest_level == nullptr)
               throw logic_error("node lowest level not found in the data flow");
@@ -628,13 +633,13 @@ bool ParameterSelector::insert_mod_switch_bfv(
             while (arg2_level_data.lowest_level > arg1_level_data.justified_level)
             {
               --arg2_level_data.lowest_level;
-              ir::Program::Ptr mod_switch_node = program_->insert_operation_node_in_dataflow(
-                ir::OpCode::modswitch, vector<ir::Program::Ptr>({arg2_lowest_level}),
+              ir::Term::Ptr mod_switch_node = program_->insert_operation_node_in_dataflow(
+                ir::OpCode::modswitch, vector<ir::Term::Ptr>({arg2_lowest_level}),
                 make_leveled_node_label(arg2->get_label(), arg2_level_data.lowest_level), ir::TermType::ciphertext);
               arg2_lowest_level->add_parent_label(mod_switch_node->get_label());
               arg2_lowest_level = mod_switch_node;
             }
-            ir::Program::Ptr arg2_matching_level = program_->find_node_in_dataflow(
+            ir::Term::Ptr arg2_matching_level = program_->find_node_in_dataflow(
               make_leveled_node_label(arg2->get_label(), arg2_level_data.justified_level));
             if (arg2_matching_level == nullptr)
               throw logic_error("leveled version of node supposed to be present");
@@ -687,13 +692,13 @@ bool ParameterSelector::insert_mod_switch_bfv(
         node_adapted_noise -= data_level_primes_sizes[i - 1];
 
       auto node_old_parents = node->get_parents_labels();
-      ir::Program::Ptr mod_switch_arg = node;
+      ir::Term::Ptr mod_switch_arg = node;
       while (node_level > 0 && node_adapted_noise > data_level_primes_sizes[node_level - 1] + safety_margin)
       {
         node_adapted_noise -= data_level_primes_sizes[node_level - 1];
         --node_level;
-        ir::Program::Ptr mod_switch_node = program_->insert_operation_node_in_dataflow(
-          ir::OpCode::modswitch, vector<ir::Program::Ptr>({mod_switch_arg}),
+        ir::Term::Ptr mod_switch_node = program_->insert_operation_node_in_dataflow(
+          ir::OpCode::modswitch, vector<ir::Term::Ptr>({mod_switch_arg}),
           make_leveled_node_label(node->get_label(), node_level), ir::TermType::ciphertext);
         mod_switch_arg->insert_parent_label(mod_switch_node->get_label());
         mod_switch_arg = mod_switch_node;
@@ -707,7 +712,7 @@ bool ParameterSelector::insert_mod_switch_bfv(
         used_mod_switch = true;
         for (const auto &parent_label : node_old_parents)
         {
-          ir::Program::Ptr parent = program_->find_node_in_dataflow(parent_label);
+          ir::Term::Ptr parent = program_->find_node_in_dataflow(parent_label);
           if (parent == nullptr)
             throw logic_error("parent node not found");
 
@@ -731,22 +736,22 @@ void apply_mod_switch_schedule(
 
   for (const auto &node_noise : nodes_noise)
   {
-    ir::Program::Ptr node = program->find_node_in_dataflow(node_noise.first);
+    ir::Term::Ptr node = program->find_node_in_dataflow(node_noise.first);
     if (node == nullptr)
       throw logic_error(
         "node handled in noise simulation yet not found in the data flow, label: '" + node_noise.first + "'");
 
-    ir::Program::Ptr mod_switch_arg = node;
+    ir::Term::Ptr mod_switch_arg = node;
     for (int i = 0; i < get<1>(node_noise.second); ++i)
     {
-      ir::Program::Ptr mod_switch_node = program->insert_operation_node_in_dataflow(
-        ir::OpCode::modswitch, vector<ir::Program::Ptr>({mod_switch_arg}), make_leveled_node_label(node_noise.first, i),
+      ir::Term::Ptr mod_switch_node = program->insert_operation_node_in_dataflow(
+        ir::OpCode::modswitch, vector<ir::Term::Ptr>({mod_switch_arg}), make_leveled_node_label(node_noise.first, i),
         ir::TermType::ciphertext);
       mod_switch_arg = mod_switch_node;
     }
     for (const auto &parent_label : node->get_parents_labels())
     {
-      ir::Program::Ptr parent = program->find_node_in_dataflow(parent_label);
+      ir::Term::Ptr parent = program->find_node_in_dataflow(parent_label);
       if (parent == nullptr)
         throw logic_error("parent node not found");
 
@@ -765,7 +770,7 @@ void apply_mod_switch_schedule(
     size_t highest_level = justified_level;
     for (const auto &mod_switch : node_level_matching_mod_switch.second)
     {
-      ir::Program::Ptr parent = program->find_node_in_dataflow(mod_switch.first);
+      ir::Term::Ptr parent = program->find_node_in_dataflow(mod_switch.first);
       if (parent == nullptr)
         throw logic_error(
           "node present as a parent in level matching map yet not found in the data flow, label: '" + mod_switch.first +
@@ -775,7 +780,7 @@ void apply_mod_switch_schedule(
 
       if (justified_level + mod_switch.second <= highest_level)
       {
-        ir::Program::Ptr new_child = program->find_node_in_dataflow(
+        ir::Term::Ptr new_child = program->find_node_in_dataflow(
           make_leveled_node_label(node_level_matching_mod_switch.first, justified_level + mod_switch.second));
         if (new_child == nullptr)
           throw logic_error(
@@ -786,7 +791,7 @@ void apply_mod_switch_schedule(
       }
       else
       {
-        ir::Program::Ptr node_highest_level =
+        ir::Term::Ptr node_highest_level =
           program->find_node_in_dataflow(make_leveled_node_label(node_level_matching_mod_switch.first, highest_level));
         if (node_highest_level == nullptr)
           throw logic_error(
@@ -795,8 +800,8 @@ void apply_mod_switch_schedule(
 
         while (highest_level < justified_level + mod_switch.second)
         {
-          ir::Program::Ptr mod_switch_node = program->insert_operation_node_in_dataflow(
-            ir::OpCode::modswitch, vector<ir::Program::Ptr>({node_highest_level}),
+          ir::Term::Ptr mod_switch_node = program->insert_operation_node_in_dataflow(
+            ir::OpCode::modswitch, vector<ir::Term::Ptr>({node_highest_level}),
             make_leveled_node_label(node_level_matching_mod_switch.first, highest_level), ir::TermType::ciphertext);
           node_highest_level = mod_switch_node;
           ++highest_level;

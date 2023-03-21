@@ -30,14 +30,11 @@ variables_values_map evaluate_on_clear(ir::Program *program, const variables_val
   variables_values_map temps_values;
   variables_values_map outputs_values;
   const auto &nodes = program->get_dataflow_sorted_nodes(true);
-  for (const auto node : nodes)
+  for (const auto &node : nodes)
   {
     auto node_value_it = temps_values.find(node->get_label());
     if (node_value_it != temps_values.end())
-    {
-      cout << node->get_label() << endl;
       throw logic_error("repeated node in dataflow_sorted_nodes");
-    }
 
     if (!node->is_operation_node())
     {

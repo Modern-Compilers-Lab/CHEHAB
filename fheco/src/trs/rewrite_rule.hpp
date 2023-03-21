@@ -60,7 +60,7 @@ public:
   bool evaluate_rewrite_condition(
     core::MatchingMap &matching_map, ir::Program *program, core::FunctionTable &functions_table) const;
 
-  std::optional<core::MatchingMap> match_with_ir_node(const ir::Program::Ptr &ir_node) const;
+  std::optional<core::MatchingMap> match_with_ir_node(const ir::Term::Ptr &ir_node) const;
 
   ~RewriteRule() {}
 };

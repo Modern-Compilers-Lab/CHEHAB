@@ -258,7 +258,7 @@ namespace core
       auto node_parents = ir_node->get_parents_labels();
       for (const auto &parent_label : node_parents)
       {
-        ir::Program::Ptr parent = program->find_node_in_dataflow(parent_label);
+        ir::Term::Ptr parent = program->find_node_in_dataflow(parent_label);
         if (parent == nullptr)
           throw std::logic_error("node parent not found");
 

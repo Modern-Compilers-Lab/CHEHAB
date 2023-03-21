@@ -473,7 +473,7 @@ int32_t get_rotation_step(const std::shared_ptr<ir::Term> &node)
   throw("invalid rotation node in get_rotation_step");
 }
 
-ir::TermType deduce_ir_term_type(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs)
+ir::TermType deduce_ir_term_type(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs)
 {
   if (lhs->get_term_type() == rhs->get_term_type())
     return lhs->get_term_type();

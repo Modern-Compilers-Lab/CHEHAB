@@ -11,7 +11,7 @@
 namespace translator
 {
 
-std::string Translator::get_identifier(const Ptr &term_ptr) const
+std::string Translator::get_identifier(const ir::Term::Ptr &term_ptr) const
 {
   if (program->get_entry_form_constants_table(term_ptr->get_label()) != std::nullopt)
   {
@@ -278,7 +278,7 @@ void Translator::translate_constant_table_entry(
   }
 }
 
-void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &os)
+void Translator::translate_binary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os)
 {
   std::string other_args(""); // this depends on the operation
   auto it = get_other_args_by_opcode.find(term_ptr->get_opcode());
@@ -298,12 +298,12 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
     os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
 }
 
-void Translator::translate_nary_operation(const Ptr &term_ptr, std::ofstream &os)
+void Translator::translate_nary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os)
 {
   std::cout << "translation of nary \n";
 }
 
-void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &os)
+void Translator::translate_unary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os)
 {
   std::string op_identifier = get_identifier(term_ptr);
   std::string rhs_identifier = get_identifier(term_ptr->get_operands()[0]);
@@ -320,7 +320,7 @@ void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &o
   }
 }
 
-void Translator::translate_term(const Ptr &term, std::ofstream &os)
+void Translator::translate_term(const ir::Term::Ptr &term, std::ofstream &os)
 {
 
   auto constant_table_entry_opt = program->get_entry_form_constants_table(term->get_label());
@@ -366,7 +366,7 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
   }
 }
 
-void Translator::translate_program(std::ofstream &os)
+void Translator::translate_program(std::ofstream &os, const std::set<int> &rotations_keys_steps)
 {
 
   os << headers_include;
@@ -375,16 +375,16 @@ void Translator::translate_program(std::ofstream &os)
 
   os << "\n";
 
-  if (program->get_rotations_keys_steps().size())
-    write_rotations_steps_getter(program->get_rotations_keys_steps(), os);
+  if (rotations_keys_steps.size())
+    write_rotations_steps_getter(rotations_keys_steps, os);
 
   generate_function_signature(os);
   os << "{" << '\n';
 
-  convert_to_inplace_pass();
+  // convert_to_inplace_pass();
 
   {
-    const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(false);
+    const std::vector<ir::Term::Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(false);
 
     // after doing all passes, now we do the last pass to translate and generate the code
     for (auto &node_ptr : nodes_ptr)
@@ -459,7 +459,7 @@ void Translator::generate_key_generator(std::ofstream &os) const
   os << key_generator_type_literal << " " << key_generator_identifier << "(" << context_identifier << ");\n";
 }
 
-ir::OpCode Translator::deduce_opcode_to_generate(const Ptr &node) const
+ir::OpCode Translator::deduce_opcode_to_generate(const ir::Term::Ptr &node) const
 {
   if (node->is_operation_node() == false)
     return node->get_opcode();

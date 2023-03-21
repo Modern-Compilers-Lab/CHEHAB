@@ -1,4 +1,5 @@
 #include "ops_overloads.hpp"
+#include "compiler.hpp"
 
 namespace fhecompiler
 {
@@ -205,9 +206,9 @@ Ciphertext &Ciphertext::operator>>=(int steps)
 
 Ciphertext rotate(const Ciphertext &lhs, int steps)
 {
-  steps = steps % program->get_vector_size();
+  steps = steps % Compiler::get_active()->get_vector_size();
   if (steps < 0)
-    steps += program->get_vector_size();
+    steps += Compiler::get_active()->get_vector_size();
   return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), ir::OpCode::rotate, ir::TermType::ciphertext);
 }
 

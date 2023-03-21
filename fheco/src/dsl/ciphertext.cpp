@@ -1,12 +1,8 @@
 #include "ciphertext.hpp"
+#include "compiler.hpp"
 #include "datatypes_util.hpp"
-#include "program.hpp"
 #include "term.hpp"
 #include <memory>
-
-using namespace datatype;
-
-extern ir::Program *program;
 
 namespace fhecompiler
 {
@@ -41,7 +37,7 @@ Ciphertext::Ciphertext(Ciphertext &&ct_move)
 
 Ciphertext Ciphertext::encrypt(const Plaintext &pt)
 {
-  auto pt_ptr = program->find_node_in_dataflow(pt.get_label());
+  auto pt_ptr = Compiler::get_active()->find_node_in_dataflow(pt.get_label());
   if (pt_ptr == nullptr)
   {
     throw("plaintext to encrypt is not defined, maybe it is only declared.\n");
@@ -54,7 +50,7 @@ Ciphertext::Ciphertext(const std::string &tag, VarType var_type)
 {
   if (var_type == VarType::input)
   {
-    program->insert_node_in_dataflow(*this);
+    Compiler::get_active()->insert_node_in_dataflow(*this);
   }
   operate_in_constants_table(this->label, tag, var_type);
 }
@@ -67,8 +63,8 @@ Ciphertext &Ciphertext::operator=(const Ciphertext &ct_copy)
 Ciphertext::Ciphertext(const Ciphertext &ct_copy) : label(datatype::ct_label_prefix + std::to_string(ciphertext_id++))
 {
   /*
-  auto ct_copy_node_ptr = program->insert_node_in_dataflow<Ciphertext>(ct_copy);
-  program->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, this->label,
+  auto ct_copy_node_ptr = Compiler::get_active()->insert_node_in_dataflow<Ciphertext>(ct_copy);
+  Compiler::get_active()->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, this->label,
   ir::TermType::ciphertext);
   */
   operate_copy<Ciphertext>(*this, ct_copy, ir::TermType::ciphertext);
@@ -112,7 +108,7 @@ Ciphertext Ciphertext::operator-()
 
 std::string Ciphertext::get_term_tag()
 {
-  auto table_entry = program->get_entry_form_constants_table(this->label);
+  auto table_entry = Compiler::get_active()->get_entry_form_constants_table(this->label);
   if (table_entry != std::nullopt)
   {
     ir::ConstantTableEntry table_entry_dereferenced = *table_entry;
@@ -124,7 +120,7 @@ std::string Ciphertext::get_term_tag()
 
 bool Ciphertext::is_output() const
 {
-  return (program->type_of(this->label) == ir::ConstantTableEntryType::output);
+  return (Compiler::get_active()->type_of(this->label) == ir::ConstantTableEntryType::output);
 }
 
 } // namespace fhecompiler

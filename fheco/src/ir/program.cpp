@@ -1,5 +1,5 @@
 #include "program.hpp"
-#include <unordered_set>
+
 namespace ir
 {
 
@@ -200,7 +200,7 @@ void Program::compact_assignement(const ir::Term::Ptr &node_ptr)
   }
 }
 
-void Program::flatten_term_operand_by_one_level_at_index(const ir::Program::Ptr &node_term, size_t index)
+void Program::flatten_term_operand_by_one_level_at_index(const ir::Term::Ptr &node_term, size_t index)
 {
   /*
     t2 = a+b
@@ -214,7 +214,7 @@ void Program::flatten_term_operand_by_one_level_at_index(const ir::Program::Ptr 
   if (node_term->is_operation_node() == false)
     return;
 
-  auto flattening_condition = [this](const ir::Program::Ptr &operand) -> bool {
+  auto flattening_condition = [this](const ir::Term::Ptr &operand) -> bool {
     if (operand->is_operation_node() == false)
       return false;
     if (type_of(operand->get_label()) == ir::ConstantTableEntryType::output)

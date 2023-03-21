@@ -1,12 +1,8 @@
 #include "plaintext.hpp"
+#include "compiler.hpp"
 #include "datatypes_util.hpp"
-#include "program.hpp"
 #include "term.hpp"
 #include <memory>
-
-using namespace datatype;
-
-extern ir::Program *program;
 
 namespace fhecompiler
 {
@@ -36,12 +32,13 @@ Plaintext::Plaintext(const std::vector<std::int64_t> &message)
 {
 
   /*
-  if ((size_t)message.size() > program->get_dimension())
+  if ((size_t)message.size() > Compiler::get_active()->get_dimension())
     throw("Number of messages in one vector is larger than the expcted value ");
   */
 
-  program->insert_node_in_dataflow<Plaintext>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
+  Compiler::get_active()->insert_node_in_dataflow<Plaintext>(*this);
+  Compiler::get_active()->insert_entry_in_constants_table(
+    {this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
 }
 
 Plaintext::Plaintext(const std::vector<std::uint64_t> &message)
@@ -49,19 +46,21 @@ Plaintext::Plaintext(const std::vector<std::uint64_t> &message)
 {
 
   /*
-  if ((size_t)message.size() > program->get_dimension())
+  if ((size_t)message.size() > Compiler::get_active()->get_dimension())
     throw("Number of messages in one vector is larger than the expcted value ");
   */
 
-  program->insert_node_in_dataflow<Plaintext>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
+  Compiler::get_active()->insert_node_in_dataflow<Plaintext>(*this);
+  Compiler::get_active()->insert_entry_in_constants_table(
+    {this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
 }
 
 Plaintext::Plaintext(const std::vector<double> &message)
   : label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++))
 {
-  program->insert_node_in_dataflow<Plaintext>(*this);
-  program->insert_entry_in_constants_table({this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
+  Compiler::get_active()->insert_node_in_dataflow<Plaintext>(*this);
+  Compiler::get_active()->insert_entry_in_constants_table(
+    {this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
 }
 
 Plaintext::Plaintext(const std::string &tag, VarType var_type)
@@ -69,7 +68,7 @@ Plaintext::Plaintext(const std::string &tag, VarType var_type)
 {
   if (var_type == VarType::input)
   {
-    program->insert_node_in_dataflow(*this);
+    Compiler::get_active()->insert_node_in_dataflow(*this);
   }
   // we are expecting from the user to provide a tag for input
   operate_in_constants_table(this->label, tag, var_type);
@@ -84,8 +83,8 @@ Plaintext::Plaintext(const Plaintext &pt_copy) : label(datatype::pt_label_prefix
 {
   operate_copy<Plaintext>(*this, pt_copy, ir::TermType::plaintext);
   /*
-  auto pt_copy_node_ptr = program->insert_node_in_dataflow<Plaintext>(pt_copy);
-  program->insert_operation_node_in_dataflow(ir::OpCode::assign, {pt_copy_node_ptr}, this->label,
+  auto pt_copy_node_ptr = Compiler::get_active()->insert_node_in_dataflow<Plaintext>(pt_copy);
+  Compiler::get_active()->insert_operation_node_in_dataflow(ir::OpCode::assign, {pt_copy_node_ptr}, this->label,
   ir::TermType::plaintext);
   */
   // std::cout << this->label << " = " << pt_copy.get_label() << "\n";

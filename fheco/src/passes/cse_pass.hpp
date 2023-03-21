@@ -1,5 +1,7 @@
 #pragma once
+
 #include "program.hpp"
+#include <memory>
 #include <sstream>
 
 namespace fheco_passes
@@ -7,18 +9,17 @@ namespace fheco_passes
 
 struct SEid
 {
-  ir::Program::Ptr expr_ptr;
-  ir::Program::Ptr lhs;
-  ir::Program::Ptr rhs;
+  ir::Term::Ptr expr_ptr;
+  ir::Term::Ptr lhs;
+  ir::Term::Ptr rhs;
   ir::OpCode opcode = ir::OpCode::undefined;
 
   SEid() = default;
 
-  SEid(const ir::Program::Ptr &_lhs, const ir::Program::Ptr &_rhs, ir::OpCode _opcode)
-    : lhs(_lhs), rhs(_rhs), opcode(_opcode)
+  SEid(const ir::Term::Ptr &_lhs, const ir::Term::Ptr &_rhs, ir::OpCode _opcode) : lhs(_lhs), rhs(_rhs), opcode(_opcode)
   {}
 
-  SEid(const ir::Program::Ptr &term_node)
+  SEid(const ir::Term::Ptr &term_node)
   {
     if (term_node->is_operation_node())
     {
@@ -44,15 +45,15 @@ struct SEidHash
   {
     if (seid.opcode == ir::OpCode::undefined)
     {
-      return std::hash<ir::Program::Ptr>{}(seid.expr_ptr);
+      return std::hash<ir::Term::Ptr>{}(seid.expr_ptr);
     }
     else
     {
       if (seid.lhs && seid.rhs) // binary operations
-        return std::hash<ir::Program::Ptr>{}(seid.lhs) ^ (std::hash<size_t>{}(static_cast<size_t>(seid.opcode))) ^
-               (std::hash<ir::Program::Ptr>{}(seid.rhs));
+        return std::hash<ir::Term::Ptr>{}(seid.lhs) ^ (std::hash<size_t>{}(static_cast<size_t>(seid.opcode))) ^
+               (std::hash<ir::Term::Ptr>{}(seid.rhs));
       else if (seid.lhs) // unary operations
-        return std::hash<ir::Program::Ptr>{}(seid.lhs) ^ (std::hash<size_t>{}(static_cast<size_t>(seid.opcode)));
+        return std::hash<ir::Term::Ptr>{}(seid.lhs) ^ (std::hash<size_t>{}(static_cast<size_t>(seid.opcode)));
     }
   }
   */
@@ -79,24 +80,24 @@ struct SEidHash
 class CSE
 {
 private:
-  ir::Program *program;
+  std::shared_ptr<ir::Program> program;
 
-  bool check_syntactical_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs); // syntactical equality
+  bool check_syntactical_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs); // syntactical equality
 
-  bool check_constants_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs);
+  bool check_constants_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs);
 
-  bool check_raw_data_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs);
+  bool check_raw_data_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs);
 
-  bool check_scalars_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs);
+  bool check_scalars_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs);
 
-  bool check_plains_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs);
+  bool check_plains_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs);
 
-  bool check_inputs_equality(const ir::Program::Ptr &lhs, const ir::Program::Ptr &rhs);
+  bool check_inputs_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs);
 
-  // std::string calculate_id(const ir::Program::Ptr &term);
+  // std::string calculate_id(const ir::Term::Ptr &term);
 
 public:
-  CSE(ir::Program *prgm) : program(prgm) {}
+  CSE(const std::shared_ptr<ir::Program> &prgm) : program(prgm) {}
   // void apply_cse();
   /*
     This function apply CSE on the program (mainly IR). by allowing insertion of assign operator node you will gain one
