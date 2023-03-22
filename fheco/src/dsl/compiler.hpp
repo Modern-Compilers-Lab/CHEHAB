@@ -73,10 +73,10 @@ public:
     return count_main_node_classes(active_func_);
   }
 
-  static inline void init_input(const std::string &label)
+  static inline void init_input(const std::string &label, const std::string &tag)
   {
     FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
-    func_entry.init_input(label);
+    func_entry.init_input(label, tag);
   }
 
   template <typename T>
@@ -145,7 +145,7 @@ private:
 
     const utils::variables_values_map::mapped_type &get_node_value(const std::string &label) const;
 
-    void init_input(const std::string &label);
+    void init_input(const std::string &label, const std::string &tag);
 
     void add_const_node_value(const std::string &label, const utils::variables_values_map::mapped_type &value);
 

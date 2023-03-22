@@ -76,7 +76,17 @@ variables_values_map evaluate_on_clear(ir::Program *program, const variables_val
       }
       case ir::ConstantTableEntryType::input:
       {
-        auto input_node_it = inputs_values.find(node->get_label());
+        string node_tag;
+        auto const_table_entry_opt = program->get_entry_form_constants_table(node->get_label());
+        if (const_table_entry_opt.has_value())
+        {
+          ir::ConstantTableEntry const_table_entry = *const_table_entry_opt;
+          node_tag = const_table_entry.get_entry_value().tag;
+        }
+        else
+          throw logic_error("input node without entry in const table (no tag)");
+
+        auto input_node_it = inputs_values.find(node_tag);
         if (input_node_it == inputs_values.end())
           throw invalid_argument("input variable value not provided");
 
@@ -370,7 +380,16 @@ variables_values_map evaluate_on_clear(ir::Program *program, const variables_val
         throw logic_error("operation node with invalid number of operands (not 1 nor 2)");
 
       if (program->type_of(node->get_label()) == ir::ConstantTableEntryType::output)
-        outputs_values.insert({node->get_label(), temps_values[node->get_label()]});
+      {
+        auto const_table_entry_opt = program->get_entry_form_constants_table(node->get_label());
+        if (const_table_entry_opt.has_value())
+        {
+          ir::ConstantTableEntry const_table_entry = *const_table_entry_opt;
+          outputs_values.insert({const_table_entry.get_entry_value().tag, temps_values[node->get_label()]});
+        }
+        else
+          throw logic_error("output node without entry in const table (no tag)");
+      }
     }
   }
   return outputs_values;

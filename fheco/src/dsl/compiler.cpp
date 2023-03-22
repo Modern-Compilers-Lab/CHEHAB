@@ -105,7 +105,7 @@ const utils::variables_values_map::mapped_type &Compiler::FuncEntry::get_node_va
   return node_value_it->second;
 }
 
-void Compiler::FuncEntry::init_input(const string &label)
+void Compiler::FuncEntry::init_input(const string &label, const string &tag)
 {
   auto node_it = nodes_values.find(label);
   if (node_it != nodes_values.end())
@@ -115,17 +115,16 @@ void Compiler::FuncEntry::init_input(const string &label)
   {
     vector<int64_t> random_value(func->get_vector_size());
     utils::init_random(random_value, -100, 100);
-    utils::variables_values_map::value_type node_entry = {label, random_value};
-    nodes_values.insert(node_entry);
-    inputs_values.insert(node_entry);
+    nodes_values.insert({label, random_value});
+    inputs_values.insert({tag, random_value});
   }
   else
   {
     vector<uint64_t> random_value(func->get_vector_size());
     utils::init_random(random_value, 0, 100);
     utils::variables_values_map::value_type node_entry = {label, random_value};
-    nodes_values.insert(node_entry);
-    inputs_values.insert(node_entry);
+    nodes_values.insert({label, random_value});
+    inputs_values.insert({tag, random_value});
   }
 }
 
@@ -206,7 +205,16 @@ void Compiler::FuncEntry::operate_unary(
     throw logic_error("could not get child value");
 
   if (is_output)
-    outputs_values[destination] = nodes_values[destination];
+  {
+    auto const_table_entry_opt = func->get_entry_form_constants_table(destination);
+    if (const_table_entry_opt.has_value())
+    {
+      ir::ConstantTableEntry const_table_entry = *const_table_entry_opt;
+      outputs_values[const_table_entry.get_entry_value().tag] = nodes_values[destination];
+    }
+    else
+      throw logic_error("output node without entry in const table (no tag)");
+  }
 }
 
 void Compiler::FuncEntry::operate_binary(
@@ -346,7 +354,16 @@ void Compiler::FuncEntry::operate_binary(
     break;
   }
   if (is_output)
-    outputs_values[destination] = nodes_values[destination];
+  {
+    auto const_table_entry_opt = func->get_entry_form_constants_table(destination);
+    if (const_table_entry_opt.has_value())
+    {
+      ir::ConstantTableEntry const_table_entry = *const_table_entry_opt;
+      outputs_values[const_table_entry.get_entry_value().tag] = nodes_values[destination];
+    }
+    else
+      throw logic_error("output node without entry in const table (no tag)");
+  }
 }
 
 void Compiler::FuncEntry::operate_rotate(const string &arg, int step, const std::string &destination, bool is_output)
@@ -372,7 +389,16 @@ void Compiler::FuncEntry::operate_rotate(const string &arg, int step, const std:
     throw logic_error("could not get child value");
 
   if (is_output)
-    outputs_values[destination] = nodes_values[destination];
+  {
+    auto const_table_entry_opt = func->get_entry_form_constants_table(destination);
+    if (const_table_entry_opt.has_value())
+    {
+      ir::ConstantTableEntry const_table_entry = *const_table_entry_opt;
+      outputs_values[const_table_entry.get_entry_value().tag] = nodes_values[destination];
+    }
+    else
+      throw logic_error("output node without entry in const table (no tag)");
+  }
 }
 
 } // namespace fhecompiler
