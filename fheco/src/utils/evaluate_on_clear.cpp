@@ -90,6 +90,8 @@ variables_values_map evaluate_on_clear(ir::Program *program, const variables_val
       }
       case ir::ConstantTableEntryType::undefined:
         // throw logic_error("maybe raw_data");
+        if (node->get_term_type() != ir::TermType::rawData)
+          throw logic_error("leaf node without value");
         break;
       default:
         throw logic_error("leaf node not input nor const");

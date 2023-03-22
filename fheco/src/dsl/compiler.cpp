@@ -7,7 +7,9 @@
 #include "ruleset.hpp"
 #include "translator.hpp"
 #include "trs.hpp"
+#include <cstdint>
 #include <set>
+#include <variant>
 
 using namespace std;
 
@@ -15,19 +17,21 @@ namespace fhecompiler
 {
 
 shared_ptr<ir::Program> Compiler::active_func_;
-unordered_map<std::string, std::shared_ptr<ir::Program>> Compiler::funcs_table_;
+unordered_map<string, Compiler::FuncEntry> Compiler::funcs_table_;
+utils::ClearDataEvaluator Compiler::clear_data_evaluator;
 
-void Compiler::create_func(const std::string &name, size_t vector_size, int bit_width, bool signedness, Scheme scheme)
+void Compiler::create_func(const string &name, size_t vector_size, int bit_width, bool signedness, Scheme scheme)
 {
   auto function_it = funcs_table_.find(name);
   if (function_it != funcs_table_.end())
     throw invalid_argument("funciton with this name already exists");
 
   active_func_ = make_shared<ir::Program>(name, bit_width, signedness, vector_size, scheme);
-  funcs_table_.insert({name, active_func_});
+  clear_data_evaluator = utils::ClearDataEvaluator(vector_size, bit_width, signedness);
+  funcs_table_.insert({name, {active_func_}});
 }
 
-void Compiler::delete_func(const std::string &name)
+void Compiler::delete_func(const string &name)
 {
   auto function_it = funcs_table_.find(name);
   if (function_it == funcs_table_.end())
@@ -38,13 +42,15 @@ void Compiler::delete_func(const std::string &name)
     active_func_ = nullptr;
 }
 
-void Compiler::set_active(const std::string &func_name)
+void Compiler::set_active(const string &func_name)
 {
   auto function_it = funcs_table_.find(func_name);
   if (function_it == funcs_table_.end())
     throw invalid_argument("no function with this name was found");
 
-  active_func_ = function_it->second;
+  active_func_ = function_it->second.func;
+  clear_data_evaluator = utils::ClearDataEvaluator(
+    active_func_->get_vector_size(), active_func_->get_bit_width(), active_func_->get_signedness());
 }
 
 void Compiler::compile(
@@ -77,7 +83,7 @@ void Compiler::compile(
 
   translator::Translator tr(func, sec_level, params, uses_mod_switch);
   {
-    std::ofstream translation_os(output_file);
+    ofstream translation_os(output_file);
 
     if (!translation_os)
       throw("couldn't open file for translation.\n");
@@ -88,6 +94,285 @@ void Compiler::compile(
   }
 
   draw_ir(func, output_file + "4.dot");
+}
+
+const utils::variables_values_map::mapped_type &Compiler::FuncEntry::get_node_value(const std::string &label) const
+{
+  auto node_value_it = nodes_values.find(label);
+  if (node_value_it == nodes_values.end())
+    throw invalid_argument("node value not available");
+
+  return node_value_it->second;
+}
+
+void Compiler::FuncEntry::init_input(const string &label)
+{
+  auto node_it = nodes_values.find(label);
+  if (node_it != nodes_values.end())
+    throw logic_error("input node already initialized");
+
+  if (func->get_signedness())
+  {
+    vector<int64_t> random_value(func->get_vector_size());
+    utils::init_random(random_value, -100, 100);
+    utils::variables_values_map::value_type node_entry = {label, random_value};
+    nodes_values.insert(node_entry);
+    inputs_values.insert(node_entry);
+  }
+  else
+  {
+    vector<uint64_t> random_value(func->get_vector_size());
+    utils::init_random(random_value, 0, 100);
+    utils::variables_values_map::value_type node_entry = {label, random_value};
+    nodes_values.insert(node_entry);
+    inputs_values.insert(node_entry);
+  }
+}
+
+void Compiler::FuncEntry::add_const_node_value(
+  const string &label, const utils::variables_values_map::mapped_type &value)
+{
+  auto node_it = nodes_values.find(label);
+  if (node_it != nodes_values.end())
+    throw logic_error("node value already added");
+
+  utils::variables_values_map::value_type node_entry = {label, value};
+  nodes_values.insert(node_entry);
+}
+
+void Compiler::FuncEntry::operate_unary(
+  ir::OpCode op, const string &arg, const std::string &destination, bool is_output)
+{
+  // auto destination_value_it = nodes_values.find(destination);
+  // if (destination_value_it != nodes_values.end())
+  //   throw logic_error("destination node already has a value");
+
+  auto arg_value_var = get_node_value(arg);
+  if (auto arg_value = get_if<vector<int64_t>>(&arg_value_var))
+  {
+    switch (op)
+    {
+    case ir::OpCode::encrypt:
+    case ir::OpCode::assign:
+      nodes_values[destination] = *arg_value;
+      break;
+    case ir::OpCode::negate:
+    {
+      vector<int64_t> destination_value;
+      clear_data_evaluator.negate(*arg_value, destination_value);
+      nodes_values[destination] = destination_value;
+      break;
+    }
+    case ir::OpCode::square:
+    {
+      vector<int64_t> destination_value;
+      clear_data_evaluator.multiply(*arg_value, *arg_value, destination_value);
+      nodes_values[destination] = destination_value;
+      break;
+    }
+    default:
+      throw logic_error("unhandled unary operation");
+      break;
+    }
+  }
+  else if (auto arg_value = get_if<vector<uint64_t>>(&arg_value_var))
+  {
+    switch (op)
+    {
+    case ir::OpCode::encrypt:
+    case ir::OpCode::assign:
+      nodes_values[destination] = *arg_value;
+      break;
+    case ir::OpCode::negate:
+    {
+      vector<uint64_t> destination_value;
+      clear_data_evaluator.negate(*arg_value, destination_value);
+      nodes_values[destination] = destination_value;
+      break;
+    }
+    case ir::OpCode::square:
+    {
+      vector<uint64_t> destination_value;
+      clear_data_evaluator.multiply(*arg_value, *arg_value, destination_value);
+      nodes_values[destination] = destination_value;
+      break;
+    }
+    default:
+      throw logic_error("unhandled unary operation");
+      break;
+    }
+  }
+  else
+    throw logic_error("could not get child value");
+
+  if (is_output)
+    outputs_values[destination] = nodes_values[destination];
+}
+
+void Compiler::FuncEntry::operate_binary(
+  ir::OpCode op, const string &arg1, const string &arg2, const std::string &destination, bool is_output)
+{
+  // auto destination_value_it = nodes_values.find(destination);
+  // if (destination_value_it != nodes_values.end())
+  //   throw logic_error("destination node already has a value");
+
+  auto arg1_value_var = get_node_value(arg1);
+  auto arg2_value_var = get_node_value(arg2);
+
+  switch (op)
+  {
+  case ir::OpCode::add:
+  {
+    if (auto arg1_value = get_if<vector<int64_t>>(&arg1_value_var))
+    {
+      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
+      {
+        vector<int64_t> destination_value;
+        clear_data_evaluator.add(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
+      {
+        vector<uint64_t> destination_value;
+        clear_data_evaluator.add(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else
+        throw logic_error("could not get child value");
+    }
+    else if (auto arg1_value = get_if<vector<uint64_t>>(&arg1_value_var))
+    {
+      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
+      {
+        vector<uint64_t> destination_value;
+        clear_data_evaluator.add(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
+      {
+        vector<uint64_t> destination_value;
+        clear_data_evaluator.add(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else
+        throw logic_error("could not get child value");
+    }
+    else
+      throw logic_error("could not get child value");
+    break;
+  }
+  case ir::OpCode::sub:
+  {
+    if (auto arg1_value = get_if<vector<int64_t>>(&arg1_value_var))
+    {
+      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
+      {
+        vector<int64_t> destination_value;
+        clear_data_evaluator.sub(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
+      {
+        vector<uint64_t> destination_value;
+        clear_data_evaluator.sub(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else
+        throw logic_error("could not get child value");
+    }
+    else if (auto arg1_value = get_if<vector<uint64_t>>(&arg1_value_var))
+    {
+      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
+      {
+        vector<uint64_t> destination_value;
+        clear_data_evaluator.sub(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
+      {
+        vector<uint64_t> destination_value;
+        clear_data_evaluator.sub(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else
+        throw logic_error("could not get child value");
+    }
+    else
+      throw logic_error("could not get child value");
+    break;
+  }
+  case ir::OpCode::mul:
+  {
+    if (auto arg1_value = get_if<vector<int64_t>>(&arg1_value_var))
+    {
+      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
+      {
+        vector<int64_t> destination_value;
+        clear_data_evaluator.multiply(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
+      {
+        vector<uint64_t> destination_value;
+        clear_data_evaluator.multiply(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else
+        throw logic_error("could not get child value");
+    }
+    else if (auto arg1_value = get_if<vector<uint64_t>>(&arg1_value_var))
+    {
+      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
+      {
+        vector<uint64_t> destination_value;
+        clear_data_evaluator.multiply(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
+      {
+        vector<uint64_t> destination_value;
+        clear_data_evaluator.multiply(*arg1_value, *arg2_value, destination_value);
+        nodes_values[destination] = destination_value;
+      }
+      else
+        throw logic_error("could not get child value");
+    }
+    else
+      throw logic_error("could not get child value");
+    break;
+  }
+  default:
+    throw logic_error("unhandled binary operation");
+    break;
+  }
+  if (is_output)
+    outputs_values[destination] = nodes_values[destination];
+}
+
+void Compiler::FuncEntry::operate_rotate(const string &arg, int step, const std::string &destination, bool is_output)
+{
+  // auto destination_value_it = nodes_values.find(destination);
+  // if (destination_value_it != nodes_values.end())
+  //   throw logic_error("destination node already has a value");
+
+  auto arg_value_var = get_node_value(arg);
+  if (auto arg_value = get_if<vector<int64_t>>(&arg_value_var))
+  {
+    vector<int64_t> destination_value;
+    clear_data_evaluator.rotate(*arg_value, step, destination_value);
+    nodes_values[destination] = destination_value;
+  }
+  else if (auto arg_value = get_if<vector<uint64_t>>(&arg_value_var))
+  {
+    vector<uint64_t> destination_value;
+    clear_data_evaluator.rotate(*arg_value, step, destination_value);
+    nodes_values[destination] = destination_value;
+  }
+  else
+    throw logic_error("could not get child value");
+
+  if (is_output)
+    outputs_values[destination] = nodes_values[destination];
 }
 
 } // namespace fhecompiler

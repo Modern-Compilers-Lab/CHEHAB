@@ -12,6 +12,8 @@ namespace utils
 class ClearDataEvaluator
 {
 public:
+  ClearDataEvaluator() {}
+
   ClearDataEvaluator(std::size_t vector_size, int bit_width, bool signedness)
     : vector_size_(vector_size), max_value_((2 << (bit_width - 1)) - 1), signedness_(signedness)
   {
@@ -151,9 +153,9 @@ public:
   }
 
 private:
-  std::size_t vector_size_;
-  bool signedness_;
-  long long max_value_;
+  std::size_t vector_size_ = 0;
+  bool signedness_ = true;
+  long long max_value_ = 0;
 };
 
 } // namespace utils

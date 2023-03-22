@@ -21,14 +21,14 @@ int main()
   fhecompiler::Ciphertext output("output", fhecompiler::VarType::output);
   output = c6;
 
-  vector<int64_t> random_c0(8);
-  utils::init_random(random_c0, -100, 100);
-
-  utils::variables_values_map inputs_values = {{c0.get_label(), random_c0}};
+  const utils::variables_values_map &inputs_values = fhecompiler::Compiler::get_input_values();
 
   utils::print_variables_values(inputs_values);
 
   auto clear_outputs1 = fhecompiler::Compiler::evaluate_on_clear(inputs_values);
+
+  if (clear_outputs1 != fhecompiler::Compiler::get_output_values())
+    throw logic_error("clear_outputs1 != fhecompiler::Compiler::get_output_values()");
 
   fhecompiler::Compiler::compile("box_blur.hpp");
 

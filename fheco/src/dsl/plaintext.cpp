@@ -36,6 +36,7 @@ Plaintext::Plaintext(const std::vector<std::int64_t> &message)
     throw("Number of messages in one vector is larger than the expcted value ");
   */
 
+  Compiler::add_const_node_value(label, message);
   Compiler::get_active()->insert_node_in_dataflow<Plaintext>(*this);
   Compiler::get_active()->insert_entry_in_constants_table(
     {this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
@@ -50,6 +51,7 @@ Plaintext::Plaintext(const std::vector<std::uint64_t> &message)
     throw("Number of messages in one vector is larger than the expcted value ");
   */
 
+  Compiler::add_const_node_value(label, message);
   Compiler::get_active()->insert_node_in_dataflow<Plaintext>(*this);
   Compiler::get_active()->insert_entry_in_constants_table(
     {this->label, {ir::ConstantTableEntryType::constant, {label, message}}});
@@ -68,6 +70,7 @@ Plaintext::Plaintext(const std::string &tag, VarType var_type)
 {
   if (var_type == VarType::input)
   {
+    Compiler::init_input(label);
     Compiler::get_active()->insert_node_in_dataflow(*this);
   }
   // we are expecting from the user to provide a tag for input

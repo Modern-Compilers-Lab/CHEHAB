@@ -50,6 +50,7 @@ Ciphertext::Ciphertext(const std::string &tag, VarType var_type)
 {
   if (var_type == VarType::input)
   {
+    Compiler::init_input(label);
     Compiler::get_active()->insert_node_in_dataflow(*this);
   }
   operate_in_constants_table(this->label, tag, var_type);
