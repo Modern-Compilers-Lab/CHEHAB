@@ -213,7 +213,6 @@ void serialize_bfv_noise_experiments(
       file << ",";
   }
   file << "}" << endl;
-  file.close();
 }
 
 void print_parameters(const SEALContext &context)

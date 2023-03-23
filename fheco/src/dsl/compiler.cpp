@@ -8,6 +8,7 @@
 #include "translator.hpp"
 #include "trs.hpp"
 #include <cstdint>
+#include <fstream>
 #include <set>
 #include <variant>
 
@@ -126,6 +127,7 @@ void Compiler::FuncEntry::init_input(const string &label, const string &tag)
     nodes_values.insert({label, random_value});
     inputs_values.insert({tag, random_value});
   }
+  tags_labels[tag] = label;
 }
 
 void Compiler::FuncEntry::add_const_node_value(
@@ -206,14 +208,16 @@ void Compiler::FuncEntry::operate_unary(
 
   if (is_output)
   {
-    auto const_table_entry_opt = func->get_entry_form_constants_table(destination);
-    if (const_table_entry_opt.has_value())
+    try
     {
-      ir::ConstantTableEntry const_table_entry = *const_table_entry_opt;
-      outputs_values[const_table_entry.get_entry_value().tag] = nodes_values[destination];
+      string tag = func->get_tag_value_in_constants_table_entry(destination);
+      outputs_values[tag] = nodes_values[destination];
+      tags_labels[tag] = destination;
     }
-    else
+    catch (const std::string &e)
+    {
       throw logic_error("output node without entry in const table (no tag)");
+    }
   }
 }
 
@@ -355,14 +359,16 @@ void Compiler::FuncEntry::operate_binary(
   }
   if (is_output)
   {
-    auto const_table_entry_opt = func->get_entry_form_constants_table(destination);
-    if (const_table_entry_opt.has_value())
+    try
     {
-      ir::ConstantTableEntry const_table_entry = *const_table_entry_opt;
-      outputs_values[const_table_entry.get_entry_value().tag] = nodes_values[destination];
+      string tag = func->get_tag_value_in_constants_table_entry(destination);
+      outputs_values[tag] = nodes_values[destination];
+      tags_labels[tag] = destination;
     }
-    else
+    catch (const std::string &e)
+    {
       throw logic_error("output node without entry in const table (no tag)");
+    }
   }
 }
 
@@ -390,14 +396,109 @@ void Compiler::FuncEntry::operate_rotate(const string &arg, int step, const std:
 
   if (is_output)
   {
-    auto const_table_entry_opt = func->get_entry_form_constants_table(destination);
-    if (const_table_entry_opt.has_value())
+    try
     {
-      ir::ConstantTableEntry const_table_entry = *const_table_entry_opt;
-      outputs_values[const_table_entry.get_entry_value().tag] = nodes_values[destination];
+      string tag = func->get_tag_value_in_constants_table_entry(destination);
+      outputs_values[tag] = nodes_values[destination];
+      tags_labels[tag] = destination;
     }
-    else
+    catch (const std::string &e)
+    {
       throw logic_error("output node without entry in const table (no tag)");
+    }
+  }
+}
+
+void Compiler::FuncEntry::serialize_inputs_outputs(
+  const utils::variables_values_map &inputs, const utils::variables_values_map &outputs, const string &file_name) const
+{
+  if (inputs.size() != inputs_values.size())
+    throw invalid_argument("invalid number of inputs");
+
+  if (outputs.size() != outputs.size())
+    throw invalid_argument("invalid number of outputs");
+
+  ofstream file(file_name);
+  auto value_var_visitor = [&file](const auto &value) {
+    for (auto it = value.begin(); it != value.end() - 1; ++it)
+      file << *it << " ";
+    file << *value.rbegin();
+  };
+
+  file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << endl;
+  for (const auto &v : inputs)
+  {
+    if (inputs_values.find(v.first) == inputs_values.end())
+      throw invalid_argument("invalid input tag");
+
+    auto v_label_it = tags_labels.find(v.first);
+    if (v_label_it == tags_labels.end())
+      throw logic_error("input variable without label in tags_labels");
+
+    const auto &node = func->find_node_in_dataflow(v_label_it->second);
+    if (!node)
+      throw logic_error("input node not found in the data flow");
+
+    file << (node->get_term_type() == ir::TermType::ciphertext) << " " << v.first << " ";
+    visit(value_var_visitor, v.second);
+    file << endl;
+  }
+  for (const auto &v : outputs)
+  {
+    if (outputs_values.find(v.first) == outputs_values.end())
+      throw invalid_argument("invalid output tag");
+
+    auto v_label_it = tags_labels.find(v.first);
+    if (v_label_it == tags_labels.end())
+      throw logic_error("output variable without label in tags_labels");
+
+    const auto &node = func->find_node_in_dataflow(v_label_it->second);
+    if (!node)
+      throw logic_error("output node not found in the data flow");
+
+    file << (node->get_term_type() == ir::TermType::ciphertext) << " " << v.first << " ";
+    visit(value_var_visitor, v.second);
+    file << endl;
+  }
+}
+
+void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) const
+{
+  ofstream file(file_name);
+  auto value_var_visitor = [&file](const auto &value) {
+    for (auto it = value.begin(); it != value.end() - 1; ++it)
+      file << *it << " ";
+    file << *value.rbegin();
+  };
+
+  file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << endl;
+  for (const auto &v : inputs_values)
+  {
+    auto v_label_it = tags_labels.find(v.first);
+    if (v_label_it == tags_labels.end())
+      throw logic_error("input variable without label in tags_labels");
+
+    const auto &node = func->find_node_in_dataflow(v_label_it->second);
+    if (!node)
+      throw logic_error("input node not found in the data flow");
+
+    file << (node->get_term_type() == ir::TermType::ciphertext) << " " << v.first << " ";
+    visit(value_var_visitor, v.second);
+    file << endl;
+  }
+  for (const auto &v : outputs_values)
+  {
+    auto v_label_it = tags_labels.find(v.first);
+    if (v_label_it == tags_labels.end())
+      throw logic_error("output variable without label in tags_labels");
+
+    const auto &node = func->find_node_in_dataflow(v_label_it->second);
+    if (!node)
+      throw logic_error("output node not found in the data flow");
+
+    file << (node->get_term_type() == ir::TermType::ciphertext) << " " << v.first << " ";
+    visit(value_var_visitor, v.second);
+    file << endl;
   }
 }
 

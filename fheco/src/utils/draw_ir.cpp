@@ -112,5 +112,4 @@ void utils::draw_ir(ir::Program *program, const std::string &output_file)
 })";
   ofile << key << endl;
   ofile << "}" << endl;
-  ofile.close();
 }

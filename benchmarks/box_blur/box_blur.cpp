@@ -2,42 +2,43 @@
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 using namespace std;
+using namespace fhecompiler;
 
 int main()
 {
-  fhecompiler::Compiler::create_func("box_blur", 8);
+  string func_name = "box_blur";
+  Compiler::create_func(func_name, 8);
 
-  fhecompiler::Ciphertext c0("c0", fhecompiler::VarType::input);
+  Ciphertext c0("c0", VarType::input);
 
-  fhecompiler::Ciphertext c1 = c0 << 1;
-  fhecompiler::Ciphertext c2 = c0 << 5;
-  fhecompiler::Ciphertext c3 = c0 << 6;
-  fhecompiler::Ciphertext c4 = c1 + c0;
-  fhecompiler::Ciphertext c5 = c2 + c3;
-  fhecompiler::Ciphertext c6 = c4 + c5;
-  fhecompiler::Ciphertext output("output", fhecompiler::VarType::output);
+  Ciphertext c1 = c0 << 1;
+  Ciphertext c2 = c0 << 5;
+  Ciphertext c3 = c0 << 6;
+  Ciphertext c4 = c1 + c0;
+  Ciphertext c5 = c2 + c3;
+  Ciphertext c6 = c4 + c5;
+  Ciphertext output("output", VarType::output);
   output = c6;
 
-  const utils::variables_values_map &inputs_values = fhecompiler::Compiler::get_input_values();
+  const utils::variables_values_map &inputs_values = Compiler::get_input_values();
 
-  utils::print_variables_values(inputs_values);
+  auto clear_outputs1 = Compiler::evaluate_on_clear(inputs_values);
 
-  auto clear_outputs1 = fhecompiler::Compiler::evaluate_on_clear(inputs_values);
+  if (clear_outputs1 != Compiler::get_output_values())
+    throw logic_error("clear_outputs1 != Compiler::get_output_values()");
 
-  if (clear_outputs1 != fhecompiler::Compiler::get_output_values())
-    throw logic_error("clear_outputs1 != fhecompiler::Compiler::get_output_values()");
+  Compiler::compile(func_name + ".hpp");
 
-  fhecompiler::Compiler::compile("box_blur.hpp");
-
-  auto clear_outputs2 = fhecompiler::Compiler::evaluate_on_clear(inputs_values);
+  auto clear_outputs2 = Compiler::evaluate_on_clear(inputs_values);
 
   if (clear_outputs1 != clear_outputs2)
     throw logic_error("clear_outputs1 != clear_outputs2");
 
-  utils::print_variables_values(clear_outputs2);
+  Compiler::serialize_inputs_outputs(func_name + ".txt");
 
   return 0;
 }

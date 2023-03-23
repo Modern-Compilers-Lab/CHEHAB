@@ -135,11 +135,35 @@ public:
     return get_func_entry(active_func_->get_program_tag()).outputs_values;
   }
 
+  static inline void serialize_inputs_outputs(
+    const std::string &func_name, const utils::variables_values_map &inputs, const utils::variables_values_map &outputs,
+    const std::string &file_name)
+  {
+    get_func_entry(func_name).serialize_inputs_outputs(inputs, outputs, file_name);
+  }
+
+  static inline void serialize_inputs_outputs(const std::string &func_name, const std::string &file_name)
+  {
+    get_func_entry(func_name).serialize_inputs_outputs(file_name);
+  }
+
+  static inline void serialize_inputs_outputs(
+    const utils::variables_values_map &inputs, const utils::variables_values_map &outputs, const std::string &file_name)
+  {
+    get_func_entry(active_func_->get_program_tag()).serialize_inputs_outputs(inputs, outputs, file_name);
+  }
+
+  static inline void serialize_inputs_outputs(const std::string &file_name)
+  {
+    get_func_entry(active_func_->get_program_tag()).serialize_inputs_outputs(file_name);
+  }
+
 private:
   struct FuncEntry
   {
     std::shared_ptr<ir::Program> func;
     utils::variables_values_map nodes_values;
+    std::unordered_map<std::string, std::string> tags_labels;
     utils::variables_values_map inputs_values;
     utils::variables_values_map outputs_values;
 
@@ -156,6 +180,12 @@ private:
       bool is_output = false);
 
     void operate_rotate(const std::string &arg, int step, const std::string &destination, bool is_output = false);
+
+    void serialize_inputs_outputs(
+      const utils::variables_values_map &inputs, const utils::variables_values_map &outputs,
+      const std::string &file_name) const;
+
+    void serialize_inputs_outputs(const std::string &file_name) const;
   };
 
   static void compile(
