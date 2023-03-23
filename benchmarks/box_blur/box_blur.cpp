@@ -31,14 +31,14 @@ int main()
   if (clear_outputs1 != Compiler::get_output_values())
     throw logic_error("clear_outputs1 != Compiler::get_output_values()");
 
-  Compiler::compile(func_name + ".hpp");
+  Compiler::compile("he/gen_he_" + func_name + ".hpp");
 
   auto clear_outputs2 = Compiler::evaluate_on_clear(inputs_values);
 
   if (clear_outputs1 != clear_outputs2)
     throw logic_error("clear_outputs1 != clear_outputs2");
 
-  Compiler::serialize_inputs_outputs(func_name + ".txt");
+  Compiler::serialize_inputs_outputs(func_name + "_rand_example.txt");
 
   return 0;
 }

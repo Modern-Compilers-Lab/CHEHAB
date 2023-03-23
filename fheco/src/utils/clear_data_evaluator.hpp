@@ -23,8 +23,8 @@ public:
   template <typename T>
   inline std::vector<T> make_element(const std::vector<T> &v)
   {
-    constexpr bool t_is_int64_t = std::is_same<T, std::int64_t>::value;
-    constexpr bool t_is_uint64_t = std::is_same<T, std::uint64_t>::value;
+    constexpr bool t_is_int64_t = std::is_same_v<T, std::int64_t>;
+    constexpr bool t_is_uint64_t = std::is_same_v<T, std::uint64_t>;
     static_assert(t_is_int64_t || t_is_uint64_t, "only int64_t and uint64_t are supported");
 
     std::vector<T> element(v);
@@ -35,8 +35,8 @@ public:
   template <typename T>
   inline std::vector<T> make_element(T value)
   {
-    constexpr bool t_is_int64_t = std::is_same<T, std::int64_t>::value;
-    constexpr bool t_is_uint64_t = std::is_same<T, std::uint64_t>::value;
+    constexpr bool t_is_int64_t = std::is_same_v<T, std::int64_t>;
+    constexpr bool t_is_uint64_t = std::is_same_v<T, std::uint64_t>;
     static_assert(t_is_int64_t || t_is_uint64_t, "only int64_t and uint64_t are supported");
 
     std::vector<T> element(vector_size_, value);
@@ -46,8 +46,8 @@ public:
   template <typename T>
   inline void validate(const std::vector<T> &arg)
   {
-    constexpr bool t_is_int64_t = std::is_same<T, std::int64_t>::value;
-    constexpr bool t_is_uint64_t = std::is_same<T, std::uint64_t>::value;
+    constexpr bool t_is_int64_t = std::is_same_v<T, std::int64_t>;
+    constexpr bool t_is_uint64_t = std::is_same_v<T, std::uint64_t>;
     static_assert(t_is_int64_t || t_is_uint64_t, "only int64_t and uint64_t are supported");
 
     if (arg.size() != vector_size_)
@@ -55,7 +55,7 @@ public:
 
     for (std::size_t i = 0; i < vector_size_; ++i)
     {
-      if (t_is_int64_t)
+      if constexpr (t_is_int64_t)
       {
         if (arg[i] > max_value_ || arg[i] < -max_value_)
           throw std::invalid_argument("invalid vector slot value");
@@ -71,9 +71,9 @@ public:
   template <typename T1, typename T2, typename T3>
   inline void add(const std::vector<T1> &arg1, const std::vector<T2> &arg2, std::vector<T3> &destination)
   {
-    constexpr bool t1_is_uint64_t = std::is_same<T1, std::uint64_t>::value;
-    constexpr bool t2_is_uint64_t = std::is_same<T2, std::uint64_t>::value;
-    constexpr bool t3_is_uint64_t = std::is_same<T3, std::uint64_t>::value;
+    constexpr bool t1_is_uint64_t = std::is_same_v<T1, std::uint64_t>;
+    constexpr bool t2_is_uint64_t = std::is_same_v<T2, std::uint64_t>;
+    constexpr bool t3_is_uint64_t = std::is_same_v<T3, std::uint64_t>;
     constexpr bool to_uint64_t = t1_is_uint64_t || t2_is_uint64_t;
     static_assert(
       (t3_is_uint64_t && to_uint64_t) || (!t3_is_uint64_t && !to_uint64_t),
@@ -91,9 +91,9 @@ public:
   template <typename T1, typename T2, typename T3>
   inline void sub(const std::vector<T1> &arg1, const std::vector<T2> &arg2, std::vector<T3> &destination)
   {
-    constexpr bool t1_is_uint64_t = std::is_same<T1, std::uint64_t>::value;
-    constexpr bool t2_is_uint64_t = std::is_same<T2, std::uint64_t>::value;
-    constexpr bool t3_is_uint64_t = std::is_same<T3, std::uint64_t>::value;
+    constexpr bool t1_is_uint64_t = std::is_same_v<T1, std::uint64_t>;
+    constexpr bool t2_is_uint64_t = std::is_same_v<T2, std::uint64_t>;
+    constexpr bool t3_is_uint64_t = std::is_same_v<T3, std::uint64_t>;
     constexpr bool to_uint64_t = t1_is_uint64_t || t2_is_uint64_t;
     static_assert(
       (t3_is_uint64_t && to_uint64_t) || (!t3_is_uint64_t && !to_uint64_t),
@@ -122,9 +122,9 @@ public:
   template <typename T1, typename T2, typename T3>
   void multiply(const std::vector<T1> &arg1, const std::vector<T2> &arg2, std::vector<T3> &destination)
   {
-    constexpr bool t1_is_uint64_t = std::is_same<T1, std::uint64_t>::value;
-    constexpr bool t2_is_uint64_t = std::is_same<T2, std::uint64_t>::value;
-    constexpr bool t3_is_uint64_t = std::is_same<T3, std::uint64_t>::value;
+    constexpr bool t1_is_uint64_t = std::is_same_v<T1, std::uint64_t>;
+    constexpr bool t2_is_uint64_t = std::is_same_v<T2, std::uint64_t>;
+    constexpr bool t3_is_uint64_t = std::is_same_v<T3, std::uint64_t>;
     constexpr bool to_uint64_t = t1_is_uint64_t || t2_is_uint64_t;
     static_assert(
       (t3_is_uint64_t && to_uint64_t) || (!t3_is_uint64_t && !to_uint64_t),

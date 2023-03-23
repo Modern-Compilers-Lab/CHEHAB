@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <fstream>
 #include <set>
+#include <type_traits>
 #include <variant>
 
 using namespace std;
@@ -57,15 +58,13 @@ void Compiler::set_active(const string &func_name)
 void Compiler::compile(
   const shared_ptr<ir::Program> &func, const string &output_file, SecurityLevel sec_level, bool use_mod_switch)
 {
-  draw_ir(func, output_file + "1.dot");
+  draw_ir(func, func->get_program_tag() + "_naive_ir.dot");
 
   fheco_passes::CSE cse_pass(func);
   cse_pass.apply_cse2(true);
   fheco_trs::TRS trs(func);
   trs.apply_rewrite_rules_on_program(fheco_trs::Ruleset::rules);
   cse_pass.apply_cse2(true);
-
-  draw_ir(func, output_file + "2.dot");
 
   param_selector::ParameterSelector param_selector(func, sec_level);
   bool uses_mod_switch = use_mod_switch;
@@ -80,21 +79,17 @@ void Compiler::compile(
   fheco_passes::RelinPass relin_pass(func);
   relin_pass.simple_relinearize();
 
-  draw_ir(func, output_file + "3.dot");
-
   translator::Translator tr(func, sec_level, params, uses_mod_switch);
-  {
-    ofstream translation_os(output_file);
+  ofstream translation_os(output_file);
 
-    if (!translation_os)
-      throw("couldn't open file for translation.\n");
+  if (!translation_os)
+    throw("couldn't open file for translation.\n");
 
-    tr.translate_program(translation_os, rotation_keys_steps);
+  tr.translate_program(translation_os, rotation_keys_steps);
 
-    translation_os.close();
-  }
+  translation_os.close();
 
-  draw_ir(func, output_file + "4.dot");
+  draw_ir(func, func->get_program_tag() + "_opt_ir.dot");
 }
 
 const utils::variables_values_map::mapped_type &Compiler::FuncEntry::get_node_value(const std::string &label) const
@@ -419,10 +414,16 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
     throw invalid_argument("invalid number of outputs");
 
   ofstream file(file_name);
-  auto value_var_visitor = [&file](const auto &value) {
-    for (auto it = value.begin(); it != value.end() - 1; ++it)
-      file << *it << " ";
-    file << *value.rbegin();
+  auto value_var_visitor = [&file](const auto &v) {
+    using T = decay_t<decltype(v)>;
+    if constexpr (is_same_v<T, vector<int64_t>>)
+      file << 1 << " ";
+    else if constexpr (std::is_same_v<T, vector<uint64_t>>)
+      file << 0 << " ";
+    else
+      static_assert(utils::always_false_v<T>, "non-exhaustive visitor!");
+
+    utils::serialize_vector(v, file);
   };
 
   file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << endl;
@@ -439,7 +440,7 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
     if (!node)
       throw logic_error("input node not found in the data flow");
 
-    file << (node->get_term_type() == ir::TermType::ciphertext) << " " << v.first << " ";
+    file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(value_var_visitor, v.second);
     file << endl;
   }
@@ -456,7 +457,7 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
     if (!node)
       throw logic_error("output node not found in the data flow");
 
-    file << (node->get_term_type() == ir::TermType::ciphertext) << " " << v.first << " ";
+    file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(value_var_visitor, v.second);
     file << endl;
   }
@@ -465,10 +466,16 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
 void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) const
 {
   ofstream file(file_name);
-  auto value_var_visitor = [&file](const auto &value) {
-    for (auto it = value.begin(); it != value.end() - 1; ++it)
-      file << *it << " ";
-    file << *value.rbegin();
+  auto value_var_visitor = [&file](const auto &v) {
+    using T = decay_t<decltype(v)>;
+    if constexpr (is_same_v<T, vector<int64_t>>)
+      file << 1 << " ";
+    else if constexpr (std::is_same_v<T, vector<uint64_t>>)
+      file << 0 << " ";
+    else
+      static_assert(utils::always_false_v<T>, "non-exhaustive visitor!");
+
+    utils::serialize_vector(v, file);
   };
 
   file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << endl;
@@ -482,7 +489,7 @@ void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) cons
     if (!node)
       throw logic_error("input node not found in the data flow");
 
-    file << (node->get_term_type() == ir::TermType::ciphertext) << " " << v.first << " ";
+    file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(value_var_visitor, v.second);
     file << endl;
   }
@@ -496,7 +503,7 @@ void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) cons
     if (!node)
       throw logic_error("output node not found in the data flow");
 
-    file << (node->get_term_type() == ir::TermType::ciphertext) << " " << v.first << " ";
+    file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(value_var_visitor, v.second);
     file << endl;
   }

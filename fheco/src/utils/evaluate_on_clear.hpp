@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <map>
+#include <ostream>
 #include <random>
 #include <string>
 #include <variant>
@@ -12,6 +13,9 @@
 namespace utils
 {
 using variables_values_map = std::map<std::string, std::variant<std::vector<std::int64_t>, std::vector<std::uint64_t>>>;
+
+template <class>
+inline constexpr bool always_false_v = false;
 
 variables_values_map evaluate_on_clear(ir::Program *program, const variables_values_map &inputs_values);
 
@@ -41,6 +45,14 @@ inline void print_vector(const std::vector<T> &v, std::size_t print_size)
     std::cout << " ..., ";
   for (std::size_t i = size - print_size; i < size; i++)
     std::cout << v[i] << ((i != size - 1) ? ", " : "]\n");
+}
+
+template <typename T>
+inline void serialize_vector(const std::vector<T> &v, std::ostream &os)
+{
+  for (auto it = v.begin(); it != v.end() - 1; ++it)
+    os << *it << " ";
+  os << *v.rbegin();
 }
 
 } // namespace utils

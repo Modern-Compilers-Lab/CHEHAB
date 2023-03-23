@@ -1,4 +1,5 @@
-#include "../box_blur.hpp"
+#include "gen_he_box_blur.hpp"
+#include "utils.hpp"
 #include <chrono>
 #include <iostream>
 #include <vector>
@@ -6,24 +7,10 @@
 using namespace std;
 using namespace seal;
 
-template <typename T>
-inline void print_vector(const std::vector<T> &v, std::size_t print_size)
-{
-  if (v.size() < 2 * print_size)
-    throw std::invalid_argument("vector size must at least twice print_size");
-
-  std::size_t size = v.size();
-  std::cout << "[";
-  for (std::size_t i = 0; i < print_size; i++)
-    std::cout << v[i] << ", ";
-  if (v.size() > 2 * print_size)
-    std::cout << " ..., ";
-  for (std::size_t i = size - print_size; i < size; i++)
-    std::cout << v[i] << ((i != size - 1) ? ", " : "]\n");
-}
-
 int main()
 {
+  string func_name = "box_blur";
+
   SEALContext context = create_context();
 
   BatchEncoder batch_encoder(context);
@@ -92,6 +79,6 @@ int main()
     decryptor.decrypt(output.second, output_plain);
     vector<int64_t> output_clear;
     batch_encoder.decode(output_plain, output_clear);
-    print_vector(output_clear, 4);
+    // print_vector(output_clear, 4);
   }
 }
