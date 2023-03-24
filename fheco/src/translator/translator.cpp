@@ -371,12 +371,17 @@ void Translator::translate_program(std::ofstream &os, const std::set<int> &rotat
 
   os << headers_include;
 
+  os << "\n";
+
   context_writer.write_context(os);
 
   os << "\n";
 
   if (rotations_keys_steps.size())
+  {
     write_rotations_steps_getter(rotations_keys_steps, os);
+    os << "\n";
+  }
 
   generate_function_signature(os);
   os << "{" << '\n';
@@ -519,7 +524,7 @@ void Translator::write_rotations_steps_getter(const std::set<int> &steps, std::o
     else
       os << "};";
   }
-  os << " return steps; }";
+  os << " return steps; }\n";
 }
 
 } // namespace translator

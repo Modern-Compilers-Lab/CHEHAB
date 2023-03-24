@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
+
 seal::SEALContext create_context()
 {
   seal::EncryptionParameters params(seal::scheme_type::bfv);
@@ -17,6 +18,7 @@ std::vector<int> get_rotations_steps()
   std::vector<int> steps = {1, 5};
   return steps;
 }
+
 void box_blur(
   std::unordered_map<std::string, seal::Ciphertext> &encrypted_inputs,
   std::unordered_map<std::string, seal::Plaintext> &encoded_inputs,
