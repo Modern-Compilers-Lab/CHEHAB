@@ -38,8 +38,6 @@ int main()
   encrypted_args_map encrypted_outputs;
   encoded_args_map encoded_outputs;
 
-  int repeat = 1000;
-
   box_blur(
     encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, relin_keys, galois_keys,
     public_key);
@@ -51,7 +49,14 @@ int main()
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
-  get_encrypted_outputs_info(context, decryptor, encrypted_outputs);
+  print_variables_values(obtained_clear_outputs);
+
+  print_encrypted_outputs_info(context, decryptor, encrypted_outputs);
+
+  // get peak memory from /proc
+  getchar();
+
+  int repeat = 1000;
 
   chrono::high_resolution_clock::time_point time_start, time_end;
   time_start = chrono::high_resolution_clock::now();
@@ -62,9 +67,6 @@ int main()
   time_end = chrono::high_resolution_clock::now();
 
   chrono::microseconds time_diff = chrono::duration_cast<chrono::microseconds>(time_end - time_start);
-  cout << endl;
-  cout << "exec_time: " << time_diff.count() / repeat << " µs" << endl;
-
-  char c;
-  cin >> c;
+  cout << "exec_time: " << time_diff.count() / repeat << " µs"
+       << "\n";
 }

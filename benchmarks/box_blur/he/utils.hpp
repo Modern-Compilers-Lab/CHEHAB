@@ -36,8 +36,10 @@ void get_clear_outputs(
   const encoded_args_map &encoded_outputs, const clear_args_info_map &ref_clear_outputs,
   clear_args_info_map &clear_outputs);
 
-void get_encrypted_outputs_info(
+void print_encrypted_outputs_info(
   const seal::SEALContext &context, seal::Decryptor &decryptor, const encrypted_args_map &encrypted_outputs);
+
+void print_variables_values(const clear_args_info_map &m, std::size_t print_size = 4);
 
 template <typename T>
 inline void print_vector(const std::vector<T> &v, std::size_t print_size)
@@ -46,11 +48,11 @@ inline void print_vector(const std::vector<T> &v, std::size_t print_size)
     throw std::invalid_argument("vector size must at least twice print_size");
 
   std::size_t size = v.size();
-  std::cout << "[";
-  for (std::size_t i = 0; i < print_size; i++)
-    std::cout << v[i] << ", ";
+  for (std::size_t i = 0; i < print_size; ++i)
+    std::cout << v[i] << " ";
   if (v.size() > 2 * print_size)
-    std::cout << " ..., ";
-  for (std::size_t i = size - print_size; i < size; i++)
-    std::cout << v[i] << ((i != size - 1) ? ", " : "]\n");
+    std::cout << "... ";
+  for (std::size_t i = size - print_size; i < size - 1; ++i)
+    std::cout << v[i] << " ";
+  std::cout << v.back() << "\n";
 }

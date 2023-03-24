@@ -188,14 +188,15 @@ void get_clear_outputs(
   }
 }
 
-void get_encrypted_outputs_info(
+void print_encrypted_outputs_info(
   const SEALContext &context, Decryptor &decryptor, const encrypted_args_map &encrypted_outputs)
 {
   int L = context.first_context_data()->parms().coeff_modulus().size();
-  cout << "output ciphertexts info (L=" << L << ")" << endl;
+  cout << "output ciphertexts info (L=" << L << ")"
+       << "\n";
   cout << "id: level, remaining_noise_budget, actual_noise_upper_bound (maybe mod_switch was used to sacrifice some "
           "noise budget)"
-       << endl;
+       << "\n";
   int init_noise_budget = context.first_context_data()->total_coeff_modulus_bit_count() -
                           context.first_context_data()->parms().plain_modulus().bit_count();
   for (const auto &output : encrypted_outputs)
@@ -203,6 +204,19 @@ void get_encrypted_outputs_info(
     int level = L - context.get_context_data(output.second.parms_id())->chain_index();
     int remaining_noise_budget = decryptor.invariant_noise_budget(output.second);
     int noise_upper_bound = init_noise_budget - remaining_noise_budget;
-    cout << output.first << ": " << level << ", " << remaining_noise_budget << ", " << noise_upper_bound << endl;
+    cout << output.first << ": " << level << ", " << remaining_noise_budget << ", " << noise_upper_bound << "\n";
+  }
+}
+
+void print_variables_values(const clear_args_info_map &m, size_t print_size)
+{
+  for (const auto &variable : m)
+  {
+    cout << variable.first << " " << variable.second.is_cipher << " " << variable.second.is_signed << " ";
+
+    if (variable.second.is_signed)
+      print_vector(get<vector<int64_t>>(variable.second.value), print_size);
+    else
+      print_vector(get<vector<uint64_t>>(variable.second.value), print_size);
   }
 }
