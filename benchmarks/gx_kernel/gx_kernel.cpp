@@ -1,76 +1,50 @@
-#include "fhecompiler/cse_pass.hpp"
-#include "fhecompiler/draw_ir.hpp"
 #include "fhecompiler/fhecompiler.hpp"
-#include "fhecompiler/normalize_pass.hpp"
-#include "fhecompiler/param_selector.hpp"
-#include "fhecompiler/quantify_ir.hpp"
-#include "fhecompiler/ruleset.hpp"
-#include "fhecompiler/trs.hpp"
-#include "fhecompiler/trs_util_functions.hpp"
+#include <cstdint>
 #include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 using namespace std;
-
-extern ir::Program *program;
+using namespace fhecompiler;
 
 int main()
 {
-  fhecompiler::init("gx_kernel", 15);
+  string func_name = "gx_kernel";
+  Compiler::create_func(func_name, 8);
 
-  fhecompiler::Ciphertext c0("c0", fhecompiler::VarType::input);
+  Ciphertext c0("c0", VarType::input);
 
-  fhecompiler::Ciphertext c1 = c0 << 1;
-  fhecompiler::Ciphertext c2 = c0 << 5;
-  fhecompiler::Ciphertext c3 = c0 << 6;
-  fhecompiler::Ciphertext c4 = c0 << -1;
-  fhecompiler::Ciphertext c5 = c0 << -4;
-  fhecompiler::Ciphertext c6 = c0 << -6;
-  fhecompiler::Ciphertext c7 = c1 + c2;
-  fhecompiler::Ciphertext c8 = c3 + c4;
-  fhecompiler::Ciphertext c9 = c5 + c6;
-  fhecompiler::Ciphertext c10 = c7 + c8;
-  fhecompiler::Ciphertext c11 = c9 + c9;
-  fhecompiler::Ciphertext c12 = c10 + c11;
-  fhecompiler::Ciphertext output("output", fhecompiler::VarType::output);
+  Ciphertext c1 = c0 << 1;
+  Ciphertext c2 = c0 << 5;
+  Ciphertext c3 = c0 << 6;
+  Ciphertext c4 = c0 << -1;
+  Ciphertext c5 = c0 << -4;
+  Ciphertext c6 = c0 << -6;
+  Ciphertext c7 = c1 + c2;
+  Ciphertext c8 = c3 + c4;
+  Ciphertext c9 = c5 + c6;
+  Ciphertext c10 = c7 + c8;
+  Ciphertext c11 = c9 + c9;
+  Ciphertext c12 = c10 + c11;
+  Ciphertext output("output", VarType::output);
   output = c12;
 
-  utils::draw_ir(program, "gx_kernel.hpp1.dot");
+  const utils::variables_values_map &inputs_values = Compiler::get_input_values();
 
-  auto count = utils::count_main_node_classes(program);
-  for (const auto &e : count)
-    cout << e.first << ":" << e.second << endl;
+  auto clear_outputs1 = Compiler::evaluate_on_clear(inputs_values);
 
-  fheco_passes::CSE cse_pass(program);
-  fheco_trs::TRS trs(program);
-  trs.apply_rewrite_rules_on_program(fheco_trs::Ruleset::rules);
+  if (clear_outputs1 != Compiler::get_output_values())
+    throw logic_error("clear_outputs1 != Compiler::get_output_values()");
 
-  cse_pass.apply_cse2(true);
-  utils::draw_ir(program, "gx_kernel.hpp2.dot");
+  Compiler::compile("he/gen_he_" + func_name + ".hpp");
 
-  cout << endl;
+  auto clear_outputs2 = Compiler::evaluate_on_clear(inputs_values);
 
-  param_selector::ParameterSelector param_selector(program);
-  param_selector.select_params();
+  if (clear_outputs1 != clear_outputs2)
+    throw logic_error("clear_outputs1 != clear_outputs2");
 
-  utils::draw_ir(program, "gx_kernel.hpp3.dot");
+  Compiler::serialize_inputs_outputs(func_name + "_rand_example.txt");
 
-  count = utils::count_main_node_classes(program);
-  for (const auto &e : count)
-    cout << e.first << ": " << e.second << endl;
-
-  translator::Translator tr(program);
-  {
-    std::ofstream translation_os("gx_kernel.hpp");
-
-    if (!translation_os)
-      throw("couldn't open file for translation.\n");
-
-    tr.translate_program(translation_os);
-
-    translation_os.close();
-  }
-
-  delete program;
-  program = nullptr;
   return 0;
 }
