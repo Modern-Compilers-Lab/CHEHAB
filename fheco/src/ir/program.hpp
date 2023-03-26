@@ -155,7 +155,7 @@ public:
 
   const std::vector<ir::Term::Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
 
-  const std::unordered_map<std::string, ir::Term::Ptr> &get_outputs_nodes() const;
+  const std::map<std::string, ir::Term::Ptr> &get_outputs_nodes() const;
   /*
     Search key here is node label. In order to use just call get_label() method of the object you are manipulating
   */

@@ -110,12 +110,12 @@ INLINE const char *create_plain_modulus_intruction = "seal::PlainModulus::Batchi
 INLINE const char *set_coeff_modulus_instruction = "set_coeff_modulus";
 INLINE const char *create_coeff_modulus_instruction = "seal::CoeffModulus::Create";
 INLINE const char *set_poly_modulus_degree_instruction = "set_poly_modulus_degree";
-INLINE const char *encrypted_inputs_class_literal = "std::unordered_map<std::string, seal::Ciphertext>";
-INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::string, seal::Plaintext>";
-INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, seal::Plaintext>";
-INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, seal::Ciphertext>";
+INLINE const char *encrypted_inputs_class_literal = "std::map<std::string, seal::Ciphertext>";
+INLINE const char *encoded_inputs_class_literal = "std::map<std::string, seal::Plaintext>";
+INLINE const char *encoded_outputs_class_literal = "std::map<std::string, seal::Plaintext>";
+INLINE const char *encrypted_outputs_class_literal = "std::map<std::string, seal::Ciphertext>";
 INLINE const char *headers_include =
-  "#include\"seal/seal.h\"\n#include<vector>\n#include<unordered_map>\n#include<cstdint>\n";
+  "#include \"seal/seal.h\"\n#include <vector>\n#include <map>\n#include <cstdint>\n";
 INLINE const char *rotation_step_type_literal = "int";
 INLINE const char *gen_steps_function_signature = "std::vector<int> get_rotations_steps()";
 
@@ -310,28 +310,17 @@ public:
 struct EncodingWriter
 {
 private:
-  std::string encoder_type_literal;
   std::string encoder_identifier;
-  std::string context_identifier;
   std::string encoder_instruction_literal;
   bool is_init = false;
 
 public:
   EncodingWriter() = default;
 
-  EncodingWriter(
-    const std::string &encoder_type, const std::string &encoder_id, const std::string &ctxt_id,
-    const std::string &encode_inst_literal)
-    : encoder_type_literal(encoder_type), encoder_identifier(encoder_id), context_identifier(ctxt_id),
-      encoder_instruction_literal(encode_inst_literal)
+  EncodingWriter(const std::string &encoder_id, const std::string &encode_inst_literal)
+    : encoder_identifier(encoder_id), encoder_instruction_literal(encode_inst_literal)
   {}
   ~EncodingWriter() {}
-
-  void init(std::ostream &os)
-  {
-    is_init = true;
-    os << encoder_type_literal << " " << encoder_identifier << "(" << context_identifier << ");" << '\n';
-  }
 
   void write_scalar_encoding(
     std::ostream &os, const std::string &plaintext_id, const std::string &scalar_value, const std::string &scalar_type,
@@ -387,8 +376,6 @@ public:
          << '\n';
     }
   }
-
-  bool is_initialized() const { return this->is_init; }
 };
 
 struct ContextWriter

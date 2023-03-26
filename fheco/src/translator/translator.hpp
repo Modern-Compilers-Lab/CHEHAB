@@ -28,11 +28,14 @@ private:
   void translate_nary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os);
   void translate_unary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os);
 
-  void translate_constant_table_entry(ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os);
+  void translate_constant_table_entry(
+    const std::string &identifier, ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os);
 
   void translate_term(const ir::Term::Ptr &term_ptr, std::ofstream &os);
 
   std::string get_identifier(const ir::Term::Ptr &term_ptr) const;
+
+  std::string get_tag(const ir::Term::Ptr &term_ptr) const;
 
   void convert_to_inplace(const ir::Term::Ptr &node_ptr);
 
@@ -46,10 +49,7 @@ public:
   Translator(
     const std::shared_ptr<ir::Program> &prgm, fhecompiler::SecurityLevel sec_level,
     const param_selector::EncryptionParameters &params, bool uses_mod_switch)
-    : program(prgm), encoding_writer(
-                       program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? ckks_encoder_type_literal
-                                                                                     : bv_encoder_type_literal,
-                       encoder_type_identifier, context_identifier, encode_literal),
+    : program(prgm), encoding_writer(encoder_type_identifier, encode_literal),
       encryption_writer(
         encryptor_type_literal, encryptor_type_identifier, encrypt_literal, public_key_identifier, context_identifier),
       evaluation_writer(evaluator_type_literal, evaluator_identifier, context_identifier),
@@ -65,8 +65,8 @@ public:
   void write_assign_operation(
     std::ofstream &os, const std::string &lhs_id, const std::string &rhs_id, ir::TermType type);
 
-  void write_input(const std::string &input_identifier, ir::TermType type, std::ostream &os);
-  void write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os);
+  void write_input(const std::string &identifier, const std::string &tag, ir::TermType type, std::ostream &os);
+  void write_output(const std::string &identifier, const std::string &tag, ir::TermType type, std::ostream &os);
 
   void write_rotations_steps_getter(const std::set<int> &steps, std::ostream &os);
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "term.hpp"
-#include <deque>
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -16,7 +16,7 @@ class DAG
   using Ptr = std::shared_ptr<Term>;
 
 private:
-  std::unordered_map<std::string, Ptr> outputs_nodes;
+  std::map<std::string, Ptr> outputs_nodes;
 
   std::vector<Ptr> outputs_nodes_topsorted; // nodes topologically sorted
 
@@ -37,7 +37,7 @@ public:
 
   void delete_node_from_outputs(const std::string &key);
 
-  const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const { return outputs_nodes; }
+  const std::map<std::string, Ptr> &get_outputs_nodes() const { return outputs_nodes; }
 
   const std::vector<Ptr> &get_outputs_nodes_topsorted() const { return outputs_nodes_topsorted; }
 };

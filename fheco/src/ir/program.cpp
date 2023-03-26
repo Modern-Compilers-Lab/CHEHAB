@@ -158,7 +158,7 @@ void Program::update_tag_value_in_constants_table_entry(const std::string &entry
   }
 }
 
-const std::unordered_map<std::string, Ptr> &Program::get_outputs_nodes() const
+const std::map<std::string, Ptr> &Program::get_outputs_nodes() const
 {
   return this->data_flow->get_outputs_nodes();
 }
