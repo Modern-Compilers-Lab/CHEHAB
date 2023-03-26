@@ -110,14 +110,14 @@ void Compiler::FuncEntry::init_input(const string &label, const string &tag)
   if (func->get_signedness())
   {
     vector<int64_t> random_value(func->get_vector_size());
-    utils::init_random(random_value, -100, 100);
+    utils::init_random(random_value, -10, 10);
     nodes_values.insert({label, random_value});
     inputs_values.insert({tag, random_value});
   }
   else
   {
     vector<uint64_t> random_value(func->get_vector_size());
-    utils::init_random(random_value, 0, 100);
+    utils::init_random(random_value, 0, 10);
     utils::variables_values_map::value_type node_entry = {label, random_value};
     nodes_values.insert({label, random_value});
     inputs_values.insert({tag, random_value});

@@ -194,13 +194,13 @@ Ciphertext operator>>(const Ciphertext &lhs, int steps)
 
 Ciphertext &Ciphertext::operator<<=(int steps)
 {
-  rotate(*this, steps);
+  *this = rotate(*this, steps);
   return *this;
 }
 
 Ciphertext &Ciphertext::operator>>=(int steps)
 {
-  rotate(*this, -steps);
+  *this = rotate(*this, -steps);
   return *this;
 }
 

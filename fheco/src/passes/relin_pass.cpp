@@ -4,16 +4,12 @@
 namespace fheco_passes
 {
 
-size_t RelinPass::relin_instruction_id = 0;
-
 void RelinPass::simple_relinearize()
 {
   /*
     This implements a simple relinearization(relin) strategy in FHE applications, where a relin instruction is
     inserted after each cipher_cipher mutliplication or square
   */
-
-  auto sorted_nodes = program->get_dataflow_sorted_nodes(true);
 
   fheco_trs::TRS trs(program);
 

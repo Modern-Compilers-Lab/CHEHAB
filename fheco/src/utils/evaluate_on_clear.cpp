@@ -326,6 +326,8 @@ variables_values_map evaluate_on_clear(ir::Program *program, const variables_val
           {
           case ir::OpCode::encrypt:
           case ir::OpCode::assign:
+          case ir::OpCode::relinearize:
+          case ir::OpCode::modswitch:
             temps_values.insert({node->get_label(), *arg_value});
             break;
           case ir::OpCode::negate:
@@ -407,6 +409,7 @@ void print_variables_values(const variables_values_map &m, size_t print_size)
       print_vector(*value, print_size);
     else
       throw logic_error("could not get variable value");
+    cout << "\n";
   }
 }
 } // namespace utils

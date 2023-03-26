@@ -13,8 +13,6 @@ class RelinPass
 {
 private:
   std::shared_ptr<ir::Program> program;
-  static size_t relin_instruction_id;
-  const std::string inst_keyword = "relin";
 
 public:
   RelinPass() = default;
