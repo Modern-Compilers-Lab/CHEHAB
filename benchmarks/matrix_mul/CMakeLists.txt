@@ -1,11 +1,9 @@
-cmake_minimum_required(VERSION 3.22.1)
+cmake_minimum_required(VERSION 3.13)
 
-project(matrix_mul VERSION 1.0 LANGUAGES CXX)
+project(MatrixMul VERSION 1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+add_executable(matrix_mul matrix_mul.cpp)
+target_compile_features(matrix_mul PUBLIC cxx_std_17)
+set_target_properties(matrix_mul PROPERTIES CXX_EXTENSIONS OFF)
 
-add_executable(matrix_mul1 matrix_mul1.cpp)
-add_executable(matrix_mul2 matrix_mul2.cpp)
-
-target_link_libraries(matrix_mul1 fhecompiler)
-target_link_libraries(matrix_mul2 fhecompiler)
+target_link_libraries(matrix_mul PRIVATE fhecompiler)
