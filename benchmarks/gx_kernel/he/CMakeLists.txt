@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(HEBoxBlur VERSION 1.0 LANGUAGES CXX)
+project(HEGXKernel VERSION 1.0 LANGUAGES CXX)
 
 add_library(utils STATIC utils.cpp)
 target_compile_features(utils PUBLIC cxx_std_17)
@@ -10,5 +10,5 @@ find_package(SEAL 4.1.1 EXACT REQUIRED)
 target_link_libraries(utils PUBLIC SEAL::seal)
 
 
-add_executable(he_box_blur main.cpp)
-target_link_libraries(he_box_blur PRIVATE utils)
+add_executable(he_gx_kernel main.cpp)
+target_link_libraries(he_gx_kernel PRIVATE utils)

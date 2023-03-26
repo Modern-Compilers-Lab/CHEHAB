@@ -44,15 +44,31 @@ void print_variables_values(const clear_args_info_map &m, std::size_t print_size
 template <typename T>
 inline void print_vector(const std::vector<T> &v, std::size_t print_size)
 {
-  if (v.size() < 2 * print_size)
+  std::size_t size = v.size();
+  if (size < 2 * print_size)
     throw std::invalid_argument("vector size must at least twice print_size");
 
-  std::size_t size = v.size();
+  if (size == 0)
+    return;
+
+  std::cout << "[";
   for (std::size_t i = 0; i < print_size; ++i)
-    std::cout << v[i] << " ";
+    std::cout << v[i] << ", ";
   if (v.size() > 2 * print_size)
-    std::cout << "... ";
+    std::cout << "..., ";
   for (std::size_t i = size - print_size; i < size - 1; ++i)
     std::cout << v[i] << " ";
-  std::cout << v.back() << "\n";
+  std::cout << v.back() << "]";
+}
+
+template <typename T>
+inline void print_vector(const std::vector<T> &v)
+{
+  if (v.size() == 0)
+    return;
+
+  std::cout << "[";
+  for (std::size_t i = 0; i < v.size() - 1; ++i)
+    std::cout << v[i] << " ";
+  std::cout << v.back() << "]";
 }
