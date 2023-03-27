@@ -1,4 +1,5 @@
 #include "../box_blur.hpp"
+#include <chrono>
 #include <iostream>
 #include <vector>
 
@@ -23,8 +24,6 @@ int main()
   Decryptor decryptor(context, secret_key);
 
   auto &context_data = *context.first_context_data();
-  int init_noise_budget =
-    context_data.total_coeff_modulus_bit_count() - context_data.parms().plain_modulus().bit_count();
 
   size_t slot_count = batch_encoder.slot_count();
   vector<uint64_t> random_data(slot_count);
@@ -43,9 +42,35 @@ int main()
   unordered_map<string, Ciphertext> encrypted_outputs;
   unordered_map<string, Plaintext> encoded_outputs;
 
-  box_blur(
-    encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, relin_keys, galois_keys,
-    public_key);
+  int repeat = 1000;
 
-  cout << decryptor.invariant_noise_budget(encrypted_outputs["output"]) << endl;
+  chrono::high_resolution_clock::time_point time_start, time_end;
+  time_start = chrono::high_resolution_clock::now();
+  for (int i = 0; i < repeat; ++i)
+    box_blur(
+      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, relin_keys, galois_keys,
+      public_key);
+  time_end = chrono::high_resolution_clock::now();
+
+  chrono::microseconds time_diff = chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+  cout << endl;
+  cout << "exec_time: " << time_diff.count() / repeat << " µs" << endl;
+
+  char c;
+  cin >> c;
+
+  int L = context.first_context_data()->parms().coeff_modulus().size();
+  cout << "output ciphertexts info (L=" << L << ")" << endl;
+  cout << "id: level, remaining_noise_budget, actual_noise_upper_bound (maybe mod_switch was used to sacrifice some "
+          "noise budget)"
+       << endl;
+  int init_noise_budget = context.first_context_data()->total_coeff_modulus_bit_count() -
+                          context.first_context_data()->parms().plain_modulus().bit_count();
+  for (const auto &output : encrypted_outputs)
+  {
+    int level = L - context.get_context_data(output.second.parms_id())->chain_index();
+    int remaining_noise_budget = decryptor.invariant_noise_budget(output.second);
+    int noise_upper_bound = init_noise_budget - remaining_noise_budget;
+    cout << output.first << ": " << level << ", " << remaining_noise_budget << ", " << noise_upper_bound << endl;
+  }
 }
