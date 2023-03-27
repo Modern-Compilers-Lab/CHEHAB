@@ -47,7 +47,7 @@ inline void print_vector(const std::vector<T> &v, std::size_t print_size)
   if (v.size() > 2 * print_size)
     std::cout << "..., ";
   for (std::size_t i = size - print_size; i < size - 1; ++i)
-    std::cout << v[i] << " ";
+    std::cout << v[i] << ", ";
   std::cout << v.back() << "]";
 }
 
@@ -59,7 +59,7 @@ inline void print_vector(const std::vector<T> &v)
 
   std::cout << "[";
   for (std::size_t i = 0; i < v.size() - 1; ++i)
-    std::cout << v[i] << " ";
+    std::cout << v[i] << ", ";
   std::cout << v.back() << "]";
 }
 

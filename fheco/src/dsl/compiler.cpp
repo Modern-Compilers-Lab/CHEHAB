@@ -56,40 +56,55 @@ void Compiler::set_active(const string &func_name)
 }
 
 void Compiler::compile(
-  const shared_ptr<ir::Program> &func, const string &output_file, SecurityLevel sec_level, bool use_mod_switch)
+  const shared_ptr<ir::Program> &func, const string &output_file, int trs_passes, SecurityLevel sec_level,
+  bool use_mod_switch)
 {
-  draw_ir(func, func->get_program_tag() + "_naive_ir.dot");
-
   fheco_passes::CSE cse_pass(func);
-  cse_pass.apply_cse2(true);
   fheco_trs::TRS trs(func);
-  trs.apply_rewrite_rules_on_program(fheco_trs::Ruleset::rules);
-  cse_pass.apply_cse2(true);
+  for (int i = 0; i < trs_passes; ++i)
+  {
+    cse_pass.apply_cse2(true);
+    trs.apply_rewrite_rules_on_program(fheco_trs::Ruleset::rules);
+  }
 
-  param_selector::ParameterSelector param_selector(func, sec_level);
-  bool uses_mod_switch = use_mod_switch;
-  param_selector::EncryptionParameters params = param_selector.select_params(uses_mod_switch);
-
-  // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
   fheco_passes::RotationKeySelctionPass rs_pass(func);
   set<int> rotation_keys_steps = rs_pass.decompose_rotations();
-
   cse_pass.apply_cse2(true);
 
   fheco_passes::RelinPass relin_pass(func);
   relin_pass.simple_relinearize();
 
+  param_selector::ParameterSelector param_selector(func, sec_level);
+  bool uses_mod_switch = use_mod_switch;
+  param_selector::EncryptionParameters params = param_selector.select_params(uses_mod_switch);
+
   translator::Translator tr(func, sec_level, params, uses_mod_switch);
   ofstream translation_os(output_file);
-
   if (!translation_os)
-    throw("couldn't open file for translation.\n");
+    throw invalid_argument("couldn't open file for translation");
 
   tr.translate_program(translation_os, rotation_keys_steps);
+}
 
-  translation_os.close();
+void Compiler::compile_noopt(
+  const shared_ptr<ir::Program> &func, const string &output_file, SecurityLevel sec_level, bool use_mod_switch)
+{
+  fheco_passes::RotationKeySelctionPass rs_pass(func);
+  set<int> rotation_keys_steps = rs_pass.decompose_rotations();
 
-  draw_ir(func, func->get_program_tag() + "_opt_ir.dot");
+  fheco_passes::RelinPass relin_pass(func);
+  relin_pass.simple_relinearize();
+
+  param_selector::ParameterSelector param_selector(func, sec_level);
+  bool uses_mod_switch = use_mod_switch;
+  param_selector::EncryptionParameters params = param_selector.select_params(uses_mod_switch);
+
+  translator::Translator tr(func, sec_level, params, uses_mod_switch);
+  ofstream translation_os(output_file);
+  if (!translation_os)
+    throw invalid_argument("couldn't open file for translation");
+
+  tr.translate_program(translation_os, rotation_keys_steps);
 }
 
 const utils::variables_values_map::mapped_type &Compiler::FuncEntry::get_node_value(const std::string &label) const
@@ -414,19 +429,21 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
     throw invalid_argument("invalid number of outputs");
 
   ofstream file(file_name);
+  file << boolalpha;
+
   auto value_var_visitor = [&file](const auto &v) {
     using T = decay_t<decltype(v)>;
     if constexpr (is_same_v<T, vector<int64_t>>)
-      file << 1 << " ";
+      file << true << " ";
     else if constexpr (std::is_same_v<T, vector<uint64_t>>)
-      file << 0 << " ";
+      file << false << " ";
     else
       static_assert(utils::always_false_v<T>, "non-exhaustive visitor!");
 
     utils::serialize_vector(v, file);
   };
 
-  file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << endl;
+  file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << "\n";
   for (const auto &v : inputs)
   {
     if (inputs_values.find(v.first) == inputs_values.end())
@@ -442,7 +459,7 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
 
     file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(value_var_visitor, v.second);
-    file << endl;
+    file << "\n";
   }
   for (const auto &v : outputs)
   {
@@ -459,26 +476,28 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
 
     file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(value_var_visitor, v.second);
-    file << endl;
+    file << "\n";
   }
 }
 
 void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) const
 {
   ofstream file(file_name);
+  file << boolalpha;
+
   auto value_var_visitor = [&file](const auto &v) {
     using T = decay_t<decltype(v)>;
     if constexpr (is_same_v<T, vector<int64_t>>)
-      file << 1 << " ";
+      file << true << " ";
     else if constexpr (std::is_same_v<T, vector<uint64_t>>)
-      file << 0 << " ";
+      file << false << " ";
     else
       static_assert(utils::always_false_v<T>, "non-exhaustive visitor!");
 
     utils::serialize_vector(v, file);
   };
 
-  file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << endl;
+  file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << "\n";
   for (const auto &v : inputs_values)
   {
     auto v_label_it = tags_labels.find(v.first);
@@ -491,7 +510,7 @@ void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) cons
 
     file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(value_var_visitor, v.second);
-    file << endl;
+    file << "\n";
   }
   for (const auto &v : outputs_values)
   {
@@ -505,7 +524,7 @@ void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) cons
 
     file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(value_var_visitor, v.second);
-    file << endl;
+    file << "\n";
   }
 }
 

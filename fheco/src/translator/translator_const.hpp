@@ -274,6 +274,7 @@ public:
       else
         os << ");";
     }
+    os << "\n";
   }
 
   void write_binary_operation(
@@ -301,9 +302,10 @@ public:
       os << ", " << other_args;
     }
     if (!is_inplace)
-      os << "," << destination_id << ");" << '\n';
+      os << "," << destination_id << ");";
     else
       os << ");";
+    os << "\n";
   }
 };
 
