@@ -446,7 +446,7 @@ void Translator::generate_function_signature(std::ofstream &os) const
             AccessType::readAndModify},
            {encoded_outputs_class_literal, outputs_class_identifier[ir::TermType::plaintext],
             AccessType::readAndModify},
-           {context_type_literal, context_identifier, AccessType::readOnly},
+           {evaluator_type_literal, evaluator_identifier, AccessType::readOnly},
            {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
            {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
            {public_key_literal, public_key_identifier, AccessType::readOnly}})

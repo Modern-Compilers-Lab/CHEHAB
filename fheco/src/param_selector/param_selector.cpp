@@ -2,6 +2,7 @@
 #include "encryption_parameters.hpp"
 #include "fhecompiler_const.hpp"
 #include "term.hpp"
+#include <iostream>
 #include <stdexcept>
 
 using namespace std;
@@ -365,7 +366,7 @@ void ParameterSelector::select_params_bfv(bool use_mod_switch)
   if (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end())
     throw logic_error("the maximum polynomial modulus degree of the noise estimates for the given plaintext modulus "
                       "size is smaller than vector_size");
-
+  int circuit_noise = 0;
   EncryptionParameters params;
   unordered_map<string, int> nodes_noise;
   while (poly_modulus_degree_noise_estimates_it != plain_mod_noise_estimates_it->second.end())
@@ -373,7 +374,7 @@ void ParameterSelector::select_params_bfv(bool use_mod_switch)
     poly_modulus_degree = poly_modulus_degree_noise_estimates_it->first;
     const NoiseEstimatesValue &noise_estimates_value = poly_modulus_degree_noise_estimates_it->second;
     nodes_noise.clear();
-    int circuit_noise = simulate_noise_bfv(noise_estimates_value, nodes_noise);
+    circuit_noise = simulate_noise_bfv(noise_estimates_value, nodes_noise);
 
     int coeff_mod_data_level_size = plain_mod_size + circuit_noise;
     params = EncryptionParameters(poly_modulus_degree, plain_mod_size, coeff_mod_data_level_size);
@@ -396,6 +397,9 @@ void ParameterSelector::select_params_bfv(bool use_mod_switch)
   }
   if (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end())
     throw logic_error("could not find suitable parameters");
+
+  cout << "circuit_noise:" << circuit_noise << endl;
+  cout << "min_q:" << params.coeff_mod_bit_count() << endl;
 
   if (program_->get_sec_level() != fhecompiler::SecurityLevel::none)
   {

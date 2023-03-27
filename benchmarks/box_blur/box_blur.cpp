@@ -16,7 +16,7 @@ extern ir::Program *program;
 int main()
 {
 
-  fhecompiler::init("box_blur", 15);
+  fhecompiler::init("box_blur", 15, true, 1024, fhecompiler::SecurityLevel::tc128, fhecompiler::Scheme::bfv);
 
   fhecompiler::Ciphertext c0("c0", fhecompiler::VarType::input);
 
@@ -31,9 +31,9 @@ int main()
 
   utils::draw_ir(program, "box_blur.hpp1.dot");
 
-  auto count = utils::count_main_node_classes(program);
-  for (const auto &e : count)
-    cout << e.first << ":" << e.second << endl;
+  // auto count = utils::count_main_node_classes(program);
+  // for (const auto &e : count)
+  //   cout << e.first << ":" << e.second << endl;
 
   fheco_passes::CSE cse_pass(program);
   fheco_trs::TRS trs(program);
@@ -42,16 +42,16 @@ int main()
   cse_pass.apply_cse2(true);
   utils::draw_ir(program, "box_blur.hpp2.dot");
 
-  cout << endl;
+  // cout << endl;
 
   param_selector::ParameterSelector param_selector(program);
   param_selector.select_params();
 
   utils::draw_ir(program, "box_blur.hpp3.dot");
 
-  count = utils::count_main_node_classes(program);
-  for (const auto &e : count)
-    cout << e.first << ": " << e.second << endl;
+  // count = utils::count_main_node_classes(program);
+  // for (const auto &e : count)
+  //   cout << e.first << ": " << e.second << endl;
 
   translator::Translator tr(program);
   {

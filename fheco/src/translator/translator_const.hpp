@@ -38,7 +38,7 @@ INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
   {ir::OpCode::sub_plain, "sub_plain"},
   {ir::OpCode::rescale, "rescale"},
   {ir::OpCode::square, "square"},
-  {ir::OpCode::rotate, "rotate_vector"},
+  {ir::OpCode::rotate, "rotate_rows"},
   {ir::OpCode::rotate_rows, "rotate_rows"},
   {ir::OpCode::rotate_columns, "rotate_columns"},
   {ir::OpCode::relinearize, "relinearize"}
@@ -60,7 +60,7 @@ INLINE std::unordered_map<ir::OpCode, const char *> ops_map_inplace = {
   {ir::OpCode::sub_plain, "sub_plain_inplace"},
   {ir::OpCode::rescale, "rescale_inplace"},
   {ir::OpCode::square, "square_inplace"},
-  {ir::OpCode::rotate, "rotate_vector_inplace"},
+  {ir::OpCode::rotate, "rotate_rows_inplace"},
   {ir::OpCode::rotate_rows, "rotate_rows_inplace"},
   {ir::OpCode::rotate_columns, "rotate_columns_inplace"},
   {ir::OpCode::relinearize, "relinearize_inplace"}
@@ -224,7 +224,6 @@ private:
   std::string evaluator_identifier;
   std::string context_identifier;
   std::string evaluator_type_literal;
-  bool is_init = false;
 
 public:
   EvaluationWriter() = default;
@@ -235,18 +234,10 @@ public:
 
   ~EvaluationWriter() {}
 
-  void init(std::ostream &os)
-  {
-    is_init = true;
-    os << evaluator_type_literal << " " << evaluator_identifier << "(" << context_identifier << ");" << '\n';
-  }
-
   void write_unary_operation(
     std::ostream &os, ir::OpCode opcode, const std::string &destination_id, const std::string &lhs_id,
     ir::TermType type)
   {
-    if (is_init == false)
-      init(os);
 
     // if destination_id == lhs_id then the instruction is inplace
 
@@ -290,8 +281,6 @@ public:
     const std::string &rhs_id, ir::TermType type)
   {
     // if destination_id == lhs_id then it is an inplace instruction
-    if (is_init == false)
-      init(os);
 
     bool is_inplace = destination_id == lhs_id;
 
@@ -316,8 +305,6 @@ public:
     else
       os << ");";
   }
-
-  bool is_initialized() const { return this->is_init; }
 };
 
 struct EncodingWriter
