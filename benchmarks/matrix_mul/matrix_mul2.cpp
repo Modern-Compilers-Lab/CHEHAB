@@ -129,8 +129,12 @@ int main()
 
   cse_pass.apply_cse2(true);
 
+  utils::draw_ir(program, "matrix_mul2.hpp2.dot");
+
   param_selector::ParameterSelector param_selector(program);
   param_selector.select_params();
+
+  utils::draw_ir(program, "matrix_mul2.hpp3.dot");
 
   cout << endl;
 

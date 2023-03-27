@@ -47,6 +47,8 @@ int main()
   param_selector::ParameterSelector param_selector(program);
   param_selector.select_params();
 
+  utils::draw_ir(program, "box_blur.hpp3.dot");
+
   count = utils::count_main_node_classes(program);
   for (const auto &e : count)
     cout << e.first << ": " << e.second << endl;

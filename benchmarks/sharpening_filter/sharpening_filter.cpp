@@ -51,6 +51,8 @@ int main()
   param_selector::ParameterSelector param_selector(program);
   param_selector.select_params();
 
+  utils::draw_ir(program, "sharpening_filter.hpp3.dot");
+
   cout << endl;
 
   count = utils::count_main_node_classes(program);
