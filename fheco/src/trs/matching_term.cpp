@@ -164,7 +164,7 @@ MatchingTerm negate(const MatchingTerm &term)
 MatchingTerm operator<<(const MatchingTerm &lhs, const MatchingTerm &rhs)
 {
   MatchingTerm new_term(
-    fheco_trs::OpCode::rotate_rows, std::vector<MatchingTerm>({lhs, rhs}), fheco_trs::TermType::ciphertext);
+    fheco_trs::OpCode::rotate, std::vector<MatchingTerm>({lhs, rhs}), fheco_trs::TermType::ciphertext);
   return new_term;
 }
 
