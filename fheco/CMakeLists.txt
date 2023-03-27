@@ -37,8 +37,10 @@ target_sources(fhecompiler PRIVATE
   ${SRC_TRS}/trs_core.cpp
   ${SRC_TRS}/trs_util_functions.cpp
   ${SRC_UTILS}/draw_ir.cpp
+  ${SRC_UTILS}/quantify_ir.cpp
   ${SRC_TRS}/reduction_order/utils.cpp
   ${SRC_TRS}/reduction_order/component_orders.cpp
+  ${SRC_TRS}/ruleset.cpp
   ${SRC_PASSES}/normalize_pass.cpp
   ${SRC_PASSES}/additional_passes.cpp
 )
@@ -74,6 +76,9 @@ install(FILES
   ${SRC_TRS}/reduction_order/component_orders.hpp
   ${SRC_TRS}/trs_core.hpp
   ${SRC_TRS}/trs_util_functions.hpp
+  ${SRC_TRS}/ruleset.hpp
+  ${SRC_UTILS}/draw_ir.hpp
+  ${SRC_UTILS}/quantify_ir.hpp
   DESTINATION ${HEADERS_INSTALL_DIR}
 )
 
