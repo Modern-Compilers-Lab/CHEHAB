@@ -1,4 +1,6 @@
 #pragma once
+
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -7,19 +9,19 @@
 namespace ir
 {
 
-using ScalarValue = std::variant<int64_t, double, uint64_t>;
+using ScalarValue = std::variant<std::int64_t, std::uint64_t, double>;
 
-using VectorValue = std::variant<std::vector<int64_t>, std::vector<double>>;
+using VectorValue = std::variant<std::vector<std::int64_t>, std::vector<std::uint64_t>, std::vector<double>>;
 
 using ConstantValue = std::variant<ScalarValue, VectorValue>;
 
-enum TermType
+enum class TermType
 {
   undefined,
-  rawDataType,
-  scalarType,
-  ciphertextType,
-  plaintextType
+  rawData,
+  scalar,
+  ciphertext,
+  plaintext
 };
 
 enum class OpCode
@@ -56,7 +58,7 @@ enum class ConstantTableEntryType
 };
 
 inline std::unordered_map<ir::TermType, std::string> term_type_label_map = {
-  {ir::scalarType, "scalar"}, {ir::plaintextType, "plaintext"}, {ir::ciphertextType, "ciphertext"}};
+  {ir::TermType::scalar, "scalar"}, {ir::TermType::plaintext, "plaintext"}, {ir::TermType::ciphertext, "ciphertext"}};
 
 inline std::unordered_map<ir::OpCode, std::string> str_opcode = {
   {OpCode::undefined, "undefined"},

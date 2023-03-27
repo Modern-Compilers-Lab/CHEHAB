@@ -334,10 +334,10 @@ void Program::replace_with(const Ptr &lhs, const Ptr &rhs)
     if (lhs_term_type != rhs_term_type)
     {
       // insert encode or encrypt
-      if (lhs_term_type == ir::ciphertextType)
+      if (lhs_term_type == ir::TermType::ciphertext)
       {
         auto new_encrypt_node =
-          insert_operation_node_in_dataflow(OpCode::encrypt, std::vector<Ptr>{rhs}, "", ir::ciphertextType);
+          insert_operation_node_in_dataflow(OpCode::encrypt, std::vector<Ptr>{rhs}, "", ir::TermType::ciphertext);
 
         update_if_output_entry(lhs->get_label(), new_encrypt_node);
       }

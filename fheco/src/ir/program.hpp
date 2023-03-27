@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dag.hpp"
+#include "encryption_parameters.hpp"
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
 #include "term.hpp"
@@ -9,6 +10,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -90,9 +92,13 @@ private:
   std::unordered_map<std::string, ConstantTableEntry>
     constants_table; // we will have a symbol table, the data structure is a hash table
 
-  fhecompiler::Scheme program_scheme;
+  int bit_width;
 
-  fhecompiler::Backend target_backed;
+  bool signedness;
+
+  fhecompiler::SecurityLevel sec_level;
+
+  fhecompiler::Scheme scheme;
 
   double scale = 0.0; // for ckks
 
@@ -100,10 +106,14 @@ private:
 
   std::size_t number_of_slots;
 
+  fhecompiler::Backend target_backed = fhecompiler::Backend::SEAL;
+
   std::size_t plain_modulus = 786433;
 
   // rotation steps in the program, this vector will be empty until rotation keys selection pass
-  std::vector<int32_t> rotations_steps;
+  std::set<int> rotations_keys_steps;
+
+  param_selector::EncryptionParameters params;
 
 public:
   using Ptr = std::shared_ptr<Term>;
@@ -113,10 +123,6 @@ public:
   Program(const std::string &tag_value) : program_tag{tag_value} { data_flow = std::make_unique<DAG>(); }
 
   ~Program() {}
-
-  void set_targeted_backed(fhecompiler::Backend backend) { target_backed = backend; }
-
-  fhecompiler::Backend get_targeted_backend() { return this->target_backed; }
 
   Ptr insert_operation_node_in_dataflow(
     OpCode _opcode, const std::vector<Ptr> &_operands, std::string label, TermType term_type);
@@ -138,6 +144,10 @@ public:
     return new_term;
   }
 
+  void set_targeted_backed(fhecompiler::Backend backend) { target_backed = backend; }
+
+  fhecompiler::Backend get_targeted_backend() { return this->target_backed; }
+
   void set_as_output(const Ptr &node);
 
   void update_tag_value_in_constants_table_entry(const std::string &entry_key, const std::string &tag_value);
@@ -147,8 +157,6 @@ public:
   std::optional<std::string> get_tag_value_in_constants_table_entry_if_exists(const std::string &entry_key);
 
   void set_node_operands(const std::string &node_label, const std::vector<Ptr> &new_opreands);
-
-  void set_scheme(fhecompiler::Scheme program_scheme_value) { program_scheme = program_scheme_value; }
 
   void insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry);
 
@@ -172,12 +180,6 @@ public:
 
   ConstantTableEntryType type_of(const std::string &label);
 
-  void set_plain_modulus(std::size_t modulus) { this->plain_modulus = modulus; }
-
-  std::size_t get_plain_modulus() const { return this->plain_modulus; }
-
-  // std::size_t get_dimension() const { return this->dimension; }
-
   void compact_assignement(const ir::Term::Ptr &node_ptr);
 
   void flatten_term_operand_by_one_level_at_index(const ir::Term::Ptr &term, std::size_t index);
@@ -196,19 +198,33 @@ public:
 
   const std::string &get_program_tag() const { return this->program_tag; }
 
-  fhecompiler::Scheme get_encryption_scheme() const { return this->program_scheme; }
+  fhecompiler::Scheme get_encryption_scheme() const { return this->scheme; }
 
-  void set_scale(double _scale) { scale = _scale; }
+  void set_bit_width(int bit_width) { this->bit_width = bit_width; }
 
-  double get_scale() { return scale; }
+  int get_bit_width() const { return this->bit_width; }
 
-  void set_vector_size(std::size_t vec_size) { vector_size = vec_size; }
+  void set_signedness(bool signedness) { this->signedness = signedness; }
+
+  bool get_signedness() const { return this->signedness; }
+
+  size_t get_plain_modulus() const { return plain_modulus; }
+
+  void set_vector_size(std::size_t vector_size) { this->vector_size = vector_size; }
 
   std::size_t get_vector_size() const { return vector_size; }
 
-  void set_number_of_slots(std::size_t nb_slots) { number_of_slots = nb_slots; }
+  void set_sec_level(fhecompiler::SecurityLevel sec_level) { this->sec_level = sec_level; }
 
-  std::size_t get_number_of_slots() { return number_of_slots; }
+  fhecompiler::SecurityLevel get_sec_level() const { return sec_level; }
+
+  void set_scheme(fhecompiler::Scheme scheme) { this->scheme = scheme; }
+
+  fhecompiler::Scheme get_scheme() const { return scheme; }
+
+  void set_scale(double _scale) { scale = _scale; }
+
+  double get_scale() const { return scale; }
 
   bool is_tracked_object(const std::string &label);
 
@@ -216,13 +232,13 @@ public:
 
   void add_node_to_outputs_nodes(const Ptr &node);
 
-  void set_rotations_steps(std::vector<int32_t> &steps) { rotations_steps = steps; }
+  // void set_rotations_steps(std::vector<int32_t> &steps) { rotations_steps = steps; }
   /*
     key is the node label
   */
   std::optional<ConstantValue> get_entry_value_value(const std::string &key) const;
 
-  const std::vector<int32_t> &get_rotations_steps() const { return rotations_steps; }
+  // const std::vector<int32_t> &get_rotations_steps() const { return rotations_steps; }
 
   /*
     This method updates the entry in outputs_nodes map in data_flow, the reason is to keep the same identifier
@@ -233,6 +249,14 @@ public:
   void replace_with(const Ptr &lhs, const Ptr &rhs);
 
   bool is_output_node(const std::string &label);
+
+  void set_rotations_keys_steps(const std::set<int> &steps) { rotations_keys_steps = steps; }
+
+  const std::set<int> &get_rotations_keys_steps() const { return rotations_keys_steps; }
+
+  void set_params(const param_selector::EncryptionParameters &params) { this->params = params; }
+
+  const param_selector::EncryptionParameters &get_params() const { return params; }
 };
 
 /*

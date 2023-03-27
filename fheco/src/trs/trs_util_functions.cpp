@@ -14,12 +14,12 @@ namespace util_functions
     */
     ir::Program::Ptr folded_ir_node = ir::fold_ir_term(matching_map[term_to_fold.get_term_id()], program);
     matching_map[term_to_fold.get_term_id()] = folded_ir_node;
-    if (folded_ir_node->get_term_type() == ir::TermType::plaintextType)
-      term_to_fold.set_term_type(fheco_trs::TermType::plaintextType);
-    else if (folded_ir_node->get_term_type() == ir::TermType::scalarType)
-      term_to_fold.set_term_type(fheco_trs::TermType::scalarType);
-    else if (folded_ir_node->get_term_type() == ir::TermType::rawDataType)
-      term_to_fold.set_term_type(fheco_trs::TermType::rawDataType);
+    if (folded_ir_node->get_term_type() == ir::TermType::plaintext)
+      term_to_fold.set_term_type(fheco_trs::TermType::plaintext);
+    else if (folded_ir_node->get_term_type() == ir::TermType::scalar)
+      term_to_fold.set_term_type(fheco_trs::TermType::scalar);
+    else if (folded_ir_node->get_term_type() == ir::TermType::rawData)
+      term_to_fold.set_term_type(fheco_trs::TermType::rawData);
     else
       throw("unexpected ir node type in fold");
     return term_to_fold;
@@ -80,13 +80,13 @@ namespace util_functions
     if (const_value_opt == std::nullopt)
       return false;
 
-    if (ir_node->get_term_type() == ir::scalarType)
+    if (ir_node->get_term_type() == ir::TermType::scalar)
     {
       ir::Number value = ir::get_constant_value_as_number(*const_value_opt);
 
       return (value == 1);
     }
-    else if (ir_node->get_term_type() == ir::plaintextType)
+    else if (ir_node->get_term_type() == ir::TermType::plaintext)
     {
       std::vector<ir::Number> number_vec;
       ir::get_constant_value_as_vector_of_number(*const_value_opt, number_vec);
@@ -110,13 +110,13 @@ namespace util_functions
     if (const_value_opt == std::nullopt)
       return false;
 
-    if (ir_node->get_term_type() == ir::scalarType)
+    if (ir_node->get_term_type() == ir::TermType::scalar)
     {
       ir::Number value = ir::get_constant_value_as_number(*const_value_opt);
 
       return (value == 0);
     }
-    else if (ir_node->get_term_type() == ir::plaintextType)
+    else if (ir_node->get_term_type() == ir::TermType::plaintext)
     {
       std::vector<ir::Number> number_vec;
       ir::get_constant_value_as_vector_of_number(*const_value_opt, number_vec);

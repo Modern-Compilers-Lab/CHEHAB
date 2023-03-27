@@ -76,15 +76,15 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
     ir::TermType lhs_term_type = lhs_node_ptr->get_term_type();
     ir::TermType rhs_term_type = rhs_node_ptr->get_term_type();
 
-    if (lhs_term_type == ir::ciphertextType || rhs_term_type == ir::ciphertextType)
+    if (lhs_term_type == ir::TermType::ciphertext || rhs_term_type == ir::TermType::ciphertext)
       throw("unexpected, ciphertexts evaluation is not available at compile time");
 
-    if (lhs_term_type == ir::plaintextType && rhs_term_type == ir::plaintextType)
+    if (lhs_term_type == ir::TermType::plaintext && rhs_term_type == ir::TermType::plaintext)
     {
       new_lhs_node = ir::fold_const_plain(lhs_node_ptr, rhs_node_ptr, opcode, program);
       lhs.set_label(new_lhs_node->get_label());
     }
-    else if (lhs_term_type == ir::scalarType && rhs_term_type == ir::scalarType)
+    else if (lhs_term_type == ir::TermType::scalar && rhs_term_type == ir::TermType::scalar)
     {
       new_lhs_node = ir::fold_scalar(lhs_node_ptr, rhs_node_ptr, opcode, program);
       lhs.set_label(new_lhs_node->get_label());
@@ -171,10 +171,10 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
     ir::TermType lhs_term_type = lhs_node_ptr->get_term_type();
     ir::TermType rhs_term_type = rhs_node_ptr->get_term_type();
 
-    if (lhs_term_type == ir::ciphertextType || rhs_term_type == ir::ciphertextType)
+    if (lhs_term_type == ir::TermType::ciphertext || rhs_term_type == ir::TermType::ciphertext)
       throw("ciphertexts evaluation is not available at compile time");
 
-    if (lhs_term_type == ir::plaintextType && rhs_term_type == ir::plaintextType)
+    if (lhs_term_type == ir::TermType::plaintext && rhs_term_type == ir::TermType::plaintext)
     {
       auto folded_term = ir::fold_const_plain(lhs_node_ptr, rhs_node_ptr, opcode, program);
       T1 new_T("");
@@ -182,7 +182,7 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
       return new_T;
     }
 
-    else if (lhs_term_type == ir::scalarType && rhs_term_type == ir::scalarType)
+    else if (lhs_term_type == ir::TermType::scalar && rhs_term_type == ir::TermType::scalar)
     {
       auto folded_term = ir::fold_scalar(lhs_node_ptr, rhs_node_ptr, opcode, program);
       T1 new_T("");
@@ -515,7 +515,7 @@ void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode op
   if (program == nullptr)
     throw(program_not_init_msg);
 
-  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawDataType);
+  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawData);
   Ptr lhs_term = program->find_node_in_dataflow(lhs.get_label());
 
   if (lhs_term == nullptr)
@@ -552,7 +552,7 @@ T operate_with_raw(const T &lhs, datatype::rawData raw_data, ir::OpCode opcode, 
     throw(program_not_init_msg);
 
   T new_T("");
-  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawDataType);
+  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawData);
   Ptr lhs_term = program->find_node_in_dataflow(lhs.get_label());
   if (lhs_term == nullptr)
     throw(" operand not defined, maybe it is a temporary and it is only declared \n");

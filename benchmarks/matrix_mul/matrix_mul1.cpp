@@ -2,6 +2,7 @@
 #include "fhecompiler/draw_ir.hpp"
 #include "fhecompiler/fhecompiler.hpp"
 #include "fhecompiler/normalize_pass.hpp"
+#include "fhecompiler/param_selector.hpp"
 #include "fhecompiler/quantify_ir.hpp"
 #include "fhecompiler/ruleset.hpp"
 #include "fhecompiler/trs.hpp"
@@ -29,9 +30,7 @@ inline fhecompiler::Ciphertext sum_all_slots(const fhecompiler::Ciphertext &x, i
 int main()
 {
 
-  fhecompiler::init("matrix_mul", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
-
-  program->set_number_of_slots(8192);
+  fhecompiler::init("matrix_mul1", 15);
 
   std::vector<std::vector<int64_t>> A = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
   std::vector<std::vector<int64_t>> B = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
@@ -117,11 +116,26 @@ int main()
 
   cse_pass.apply_cse2(true);
 
+  param_selector::ParameterSelector param_selector(program);
+  param_selector.select_params();
+
   cout << endl;
 
   count = utils::count_main_node_classes(program);
   for (const auto &e : count)
     cout << e.first << ": " << e.second << endl;
+
+  translator::Translator tr(program);
+  {
+    std::ofstream translation_os("matrix_mul1.hpp");
+
+    if (!translation_os)
+      throw("couldn't open file for translation.\n");
+
+    tr.translate_program(translation_os);
+
+    translation_os.close();
+  }
 
   delete program;
   program = nullptr;

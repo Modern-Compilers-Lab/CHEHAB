@@ -146,7 +146,7 @@ void Term::set_a_default_label()
   if (type == TermType::undefined)
     throw("undefined term type in set_a_default_label");
 
-  if (type == TermType::rawDataType)
+  if (type == TermType::rawData)
     return; /* we don't change the label of a rawDataType node as it is the actual value
              */
   label = term_type_label_map[type] + std::to_string(term_id);

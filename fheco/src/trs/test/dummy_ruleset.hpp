@@ -18,14 +18,14 @@ namespace ruleset
   T k(TermType::variable);
   T n(TermType::constant);
   T m(TermType::constant);
-  T p(TermType::rawDataType);
-  T q(TermType::rawDataType);
+  T p(TermType::rawData);
+  T q(TermType::rawData);
   T c0(TermType::constant);
   T c1(TermType::constant);
-  T t1(TermType::ciphertextType);
-  T t2(TermType::ciphertextType);
-  T t3(TermType::ciphertextType);
-  T t4(TermType::ciphertextType);
+  T t1(TermType::ciphertext);
+  T t2(TermType::ciphertext);
+  T t3(TermType::ciphertext);
+  T t4(TermType::ciphertext);
   T w(TermType::variable);
   T u(TermType::variable);
 
@@ -55,15 +55,15 @@ namespace ruleset
     {((c0 * x) * y), ((x * y) * c0)} /*rule7*/,
     {(y * (x * c0)), ((x * y) * c0)} /*rule7*/,
     {(y * (c0 * x)), ((x * y) * c0)} /*rule7*/,
-    {(x * x), square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
-    {(x * y) * x, y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
-    {x * (x * y), y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
-    {(y * x) * x, y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
-    {x * (y * x), y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
+    {(x * x), square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertext)},
+    {(x * y) * x, y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertext)},
+    {x * (x * y), y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertext)},
+    {(y * x) * x, y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertext)},
+    {x * (y * x), y *square(x), MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertext)},
     {((x * y) * z) * x, (y * z) * square(x),
-     MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
+     MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertext)},
     {x * ((x * y) * z), (y * z) * square(x),
-     MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertextType)},
+     MatchingTerm::type_of(x) == static_cast<int>(ir::TermType::ciphertext)},
     {(x * (y << p)) * (z << q), x *(((y << T::fold(p - q)) * z) << q),
      (p > q) && (p > 0) && (q > 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},
     {((y << p) * x) * (z << q), x *(((y << T::fold(p - q)) * z) << q),

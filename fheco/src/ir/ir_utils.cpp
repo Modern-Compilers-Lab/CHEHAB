@@ -1,6 +1,7 @@
 #include "ir_utils.hpp"
-#include "fhecompiler_const.hpp"
 #include <cmath>
+#include <cstdint>
+#include <stdexcept>
 
 namespace ir
 {
@@ -8,7 +9,7 @@ namespace ir
 std::shared_ptr<ir::Term> fold_raw(
   const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, ir::OpCode opcode)
 {
-  if ((lhs->get_term_type() != ir::rawDataType) || (rhs->get_term_type() != ir::rawDataType))
+  if ((lhs->get_term_type() != ir::TermType::rawData) || (rhs->get_term_type() != ir::TermType::rawData))
   {
     throw("a non rawDataType in fold_raw function");
   }
@@ -28,7 +29,7 @@ std::shared_ptr<ir::Term> fold_raw(
     else
       throw("unsupported operation in fold_raw");
 
-    ir::Term new_raw_node(std::to_string(folded_value), ir::rawDataType);
+    ir::Term new_raw_node(std::to_string(folded_value), ir::TermType::rawData);
     return std::make_shared<ir::Term>(new_raw_node);
   }
 }
@@ -36,7 +37,7 @@ std::shared_ptr<ir::Term> fold_raw(
 std::shared_ptr<ir::Term> fold_scalar(
   const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, ir::OpCode opcode, ir::Program *program)
 {
-  if (lhs->get_term_type() != ir::scalarType || rhs->get_term_type() != ir::scalarType)
+  if (lhs->get_term_type() != ir::TermType::scalar || rhs->get_term_type() != ir::TermType::scalar)
     throw("a non scalarType in fold_scalar");
 
   if (opcode == ir::OpCode::add)
@@ -59,7 +60,7 @@ std::shared_ptr<ir::Term> fold_scalar_helper(
   const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs,
   const std::function<void(Number &, Number, Modulus)> &e_func, Program *program)
 {
-  ir::Term new_scalar(ir::TermType::scalarType);
+  ir::Term new_scalar(ir::TermType::scalar);
   new_scalar.set_a_default_label();
 
   const char *nullopt_ex_msg = "unexpected nullopt in fold_scalar_helper";
@@ -109,7 +110,7 @@ Number get_constant_value_as_number(ir::ConstantValue const_value)
   if (auto v = std::get_if<int64_t>(&scalar_value))
     return static_cast<Number>(*v);
   else
-    return std::get<double>(scalar_value);
+    throw std::runtime_error("could not get scalar value");
 }
 
 void cast_int_vector_to_number(const std::vector<int64_t> &int_vector, std::vector<Number> &double_vector)
@@ -127,7 +128,7 @@ void cast_number_vector_to_int(const std::vector<Number> &double_vector, std::ve
     int_vector.resize(double_vector.size());
 
   for (size_t i = 0; i < int_vector.size(); i++)
-    int_vector[i] = static_cast<int64_t>(double_vector[i]);
+    int_vector[i] = static_cast<std::int64_t>(double_vector[i]);
 }
 
 void get_constant_value_as_vector_of_number(ir::ConstantValue const_value, std::vector<Number> &double_vector)
@@ -152,14 +153,14 @@ std::shared_ptr<ir::Term> fold_const_plain_helper(
 {
   auto lhs_const_value_opt = program->get_entry_value_value(lhs->get_label());
 
-  if (lhs_const_value_opt == std::nullopt || lhs->get_term_type() != ir::plaintextType)
+  if (lhs_const_value_opt == std::nullopt || lhs->get_term_type() != ir::TermType::plaintext)
   {
     throw("only plaintexts with a value at compile time are expected at fold_const_plain_helper");
   }
 
   auto rhs_const_value_opt = program->get_entry_value_value(rhs->get_label());
 
-  if (rhs_const_value_opt == std::nullopt || rhs->get_term_type() != ir::plaintextType)
+  if (rhs_const_value_opt == std::nullopt || rhs->get_term_type() != ir::TermType::plaintext)
   {
     throw("only plaintexts with a value at compile time are expected at fold_const_plain_helper");
   }
@@ -179,7 +180,7 @@ std::shared_ptr<ir::Term> fold_const_plain_helper(
 
   e_func(lhs_vec, rhs_vec, program->get_plain_modulus());
 
-  std::shared_ptr<ir::Term> plain_const_term = std::make_shared<ir::Term>(ir::TermType::plaintextType);
+  std::shared_ptr<ir::Term> plain_const_term = std::make_shared<ir::Term>(ir::TermType::plaintext);
   plain_const_term->set_a_default_label();
 
   if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
@@ -244,20 +245,20 @@ std::shared_ptr<ir::Term> fold_plain_scalar_helper(
   std::vector<Number> plain_vec;
   ir::Number scalar_value;
 
-  if (lhs->get_term_type() == ir::plaintextType)
+  if (lhs->get_term_type() == ir::TermType::plaintext)
   {
     get_constant_value_as_vector_of_number(lhs_const_value, plain_vec);
 
-    if (rhs->get_term_type() != ir::scalarType)
+    if (rhs->get_term_type() != ir::TermType::scalar)
       throw("scalar expected at this stage in fold_plain_scalar_helper");
 
     scalar_value = get_constant_value_as_number(rhs_const_value);
   }
-  else if (rhs->get_term_type() == ir::plaintextType)
+  else if (rhs->get_term_type() == ir::TermType::plaintext)
   {
     get_constant_value_as_vector_of_number(rhs_const_value, plain_vec);
 
-    if (lhs->get_term_type() != ir::scalarType)
+    if (lhs->get_term_type() != ir::TermType::scalar)
       throw("scalar expected at this stage in fold_plain_scalar_helper");
 
     scalar_value = get_constant_value_as_number(lhs_const_value);
@@ -265,7 +266,7 @@ std::shared_ptr<ir::Term> fold_plain_scalar_helper(
 
   op_func(plain_vec, scalar_value, program->get_plain_modulus());
 
-  std::shared_ptr<ir::Term> const_node = std::make_shared<ir::Term>(TermType::plaintextType);
+  std::shared_ptr<ir::Term> const_node = std::make_shared<ir::Term>(TermType::plaintext);
   const_node->set_a_default_label();
 
   if (program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
@@ -304,7 +305,7 @@ std::shared_ptr<ir::Term> fold_plain_scalar(
     break;
 
   case OpCode::sub:
-    if (lhs->get_term_type() == ir::scalarType)
+    if (lhs->get_term_type() == ir::TermType::scalar)
     {
       return fold_plain_scalar_helper(lhs, rhs, subtract_vector_of_number_to_number, program);
     }
@@ -326,11 +327,11 @@ int32_t get_rotation_step(const std::shared_ptr<ir::Term> &node)
   if (node->get_opcode() != ir::OpCode::rotate)
     throw std::logic_error("rotation node expected in get_rotation_step");
 
-  if (node->get_operands()[0]->get_term_type() == ir::rawDataType)
+  if (node->get_operands()[0]->get_term_type() == ir::TermType::rawData)
   {
     return std::stoi(node->get_operands()[0]->get_label());
   }
-  else if (node->get_operands()[1]->get_term_type() == ir::rawDataType)
+  else if (node->get_operands()[1]->get_term_type() == ir::TermType::rawData)
   {
     return std::stoi(node->get_operands()[1]->get_label());
   }
@@ -342,11 +343,11 @@ ir::TermType deduce_ir_term_type(const ir::Program::Ptr &lhs, const ir::Program:
   if (lhs->get_term_type() == rhs->get_term_type())
     return lhs->get_term_type();
 
-  if (lhs->get_term_type() == ir::ciphertextType || rhs->get_term_type() == ir::ciphertextType)
-    return ir::ciphertextType;
+  if (lhs->get_term_type() == ir::TermType::ciphertext || rhs->get_term_type() == ir::TermType::ciphertext)
+    return ir::TermType::ciphertext;
 
-  if (lhs->get_term_type() == ir::plaintextType || rhs->get_term_type() == ir::plaintextType)
-    return ir::plaintextType;
+  if (lhs->get_term_type() == ir::TermType::plaintext || rhs->get_term_type() == ir::TermType::plaintext)
+    return ir::TermType::plaintext;
 
   throw("couldn't deduce ir term type");
 }
@@ -361,11 +362,11 @@ ir::TermType deduce_ir_term_type(const std::vector<ir::Program::Ptr> &terms)
 
   for (size_t i = 0; i < terms.size(); i++)
   {
-    if (terms[i]->get_term_type() == ir::ciphertextType)
-      return ciphertextType;
+    if (terms[i]->get_term_type() == ir::TermType::ciphertext)
+      return ir::TermType::ciphertext;
 
-    if (terms[i]->get_term_type() == ir::plaintextType)
-      return ir::plaintextType;
+    if (terms[i]->get_term_type() == ir::TermType::plaintext)
+      return ir::TermType::plaintext;
   }
   return terms[0]->get_term_type();
 }
@@ -376,7 +377,7 @@ std::shared_ptr<ir::Term> fold_ir_term(const std::shared_ptr<ir::Term> &term, ir
   if (term->is_operation_node() == false)
     return term;
 
-  if (term->get_term_type() == ir::ciphertextType)
+  if (term->get_term_type() == ir::TermType::ciphertext)
     return term;
 
   auto operands = term->get_operands();
@@ -393,13 +394,13 @@ std::shared_ptr<ir::Term> fold_ir_term(const std::shared_ptr<ir::Term> &term, ir
   bool is_rhs_const = (folded_rhs->is_operation_node() == false) &&
                       (program->get_entry_value_value(folded_rhs->get_label()) != std::nullopt);
 
-  if ((folded_lhs->get_term_type() == ir::rawDataType) && (folded_rhs->get_term_type() == ir::rawDataType))
+  if ((folded_lhs->get_term_type() == ir::TermType::rawData) && (folded_rhs->get_term_type() == ir::TermType::rawData))
   {
     std::shared_ptr<ir::Term> folded_term = ir::fold_raw(folded_lhs, folded_rhs, term->get_opcode());
     term->replace_with(folded_term);
     return term;
   }
-  else if (folded_rhs->get_term_type() == ir::scalarType && folded_lhs->get_term_type() == ir::scalarType)
+  else if (folded_rhs->get_term_type() == ir::TermType::scalar && folded_lhs->get_term_type() == ir::TermType::scalar)
   {
     if (is_lhs_const && is_rhs_const)
     {
@@ -410,7 +411,8 @@ std::shared_ptr<ir::Term> fold_ir_term(const std::shared_ptr<ir::Term> &term, ir
     else
       throw("scalars must be constants in fold_ir_term");
   }
-  else if (folded_rhs->get_term_type() == ir::plaintextType && folded_lhs->get_term_type() == ir::plaintextType)
+  else if (
+    folded_rhs->get_term_type() == ir::TermType::plaintext && folded_lhs->get_term_type() == ir::TermType::plaintext)
   {
     if (is_lhs_const && is_rhs_const)
     {
@@ -450,10 +452,10 @@ void print_ops_counters(Program *program)
     auto &lhs = operands[0];
     auto &rhs = operands[1];
 
-    if ((lhs->get_term_type() == ir::plaintextType) || (lhs->get_term_type() == ir::scalarType))
+    if ((lhs->get_term_type() == ir::TermType::plaintext) || (lhs->get_term_type() == ir::TermType::scalar))
       return true;
 
-    if ((rhs->get_term_type() == ir::plaintextType) || (rhs->get_term_type() == ir::scalarType))
+    if ((rhs->get_term_type() == ir::TermType::plaintext) || (rhs->get_term_type() == ir::TermType::scalar))
       return true;
 
     return false;
@@ -469,7 +471,7 @@ void print_ops_counters(Program *program)
     if (node->is_operation_node() == false)
       continue;
 
-    if (node->get_term_type() == ir::TermType::ciphertextType)
+    if (node->get_term_type() == ir::TermType::ciphertext)
     {
       switch ((node->get_opcode()))
       {
@@ -628,7 +630,7 @@ void negate_value_if_possible(const std::string &label, Program *program)
 
   ir::ConstantValue const_value = *const_value_opt;
 
-  if (node_ptr->get_term_type() == ir::plaintextType)
+  if (node_ptr->get_term_type() == ir::TermType::plaintext)
   {
     std::vector<Number> vec;
     get_constant_value_as_vector_of_number(const_value, vec);
@@ -648,7 +650,7 @@ void negate_value_if_possible(const std::string &label, Program *program)
 
     return;
   }
-  else if (node_ptr->get_term_type() == ir::scalarType)
+  else if (node_ptr->get_term_type() == ir::TermType::scalar)
   {
     Number value;
     value = get_constant_value_as_number(const_value);
@@ -704,7 +706,7 @@ bool check_constants_value_equality(const ConstantValue &lhs, const ConstantValu
 {
   if (lhs.index() != rhs.index())
     return false;
-  else if (term_type == ir::plaintextType)
+  else if (term_type == ir::TermType::plaintext)
   {
     std::vector<ir::Number> lhs_v;
     ir::get_constant_value_as_vector_of_number(lhs, lhs_v);
@@ -720,7 +722,7 @@ bool check_constants_value_equality(const ConstantValue &lhs, const ConstantValu
 
     return true;
   }
-  else if (term_type == ir::scalarType)
+  else if (term_type == ir::TermType::scalar)
   {
     ir::Number lhs_v = ir::get_constant_value_as_number(lhs);
     ir::Number rhs_v = ir::get_constant_value_as_number(rhs);
@@ -754,7 +756,7 @@ Program::Ptr get_rotation_node_operand(const Program::Ptr &node)
   if (node->get_opcode() != ir::OpCode::rotate)
     throw std::logic_error("rotation node expected in ir::get_rotation_node_operand");
 
-  if (node->get_operands()[0]->get_term_type() == ir::TermType::ciphertextType)
+  if (node->get_operands()[0]->get_term_type() == ir::TermType::ciphertext)
     return node->get_operands()[0];
 
   return node->get_operands()[1];
@@ -765,7 +767,7 @@ Program::Ptr get_rotation_step_node(const Program::Ptr &node)
   if (node->get_opcode() != ir::OpCode::rotate)
     throw std::logic_error("rotation node expected in ir::get_rotation_node_operand");
 
-  if (node->get_operands()[0]->get_term_type() == ir::rawDataType)
+  if (node->get_operands()[0]->get_term_type() == ir::TermType::rawData)
     return node->get_operands()[0];
 
   return node->get_operands()[1];

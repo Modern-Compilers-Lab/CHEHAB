@@ -72,14 +72,14 @@ struct SEid
     if ((lhs_const_value_opt != std::nullopt) != (rhs_const_value_opt != std::nullopt))
       return false;
 
-    if (id.expr_ptr->get_term_type() == ir::scalarType)
+    if (id.expr_ptr->get_term_type() == ir::TermType::scalar)
     {
-      return ir::check_constants_value_equality(*lhs_const_value_opt, *rhs_const_value_opt, ir::scalarType);
+      return ir::check_constants_value_equality(*lhs_const_value_opt, *rhs_const_value_opt, ir::TermType::scalar);
     }
 
-    if (id.expr_ptr->get_term_type() == ir::plaintextType && (lhs_const_value_opt != std::nullopt))
+    if (id.expr_ptr->get_term_type() == ir::TermType::plaintext && (lhs_const_value_opt != std::nullopt))
     {
-      return ir::check_constants_value_equality(*lhs_const_value_opt, *rhs_const_value_opt, ir::plaintextType);
+      return ir::check_constants_value_equality(*lhs_const_value_opt, *rhs_const_value_opt, ir::TermType::plaintext);
     }
 
     return id.expr_ptr->get_label() == this->expr_ptr->get_label(); // inputs
@@ -124,7 +124,7 @@ struct SEidHash
       }
       else
       {
-        if (term_type == ir::scalarType)
+        if (term_type == ir::TermType::scalar)
         {
           ir::Number number_value = ir::get_constant_value_as_number(*const_value_opt);
           return ir::hash_number(number_value);

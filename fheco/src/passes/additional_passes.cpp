@@ -44,7 +44,7 @@ void optimize_SOR_pass(ir::Program *program, ir::OpCode target_opcode)
     if (node->get_opcode() != target_opcode)
       continue;
 
-    if (node->get_term_type() != ir::TermType::ciphertextType)
+    if (node->get_term_type() != ir::TermType::ciphertext)
       continue;
 
     bool only_rotations(false);
@@ -310,10 +310,10 @@ ir::Program::Ptr optimize_SOR_helper(
       auto rhs_rot_node = rot_nodes[right_pointer++];
       auto rhs_rot_node_operand = ir::get_rotation_node_operand(rhs_rot_node);
       auto new_t_op_node = program->insert_operation_node_in_dataflow(
-        target_opcode, {mid_node, rhs_rot_node_operand}, "", ir::TermType::ciphertextType);
+        target_opcode, {mid_node, rhs_rot_node_operand}, "", ir::TermType::ciphertext);
       auto lhs_step_node = ir::get_rotation_step_node(lhs_rot_node);
       auto new_rot_node = program->insert_operation_node_in_dataflow(
-        ir::OpCode::rotate, {new_t_op_node, lhs_step_node}, "", ir::ciphertextType);
+        ir::OpCode::rotate, {new_t_op_node, lhs_step_node}, "", ir::TermType::ciphertext);
 
       new_rot_nodes.push_back(new_rot_node);
     }
@@ -346,12 +346,12 @@ ir::Program::Ptr recover_binary_shape_of_SOR(
     return sor[0];
 
   auto curr_node =
-    program->insert_operation_node_in_dataflow(target_opcode, {sor[0], sor[1]}, "", ir::TermType::ciphertextType);
+    program->insert_operation_node_in_dataflow(target_opcode, {sor[0], sor[1]}, "", ir::TermType::ciphertext);
 
   for (size_t i = 2; i < sor.size(); i++)
   {
     curr_node =
-      program->insert_operation_node_in_dataflow(target_opcode, {curr_node, sor[i]}, "", ir::TermType::ciphertextType);
+      program->insert_operation_node_in_dataflow(target_opcode, {curr_node, sor[i]}, "", ir::TermType::ciphertext);
   }
 
   return curr_node;
@@ -375,7 +375,7 @@ ir::Program::Ptr recover_binary_shape_of_SOR(
         auto lhs = curr_level[i];
         auto rhs = curr_level[i + 1];
         new_level.push_back(
-          program->insert_operation_node_in_dataflow(target_opcode, {lhs, rhs}, "", ir::ciphertextType));
+          program->insert_operation_node_in_dataflow(target_opcode, {lhs, rhs}, "", ir::TermType::ciphertext));
       }
       else
         new_level.push_back(curr_level[i]);

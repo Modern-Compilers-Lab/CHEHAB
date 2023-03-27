@@ -3,6 +3,7 @@
 #include "cse_pass.hpp"
 #include "draw_ir.hpp"
 #include "normalize_pass.hpp"
+#include "param_selector.hpp"
 #include "relin_pass.hpp"
 #include "rotationkeys_select_pass.hpp"
 #include "trs.hpp"
@@ -18,37 +19,31 @@ ir::Program *program;
 namespace fhecompiler
 {
 
-void init(const std::string &program_name, Scheme program_scheme, Backend backend, std::size_t vec_size, double scale)
+void init(
+  const std::string &name, int bit_width, bool signedness, std::size_t vec_size, SecurityLevel sec_level, Scheme scheme,
+  double scale)
 {
 
   if (program != nullptr)
     delete program;
 
-  program = new ir::Program(program_name);
+  program = new ir::Program(name);
 
-  program->set_scheme(program_scheme);
-  program->set_targeted_backed(backend);
-  program->set_scale(scale);
+  program->set_bit_width(bit_width);
+  program->set_signedness(signedness);
   program->set_vector_size(vec_size);
-  // program->set_number_of_slots(number_of_slots);
-  if (program_scheme == Scheme::ckks && scale == 0.0)
+  program->set_sec_level(sec_level);
+  program->set_scheme(scheme);
+  program->set_scale(scale);
+
+  if (scheme == Scheme::ckks && scale == 0.0)
   {
     throw("scale is missing for CKKS\n");
   }
 }
 
-void compile(const std::string &output_filename, params_selector::EncryptionParameters *params)
+void compile(const std::string &output_filename)
 {
-  /*
-  params_selector::ParameterSelector parameters_selector(program);
-  params_selector::EncryptionParameters params = parameters_selector.select_parameters();
-  */
-
-  std::cout << "compilation...\n";
-
-  params_selector::ParameterSelector parameters_selector(program);
-
-  parameters_selector.fix_parameters(*params);
 
   // compact assignement pass
   {
@@ -110,7 +105,12 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   utils::draw_ir(program, output_filename + "2.dot");
 
+  param_selector::ParameterSelector param_selector(program);
+  param_selector.select_params();
+
   // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
+  fheco_passes::RotationKeySelctionPass rs_pass(program);
+  rs_pass.decompose_rotations();
 
   // fheco_passes::RotationKeySelctionPass rs_pass(program, params);
   // rs_pass.collect_program_rotations_steps();
@@ -123,7 +123,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
 
-  translator::Translator tr(program, params);
+  translator::Translator tr(program);
   {
     std::ofstream translation_os(output_filename);
 

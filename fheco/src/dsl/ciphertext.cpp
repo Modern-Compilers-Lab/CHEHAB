@@ -27,15 +27,15 @@ Ciphertext::Ciphertext() : label(datatype::ct_label_prefix + std::to_string(Ciph
 
 Ciphertext &Ciphertext::operator=(Ciphertext &&ct_move)
 {
-  // return operate_assignement<Ciphertext>(*this, ct_move, ir::ciphertextType);
-  operate_move_assignement<Ciphertext>(*this, std::move(ct_move), ir::ciphertextType);
+  // return operate_assignement<Ciphertext>(*this, ct_move, ir::TermType::ciphertext);
+  operate_move_assignement<Ciphertext>(*this, std::move(ct_move), ir::TermType::ciphertext);
   return *this;
 }
 
 Ciphertext::Ciphertext(Ciphertext &&ct_move)
   : label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++))
 {
-  operate_move<Ciphertext>(*this, std::move(ct_move), ir::ciphertextType);
+  operate_move<Ciphertext>(*this, std::move(ct_move), ir::TermType::ciphertext);
 }
 
 Ciphertext Ciphertext::encrypt(const Plaintext &pt)
@@ -48,7 +48,7 @@ Ciphertext Ciphertext::encrypt(const Plaintext &pt)
   {
     throw("plaintext to encrypt is not defined, maybe it is only declared.\n");
   }
-  return operate_unary<Ciphertext, Plaintext>(pt, ir::OpCode::encrypt, ir::ciphertextType);
+  return operate_unary<Ciphertext, Plaintext>(pt, ir::OpCode::encrypt, ir::TermType::ciphertext);
 }
 
 Ciphertext::Ciphertext(const std::string &tag, VarType var_type)
@@ -67,46 +67,47 @@ Ciphertext::Ciphertext(const std::string &tag, VarType var_type)
 
 Ciphertext &Ciphertext::operator=(const Ciphertext &ct_copy)
 {
-  return operate_copy_assignement<Ciphertext>(*this, ct_copy, ir::ciphertextType);
+  return operate_copy_assignement<Ciphertext>(*this, ct_copy, ir::TermType::ciphertext);
 }
 
 Ciphertext::Ciphertext(const Ciphertext &ct_copy) : label(datatype::ct_label_prefix + std::to_string(ciphertext_id++))
 {
   /*
   auto ct_copy_node_ptr = program->insert_node_in_dataflow<Ciphertext>(ct_copy);
-  program->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, this->label, ir::ciphertextType);
+  program->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, this->label,
+  ir::TermType::ciphertext);
   */
-  operate_copy<Ciphertext>(*this, ct_copy, ir::ciphertextType);
+  operate_copy<Ciphertext>(*this, ct_copy, ir::TermType::ciphertext);
 }
 
 Ciphertext &Ciphertext::operator+=(const Ciphertext &rhs)
 {
-  compound_operate<Ciphertext, Ciphertext>(*this, rhs, ir::OpCode::add, ir::ciphertextType);
+  compound_operate<Ciphertext, Ciphertext>(*this, rhs, ir::OpCode::add, ir::TermType::ciphertext);
   return *this;
 }
 
 Ciphertext &Ciphertext::operator*=(const Ciphertext &rhs)
 {
-  compound_operate<Ciphertext, Ciphertext>(*this, rhs, ir::OpCode::mul, ir::ciphertextType);
+  compound_operate<Ciphertext, Ciphertext>(*this, rhs, ir::OpCode::mul, ir::TermType::ciphertext);
   return *this;
 }
 
 Ciphertext &Ciphertext::operator-=(const Ciphertext &rhs)
 {
-  compound_operate<Ciphertext, Ciphertext>(*this, rhs, ir::OpCode::sub, ir::ciphertextType);
+  compound_operate<Ciphertext, Ciphertext>(*this, rhs, ir::OpCode::sub, ir::TermType::ciphertext);
   return *this;
 }
 
 Ciphertext &Ciphertext::square()
 {
-  compound_operate_unary<Ciphertext, Ciphertext>(*this, ir::OpCode::square, ir::ciphertextType);
+  compound_operate_unary<Ciphertext, Ciphertext>(*this, ir::OpCode::square, ir::TermType::ciphertext);
   return *this;
 }
 
 Ciphertext &Ciphertext::exponentiate(uint64_t exponent)
 {
   // compound_operate_with_raw<Ciphertext>(*this, std::to_string(exponent), ir::OpCode::exponentiate,
-  // ir::ciphertextType); return *this;
+  // ir::TermType::ciphertext); return *this;
   // we convert exponentiate to squares
   if (exponent == 1)
     return *this;
@@ -150,7 +151,7 @@ Ciphertext &Ciphertext::rotate_rows(int steps)
     opcode = ir::OpCode::rotate_rows;
   */
 
-  compound_operate_with_raw<Ciphertext>(*this, std::to_string(steps), opcode, ir::ciphertextType);
+  compound_operate_with_raw<Ciphertext>(*this, std::to_string(steps), opcode, ir::TermType::ciphertext);
 
   return *this;
 }
@@ -163,7 +164,7 @@ Ciphertext &Ciphertext::rotate(int steps)
 
   ir::OpCode opcode = ir::OpCode::rotate;
 
-  compound_operate_with_raw<Ciphertext>(*this, std::to_string(steps), opcode, ir::ciphertextType);
+  compound_operate_with_raw<Ciphertext>(*this, std::to_string(steps), opcode, ir::TermType::ciphertext);
 
   return *this;
 }
@@ -178,14 +179,14 @@ Ciphertext &Ciphertext::rotate_columns()
     return *this;
   else
   {
-    compound_operate_unary<Ciphertext, Ciphertext>(*this, ir::OpCode::rotate_columns, ir::ciphertextType);
+    compound_operate_unary<Ciphertext, Ciphertext>(*this, ir::OpCode::rotate_columns, ir::TermType::ciphertext);
     return *this;
   }
 }
 
 Ciphertext Ciphertext::operator-()
 {
-  return operate_unary<Ciphertext, Ciphertext>(*this, ir::OpCode::negate, ir::ciphertextType);
+  return operate_unary<Ciphertext, Ciphertext>(*this, ir::OpCode::negate, ir::TermType::ciphertext);
 }
 
 Ciphertext operator+(const Ciphertext &lhs, const Ciphertext &rhs)
@@ -195,114 +196,30 @@ Ciphertext operator+(const Ciphertext &lhs, const Ciphertext &rhs)
     lhs_copy += rhs;
     return lhs_copy;
   */
-  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(lhs, rhs, ir::OpCode::add, ir::ciphertextType);
+  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(lhs, rhs, ir::OpCode::add, ir::TermType::ciphertext);
 }
 
 Ciphertext operator*(const Ciphertext &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(lhs, rhs, ir::OpCode::mul, ir::ciphertextType);
+  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(lhs, rhs, ir::OpCode::mul, ir::TermType::ciphertext);
 }
 
 Ciphertext operator-(const Ciphertext &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(lhs, rhs, ir::OpCode::sub, ir::ciphertextType);
+  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(lhs, rhs, ir::OpCode::sub, ir::TermType::ciphertext);
 }
 
 Ciphertext operator-(const Ciphertext &rhs)
 {
-  return operate_unary<Ciphertext, Ciphertext>(rhs, ir::OpCode::negate, ir::ciphertextType);
+  return operate_unary<Ciphertext, Ciphertext>(rhs, ir::OpCode::negate, ir::TermType::ciphertext);
 }
 
 Ciphertext exponentiate(const Ciphertext &lhs, uint32_t exponent)
 {
-  // return operate_with_raw<Ciphertext>(lhs, std::to_string(exponent), ir::OpCode::exponentiate, ir::ciphertextType);
+  // return operate_with_raw<Ciphertext>(lhs, std::to_string(exponent), ir::OpCode::exponentiate,
+  // ir::TermType::ciphertext);
   Ciphertext lhs_copy = lhs;
   return lhs_copy.exponentiate(exponent);
-}
-
-Ciphertext square(const Ciphertext &lhs)
-{
-  return operate_unary<Ciphertext, Ciphertext>(lhs, ir::OpCode::square, ir::ciphertextType);
-}
-
-Ciphertext operator<<(const Ciphertext &lhs, int steps)
-{
-  return rotate(lhs, steps);
-}
-
-Ciphertext operator>>(const Ciphertext &lhs, int steps)
-{
-  return rotate(lhs, -steps);
-}
-
-Ciphertext &Ciphertext::operator<<=(int steps)
-{
-  this->rotate(steps);
-  return *this;
-}
-
-Ciphertext &Ciphertext::operator>>=(int steps)
-{
-  this->rotate(-steps);
-  return *this;
-}
-
-Ciphertext rotate(const Ciphertext &lhs, int steps)
-{
-
-  ir::OpCode opcode = ir::OpCode::rotate;
-
-  return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), opcode, ir::ciphertextType);
-}
-
-Ciphertext rotate_rows(const Ciphertext &lhs, int steps)
-{
-  ir::OpCode opcode = ir::OpCode::rotate;
-
-  /*
-  if (program->get_targeted_backend() != Backend::SEAL)
-  {
-    opcode = ir::OpCode::rotate;
-  }
-  else
-    opcode = ir::OpCode::rotate_rows;
-    */
-
-  return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), opcode, ir::ciphertextType);
-}
-
-Ciphertext rotate_columns(const Ciphertext &lhs)
-{
-  if (program == nullptr)
-    throw(program_not_init_msg);
-
-  if (program->get_targeted_backend() != Backend::SEAL)
-    return lhs;
-
-  return operate_unary<Ciphertext, Ciphertext>(lhs, ir::OpCode::rotate_columns, ir::ciphertextType);
-}
-
-std::string Ciphertext::get_term_tag()
-{
-
-  if (program == nullptr)
-    throw(program_not_init_msg);
-
-  auto table_entry = program->get_entry_form_constants_table(this->label);
-  if (table_entry != std::nullopt)
-  {
-    ir::ConstantTableEntry table_entry_dereferenced = *table_entry;
-    return table_entry_dereferenced.get_entry_value().tag;
-  }
-  else
-    return "";
-}
-
-bool Ciphertext::is_output() const
-{
-  if (program == nullptr)
-    throw(program_not_init_msg);
-  return (program->type_of(this->label) == ir::ConstantTableEntryType::output);
 }
 
 } // namespace fhecompiler

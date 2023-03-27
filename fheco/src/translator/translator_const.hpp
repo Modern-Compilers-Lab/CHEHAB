@@ -18,7 +18,7 @@ namespace translator
 /* return types map, it maps IR types with corresponding literal for code generation that targets the API */
 INLINE std::unordered_map<ir::TermType, const char *> types_map = {
 
-  {ir::ciphertextType, "ufhe::Ciphertext"}, {ir::plaintextType, "ufhe::Plaintext"}
+  {ir::TermType::ciphertext, "seal::Ciphertext"}, {ir::TermType::plaintext, "seal::Plaintext"}
 
 };
 
@@ -75,53 +75,55 @@ INLINE std::unordered_set<ir::OpCode> inplace_instructions = {
   ir::OpCode::exponentiate, ir::OpCode::square};
 
 /* literals related to api/backend */
-INLINE const char *params_type_literal = "ufhe::EncryptionParams";
+INLINE const char *params_type_literal = "seal::EncryptionParameters";
 INLINE const char *params_identifier_literal = "params";
-INLINE const char *scalar_int = "int64_t";
+INLINE const char *scalar_int = "std::int64_t";
+INLINE const char *scalar_uint = "std::uint64_t";
 INLINE const char *scalar_float = "double";
 INLINE const char *encode_literal = "encode";
 INLINE const char *decode_literal = "decode";
 INLINE const char *encrypt_literal = "encrypt";
 INLINE const char *decrypt_literal = "decrypt";
-INLINE const char *context_type_literal = "ufhe::EncryptionContext";
+INLINE const char *context_type_literal = "seal::SEALContext";
 INLINE const char *context_identifier = "context";
-INLINE const char *public_key_literal = "ufhe::PublicKey";
+INLINE const char *public_key_literal = "seal::PublicKey";
 INLINE const char *public_key_identifier = "public_key";
-INLINE const char *secret_key_literal = "ufhe::SecretKey";
+INLINE const char *secret_key_literal = "seal::SecretKey";
 INLINE const char *secret_key_identifier = "secret_key";
-INLINE const char *relin_keys_type_literal = "ufhe::RelinKeys";
+INLINE const char *relin_keys_type_literal = "seal::RelinKeys";
 INLINE const char *relin_keys_identifier = "relin_keys";
-INLINE const char *galois_keys_type_literal = "ufhe::GaloisKeys";
+INLINE const char *galois_keys_type_literal = "seal::GaloisKeys";
 INLINE const char *galois_keys_identifier = "galois_keys";
-INLINE const char *key_generator_type_literal = "ufhe::KeyGenerator";
+INLINE const char *key_generator_type_literal = "seal::KeyGenerator";
 INLINE const char *key_generator_identifier = "key_gen";
-INLINE const char *evaluator_type_literal = "ufhe::Evaluator";
+INLINE const char *evaluator_type_literal = "seal::Evaluator";
 INLINE const char *evaluator_identifier = "evaluator";
-INLINE const char *bv_encoder_type_literal = "ufhe::BatchEncoder";
-INLINE const char *ckks_encoder_type_literal = "ufhe::CKKSEncoder";
+INLINE const char *bv_encoder_type_literal = "seal::BatchEncoder";
+INLINE const char *ckks_encoder_type_literal = "seal::CKKSEncoder";
 INLINE const char *encoder_type_identifier = "encoder";
-INLINE const char *encryptor_type_literal = "ufhe::Encryptor";
+INLINE const char *encryptor_type_literal = "seal::Encryptor";
 INLINE const char *encryptor_type_identifier = "encryptor";
 INLINE const char *insert_object_instruction = "insert"; // instruction to insert inputs/outputs
 INLINE const char *context_function_name = "create_context";
 INLINE const char *set_plain_modulus_intruction = "set_plain_modulus";
-INLINE const char *set_coef_modulus_instruction = "set_coeff_modulus";
+INLINE const char *create_plain_modulus_intruction = "seal::PlainModulus::Batching";
+INLINE const char *set_coeff_modulus_instruction = "set_coeff_modulus";
+INLINE const char *create_coeff_modulus_instruction = "seal::CoeffModulus::Create";
 INLINE const char *set_poly_modulus_degree_instruction = "set_poly_modulus_degree";
-INLINE const char *encrypted_inputs_class_literal = "std::unordered_map<std::string, ufhe::Ciphertext>";
-INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::string, ufhe::Plaintext>";
-INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, ufhe::Plaintext>";
-INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, ufhe::Ciphertext>";
-INLINE const char *headers_include = "#include\"ufhe/ufhe.hpp\"\n#include<vector>\n#include<unordered_map>\n";
+INLINE const char *encrypted_inputs_class_literal = "std::unordered_map<std::string, seal::Ciphertext>";
+INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::string, seal::Plaintext>";
+INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, seal::Plaintext>";
+INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, seal::Ciphertext>";
+INLINE const char *headers_include =
+  "#include\"seal/seal.h\"\n#include<vector>\n#include<unordered_map>\n#include<cstdint>\n";
 INLINE const char *rotation_step_type_literal = "int32_t";
 INLINE const char *gen_steps_function_signature = "std::vector<int32_t> get_rotations_steps()";
 
 INLINE std::unordered_map<ir::TermType, const char *> outputs_class_identifier = {
-  {ir::plaintextType, "encoded_outputs"},
-  {ir::ciphertextType, "encrypted_outputs"},
-  {ir::scalarType, "encoded_outputs"}};
+  {ir::TermType::plaintext, "encoded_outputs"}, {ir::TermType::ciphertext, "encrypted_outputs"}};
 
 INLINE std::unordered_map<ir::TermType, const char *> inputs_class_identifier = {
-  {ir::plaintextType, "encoded_inputs"}, {ir::ciphertextType, "encrypted_inputs"}};
+  {ir::TermType::plaintext, "encoded_inputs"}, {ir::TermType::ciphertext, "encrypted_inputs"}};
 
 INLINE std::unordered_map<ir::OpCode, const char *> get_other_args_by_opcode = {
   {ir::OpCode::rotate, galois_keys_identifier},
@@ -208,7 +210,7 @@ public:
 
   void write_encryption(std::ostream &os, const std::string &plaintext_id, const std::string &destination_cipher) const
   {
-    os << types_map[ir::ciphertextType] << " " << destination_cipher << ";" << '\n';
+    os << types_map[ir::TermType::ciphertext] << " " << destination_cipher << ";" << '\n';
     os << encryptor_identifier << "." << encrypt_instruction_literal << "(" << plaintext_id << "," << destination_cipher
        << ");" << '\n';
   }
@@ -351,14 +353,9 @@ public:
     // create a vector
     const std::string vector_id = plaintext_id + "_clear";
     os << "std::vector<" << scalar_type << ">"
-       << " " << vector_id << "(" << number_of_slots << ");" << '\n';
+       << " " << vector_id << "(" << number_of_slots << "," << scalar_value << ");" << '\n';
 
-    os << "for(size_t i = 0; i < " << number_of_slots << "; i++)" << '\n'
-       << "{" << '\n'
-       << vector_id << "[i] = " << scalar_value << ";" << '\n'
-       << "}" << '\n';
-
-    os << types_map[ir::plaintextType] << " " << plaintext_id << ";" << '\n';
+    os << types_map[ir::TermType::plaintext] << " " << plaintext_id << ";" << '\n';
     if (scale > 0.0)
     {
       os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << scale << ","
@@ -391,7 +388,7 @@ public:
        << " " << vector_id << " = " << vector_value_str << ";" << '\n';
 
     // encoding
-    os << types_map[ir::plaintextType] << " " << plaintext_id << ";" << '\n';
+    os << types_map[ir::TermType::plaintext] << " " << plaintext_id << ";" << '\n';
     if (scale > 0.0)
     {
       os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << scale << ","
@@ -410,73 +407,44 @@ public:
 struct ContextWriter
 {
 private:
-  params_selector::EncryptionParameters *params;
+  param_selector::EncryptionParameters params;
   fhecompiler::Scheme scheme_type;
+  fhecompiler::SecurityLevel sec_level;
 
-  const std::vector<std::string> scheme_type_str = {"bfv", "bgv", "ckks"};
-  const std::vector<std::string> security_level_str = {
-    "ufhe::sec_level_type::tc128", "ufhe::sec_level_type::tc192", "ufhe::sec_level_type::tc256"};
+  const std::vector<std::string> scheme_type_str = {"none, bfv", "bgv", "ckks"};
+  const std::vector<std::string> security_level_str = {"none", "tc128", "tc192", "tc256"};
 
 public:
   bool is_defined = false;
 
-  ContextWriter(params_selector::EncryptionParameters *_params, fhecompiler::Scheme scheme_t)
-    : params(_params), scheme_type(scheme_t)
+  ContextWriter(
+    const param_selector::EncryptionParameters &_params, fhecompiler::Scheme scheme_t,
+    fhecompiler::SecurityLevel sec_level)
+    : params(_params), scheme_type(scheme_t), sec_level(sec_level)
   {}
 
   void write_plaintext_modulus(std::ostream &os)
   {
-    os << params_identifier_literal << "." << set_plain_modulus_intruction << "(" << params->plaintext_modulus << ");"
-       << '\n';
+    os << params_identifier_literal << "." << set_plain_modulus_intruction << "(" << create_plain_modulus_intruction
+       << "(" << params.poly_modulus_degree() << "," << params.plain_modulus_bit_size() << "));" << '\n';
   }
 
-  void write_plaintext_modulus_bit_length(std::ostream &os)
+  void write_coefficient_modulus(std::ostream &os)
   {
-    if (params->poly_modulus_degree == 0)
-      throw("invalid plynomial modulus degree in write_plaintext_modulus_bit_length \n");
-
-    os << params_identifier_literal << "." << set_plain_modulus_intruction << "(ufhe::PlainModulus::Batching("
-       << params->poly_modulus_degree << "," << params->plaintext_modulus_bit_length << "));" << '\n';
-  }
-
-  void write_user_defined_coefficient_modulus(std::ostream &os)
-  {
-    if (!params->coef_modulus.empty())
+    os << params_identifier_literal << "." << set_coeff_modulus_instruction << "(" << create_coeff_modulus_instruction
+       << "(" << params.poly_modulus_degree() << ",{";
+    for (size_t i = 0; i < params.coeff_mod_bit_sizes().size(); i++)
     {
-      std::string coef_modulus_identifier = "coef_mod";
-      size_t coef_mod_size = params->coef_modulus.size();
-      os << "std::vector<int> " << coef_modulus_identifier << " = ";
-      os << "{";
-      for (size_t i = 0; i < params->coef_modulus.size(); i++)
-      {
-        os << params->coef_modulus[i];
-        if (i < params->coef_modulus.size() - 1)
-        {
-          os << ", ";
-        }
-      }
-      os << "};" << '\n';
-      os << params_identifier_literal << "." << set_coef_modulus_instruction << "(ufhe::CoeffModulus::Create("
-         << params->poly_modulus_degree << "," << coef_modulus_identifier << "));" << '\n';
+      os << params.coeff_mod_bit_sizes()[i];
+      if (i < params.coeff_mod_bit_sizes().size() - 1)
+        os << ", ";
     }
-    else
-      throw("coef moulus is not set by the user\n");
-  }
-
-  void write_default_coefficient_modulus_BFV(std::ostream &os)
-  {
-    if (scheme_type != fhecompiler::Scheme::bfv)
-    {
-      throw("default coef modulus is supported only for BFV\n");
-    }
-    os << params_identifier_literal << "." << set_coef_modulus_instruction << "(ufhe::CoeffModulus::BFVDefault("
-       << params->poly_modulus_degree << "," << security_level_str[(static_cast<int>(params->security_level)) - 1]
-       << "));" << '\n';
+    os << "}));" << '\n';
   }
 
   void write_polynomial_modulus_degree(std::ostream &os)
   {
-    os << params_identifier_literal << "." << set_poly_modulus_degree_instruction << "(" << params->poly_modulus_degree
+    os << params_identifier_literal << "." << set_poly_modulus_degree_instruction << "(" << params.poly_modulus_degree()
        << ");" << '\n';
   }
 
@@ -484,25 +452,12 @@ public:
   {
 
     os << params_type_literal << " " << params_identifier_literal
-       << "(ufhe::scheme_type::" << scheme_type_str[static_cast<int>(scheme_type)] << ");" << '\n';
+       << "(seal::scheme_type::" << scheme_type_str[static_cast<int>(scheme_type)] << ");" << '\n';
 
     write_polynomial_modulus_degree(os);
-    if (!params->coef_modulus.empty())
-    {
-      write_user_defined_coefficient_modulus(os);
-    }
-    else
-      write_default_coefficient_modulus_BFV(os);
-
     if (scheme_type != fhecompiler::Scheme::ckks)
-    {
-      if (params->plaintext_modulus_bit_length == 0)
-      {
-        write_plaintext_modulus(os);
-      }
-      else
-        write_plaintext_modulus_bit_length(os);
-    }
+      write_plaintext_modulus(os);
+    write_coefficient_modulus(os);
   }
 
   void write_context(std::ostream &os)
@@ -510,7 +465,8 @@ public:
     os << context_type_literal << " " << context_function_name << "()"
        << "{" << '\n';
     write_parameters(os);
-    os << context_type_literal << " " << context_identifier << "(" << params_identifier_literal << ");" << '\n';
+    os << context_type_literal << " " << context_identifier << "(" << params_identifier_literal << ",true,"
+       << "seal::sec_level_type::" << security_level_str[static_cast<int>(sec_level)] << ");" << '\n';
     os << "return " << context_identifier << ";" << '\n';
     os << "}" << '\n';
   };
