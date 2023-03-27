@@ -8,7 +8,7 @@ seal::SEALContext create_context()
   params.set_poly_modulus_degree(8192);
   params.set_plain_modulus(seal::PlainModulus::Batching(8192, 17));
   params.set_coeff_modulus(seal::CoeffModulus::Create(8192, {60, 60, 60}));
-  seal::SEALContext context(params, true, seal::sec_level_type::tc128);
+  seal::SEALContext context(params, false, seal::sec_level_type::tc128);
   return context;
 }
 
@@ -49,9 +49,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext159, ciphertext160);
   evaluator.add_inplace(ciphertext159, ciphertext162);
   evaluator.multiply_plain_inplace(ciphertext159, plaintext19);
-  seal::Ciphertext ciphertext164_level1;
-  evaluator.mod_switch_to_next(ciphertext159, ciphertext164_level1);
-  seal::Ciphertext ciphertext166 = ciphertext164_level1;
+  seal::Ciphertext ciphertext166 = ciphertext159;
   std::vector<std::int64_t> plaintext6_clear = {1, -10, 9, 2};
   seal::Plaintext plaintext6;
   encoder.encode(plaintext6_clear, plaintext6);
@@ -70,9 +68,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext148, ciphertext149);
   evaluator.add_inplace(ciphertext148, ciphertext151);
   evaluator.multiply_plain_inplace(ciphertext148, plaintext19);
-  seal::Ciphertext ciphertext153_level1;
-  evaluator.mod_switch_to_next(ciphertext148, ciphertext153_level1);
-  seal::Ciphertext ciphertext155 = ciphertext153_level1;
+  seal::Ciphertext ciphertext155 = ciphertext148;
   seal::Ciphertext ciphertext168 = ciphertext155;
   std::vector<std::int64_t> plaintext5_clear = {0, -7, 1, -8};
   seal::Plaintext plaintext5;
@@ -92,9 +88,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext139, ciphertext140);
   evaluator.add_inplace(ciphertext139, ciphertext142);
   evaluator.multiply_plain_inplace(ciphertext139, plaintext19);
-  seal::Ciphertext ciphertext144_level1;
-  evaluator.mod_switch_to_next(ciphertext139, ciphertext144_level1);
-  seal::Ciphertext ciphertext145 = ciphertext144_level1;
+  seal::Ciphertext ciphertext145 = ciphertext139;
   seal::Ciphertext ciphertext156 = ciphertext145;
   seal::Ciphertext ciphertext167 = ciphertext156;
   seal::Ciphertext ciphertext169 = ciphertext167;
@@ -119,9 +113,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext122, ciphertext123);
   evaluator.add_inplace(ciphertext122, ciphertext125);
   evaluator.multiply_plain_inplace(ciphertext122, plaintext19);
-  seal::Ciphertext ciphertext127_level1;
-  evaluator.mod_switch_to_next(ciphertext122, ciphertext127_level1);
-  seal::Ciphertext ciphertext129 = ciphertext127_level1;
+  seal::Ciphertext ciphertext129 = ciphertext122;
   seal::Ciphertext ciphertext109;
   evaluator.multiply(ciphertext15, ciphertext25, ciphertext109);
   seal::Ciphertext ciphertext110 = ciphertext109;
@@ -133,9 +125,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext111, ciphertext112);
   evaluator.add_inplace(ciphertext111, ciphertext114);
   evaluator.multiply_plain_inplace(ciphertext111, plaintext19);
-  seal::Ciphertext ciphertext116_level1;
-  evaluator.mod_switch_to_next(ciphertext111, ciphertext116_level1);
-  seal::Ciphertext ciphertext118 = ciphertext116_level1;
+  seal::Ciphertext ciphertext118 = ciphertext111;
   seal::Ciphertext ciphertext131 = ciphertext118;
   evaluator.multiply_inplace(ciphertext15, ciphertext24);
   seal::Ciphertext ciphertext101 = ciphertext15;
@@ -147,9 +137,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext102, ciphertext103);
   evaluator.add_inplace(ciphertext102, ciphertext105);
   evaluator.multiply_plain_inplace(ciphertext102, plaintext19);
-  seal::Ciphertext ciphertext107_level1;
-  evaluator.mod_switch_to_next(ciphertext102, ciphertext107_level1);
-  seal::Ciphertext ciphertext108 = ciphertext107_level1;
+  seal::Ciphertext ciphertext108 = ciphertext102;
   seal::Ciphertext ciphertext119 = ciphertext108;
   seal::Ciphertext ciphertext130 = ciphertext119;
   seal::Ciphertext ciphertext132 = ciphertext130;
@@ -175,9 +163,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext85, ciphertext86);
   evaluator.add_inplace(ciphertext85, ciphertext88);
   evaluator.multiply_plain_inplace(ciphertext85, plaintext19);
-  seal::Ciphertext ciphertext90_level1;
-  evaluator.mod_switch_to_next(ciphertext85, ciphertext90_level1);
-  seal::Ciphertext ciphertext92 = ciphertext90_level1;
+  seal::Ciphertext ciphertext92 = ciphertext85;
   seal::Ciphertext ciphertext72;
   evaluator.multiply(ciphertext14, ciphertext25, ciphertext72);
   seal::Ciphertext ciphertext73 = ciphertext72;
@@ -189,9 +175,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext74, ciphertext75);
   evaluator.add_inplace(ciphertext74, ciphertext77);
   evaluator.multiply_plain_inplace(ciphertext74, plaintext19);
-  seal::Ciphertext ciphertext79_level1;
-  evaluator.mod_switch_to_next(ciphertext74, ciphertext79_level1);
-  seal::Ciphertext ciphertext81 = ciphertext79_level1;
+  seal::Ciphertext ciphertext81 = ciphertext74;
   seal::Ciphertext ciphertext94 = ciphertext81;
   evaluator.multiply_inplace(ciphertext14, ciphertext24);
   seal::Ciphertext ciphertext64 = ciphertext14;
@@ -203,9 +187,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext65, ciphertext66);
   evaluator.add_inplace(ciphertext65, ciphertext68);
   evaluator.multiply_plain_inplace(ciphertext65, plaintext19);
-  seal::Ciphertext ciphertext70_level1;
-  evaluator.mod_switch_to_next(ciphertext65, ciphertext70_level1);
-  seal::Ciphertext ciphertext71 = ciphertext70_level1;
+  seal::Ciphertext ciphertext71 = ciphertext65;
   seal::Ciphertext ciphertext82 = ciphertext71;
   seal::Ciphertext ciphertext93 = ciphertext82;
   seal::Ciphertext ciphertext95 = ciphertext93;
@@ -223,9 +205,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext196, ciphertext197);
   evaluator.add_inplace(ciphertext196, ciphertext199);
   evaluator.multiply_plain_inplace(ciphertext196, plaintext19);
-  seal::Ciphertext ciphertext201_level1;
-  evaluator.mod_switch_to_next(ciphertext196, ciphertext201_level1);
-  seal::Ciphertext ciphertext203 = ciphertext201_level1;
+  seal::Ciphertext ciphertext203 = ciphertext196;
   seal::Ciphertext ciphertext183;
   evaluator.multiply(ciphertext25, ciphertext10, ciphertext183);
   seal::Ciphertext ciphertext184 = ciphertext183;
@@ -237,9 +217,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext185, ciphertext186);
   evaluator.add_inplace(ciphertext185, ciphertext188);
   evaluator.multiply_plain_inplace(ciphertext185, plaintext19);
-  seal::Ciphertext ciphertext190_level1;
-  evaluator.mod_switch_to_next(ciphertext185, ciphertext190_level1);
-  seal::Ciphertext ciphertext192 = ciphertext190_level1;
+  seal::Ciphertext ciphertext192 = ciphertext185;
   seal::Ciphertext ciphertext205 = ciphertext192;
   seal::Ciphertext ciphertext174;
   evaluator.multiply(ciphertext10, ciphertext24, ciphertext174);
@@ -252,9 +230,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext176, ciphertext177);
   evaluator.add_inplace(ciphertext176, ciphertext179);
   evaluator.multiply_plain_inplace(ciphertext176, plaintext19);
-  seal::Ciphertext ciphertext181_level1;
-  evaluator.mod_switch_to_next(ciphertext176, ciphertext181_level1);
-  seal::Ciphertext ciphertext182 = ciphertext181_level1;
+  seal::Ciphertext ciphertext182 = ciphertext176;
   seal::Ciphertext ciphertext193 = ciphertext182;
   seal::Ciphertext ciphertext204 = ciphertext193;
   seal::Ciphertext ciphertext206 = ciphertext204;
@@ -280,9 +256,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext48, ciphertext49);
   evaluator.add_inplace(ciphertext48, ciphertext51);
   evaluator.multiply_plain_inplace(ciphertext48, plaintext19);
-  seal::Ciphertext ciphertext53_level1;
-  evaluator.mod_switch_to_next(ciphertext48, ciphertext53_level1);
-  seal::Ciphertext ciphertext55 = ciphertext53_level1;
+  seal::Ciphertext ciphertext55 = ciphertext48;
   evaluator.multiply_inplace(ciphertext25, ciphertext13);
   seal::Ciphertext ciphertext36 = ciphertext25;
   seal::Ciphertext ciphertext40;
@@ -293,9 +267,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext37, ciphertext38);
   evaluator.add_inplace(ciphertext37, ciphertext40);
   evaluator.multiply_plain_inplace(ciphertext37, plaintext19);
-  seal::Ciphertext ciphertext42_level1;
-  evaluator.mod_switch_to_next(ciphertext37, ciphertext42_level1);
-  seal::Ciphertext ciphertext44 = ciphertext42_level1;
+  seal::Ciphertext ciphertext44 = ciphertext37;
   seal::Ciphertext ciphertext57 = ciphertext44;
   evaluator.multiply_inplace(ciphertext13, ciphertext24);
   seal::Ciphertext ciphertext27 = ciphertext13;
@@ -307,9 +279,7 @@ void matrix_mul2(
   evaluator.add_inplace(ciphertext28, ciphertext29);
   evaluator.add_inplace(ciphertext28, ciphertext31);
   evaluator.multiply_plain_inplace(ciphertext28, plaintext19);
-  seal::Ciphertext ciphertext33_level1;
-  evaluator.mod_switch_to_next(ciphertext28, ciphertext33_level1);
-  seal::Ciphertext ciphertext34 = ciphertext33_level1;
+  seal::Ciphertext ciphertext34 = ciphertext28;
   seal::Ciphertext ciphertext45 = ciphertext34;
   seal::Ciphertext ciphertext56 = ciphertext45;
   seal::Ciphertext ciphertext58 = ciphertext56;
