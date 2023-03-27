@@ -51,7 +51,8 @@ public:
       encryption_writer(
         encryptor_type_literal, encryptor_type_identifier, encrypt_literal, public_key_identifier, context_identifier),
       evaluation_writer(evaluator_type_literal, evaluator_identifier, context_identifier),
-      context_writer(program->get_params(), program->get_scheme(), program->get_sec_level())
+      context_writer(
+        program->get_params(), program->get_scheme(), program->get_uses_mod_switch(), program->get_sec_level())
   {}
 
   ~Translator() {}

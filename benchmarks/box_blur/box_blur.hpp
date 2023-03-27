@@ -8,7 +8,7 @@ seal::SEALContext create_context()
   params.set_poly_modulus_degree(2048);
   params.set_plain_modulus(seal::PlainModulus::Batching(2048, 17));
   params.set_coeff_modulus(seal::CoeffModulus::Create(2048, {27, 27}));
-  seal::SEALContext context(params, true, seal::sec_level_type::tc128);
+  seal::SEALContext context(params, false, seal::sec_level_type::tc128);
   return context;
 }
 

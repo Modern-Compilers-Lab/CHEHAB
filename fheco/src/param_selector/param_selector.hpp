@@ -39,7 +39,7 @@ private:
   int simulate_noise_bfv(
     NoiseEstimatesValue noise_estimates_value, std::unordered_map<std::string, int> &nodes_noise) const;
 
-  void insert_mod_switch_bfv(
+  bool insert_mod_switch_bfv(
     const std::vector<int> &data_level_primes_sizes, std::unordered_map<std::string, int> &nodes_noise,
     int safety_margin);
 
