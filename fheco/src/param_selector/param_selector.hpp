@@ -23,9 +23,9 @@ public:
 private:
   struct NoiseEstimatesValue
   {
-    int fresh_noise;
-    int mul_noise_growth;
-    int mul_plain_noise_growth;
+    int fresh_noise = 0;
+    int mul_noise_growth = 0;
+    int mul_plain_noise_growth = 0;
   };
 
   ir::Program *program_;

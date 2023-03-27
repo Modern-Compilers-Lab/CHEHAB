@@ -25,15 +25,17 @@ int main()
       EncryptionParameters params = bfv_no_security_params_heuristic(poly_mod, plain_mod_size, experiment_xdepth);
       plain_mod_size = params.plain_modulus().bit_count();
       SEALContext context = SEALContext(params, false, sec_level_type::none);
-      NoiseEstimatesValue noise_estimates{0, 0, 0};
+      OpsNoiseGrowth noise_estimates;
       for (int i = 0; i < repeat; ++i)
       {
-        NoiseEstimatesValue noise_estimates_run_i = estimate_noise_growth(context, experiment_xdepth);
-        noise_estimates.fresh_noise = max(noise_estimates.fresh_noise, noise_estimates_run_i.fresh_noise);
-        noise_estimates.mul_noise_growth =
-          max(noise_estimates.mul_noise_growth, noise_estimates_run_i.mul_noise_growth);
-        noise_estimates.mul_plain_noise_growth =
-          max(noise_estimates.mul_plain_noise_growth, noise_estimates_run_i.mul_plain_noise_growth);
+        OpsNoiseGrowth noise_estimates_run_i = estimate_noise_growth_bfv(context, experiment_xdepth);
+        noise_estimates.encrypt = max(noise_estimates.encrypt, noise_estimates_run_i.encrypt);
+        noise_estimates.mul = max(noise_estimates.mul, noise_estimates_run_i.mul);
+        noise_estimates.mul_plain = max(noise_estimates.mul_plain, noise_estimates_run_i.mul_plain);
+        noise_estimates.add = max(noise_estimates.add, noise_estimates_run_i.add);
+        noise_estimates.add_plain = max(noise_estimates.add_plain, noise_estimates_run_i.add_plain);
+        noise_estimates.rotate = max(noise_estimates.rotate, noise_estimates_run_i.rotate);
+        noise_estimates.relin = max(noise_estimates.relin, noise_estimates_run_i.relin);
       }
       auto plain_mod_estimates_it = bfv_noise_experiments.find(plain_mod_size);
       if (plain_mod_estimates_it == bfv_noise_experiments.end())
@@ -41,8 +43,9 @@ int main()
       else
         plain_mod_estimates_it->second.insert({poly_mod, noise_estimates});
 
-      cout << poly_mod << "," << plain_mod_size << " : " << noise_estimates.fresh_noise << ","
-           << noise_estimates.mul_noise_growth << "," << noise_estimates.mul_plain_noise_growth << endl;
+      cout << poly_mod << "," << plain_mod_size << " : " << noise_estimates.encrypt << "," << noise_estimates.mul << ","
+           << noise_estimates.mul_plain << "," << noise_estimates.add << "," << noise_estimates.add_plain << ","
+           << noise_estimates.rotate << "," << noise_estimates.relin << endl;
 
       ++plain_mod_size;
     }

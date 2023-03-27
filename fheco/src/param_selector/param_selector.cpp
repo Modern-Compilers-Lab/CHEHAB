@@ -439,8 +439,8 @@ int ParameterSelector::simulate_noise_bfv(
     {{ir::OpCode::sub, ir::TermType::plaintext, ir::TermType::ciphertext}, 0},
     {{ir::OpCode::sub, ir::TermType::ciphertext, ir::TermType::scalar}, 0},
     {{ir::OpCode::sub, ir::TermType::scalar, ir::TermType::ciphertext}, 0},
-    {{ir::OpCode::rotate, ir::TermType::ciphertext, ir::TermType::rawData}, 0},
-    {{ir::OpCode::rotate, ir::TermType::rawData, ir::TermType::ciphertext}, 0},
+    {{ir::OpCode::rotate, ir::TermType::ciphertext, ir::TermType::rawData}, 5},
+    {{ir::OpCode::rotate, ir::TermType::rawData, ir::TermType::ciphertext}, 5},
     {{ir::OpCode::assign, ir::TermType::ciphertext, ir::TermType::undefined}, 0},
     {{ir::OpCode::encrypt, ir::TermType::plaintext, ir::TermType::undefined}, fresh_noise}};
 
