@@ -322,6 +322,10 @@ std::shared_ptr<ir::Term> fold_plain_scalar(
 
 int32_t get_rotation_step(const std::shared_ptr<ir::Term> &node)
 {
+
+  if (node->get_opcode() != ir::OpCode::rotate)
+    throw std::logic_error("rotation node expected in get_rotation_step");
+
   if (node->get_operands()[0]->get_term_type() == ir::rawDataType)
   {
     return std::stoi(node->get_operands()[0]->get_label());
@@ -743,6 +747,28 @@ size_t hash_vector_of_numbers(const std::vector<ir::Number> &vec)
     hash_value = (hash_value ^ hash_number(vec[i]));
   }
   return hash_value;
+}
+
+Program::Ptr get_rotation_node_operand(const Program::Ptr &node)
+{
+  if (node->get_opcode() != ir::OpCode::rotate)
+    throw std::logic_error("rotation node expected in ir::get_rotation_node_operand");
+
+  if (node->get_operands()[0]->get_term_type() == ir::TermType::ciphertextType)
+    return node->get_operands()[0];
+
+  return node->get_operands()[1];
+}
+
+Program::Ptr get_rotation_step_node(const Program::Ptr &node)
+{
+  if (node->get_opcode() != ir::OpCode::rotate)
+    throw std::logic_error("rotation node expected in ir::get_rotation_node_operand");
+
+  if (node->get_operands()[0]->get_term_type() == ir::rawDataType)
+    return node->get_operands()[0];
+
+  return node->get_operands()[1];
 }
 
 } // namespace ir

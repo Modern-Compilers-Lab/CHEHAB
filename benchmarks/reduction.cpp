@@ -1,7 +1,8 @@
 #include "fhecompiler/fhecompiler.hpp"
 #include <bits/stdc++.h>
 
-inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int vector_size)
+/*
+inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int vector_size, bool is_last = false)
 {
   fhecompiler::Ciphertext result = x;
   int step = vector_size - 1;
@@ -10,6 +11,22 @@ inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int vec
     result += (x << (step--));
   }
   // result of sum will be in the first slot
+  // x <<= 1;
+  return result;
+}
+*/
+
+inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int vector_size)
+{
+  fhecompiler::Ciphertext result = x;
+  int step = vector_size - 1;
+  for (; step-- > 0;)
+  {
+    x <<= 1;
+    result += x;
+  }
+  // result of sum will be in the first slot
+  x <<= 1;
   return result;
 }
 
@@ -74,13 +91,39 @@ int main()
     fhecompiler::init("reduction", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
 
     fhecompiler::Ciphertext ct1("ct1", fhecompiler::VarType::input);
+    fhecompiler::Ciphertext ct2("ct2", fhecompiler::VarType::input);
 
     fhecompiler::Ciphertext slots_sum("slots_sum", fhecompiler::VarType::temp);
     fhecompiler::Ciphertext dummy_output("ct_otuput", fhecompiler::VarType::output);
 
-    slots_sum = sum_all_slots(ct1, 1025);
+    // std::vector<int64_t> mask(1024, 0);
+    // mask[0] = 1;
 
+    /*
+      y = x << 4
+      s1 = (x << 1) + (x << 2) + (x << 3)
+      s2 = (y << 1) + (y << 2) + (y << 3)
+    */
+    /*
+    slots_sum = ct1;
+    int N = 63;
+    for (int i = 1; i <= N; i++)
+    {
+      slots_sum += (ct1 << i);
+    }
     dummy_output = slots_sum;
+    */
+    int vector_size = 4096;
+    int segment_size = 64;
+    int nb_segments = vector_size / segment_size;
+
+    std::cout << nb_segments << "\n";
+
+    while (nb_segments)
+    {
+      fhecompiler::Ciphertext output("output" + std::to_string(nb_segments--), fhecompiler::VarType::output);
+      output = sum_all_slots(ct1, segment_size);
+    }
 
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;

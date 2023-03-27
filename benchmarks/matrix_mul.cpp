@@ -1,14 +1,19 @@
 #include "fhecompiler/fhecompiler.hpp"
 
-inline fhecompiler::Ciphertext sum_all_slots(const fhecompiler::Ciphertext &x, int vector_size)
+inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int vector_size)
 {
   fhecompiler::Ciphertext result = x;
   int step = vector_size - 1;
-  for (; step >= 1;)
+  if (step < 0)
+    throw std::logic_error("negative rotation step");
+  fhecompiler::Ciphertext rots_sum = x << step;
+  step--;
+  for (; step > 0;)
   {
-    result += (x << (step--));
+    rots_sum += (x << (step--));
   }
   // result of sum will be in the first slot
+  result += rots_sum;
   return result;
 }
 

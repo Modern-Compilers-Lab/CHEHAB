@@ -79,6 +79,13 @@ private:
 
   std::unique_ptr<DAG> data_flow; // data_flow points to the IR which is a Directed Acyclic Graph (DAG)
 
+  /*
+    std::unordered_map<size_t, std::unique_ptr<DAG>> dags
+
+    in that case we gonna have multiple DAGs, where each dag is associated to an encryption context
+    an encryption context is difined by the set of parameters, from the user we need plaintext modulus
+  */
+
   std::unordered_map<std::string, ConstantTableEntry>
     constants_table; // we will have a symbol table, the data structure is a hash table
 
@@ -220,5 +227,10 @@ public:
 
   bool is_output_node(const std::string &label);
 };
+
+/*
+
+
+*/
 
 } // namespace ir

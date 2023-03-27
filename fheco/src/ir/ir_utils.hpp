@@ -92,4 +92,8 @@ size_t hash_number(const ir::Number number);
 
 size_t hash_vector_of_numbers(const std::vector<ir::Number> &v);
 
+Program::Ptr get_rotation_node_operand(const Program::Ptr &node);
+
+Program::Ptr get_rotation_step_node(const Program::Ptr &node);
+
 } // namespace ir

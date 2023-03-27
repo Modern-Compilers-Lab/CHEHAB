@@ -40,6 +40,7 @@ target_sources(fhecompiler PRIVATE
   ${SRC_TRS}/reduction_order/utils.cpp
   ${SRC_TRS}/reduction_order/component_orders.cpp
   ${SRC_PASSES}/normalize_pass.cpp
+  ${SRC_PASSES}/additional_passes.cpp
 )
 
 install(FILES  
@@ -64,6 +65,7 @@ install(FILES
   ${SRC_UTILS}/fhecompiler_const.hpp
   ${SRC_PASSES}/rotationkeys_select_pass.hpp
   ${SRC_PASSES}/normalize_pass.hpp
+  ${SRC_PASSES}/additional_passes.hpp
   ${SRC_TRS}/trs.hpp
   ${SRC_TRS}/matching_term.hpp
   ${SRC_TRS}/rewrite_rule.hpp
