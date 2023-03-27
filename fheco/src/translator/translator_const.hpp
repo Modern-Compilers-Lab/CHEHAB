@@ -411,7 +411,7 @@ private:
   fhecompiler::Scheme scheme_type;
   fhecompiler::SecurityLevel sec_level;
 
-  const std::vector<std::string> scheme_type_str = {"none, bfv", "bgv", "ckks"};
+  const std::vector<std::string> scheme_type_str = {"none", "bfv", "bgv", "ckks"};
   const std::vector<std::string> security_level_str = {"none", "tc128", "tc192", "tc256"};
 
 public:

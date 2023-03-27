@@ -1,12 +1,13 @@
 #include "seal/seal.h"
+#include <cstdint>
 #include <unordered_map>
 #include <vector>
 seal::SEALContext create_context()
 {
-  seal::EncryptionParameters params(seal::scheme_type::bgv);
-  params.set_poly_modulus_degree(1024);
-  params.set_plain_modulus(seal::PlainModulus::Batching(1024, 17));
-  params.set_coeff_modulus(seal::CoeffModulus::Create(1024, {42, 41, 41}));
+  seal::EncryptionParameters params(seal::scheme_type::bfv);
+  params.set_poly_modulus_degree(8192);
+  params.set_plain_modulus(seal::PlainModulus::Batching(8192, 17));
+  params.set_coeff_modulus(seal::CoeffModulus::Create(8192, {60, 60, 60}));
   seal::SEALContext context(params, true, seal::sec_level_type::tc128);
   return context;
 }
@@ -19,17 +20,17 @@ void matrix_mul1(
   const seal::RelinKeys &relin_keys, const seal::GaloisKeys &galois_keys, const seal::PublicKey &public_key)
 {
   seal::BatchEncoder encoder(context);
-  std::vector<int64_t> plaintext19_clear = {1, 0, 0, 0};
+  std::vector<std::int64_t> plaintext19_clear = {1, 0, 0, 0};
   seal::Plaintext plaintext19;
   encoder.encode(plaintext19_clear, plaintext19);
-  std::vector<int64_t> plaintext7_clear = {9, 2, 0, 18};
+  std::vector<std::int64_t> plaintext7_clear = {9, 2, 0, 18};
   seal::Plaintext plaintext7;
   encoder.encode(plaintext7_clear, plaintext7);
   seal::Encryptor encryptor(context, public_key);
   seal::Ciphertext ciphertext22;
   encryptor.encrypt(plaintext7, ciphertext22);
   seal::Ciphertext ciphertext23 = ciphertext22;
-  std::vector<int64_t> plaintext3_clear = {5, 3, 2, 0};
+  std::vector<std::int64_t> plaintext3_clear = {5, 3, 2, 0};
   seal::Plaintext plaintext3;
   encoder.encode(plaintext3_clear, plaintext3);
   seal::Ciphertext ciphertext9;
@@ -56,7 +57,7 @@ void matrix_mul1(
   evaluator.add_inplace(ciphertext336, ciphertext348);
   evaluator.multiply_plain_inplace(ciphertext336, plaintext19);
   seal::Ciphertext ciphertext358 = ciphertext336;
-  std::vector<int64_t> plaintext6_clear = {1, -10, 9, 2};
+  std::vector<std::int64_t> plaintext6_clear = {1, -10, 9, 2};
   seal::Plaintext plaintext6;
   encoder.encode(plaintext6_clear, plaintext6);
   seal::Ciphertext ciphertext19;
@@ -83,7 +84,7 @@ void matrix_mul1(
   evaluator.multiply_plain_inplace(ciphertext309, plaintext19);
   seal::Ciphertext ciphertext331 = ciphertext309;
   seal::Ciphertext ciphertext360 = ciphertext331;
-  std::vector<int64_t> plaintext5_clear = {0, -7, 1, -8};
+  std::vector<std::int64_t> plaintext5_clear = {0, -7, 1, -8};
   seal::Plaintext plaintext5;
   encoder.encode(plaintext5_clear, plaintext5);
   seal::Ciphertext ciphertext17;
@@ -179,7 +180,7 @@ void matrix_mul1(
   evaluator.add_inplace(ciphertext446, ciphertext445);
   evaluator.add_inplace(ciphertext446, ciphertext443);
   seal::Ciphertext output4 = ciphertext446;
-  std::vector<int64_t> plaintext2_clear = {1, 0, 1, -3};
+  std::vector<std::int64_t> plaintext2_clear = {1, 0, 1, -3};
   seal::Plaintext plaintext2;
   encoder.encode(plaintext2_clear, plaintext2);
   seal::Ciphertext ciphertext5;
@@ -249,7 +250,7 @@ void matrix_mul1(
   evaluator.add_inplace(ciphertext276, ciphertext275);
   evaluator.add_inplace(ciphertext276, ciphertext273);
   seal::Ciphertext output2 = ciphertext276;
-  std::vector<int64_t> plaintext1_clear = {-5, 3, 2, 0};
+  std::vector<std::int64_t> plaintext1_clear = {-5, 3, 2, 0};
   seal::Plaintext plaintext1;
   encoder.encode(plaintext1_clear, plaintext1);
   seal::Ciphertext ciphertext2;
@@ -320,7 +321,7 @@ void matrix_mul1(
   evaluator.add_inplace(ciphertext191, ciphertext190);
   evaluator.add_inplace(ciphertext191, ciphertext188);
   seal::Ciphertext output1 = ciphertext191;
-  std::vector<int64_t> plaintext0_clear = {1, 2, 3, -2};
+  std::vector<std::int64_t> plaintext0_clear = {1, 2, 3, -2};
   seal::Plaintext plaintext0;
   encoder.encode(plaintext0_clear, plaintext0);
   seal::Ciphertext ciphertext0;

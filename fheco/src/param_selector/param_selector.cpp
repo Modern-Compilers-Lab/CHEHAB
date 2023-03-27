@@ -1,7 +1,7 @@
 #include "param_selector.hpp"
+#include "encryption_parameters.hpp"
 #include "fhecompiler_const.hpp"
 #include "term.hpp"
-#include <map>
 #include <stdexcept>
 
 using namespace std;
@@ -14,109 +14,110 @@ unordered_map<fhecompiler::SecurityLevel, unordered_map<size_t, int>> ParameterS
   {fhecompiler::SecurityLevel::tc192, {{1024, 19}, {2048, 37}, {4096, 75}, {8192, 152}, {16384, 305}, {32768, 612}}},
   {fhecompiler::SecurityLevel::tc256, {{1024, 14}, {2048, 29}, {4096, 58}, {8192, 118}, {16384, 237}, {32768, 476}}}};
 
-vector<tuple<int, vector<tuple<size_t, tuple<int, int, int>>>>> ParameterSelector::bfv_noise_estimates_seal = {
-  {17, {{1024, {8, 22, 30}}}}};
-
-tuple<vector<int>, int> split_coeff_mod_seal(int data_level_size)
-{
-  vector<int> primes_sizes(data_level_size / MOD_BIT_COUNT_MAX, MOD_BIT_COUNT_MAX);
-  if (data_level_size % MOD_BIT_COUNT_MAX)
-  {
-    primes_sizes.push_back(MOD_BIT_COUNT_MAX);
-    // Remove exceeding bits
-    for (int i = 0; i < MOD_BIT_COUNT_MAX - (data_level_size % MOD_BIT_COUNT_MAX); ++i)
-      --primes_sizes[(primes_sizes.size() - 1 - i) % primes_sizes.size()];
-  }
-  // Add special prime
-  primes_sizes.push_back(primes_sizes.back());
-  return {primes_sizes, data_level_size + primes_sizes.back()};
-}
-
-int increase_coeff_mod_bit_sizes_seal(vector<int> &primes_sizes, int max_total_amount)
-{
-  auto last_big_prime_index = [](const vector<int> &primes_sizes) -> int {
-    int idx = 0;
-    // Consider only data level primes
-    while (idx < primes_sizes.size() - 2 && primes_sizes[idx] == primes_sizes[idx + 1])
-      ++idx;
-    return idx;
-  };
-
-  int start_idx = last_big_prime_index(primes_sizes) + 1;
-  int i;
-  for (i = 0; i < max_total_amount; ++i)
-  {
-    int prime_idx = (start_idx + i) % primes_sizes.size();
-    if (primes_sizes[prime_idx] == MOD_BIT_COUNT_MAX)
-      break;
-
-    ++primes_sizes[prime_idx];
-  }
-  return i;
-}
-
-vector<int> get_data_level_coeff_mod_seal(const vector<int> &primes_sizes)
-{
-  vector<int> data_level_part(primes_sizes);
-  // Remove special prime
-  data_level_part.pop_back();
-  return data_level_part;
-}
+map<int, map<size_t, ParameterSelector::NoiseEstimatesValue>> ParameterSelector::bfv_noise_estimates_seal = {
+  {17, {{1024, {8, 30, 22}}, {2048, {8, 31, 23}}, {4096, {8, 32, 24}}, {8192, {8, 33, 25}}}}};
 
 void ParameterSelector::select_params()
 {
-  program->set_params(select_params_bfv());
+  switch (program_->get_scheme())
+  {
+  case fhecompiler::Scheme::bfv:
+    select_params_bfv();
+    break;
+
+  case fhecompiler::Scheme::none:
+    throw logic_error("no shceme was specified");
+
+  default:
+    throw logic_error("parameter selection unsupported for the scheme");
+    break;
+  }
 }
 
-EncryptionParameters ParameterSelector::select_params_bfv(bool use_mod_switch)
+void ParameterSelector::select_params_bfv(bool use_mod_switch)
 {
-  int plain_mod_size = program->get_bit_width() + 1;
-  if (program->get_signedness())
+  int plain_mod_size = program_->get_bit_width() + 1;
+  if (program_->get_signedness())
     ++plain_mod_size;
 
-  int idx = plain_mod_size - get<0>(bfv_noise_estimates_seal[0]);
-  if (idx < 0 || idx > bfv_noise_estimates_seal.size())
-    throw logic_error("missing noise estimates for plain_mod_size " + to_string(plain_mod_size));
-
-  size_t poly_modulus_degree;
-  vector<int> coeff_mod_bit_sizes;
-  int coeff_mod_bit_count;
-  unordered_map<string, int> nodes_noise;
-
-  if (get<1>(bfv_noise_estimates_seal[idx]).size() == 0)
-    throw logic_error("empty per poly_modulus_degree estimates vector for plain_mod_size " + to_string(plain_mod_size));
-
-  for (const auto &n_noise_estimates : get<1>(bfv_noise_estimates_seal[idx]))
+  auto plain_mod_noise_estimates_it = bfv_noise_estimates_seal.find(plain_mod_size);
+  while (plain_mod_noise_estimates_it == bfv_noise_estimates_seal.end() &&
+         plain_mod_size < bfv_noise_estimates_seal.rend()->first && plain_mod_size < MOD_BIT_COUNT_MAX)
   {
+    ++plain_mod_size;
+    plain_mod_noise_estimates_it = bfv_noise_estimates_seal.find(plain_mod_size);
+  }
+  if (plain_mod_noise_estimates_it == bfv_noise_estimates_seal.end())
+    throw logic_error("noise estimates maximum plaintext modulus size smaller than bit_width+1+signedness");
+
+  if (plain_mod_noise_estimates_it->second.empty())
+    throw logic_error("empty per polynomial modulus degree estimates map for the given plaintext modulus size");
+
+  size_t poly_modulus_degree = program_->get_vector_size();
+  auto poly_modulus_degree_noise_estimates_it = plain_mod_noise_estimates_it->second.find(poly_modulus_degree);
+
+  while (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end() &&
+         poly_modulus_degree < plain_mod_noise_estimates_it->second.rend()->first)
+  {
+    poly_modulus_degree = poly_modulus_degree << 1;
+    poly_modulus_degree_noise_estimates_it = plain_mod_noise_estimates_it->second.find(poly_modulus_degree);
+  }
+  if (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end())
+    throw logic_error("the maximum polynomial modulus degree of the noise estimates for the given plaintext modulus "
+                      "size is smaller than vector_size");
+
+  EncryptionParameters params;
+  unordered_map<string, int> nodes_noise;
+  while (poly_modulus_degree_noise_estimates_it != plain_mod_noise_estimates_it->second.end())
+  {
+    poly_modulus_degree = poly_modulus_degree_noise_estimates_it->first;
+    const NoiseEstimatesValue &noise_estimates_value = poly_modulus_degree_noise_estimates_it->second;
     nodes_noise.clear();
-    poly_modulus_degree = get<0>(n_noise_estimates);
-    const auto &noise_estimates = get<1>(n_noise_estimates);
-    int circuit_noise =
-      simulate_noise_bfv(get<0>(noise_estimates), get<1>(noise_estimates), get<2>(noise_estimates), nodes_noise);
+    int circuit_noise = simulate_noise_bfv(noise_estimates_value, nodes_noise);
 
     int coeff_mod_data_level_size = plain_mod_size + circuit_noise;
-    tie(coeff_mod_bit_sizes, coeff_mod_bit_count) = split_coeff_mod_seal(coeff_mod_data_level_size);
+    params = EncryptionParameters(poly_modulus_degree, plain_mod_size, coeff_mod_data_level_size);
 
-    if (program->get_sec_level() == fhecompiler::SecurityLevel::none)
+    if (program_->get_sec_level() == fhecompiler::SecurityLevel::none)
       break;
 
-    if (coeff_mod_bit_count <= security_standard[program->get_sec_level()][poly_modulus_degree])
+    auto sec_level_he_standard_it = security_standard.find(program_->get_sec_level());
+    if (sec_level_he_standard_it == security_standard.end())
+      throw logic_error("program security level is not included in the HE security standard");
+
+    auto poly_modulus_he_standard_it = sec_level_he_standard_it->second.find(poly_modulus_degree);
+    if (poly_modulus_he_standard_it == sec_level_he_standard_it->second.end())
+      throw logic_error("the reached polynomial modulus degree is not included in the HE security standard");
+
+    if (params.coeff_mod_bit_count() <= poly_modulus_he_standard_it->second)
       break;
+
+    ++poly_modulus_degree_noise_estimates_it;
   }
-  int max_coeff_mod_bit_count = security_standard[program->get_sec_level()][poly_modulus_degree];
-  int increase_amount =
-    increase_coeff_mod_bit_sizes_seal(coeff_mod_bit_sizes, max_coeff_mod_bit_count - coeff_mod_bit_count);
-  coeff_mod_bit_count += increase_amount;
+  if (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end())
+    throw logic_error("could not find suitable parameters");
+
+  if (program_->get_sec_level() != fhecompiler::SecurityLevel::none)
+  {
+    int max_coeff_mod_bit_count = security_standard[program_->get_sec_level()][poly_modulus_degree];
+    params.increase_coeff_mod_bit_sizes(max_coeff_mod_bit_count - params.coeff_mod_bit_count());
+  }
+  else
+    params.increase_coeff_mod_bit_sizes(MOD_BIT_COUNT_MAX);
 
   if (use_mod_switch)
-    insert_mod_switch_bfv(get_data_level_coeff_mod_seal(coeff_mod_bit_sizes), nodes_noise);
+    insert_mod_switch_bfv(params.coeff_mod_data_level_bit_sizes(), nodes_noise);
 
-  return EncryptionParameters(poly_modulus_degree, plain_mod_size, coeff_mod_bit_sizes, coeff_mod_bit_count);
+  program_->set_params(params);
 }
 
 int ParameterSelector::simulate_noise_bfv(
-  int fresh_noise, int mul_noise_growth, int mul_plain_noise_growth, unordered_map<string, int> &nodes_noise) const
+  NoiseEstimatesValue noise_estimates, unordered_map<string, int> &nodes_noise) const
 {
+  int fresh_noise = noise_estimates.fresh_noise;
+  int mul_noise_growth = noise_estimates.mul_noise_growth;
+  int mul_plain_noise_growth = noise_estimates.mul_plain_noise_growth;
+
   map<tuple<ir::OpCode, ir::TermType, ir::TermType>, int> operations_noise_growth = {
     {{ir::OpCode::mul, ir::TermType::ciphertext, ir::TermType::ciphertext}, mul_noise_growth},
     {{ir::OpCode::square, ir::TermType::ciphertext, ir::TermType::undefined}, mul_noise_growth},
@@ -142,7 +143,7 @@ int ParameterSelector::simulate_noise_bfv(
 
   int circuit_noise = fresh_noise;
 
-  const auto &nodes = program->get_dataflow_sorted_nodes(true);
+  const auto &nodes = program_->get_dataflow_sorted_nodes(true);
   for (const auto &node : nodes)
   {
     if (node->get_term_type() != ir::TermType::ciphertext)
