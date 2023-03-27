@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <map>
 #include <string>
+#include <vector>
 
 #define MOD_BIT_COUNT_MAX 60
 
@@ -24,7 +25,12 @@ seal::EncryptionParameters bfv_no_security_params_heuristic(std::size_t poly_mod
 
 seal::Modulus create_plain_mod(std::size_t poly_mod, int plain_mod_init_size);
 
-OpsNoiseGrowth estimate_noise_growth_bfv(const seal::SEALContext &context, int xdepth);
+void estimate_noise_growth_bfv(const seal::SEALContext &context, int xdepth, OpsNoiseGrowth &noise_estimates);
+
+void analyze_mod_switch_impact_on_noise_budget(
+  const seal::SEALContext &context, std::vector<int> &budget_loss_per_noise);
+
+int get_invariant_noise_budget(seal::Decryptor &decryptor, const seal::Ciphertext &cipher);
 
 void serialize_bfv_noise_experiments(
   const bfv_noise_experiments_map &bfv_noise_experiments, int repeat, int xdepth, const std::string &file_name);

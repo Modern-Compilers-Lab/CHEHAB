@@ -682,7 +682,7 @@ bool ParameterSelector::insert_mod_switch_bfv(
 
       auto node_old_parents = node->get_parents_labels();
       ir::Program::Ptr mod_switch_arg = node;
-      while (node_level > 0 && node_adapted_noise >= data_level_primes_sizes[node_level - 1] + safety_margin)
+      while (node_level > 0 && node_adapted_noise > data_level_primes_sizes[node_level - 1] + safety_margin)
       {
         node_adapted_noise -= data_level_primes_sizes[node_level - 1];
         --node_level;
