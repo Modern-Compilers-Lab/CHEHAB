@@ -291,13 +291,15 @@ void ParameterSelector::insert_mod_switch_bfv(
             if (arg1_lowest_level == nullptr)
               throw logic_error("node lowest level not found in the data flow");
 
-            node->delete_operand_term(make_leveled_node_label(arg1->get_label(), arg1_level_data.justified_level));
+            // node->delete_operand_term(make_leveled_node_label(arg1->get_label(), arg1_level_data.justified_level));
+            node->delete_operand_term(arg1->get_label());
             while (arg1_level_data.lowest_level > arg2_level_data.justified_level)
             {
               --arg1_level_data.lowest_level;
               ir::Program::Ptr mod_switch_node = program_->insert_operation_node_in_dataflow(
                 ir::OpCode::modswitch, vector<ir::Program::Ptr>({arg1_lowest_level}),
                 make_leveled_node_label(arg1->get_label(), arg1_level_data.lowest_level), ir::TermType::ciphertext);
+              arg1_lowest_level->add_parent_label(mod_switch_node->get_label());
               arg1_lowest_level = mod_switch_node;
             }
             ir::Program::Ptr arg1_matching_level = program_->find_node_in_dataflow(
@@ -314,13 +316,14 @@ void ParameterSelector::insert_mod_switch_bfv(
             if (arg2_lowest_level == nullptr)
               throw logic_error("node lowest level not found in the data flow");
 
-            node->delete_operand_term(make_leveled_node_label(arg2->get_label(), arg2_level_data.justified_level));
+            node->delete_operand_term(arg2->get_label());
             while (arg2_level_data.lowest_level > arg1_level_data.justified_level)
             {
               --arg2_level_data.lowest_level;
               ir::Program::Ptr mod_switch_node = program_->insert_operation_node_in_dataflow(
                 ir::OpCode::modswitch, vector<ir::Program::Ptr>({arg2_lowest_level}),
                 make_leveled_node_label(arg2->get_label(), arg2_level_data.lowest_level), ir::TermType::ciphertext);
+              arg2_lowest_level->add_parent_label(mod_switch_node->get_label());
               arg2_lowest_level = mod_switch_node;
             }
             ir::Program::Ptr arg2_matching_level = program_->find_node_in_dataflow(
@@ -375,6 +378,7 @@ void ParameterSelector::insert_mod_switch_bfv(
       for (int i = L; i > node_level; --i)
         node_adapted_noise -= data_level_primes_sizes[i - 1];
 
+      auto node_old_parents = node->get_parents_labels();
       ir::Program::Ptr mod_switch_arg = node;
       while (node_level > 0 && node_adapted_noise >= data_level_primes_sizes[node_level - 1] + safety_margin)
       {
@@ -383,6 +387,7 @@ void ParameterSelector::insert_mod_switch_bfv(
         ir::Program::Ptr mod_switch_node = program_->insert_operation_node_in_dataflow(
           ir::OpCode::modswitch, vector<ir::Program::Ptr>({mod_switch_arg}),
           make_leveled_node_label(node->get_label(), node_level), ir::TermType::ciphertext);
+        mod_switch_arg->insert_parent_label(mod_switch_node->get_label());
         mod_switch_arg = mod_switch_node;
       }
 
@@ -391,7 +396,7 @@ void ParameterSelector::insert_mod_switch_bfv(
 
       if (node_level < operands_level)
       {
-        for (const auto &parent_label : node->get_parents_labels())
+        for (const auto &parent_label : node_old_parents)
         {
           ir::Program::Ptr parent = program_->find_node_in_dataflow(parent_label);
           if (parent == nullptr)
@@ -401,7 +406,7 @@ void ParameterSelector::insert_mod_switch_bfv(
           parent->add_operand(mod_switch_arg);
         }
       }
-      nodes_level_data.insert({node->get_label(), {node_level, node_level}});
+      nodes_level_data.insert({mod_switch_arg->get_label(), {node_level, node_level}});
     }
   }
 }
