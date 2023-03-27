@@ -34,6 +34,8 @@ RewriteRule::RewriteRule(
 
 MatchingTerm RewriteRule::get_rhs(const ir::Program *program, const matching_term_ir_node_map &matching_map) const
 {
+  if (static_rhs.has_value())
+    return *static_rhs;
   return rhs_factory(program, matching_map);
 }
 

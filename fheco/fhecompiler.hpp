@@ -9,6 +9,7 @@
 #include "program.hpp"
 #include "scalar.hpp"
 #include "translator.hpp"
+#include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -21,8 +22,8 @@ namespace fhecompiler
 
 /*program init, scale is only for ckks*/
 void init(
-  const std::string &program_name, Scheme program_scheme, Backend backend = Backend::SEAL,
-  size_t vector_size = DEFAULT_VECTOR_SIZE, double scale = 0.0);
+  const std::string &program_name, Scheme program_scheme, Backend backend = Backend::SEAL, std::size_t vec_size = 1024,
+  double scale = 0.0);
 
 // paramters selection manually
 
