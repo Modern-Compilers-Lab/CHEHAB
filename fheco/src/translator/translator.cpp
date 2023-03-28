@@ -291,14 +291,12 @@ void Translator::translate_binary_operation(const ir::Term::Ptr &term_ptr, std::
   auto &operands = term_ptr->get_operands();
   std::string lhs_identifier = get_identifier(operands[0]);
   std::string rhs_identifier = get_identifier(operands[1]);
-  if (term_ptr->get_opcode() == ir::OpCode::rotate)
+
+  if (operands[0]->get_term_type() != ir::TermType::ciphertext)
   {
-    if (operands[0]->get_term_type() == ir::TermType::rawData)
-    {
-      std::string tmp = lhs_identifier;
-      lhs_identifier = rhs_identifier;
-      rhs_identifier = tmp;
-    }
+    std::string tmp = lhs_identifier;
+    lhs_identifier = rhs_identifier;
+    rhs_identifier = tmp;
   }
 
   if (lhs_identifier.empty() || rhs_identifier.empty())

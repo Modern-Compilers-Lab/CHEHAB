@@ -141,6 +141,8 @@ public:
 
   bool delete_entry_from_constants_table(std::string entry_key);
 
+  void insert_node_to_outputs(const std::string &key);
+
   void delete_node_from_outputs(const std::string &key);
 
   bool insert_new_entry_from_existing(std::string new_entry_key, std::string exsisting_entry_key);

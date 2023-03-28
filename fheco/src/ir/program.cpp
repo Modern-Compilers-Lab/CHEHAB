@@ -53,6 +53,11 @@ void Program::insert_entry_in_constants_table(std::pair<std::string, ConstantTab
   }
 }
 
+void Program::insert_node_to_outputs(const std::string &key)
+{
+  data_flow->insert_node_to_outputs(key);
+}
+
 void Program::delete_node_from_outputs(const std::string &key)
 {
   this->data_flow->delete_node_from_outputs(key);

@@ -150,8 +150,7 @@ void Compiler::FuncEntry::add_const_node_value(
   nodes_values.insert(node_entry);
 }
 
-void Compiler::FuncEntry::operate_unary(
-  ir::OpCode op, const string &arg, const std::string &destination, bool is_output)
+void Compiler::FuncEntry::operate_unary(ir::OpCode op, const string &arg, const std::string &destination)
 {
   // auto destination_value_it = nodes_values.find(destination);
   // if (destination_value_it != nodes_values.end())
@@ -214,24 +213,10 @@ void Compiler::FuncEntry::operate_unary(
   }
   else
     throw logic_error("could not get child value");
-
-  if (is_output)
-  {
-    try
-    {
-      string tag = func->get_tag_value_in_constants_table_entry(destination);
-      outputs_values[tag] = nodes_values[destination];
-      tags_labels[tag] = destination;
-    }
-    catch (const std::string &e)
-    {
-      throw logic_error("output node without entry in const table (no tag)");
-    }
-  }
 }
 
 void Compiler::FuncEntry::operate_binary(
-  ir::OpCode op, const string &arg1, const string &arg2, const std::string &destination, bool is_output)
+  ir::OpCode op, const string &arg1, const string &arg2, const std::string &destination)
 {
   // auto destination_value_it = nodes_values.find(destination);
   // if (destination_value_it != nodes_values.end())
@@ -366,22 +351,9 @@ void Compiler::FuncEntry::operate_binary(
     throw logic_error("unhandled binary operation");
     break;
   }
-  if (is_output)
-  {
-    try
-    {
-      string tag = func->get_tag_value_in_constants_table_entry(destination);
-      outputs_values[tag] = nodes_values[destination];
-      tags_labels[tag] = destination;
-    }
-    catch (const std::string &e)
-    {
-      throw logic_error("output node without entry in const table (no tag)");
-    }
-  }
 }
 
-void Compiler::FuncEntry::operate_rotate(const string &arg, int step, const std::string &destination, bool is_output)
+void Compiler::FuncEntry::operate_rotate(const string &arg, int step, const std::string &destination)
 {
   // auto destination_value_it = nodes_values.find(destination);
   // if (destination_value_it != nodes_values.end())
@@ -402,20 +374,6 @@ void Compiler::FuncEntry::operate_rotate(const string &arg, int step, const std:
   }
   else
     throw logic_error("could not get child value");
-
-  if (is_output)
-  {
-    try
-    {
-      string tag = func->get_tag_value_in_constants_table_entry(destination);
-      outputs_values[tag] = nodes_values[destination];
-      tags_labels[tag] = destination;
-    }
-    catch (const std::string &e)
-    {
-      throw logic_error("output node without entry in const table (no tag)");
-    }
-  }
 }
 
 void Compiler::FuncEntry::serialize_inputs_outputs(
@@ -477,6 +435,12 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
     visit(value_var_visitor, v.second);
     file << "\n";
   }
+}
+
+void Compiler::FuncEntry::set_output(const std::string &arg, const std::string &tag)
+{
+  outputs_values[tag] = nodes_values[arg];
+  tags_labels[tag] = arg;
 }
 
 void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) const

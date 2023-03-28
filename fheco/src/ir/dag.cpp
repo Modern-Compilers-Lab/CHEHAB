@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <optional>
 #include <stack>
+#include <stdexcept>
 #include <unordered_set>
 
 namespace ir
@@ -49,6 +50,15 @@ void DAG::delete_node(const std::string &node_label)
     }
   }
   node_ptr_from_label.erase(it);
+}
+
+void DAG::insert_node_to_outputs(const std::string &key)
+{
+  auto node = find_node(key);
+  if (!node)
+    throw std::invalid_argument("node not found");
+
+  outputs_nodes.insert({key, node});
 }
 
 void DAG::delete_node_from_outputs(const std::string &key)

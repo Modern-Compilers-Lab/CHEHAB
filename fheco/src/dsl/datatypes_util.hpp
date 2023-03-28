@@ -1,6 +1,7 @@
 #pragma once
 
 #include "compiler.hpp"
+#include "datatypes_const.hpp"
 #include "fhecompiler_const.hpp"
 #include "term.hpp"
 #include <memory>
@@ -13,13 +14,14 @@ namespace fhecompiler
 template <typename T>
 T operate(ir::OpCode opcode, const std::vector<ir::Term::Ptr> &operands, ir::TermType term_type, bool is_output = false)
 {
-  T new_T("");
+  T new_T;
+  new_T.set_new_label();
   Compiler::get_active()->insert_operation_node_in_dataflow(opcode, operands, new_T.get_label(), term_type);
 
   if (operands.size() == 2)
-    Compiler::operate_binary(opcode, operands[0]->get_label(), operands[1]->get_label(), new_T.get_label(), is_output);
+    Compiler::operate_binary(opcode, operands[0]->get_label(), operands[1]->get_label(), new_T.get_label());
   else if (operands.size() == 1)
-    Compiler::operate_unary(opcode, operands[0]->get_label(), new_T.get_label(), is_output);
+    Compiler::operate_unary(opcode, operands[0]->get_label(), new_T.get_label());
   else
     throw std::logic_error("invalide number of operands in operate");
 
@@ -219,6 +221,8 @@ inline void operate_in_constants_table(const std::string &label, const std::stri
 
     ir::ConstantTableEntry::EntryValue entry_value = tag_to_insert;
     Compiler::get_active()->insert_entry_in_constants_table({label, {entry_type, entry_value}});
+    if (entry_type == ir::ConstantTableEntryType::output)
+      Compiler::get_active()->insert_node_to_outputs(label);
   }
 }
 
@@ -305,7 +309,8 @@ template <typename T>
 T operate_with_raw(const T &lhs, datatype::rawData raw_data, ir::OpCode opcode, ir::TermType term_type)
 {
 
-  T new_T("");
+  T new_T;
+  new_T.set_new_label();
 
   ir::Term::Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawData);
   ir::Term::Ptr lhs_term = Compiler::get_active()->find_node_in_dataflow(lhs.get_label());

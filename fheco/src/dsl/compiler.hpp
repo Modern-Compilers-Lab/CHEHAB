@@ -105,26 +105,29 @@ public:
     func_entry.add_const_node_value(label, clear_data_evaluator.make_element(value));
   }
 
-  static inline void operate_unary(
-    ir::OpCode op, const std::string &arg, const std::string &destination, bool is_output = false)
+  static inline void operate_unary(ir::OpCode op, const std::string &arg, const std::string &destination)
   {
     FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
-    func_entry.operate_unary(op, arg, destination, is_output);
+    func_entry.operate_unary(op, arg, destination);
   }
 
   static inline void operate_binary(
-    ir::OpCode op, const std::string &arg1, const std::string &arg2, const std::string &destination,
-    bool is_output = false)
+    ir::OpCode op, const std::string &arg1, const std::string &arg2, const std::string &destination)
   {
     FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
-    func_entry.operate_binary(op, arg1, arg2, destination, is_output);
+    func_entry.operate_binary(op, arg1, arg2, destination);
   }
 
-  static inline void operate_rotate(
-    const std::string &arg, int step, const std::string &destination, bool is_output = false)
+  static inline void operate_rotate(const std::string &arg, int step, const std::string &destination)
   {
     FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
-    func_entry.operate_rotate(arg, step, destination, is_output);
+    func_entry.operate_rotate(arg, step, destination);
+  }
+
+  static inline void set_output(const std::string &arg, const std::string &tag)
+  {
+    FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
+    func_entry.set_output(arg, tag);
   }
 
   static inline const utils::variables_values_map &get_input_values(const std::string &func_name)
@@ -185,13 +188,14 @@ private:
 
     void add_const_node_value(const std::string &label, const utils::variables_values_map::mapped_type &value);
 
-    void operate_unary(ir::OpCode op, const std::string &arg, const std::string &destination, bool is_output = false);
+    void operate_unary(ir::OpCode op, const std::string &arg, const std::string &destination);
 
     void operate_binary(
-      ir::OpCode op, const std::string &arg1, const std::string &arg2, const std::string &destination,
-      bool is_output = false);
+      ir::OpCode op, const std::string &arg1, const std::string &arg2, const std::string &destination);
 
-    void operate_rotate(const std::string &arg, int step, const std::string &destination, bool is_output = false);
+    void operate_rotate(const std::string &arg, int step, const std::string &destination);
+
+    void set_output(const std::string &arg, const std::string &tag);
 
     void serialize_inputs_outputs(
       const utils::variables_values_map &inputs, const utils::variables_values_map &outputs,

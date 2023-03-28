@@ -35,6 +35,8 @@ public:
 
   Ptr find_node(const std::string &node_label) const;
 
+  void insert_node_to_outputs(const std::string &key);
+
   void delete_node_from_outputs(const std::string &key);
 
   const std::map<std::string, Ptr> &get_outputs_nodes() const { return outputs_nodes; }
