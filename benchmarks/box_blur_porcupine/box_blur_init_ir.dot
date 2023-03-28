@@ -20,11 +20,9 @@ ciphertext1 -> 1
 ciphertext4 [label="+" style=dashed]
 ciphertext4 -> ciphertext1
 ciphertext4 -> ciphertext0
-ciphertext7 [label="+" style=dashed]
-ciphertext7 -> ciphertext4
-ciphertext7 -> ciphertext5
-ciphertext8 [label="=" style=dashed color=red fontcolor=red]
-ciphertext8 -> ciphertext7
+ciphertext6 [label="+" style=dashed color=red fontcolor=red]
+ciphertext6 -> ciphertext4
+ciphertext6 -> ciphertext5
 subgraph cluster_key {
     graph[label="Key"]
     node [width=0.5]

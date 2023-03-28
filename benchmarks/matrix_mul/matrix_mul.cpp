@@ -29,13 +29,13 @@ void matrix_mul(int m_a, int n_b, int n_a_m_b, bool use_log_reduction)
   // encrypt by line for matrix A
   for (int i = 0; i < m_a; ++i)
   {
-    Ciphertext line("A[" + to_string(i) + "][]", VarType::input);
+    Ciphertext line("A[" + to_string(i) + "][]");
     A_row_encrypted.push_back(line);
   }
   // encrypt by column for matrix B
   for (int i = 0; i < n_b; ++i)
   {
-    Ciphertext column("B[][" + to_string(i) + "]", VarType::input);
+    Ciphertext column("B[][" + to_string(i) + "]");
     B_column_encrypted.push_back(column);
   }
 
@@ -58,13 +58,8 @@ void matrix_mul(int m_a, int n_b, int n_a_m_b, bool use_log_reduction)
       else
         cline += slot * mask;
     }
+    cline.set_output("C[" + to_string(i) + "][]");
     C_row_encrypted.push_back(cline);
-  }
-
-  for (int i = 0; i < m_a; ++i)
-  {
-    Ciphertext line("C[" + to_string(i) + "][]", VarType::output);
-    line = C_row_encrypted[i];
   }
 }
 

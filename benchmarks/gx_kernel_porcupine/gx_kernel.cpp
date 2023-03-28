@@ -11,7 +11,7 @@ using namespace fhecompiler;
 
 void gx_kernel()
 {
-  Ciphertext c0("c0", VarType::input);
+  Ciphertext c0("c0");
   Ciphertext c1 = c0 << 1;
   Ciphertext c2 = c0 << 5;
   Ciphertext c3 = c0 << 6;
@@ -23,8 +23,8 @@ void gx_kernel()
   Ciphertext c9 = c5 + c6;
   Ciphertext c10 = c7 + c8;
   Ciphertext c11 = c9 + c9;
-  Ciphertext c12("c12", VarType::output);
-  c12 = c10 + c11;
+  Ciphertext c12 = c10 + c11;
+  c12.set_output("c12");
 }
 
 int main(int argc, char **argv)

@@ -41,11 +41,9 @@ ciphertext7 -> ciphertext2
 ciphertext10 [label="+" style=dashed]
 ciphertext10 -> ciphertext7
 ciphertext10 -> ciphertext8
-ciphertext13 [label="+" style=dashed]
-ciphertext13 -> ciphertext10
-ciphertext13 -> ciphertext11
-ciphertext14 [label="=" style=dashed color=red fontcolor=red]
-ciphertext14 -> ciphertext13
+ciphertext12 [label="+" style=dashed color=red fontcolor=red]
+ciphertext12 -> ciphertext10
+ciphertext12 -> ciphertext11
 subgraph cluster_key {
     graph[label="Key"]
     node [width=0.5]

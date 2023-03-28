@@ -20,22 +20,21 @@ return steps;
 void box_blur(std::map<std::string, seal::Ciphertext>& encrypted_inputs, std::map<std::string, seal::Plaintext>& encoded_inputs, std::map<std::string, seal::Ciphertext>& encrypted_outputs, std::map<std::string, seal::Plaintext>& encoded_outputs, const seal::Evaluator& evaluator, const seal::BatchEncoder& encoder, const seal::RelinKeys& relin_keys, const seal::GaloisKeys& galois_keys, const seal::PublicKey& public_key)
 {
 seal::Ciphertext ciphertext0 = encrypted_inputs["img"];
-seal::Ciphertext ciphertext40;
-evaluator.rotate_rows(ciphertext0,1, galois_keys,ciphertext40);
+seal::Ciphertext ciphertext39;
+evaluator.rotate_rows(ciphertext0,1, galois_keys,ciphertext39);
+seal::Ciphertext ciphertext34;
+evaluator.rotate_rows(ciphertext0,1023, galois_keys,ciphertext34);
 seal::Ciphertext ciphertext35;
-evaluator.rotate_rows(ciphertext0,1023, galois_keys,ciphertext35);
-seal::Ciphertext ciphertext36;
-evaluator.add(ciphertext0,ciphertext35,ciphertext36);
-seal::Ciphertext ciphertext41;
-evaluator.add(ciphertext36,ciphertext40,ciphertext41);
+evaluator.add(ciphertext0,ciphertext34,ciphertext35);
+seal::Ciphertext ciphertext40;
+evaluator.add(ciphertext35,ciphertext39,ciphertext40);
 seal::Ciphertext ciphertext14;
-evaluator.rotate_rows(ciphertext41,32, galois_keys,ciphertext14);
+evaluator.rotate_rows(ciphertext40,32, galois_keys,ciphertext14);
 seal::Ciphertext ciphertext6;
-evaluator.rotate_rows(ciphertext41,992, galois_keys,ciphertext6);
+evaluator.rotate_rows(ciphertext40,992, galois_keys,ciphertext6);
+seal::Ciphertext ciphertext15;
+evaluator.add(ciphertext6,ciphertext40,ciphertext15);
 seal::Ciphertext ciphertext16;
-evaluator.add(ciphertext6,ciphertext41,ciphertext16);
-seal::Ciphertext ciphertext17;
-evaluator.add(ciphertext16,ciphertext14,ciphertext17);
-seal::Ciphertext ciphertext18 = ciphertext17;
-encrypted_outputs.insert({"result",ciphertext18});
+evaluator.add(ciphertext15,ciphertext14,ciphertext16);
+encrypted_outputs.insert({"result",ciphertext16});
 }

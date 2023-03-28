@@ -11,14 +11,14 @@ using namespace fhecompiler;
 
 void box_blur()
 {
-  Ciphertext c0("c0", VarType::input);
+  Ciphertext c0("c0");
   Ciphertext c1 = c0 << 1;
   Ciphertext c2 = c0 << 5;
   Ciphertext c3 = c0 << 6;
   Ciphertext c4 = c1 + c0;
   Ciphertext c5 = c2 + c3;
-  Ciphertext c6("c6", VarType::output);
-  c6 = c4 + c5;
+  Ciphertext c6 = c4 + c5;
+  c6.set_output("c6");
 }
 
 int main(int argc, char **argv)

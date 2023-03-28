@@ -11,11 +11,11 @@ using namespace fhecompiler;
 
 void hamming_distance(int vector_size)
 {
-  Ciphertext v1("v1", VarType::input);
-  Ciphertext v2("v2", VarType::input);
+  Ciphertext v1("v1");
+  Ciphertext v2("v2");
   Ciphertext slot_wise_xor = v1 + v2 - 2 * (v1 * v2);
-  Ciphertext result("result", VarType::output);
-  result = reduce_add(slot_wise_xor);
+  Ciphertext result = reduce_add(slot_wise_xor);
+  result.set_output("result");
 }
 
 int main(int argc, char **argv)
