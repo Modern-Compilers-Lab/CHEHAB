@@ -29,7 +29,9 @@ inline void init_random(std::vector<T> &v, long long min_value, long long max_va
     v[i] = static_cast<T>(uni(rng));
 }
 
-void print_variables_values(const variables_values_map &m, std::size_t print_size = 4);
+void print_variables_values(const variables_values_map &m, std::size_t print_size);
+
+void print_variables_values(const variables_values_map &m);
 
 template <typename T>
 inline void print_vector(const std::vector<T> &v, std::ostream &os, std::size_t print_size)

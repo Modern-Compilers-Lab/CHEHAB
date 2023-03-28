@@ -414,4 +414,19 @@ void print_variables_values(const variables_values_map &m, size_t print_size)
     cout << "\n";
   }
 }
+
+void print_variables_values(const variables_values_map &m)
+{
+  for (const auto &variable : m)
+  {
+    cout << variable.first << ": ";
+    if (auto value = get_if<vector<int64_t>>(&variable.second))
+      print_vector(*value, cout);
+    else if (auto value = get_if<vector<uint64_t>>(&variable.second))
+      print_vector(*value, cout);
+    else
+      throw logic_error("could not get variable value");
+    cout << "\n";
+  }
+}
 } // namespace utils
