@@ -453,7 +453,8 @@ int ParameterSelector::simulate_noise_bfv(
     {{ir::OpCode::rotate, ir::TermType::ciphertext, ir::TermType::rawData}, 5},
     {{ir::OpCode::rotate, ir::TermType::rawData, ir::TermType::ciphertext}, 5},
     {{ir::OpCode::assign, ir::TermType::ciphertext, ir::TermType::undefined}, 0},
-    {{ir::OpCode::encrypt, ir::TermType::plaintext, ir::TermType::undefined}, fresh_noise}};
+    {{ir::OpCode::encrypt, ir::TermType::plaintext, ir::TermType::undefined}, fresh_noise},
+    {{ir::OpCode::relinearize, ir::TermType::ciphertext, ir::TermType::undefined}, 0}};
 
   int circuit_noise = fresh_noise;
 
@@ -605,12 +606,12 @@ bool ParameterSelector::insert_mod_switch_bfv(
             if (arg1_level_data.lowest_level > arg2_level_data.justified_level)
             {
               ir::Term::Ptr arg1_lowest_level;
-              if (arg1_level_data.lowest_level < L)
+              if (arg1_level_data.root_label != arg1->get_label())
               {
                 program_->find_node_in_dataflow(
                   make_leveled_node_label(arg1_level_data.root_label, arg1_level_data.lowest_level));
-                if (arg1_lowest_level == nullptr)
-                  throw logic_error("node lowest level not found in the data flow 1");
+                if (!arg1_lowest_level)
+                  throw logic_error("node lowest level not found in the data flow");
               }
               else
                 arg1_lowest_level = arg1;
@@ -630,7 +631,7 @@ bool ParameterSelector::insert_mod_switch_bfv(
             else
               arg1_matching_level = program_->find_node_in_dataflow(
                 make_leveled_node_label(arg1_level_data.root_label, arg2_level_data.justified_level));
-            if (arg1_matching_level == nullptr)
+            if (!arg1_matching_level)
               throw logic_error("leveled version of node supposed to be present");
 
             node->delete_operand_term(arg1->get_label());
@@ -642,12 +643,12 @@ bool ParameterSelector::insert_mod_switch_bfv(
             if (arg2_level_data.lowest_level > arg1_level_data.justified_level)
             {
               ir::Term::Ptr arg2_lowest_level;
-              if (arg2_level_data.lowest_level < L)
+              if (arg2_level_data.root_label != arg2->get_label())
               {
                 program_->find_node_in_dataflow(
                   make_leveled_node_label(arg2_level_data.root_label, arg2_level_data.lowest_level));
-                if (arg2_lowest_level == nullptr)
-                  throw logic_error("node lowest level not found in the data flow 2");
+                if (!arg2_lowest_level)
+                  throw logic_error("node lowest level not found in the data flow");
               }
               else
                 arg2_lowest_level = arg2;
@@ -667,7 +668,7 @@ bool ParameterSelector::insert_mod_switch_bfv(
             else
               arg2_matching_level = program_->find_node_in_dataflow(
                 make_leveled_node_label(arg2_level_data.root_label, arg1_level_data.justified_level));
-            if (arg2_matching_level == nullptr)
+            if (!arg2_matching_level)
               throw logic_error("leveled version of node supposed to be present");
 
             node->delete_operand_term(arg2->get_label());
@@ -740,7 +741,7 @@ bool ParameterSelector::insert_mod_switch_bfv(
         for (const auto &parent_label : node_old_parents)
         {
           ir::Term::Ptr parent = program_->find_node_in_dataflow(parent_label);
-          if (parent == nullptr)
+          if (!parent)
             throw logic_error("parent node not found");
 
           parent->delete_operand_term(node->get_label());
@@ -764,7 +765,7 @@ void apply_mod_switch_schedule(
   for (const auto &node_noise : nodes_noise)
   {
     ir::Term::Ptr node = program->find_node_in_dataflow(node_noise.first);
-    if (node == nullptr)
+    if (!node)
       throw logic_error(
         "node handled in noise simulation yet not found in the data flow, label: '" + node_noise.first + "'");
 
@@ -779,7 +780,7 @@ void apply_mod_switch_schedule(
     for (const auto &parent_label : node->get_parents_labels())
     {
       ir::Term::Ptr parent = program->find_node_in_dataflow(parent_label);
-      if (parent == nullptr)
+      if (!parent)
         throw logic_error("parent node not found");
 
       parent->delete_operand_term(node_noise.first);
@@ -798,7 +799,7 @@ void apply_mod_switch_schedule(
     for (const auto &mod_switch : node_level_matching_mod_switch.second)
     {
       ir::Term::Ptr parent = program->find_node_in_dataflow(mod_switch.first);
-      if (parent == nullptr)
+      if (!parent)
         throw logic_error(
           "node present as a parent in level matching map yet not found in the data flow, label: '" + mod_switch.first +
           "'");
@@ -809,7 +810,7 @@ void apply_mod_switch_schedule(
       {
         ir::Term::Ptr new_child = program->find_node_in_dataflow(
           make_leveled_node_label(node_level_matching_mod_switch.first, justified_level + mod_switch.second));
-        if (new_child == nullptr)
+        if (!new_child)
           throw logic_error(
             "leveled version of node supposed to be present, label: '" +
             make_leveled_node_label(node_level_matching_mod_switch.first, justified_level + mod_switch.second) + "'");
@@ -820,7 +821,7 @@ void apply_mod_switch_schedule(
       {
         ir::Term::Ptr node_highest_level =
           program->find_node_in_dataflow(make_leveled_node_label(node_level_matching_mod_switch.first, highest_level));
-        if (node_highest_level == nullptr)
+        if (!node_highest_level)
           throw logic_error(
             "node_highest_level not found in the data flow, label: '" +
             make_leveled_node_label(node_level_matching_mod_switch.first, highest_level) + "'");

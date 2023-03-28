@@ -33,30 +33,28 @@ public:
   }
 
   static inline void compile(
-    const std::string &func_name, const std::string &output_file, int trs_passes = 1,
-    SecurityLevel sec_level = SecurityLevel::tc128, bool use_mod_switch = true)
+    const std::string &func_name, const std::string &output_file, int trs_passes = 1, bool use_mod_switch = true,
+    SecurityLevel sec_level = SecurityLevel::tc128)
   {
-    compile(get_func(func_name), output_file, trs_passes, sec_level, use_mod_switch);
+    compile(get_func(func_name), output_file, trs_passes, use_mod_switch, sec_level);
   }
 
   static inline void compile(
-    const std::string &output_file, int trs_passes = 1, SecurityLevel sec_level = SecurityLevel::tc128,
-    bool use_mod_switch = true)
+    const std::string &output_file, int trs_passes = 1, bool use_mod_switch = true,
+    SecurityLevel sec_level = SecurityLevel::tc128)
   {
-    compile(active_func_, output_file, trs_passes, sec_level, use_mod_switch);
+    compile(active_func_, output_file, trs_passes, use_mod_switch, sec_level);
   }
 
   static inline void compile_noopt(
-    const std::string &func_name, const std::string &output_file, SecurityLevel sec_level = SecurityLevel::tc128,
-    bool use_mod_switch = true)
+    const std::string &func_name, const std::string &output_file, SecurityLevel sec_level = SecurityLevel::tc128)
   {
-    compile_noopt(get_func(func_name), output_file, sec_level, use_mod_switch);
+    compile_noopt(get_func(func_name), output_file, sec_level);
   }
 
-  static inline void compile_noopt(
-    const std::string &output_file, SecurityLevel sec_level = SecurityLevel::tc128, bool use_mod_switch = true)
+  static inline void compile_noopt(const std::string &output_file, SecurityLevel sec_level = SecurityLevel::tc128)
   {
-    compile_noopt(active_func_, output_file, sec_level, use_mod_switch);
+    compile_noopt(active_func_, output_file, sec_level);
   }
 
   static inline void draw_ir(const std::string &func_name, const std::string &output_file)
@@ -203,12 +201,11 @@ private:
   };
 
   static void compile(
-    const std::shared_ptr<ir::Program> &func, const std::string &output_file, int trs_passes, SecurityLevel sec_level,
-    bool use_mod_switch);
+    const std::shared_ptr<ir::Program> &func, const std::string &output_file, int trs_passes, bool use_mod_switch,
+    SecurityLevel sec_level);
 
   static void compile_noopt(
-    const std::shared_ptr<ir::Program> &func, const std::string &output_file, SecurityLevel sec_level,
-    bool use_mod_switch);
+    const std::shared_ptr<ir::Program> &func, const std::string &output_file, SecurityLevel sec_level);
 
   static inline void draw_ir(const std::shared_ptr<ir::Program> &func, const std::string &output_file)
   {

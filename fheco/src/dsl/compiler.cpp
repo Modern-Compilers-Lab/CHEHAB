@@ -56,8 +56,8 @@ void Compiler::set_active(const string &func_name)
 }
 
 void Compiler::compile(
-  const shared_ptr<ir::Program> &func, const string &output_file, int trs_passes, SecurityLevel sec_level,
-  bool use_mod_switch)
+  const shared_ptr<ir::Program> &func, const string &output_file, int trs_passes, bool use_mod_switch,
+  SecurityLevel sec_level)
 {
   fheco_passes::CSE cse_pass(func);
   fheco_trs::TRS trs(func);
@@ -86,8 +86,7 @@ void Compiler::compile(
   tr.translate_program(translation_os, rotation_keys_steps);
 }
 
-void Compiler::compile_noopt(
-  const shared_ptr<ir::Program> &func, const string &output_file, SecurityLevel sec_level, bool use_mod_switch)
+void Compiler::compile_noopt(const shared_ptr<ir::Program> &func, const string &output_file, SecurityLevel sec_level)
 {
   fheco_passes::RotationKeySelctionPass rs_pass(func);
   set<int> rotation_keys_steps = rs_pass.decompose_rotations();
@@ -96,7 +95,7 @@ void Compiler::compile_noopt(
   relin_pass.simple_relinearize();
 
   param_selector::ParameterSelector param_selector(func, sec_level);
-  bool uses_mod_switch = use_mod_switch;
+  bool uses_mod_switch = false;
   param_selector::EncryptionParameters params = param_selector.select_params(uses_mod_switch);
 
   translator::Translator tr(func, sec_level, params, uses_mod_switch);
@@ -132,7 +131,7 @@ void Compiler::FuncEntry::init_input(const string &label, const string &tag)
   else
   {
     vector<uint64_t> random_value(func->get_vector_size());
-    utils::init_random(random_value, 0, 10);
+    utils::init_random(random_value, 0, 1);
     utils::variables_values_map::value_type node_entry = {label, random_value};
     nodes_values.insert({label, random_value});
     inputs_values.insert({tag, random_value});

@@ -1,0 +1,117 @@
+digraph "hamming_distance" {
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+1 [label="1" style=solid]
+2 [label="2" style=solid]
+4 [label="4" style=solid]
+8 [label="8" style=solid]
+16 [label="16" style=solid]
+32 [label="32" style=solid]
+64 [label="64" style=solid]
+128 [label="128" style=solid]
+256 [label="256" style=solid]
+512 [label="512" style=solid]
+scalar0 [label="scalar0" style=solid color=darkgreen fontcolor=darkgreen]
+ciphertext1 [label="v2" style=dashed color=blue fontcolor=blue]
+ciphertext0 [label="v1" style=dashed color=blue fontcolor=blue]
+ciphertext3 [label="*" style=dashed]
+ciphertext3 -> ciphertext0
+ciphertext3 -> ciphertext1
+ciphertext4 [label="*" style=dashed]
+ciphertext4 -> ciphertext3
+ciphertext4 -> scalar0
+ciphertext2 [label="+" style=dashed]
+ciphertext2 -> ciphertext0
+ciphertext2 -> ciphertext1
+ciphertext5 [label="-" style=dashed]
+ciphertext5 -> ciphertext2
+ciphertext5 -> ciphertext4
+ciphertext7 [label="rotate" style=dashed]
+ciphertext7 -> ciphertext5
+ciphertext7 -> 512
+ciphertext8 [label="+" style=dashed]
+ciphertext8 -> ciphertext5
+ciphertext8 -> ciphertext7
+ciphertext9 [label="rotate" style=dashed]
+ciphertext9 -> ciphertext8
+ciphertext9 -> 256
+ciphertext10 [label="+" style=dashed]
+ciphertext10 -> ciphertext8
+ciphertext10 -> ciphertext9
+ciphertext11 [label="rotate" style=dashed]
+ciphertext11 -> ciphertext10
+ciphertext11 -> 128
+ciphertext12 [label="+" style=dashed]
+ciphertext12 -> ciphertext10
+ciphertext12 -> ciphertext11
+ciphertext13 [label="rotate" style=dashed]
+ciphertext13 -> ciphertext12
+ciphertext13 -> 64
+ciphertext14 [label="+" style=dashed]
+ciphertext14 -> ciphertext12
+ciphertext14 -> ciphertext13
+ciphertext15 [label="rotate" style=dashed]
+ciphertext15 -> ciphertext14
+ciphertext15 -> 32
+ciphertext16 [label="+" style=dashed]
+ciphertext16 -> ciphertext14
+ciphertext16 -> ciphertext15
+ciphertext17 [label="rotate" style=dashed]
+ciphertext17 -> ciphertext16
+ciphertext17 -> 16
+ciphertext18 [label="+" style=dashed]
+ciphertext18 -> ciphertext16
+ciphertext18 -> ciphertext17
+ciphertext19 [label="rotate" style=dashed]
+ciphertext19 -> ciphertext18
+ciphertext19 -> 8
+ciphertext20 [label="+" style=dashed]
+ciphertext20 -> ciphertext18
+ciphertext20 -> ciphertext19
+ciphertext21 [label="rotate" style=dashed]
+ciphertext21 -> ciphertext20
+ciphertext21 -> 4
+ciphertext22 [label="+" style=dashed]
+ciphertext22 -> ciphertext20
+ciphertext22 -> ciphertext21
+ciphertext23 [label="rotate" style=dashed]
+ciphertext23 -> ciphertext22
+ciphertext23 -> 2
+ciphertext24 [label="+" style=dashed]
+ciphertext24 -> ciphertext22
+ciphertext24 -> ciphertext23
+ciphertext25 [label="rotate" style=dashed]
+ciphertext25 -> ciphertext24
+ciphertext25 -> 1
+ciphertext26 [label="+" style=dashed]
+ciphertext26 -> ciphertext24
+ciphertext26 -> ciphertext25
+ciphertext27 [label="=" style=dashed color=red fontcolor=red]
+ciphertext27 -> ciphertext26
+subgraph cluster_key {
+    graph[label="Key"]
+    node [width=0.5]
+    edge [dir=forward style=invis]
+    in_cipher [label=input color=blue fontcolor=blue style=dashed]
+    tmp_cipher [label=tmp color=black fontcolor=black style=dashed]
+    out_cipher [label=out color=red fontcolor=red style=dashed]
+    cipher [shape=plain]
+
+    in_plain [label=in icolor=blue fontcolor=blue style=dotted]
+    tmp_plain [label=tmp color=black fontcolor=black style=dotted]
+    out_plain [label=out color=red fontcolor=red style=dotted]
+    plain [shape=plain]
+    
+    other [color=black fontcolor=black style=solid]
+    scalar [color=darkgreen fontcolor=darkgreen style=solid]
+    const[shape=plain]
+    
+    cipher -> plain
+    plain -> const
+    out_cipher -> out_plain
+    in_cipher -> in_plain
+    tmp_cipher -> tmp_plain
+    in_plain -> other
+    out_plain -> scalar
+}
+}

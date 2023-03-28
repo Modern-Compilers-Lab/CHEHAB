@@ -9,8 +9,6 @@ namespace fhecompiler
 
 size_t Ciphertext::ciphertext_id = 0;
 
-using Ptr = std::shared_ptr<ir::Term>;
-
 void Ciphertext::set_new_label()
 {
   this->set_label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++));
@@ -30,10 +28,10 @@ Ciphertext &Ciphertext::operator=(Ciphertext &&ct_move)
   */
 }
 
-Ciphertext::Ciphertext(Ciphertext &&ct_move)
-{
-  operate_move<Ciphertext>(*this, std::move(ct_move), ir::TermType::ciphertext);
-}
+// Ciphertext::Ciphertext(Ciphertext &&ct_move)
+// {
+//   operate_move<Ciphertext>(*this, std::move(ct_move), ir::TermType::ciphertext);
+// }
 
 Ciphertext Ciphertext::encrypt(const Plaintext &pt)
 {
@@ -61,15 +59,16 @@ Ciphertext &Ciphertext::operator=(const Ciphertext &ct_copy)
   return operate_assignement<Ciphertext>(*this, ct_copy, ir::TermType::ciphertext);
 }
 
-Ciphertext::Ciphertext(const Ciphertext &ct_copy) : label(datatype::ct_label_prefix + std::to_string(ciphertext_id++))
-{
-  /*
-  auto ct_copy_node_ptr = Compiler::get_active()->insert_node_in_dataflow<Ciphertext>(ct_copy);
-  Compiler::get_active()->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, this->label,
-  ir::TermType::ciphertext);
-  */
-  operate_copy<Ciphertext>(*this, ct_copy, ir::TermType::ciphertext);
-}
+// Ciphertext::Ciphertext(const Ciphertext &ct_copy) : label(datatype::ct_label_prefix +
+// std::to_string(ciphertext_id++))
+// {
+//   /*
+//   auto ct_copy_node_ptr = Compiler::get_active()->insert_node_in_dataflow<Ciphertext>(ct_copy);
+//   Compiler::get_active()->insert_operation_node_in_dataflow(ir::OpCode::assign, {ct_copy_node_ptr}, this->label,
+//   ir::TermType::ciphertext);
+//   */
+//   //operate_copy<Ciphertext>(*this, ct_copy, ir::TermType::ciphertext);
+// }
 
 Ciphertext &Ciphertext::operator+=(const Ciphertext &rhs)
 {

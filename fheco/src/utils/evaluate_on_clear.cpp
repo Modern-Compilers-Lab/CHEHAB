@@ -355,6 +355,8 @@ variables_values_map evaluate_on_clear(ir::Program *program, const variables_val
           {
           case ir::OpCode::encrypt:
           case ir::OpCode::assign:
+          case ir::OpCode::relinearize:
+          case ir::OpCode::modswitch:
             temps_values.insert({node->get_label(), *arg_value});
             break;
           case ir::OpCode::negate:

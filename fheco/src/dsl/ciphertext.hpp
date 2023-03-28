@@ -30,10 +30,10 @@ public:
 
   Ciphertext(const std::string &tag, VarType var_type = VarType::temp);
 
-  Ciphertext(const Ciphertext &ct_copy);
+  Ciphertext(const Ciphertext &) = default;
   Ciphertext &operator=(const Ciphertext &ct_copy);
 
-  explicit Ciphertext(Ciphertext &&ct_move);
+  Ciphertext(Ciphertext &&) = default;
   Ciphertext &operator=(Ciphertext &&ct_move);
 
   Ciphertext &operator+=(const Ciphertext &rhs);

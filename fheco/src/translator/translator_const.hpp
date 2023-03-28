@@ -3,6 +3,7 @@
 #include "encryption_parameters.hpp"
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
+#include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -254,7 +255,8 @@ public:
     }
 
     if (!is_inplace)
-      os << types_map[type] << " " << destination_id << ";";
+      os << types_map[type] << " " << destination_id << ";"
+         << "\n";
 
     if (other_args.length() == 0)
     {
@@ -312,6 +314,7 @@ public:
 struct EncodingWriter
 {
 private:
+  std::size_t nb_slots;
   std::string encoder_identifier;
   std::string encoder_instruction_literal;
   bool is_init = false;
@@ -319,19 +322,19 @@ private:
 public:
   EncodingWriter() = default;
 
-  EncodingWriter(const std::string &encoder_id, const std::string &encode_inst_literal)
-    : encoder_identifier(encoder_id), encoder_instruction_literal(encode_inst_literal)
+  EncodingWriter(std::size_t nb_slots, const std::string &encoder_id, const std::string &encode_inst_literal)
+    : nb_slots(nb_slots), encoder_identifier(encoder_id), encoder_instruction_literal(encode_inst_literal)
   {}
   ~EncodingWriter() {}
 
   void write_scalar_encoding(
     std::ostream &os, const std::string &plaintext_id, const std::string &scalar_value, const std::string &scalar_type,
-    const std::string &number_of_slots, double scale = 0.0) const
+    double scale = 0.0) const
   {
     // create a vector
     const std::string vector_id = plaintext_id + "_clear";
     os << "std::vector<" << scalar_type << ">"
-       << " " << vector_id << "(" << number_of_slots << "," << scalar_value << ");" << '\n';
+       << " " << vector_id << "(" << nb_slots << "," << scalar_value << ");" << '\n';
 
     os << types_map[ir::TermType::plaintext] << " " << plaintext_id << ";" << '\n';
     if (scale > 0.0)

@@ -244,16 +244,15 @@ void Translator::translate_constant_table_entry(
 
       if (auto value = std::get_if<std::int64_t>(&scalar_value))
         encoding_writer.write_scalar_encoding(
-          os, identifier, std::to_string(*value), scalar_int, std::to_string(program->get_vector_size()),
+          os, identifier, std::to_string(*value), scalar_int,
           program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
       else if (auto value = std::get_if<std::uint64_t>(&scalar_value))
         encoding_writer.write_scalar_encoding(
-          os, identifier, std::to_string(*value), scalar_uint, std::to_string(program->get_vector_size()),
+          os, identifier, std::to_string(*value), scalar_uint,
           program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
       else if (auto value = std::get_if<double>(&scalar_value))
         encoding_writer.write_scalar_encoding(
-          os, identifier, std::to_string(*value), scalar_float, std::to_string(program->get_vector_size()),
-          program->get_scale());
+          os, identifier, std::to_string(*value), scalar_float, program->get_scale());
       else
         throw("unsupported data type by schemes\n");
       /*

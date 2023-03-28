@@ -64,4 +64,8 @@ Ciphertext rotate(const Ciphertext &rhs, int steps);
 Ciphertext rotate_rows(const Ciphertext &lhs, int steps);
 Ciphertext rotate_columns(const Ciphertext &lhs);
 
+Ciphertext reduce_add(const Ciphertext &encrypted);
+
+Ciphertext add_many(const std::vector<Ciphertext> &encrypteds);
+
 } // namespace fhecompiler
