@@ -1,4 +1,5 @@
 #include "fhecompiler/fhecompiler.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
@@ -8,41 +9,42 @@
 using namespace std;
 using namespace fhecompiler;
 
-void box_blur(int width, int height)
+void gx_kernel()
 {
-  Ciphertext img("img", VarType::input);
-  Ciphertext top_row = img >> width;
-  Ciphertext bottom_row = img << width;
-  Ciphertext top_sum = top_row + (top_row >> 1) + (top_row << 1);
-  Ciphertext curr_sum = img + (img >> 1) + (img << 1);
-  Ciphertext bottom_sum = bottom_row + (bottom_row >> 1) + (bottom_row << 1);
-  Ciphertext result("result", VarType::output);
-  result = top_sum + curr_sum + bottom_sum;
+  Ciphertext c0("c0", VarType::input);
+  Ciphertext c1 = c0 << 1;
+  Ciphertext c2 = c0 << 5;
+  Ciphertext c3 = c0 << 6;
+  Ciphertext c4 = c0 << -1;
+  Ciphertext c5 = c0 << -4;
+  Ciphertext c6 = c0 << -6;
+  Ciphertext c7 = c1 + c2;
+  Ciphertext c8 = c3 + c4;
+  Ciphertext c9 = c5 + c6;
+  Ciphertext c10 = c7 + c8;
+  Ciphertext c11 = c9 + c9;
+  Ciphertext c12("c12", VarType::output);
+  c12 = c10 + c11;
 }
 
 int main(int argc, char **argv)
 {
-  int width = 32;
+  size_t vector_size = 1024;
   if (argc > 1)
-    width = stoi(argv[1]);
-
-  int height = 32;
-  if (argc > 2)
-    height = stoi(argv[2]);
+    vector_size = stoull(argv[1]);
 
   int trs_passes = 1;
-  if (argc > 3)
-    trs_passes = stoi(argv[3]);
+  if (argc > 2)
+    trs_passes = stoi(argv[2]);
 
   bool optimize = trs_passes > 0;
 
-  cout << "width: " << width << ", "
-       << "height: " << height << ", "
+  cout << "vector_size: " << vector_size << ", "
        << "trs_passes: " << trs_passes << "\n";
 
-  string func_name = "box_blur";
-  Compiler::create_func(func_name, height * width, 16, false);
-  box_blur(width, height);
+  string func_name = "gx_kernel";
+  Compiler::create_func(func_name, vector_size, 16, false, Scheme::bfv);
+  gx_kernel();
   Compiler::draw_ir(func_name + "_init_ir.dot");
   const auto &rand_inputs = Compiler::get_input_values();
   if (optimize)

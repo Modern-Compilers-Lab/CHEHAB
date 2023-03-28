@@ -1,51 +1,30 @@
-digraph "gx_kernel" {
+digraph "box_blur" {
 node [shape=circle width=1 margin=0]
 edge [dir=back]
-2 [label="2" style=solid]
-ciphertext0 [label="c0" style=dashed color=blue fontcolor=blue]
-ciphertext6 [label="rotate" style=dashed]
-ciphertext6 -> ciphertext0
-ciphertext6 -> 2
-4 [label="4" style=solid]
-ciphertext5 [label="rotate" style=dashed]
-ciphertext5 -> ciphertext0
-ciphertext5 -> 4
-ciphertext9 [label="+" style=dashed]
-ciphertext9 -> ciphertext5
-ciphertext9 -> ciphertext6
-ciphertext11 [label="+" style=dashed]
-ciphertext11 -> ciphertext9
-ciphertext11 -> ciphertext9
-7 [label="7" style=solid]
-ciphertext4 [label="rotate" style=dashed]
-ciphertext4 -> ciphertext0
-ciphertext4 -> 7
 6 [label="6" style=solid]
+ciphertext0 [label="c0" style=dashed color=blue fontcolor=blue]
 ciphertext3 [label="rotate" style=dashed]
 ciphertext3 -> ciphertext0
 ciphertext3 -> 6
-ciphertext8 [label="+" style=dashed]
-ciphertext8 -> ciphertext3
-ciphertext8 -> ciphertext4
 5 [label="5" style=solid]
 ciphertext2 [label="rotate" style=dashed]
 ciphertext2 -> ciphertext0
 ciphertext2 -> 5
+ciphertext5 [label="+" style=dashed]
+ciphertext5 -> ciphertext2
+ciphertext5 -> ciphertext3
 1 [label="1" style=solid]
 ciphertext1 [label="rotate" style=dashed]
 ciphertext1 -> ciphertext0
 ciphertext1 -> 1
+ciphertext4 [label="+" style=dashed]
+ciphertext4 -> ciphertext1
+ciphertext4 -> ciphertext0
 ciphertext7 [label="+" style=dashed]
-ciphertext7 -> ciphertext1
-ciphertext7 -> ciphertext2
-ciphertext10 [label="+" style=dashed]
-ciphertext10 -> ciphertext7
-ciphertext10 -> ciphertext8
-ciphertext12 [label="+" style=dashed]
-ciphertext12 -> ciphertext10
-ciphertext12 -> ciphertext11
-ciphertext14 [label="=" style=dashed color=red fontcolor=red]
-ciphertext14 -> ciphertext12
+ciphertext7 -> ciphertext4
+ciphertext7 -> ciphertext5
+ciphertext8 [label="=" style=dashed color=red fontcolor=red]
+ciphertext8 -> ciphertext7
 subgraph cluster_key {
     graph[label="Key"]
     node [width=0.5]

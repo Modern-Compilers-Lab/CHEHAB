@@ -32,7 +32,7 @@ inline void init_random(std::vector<T> &v, long long min_value, long long max_va
 void print_variables_values(const variables_values_map &m, std::size_t print_size = 4);
 
 template <typename T>
-inline void print_vector(const std::vector<T> &v, std::size_t print_size)
+inline void print_vector(const std::vector<T> &v, std::ostream &os, std::size_t print_size)
 {
   std::size_t size = v.size();
   if (size < 2 * print_size)
@@ -41,37 +41,23 @@ inline void print_vector(const std::vector<T> &v, std::size_t print_size)
   if (size == 0)
     return;
 
-  std::cout << "[";
   for (std::size_t i = 0; i < print_size; ++i)
-    std::cout << v[i] << ", ";
+    os << v[i] << " ";
   if (v.size() > 2 * print_size)
-    std::cout << "..., ";
+    os << "... ";
   for (std::size_t i = size - print_size; i < size - 1; ++i)
-    std::cout << v[i] << ", ";
-  std::cout << v.back() << "]";
+    os << v[i] << " ";
+  os << v.back();
 }
 
 template <typename T>
-inline void print_vector(const std::vector<T> &v)
+inline void print_vector(const std::vector<T> &v, std::ostream &os)
 {
   if (v.size() == 0)
     return;
 
-  std::cout << "[";
   for (std::size_t i = 0; i < v.size() - 1; ++i)
-    std::cout << v[i] << ", ";
-  std::cout << v.back() << "]";
+    os << v[i] << " ";
+  os << v.back();
 }
-
-template <typename T>
-inline void serialize_vector(const std::vector<T> &v, std::ostream &os)
-{
-  if (v.size() == 0)
-    return;
-
-  for (auto it = v.begin(); it != v.end() - 1; ++it)
-    os << *it << " ";
-  os << *v.rbegin();
-}
-
 } // namespace utils

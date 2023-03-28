@@ -1,23 +1,37 @@
 digraph "box_blur" {
 node [shape=circle width=1 margin=0]
 edge [dir=back]
-5 [label="5" style=solid]
+32 [label="32" style=solid]
 1 [label="1" style=solid]
-ciphertext0 [label="c0" style=dashed color=blue fontcolor=blue]
+ciphertext0 [label="img" style=dashed color=blue fontcolor=blue]
+ciphertext40 [label="rotate" style=dashed]
+ciphertext40 -> ciphertext0
+ciphertext40 -> 1
+1023 [label="1023" style=solid]
+ciphertext35 [label="rotate" style=dashed]
+ciphertext35 -> ciphertext0
+ciphertext35 -> 1023
+ciphertext36 [label="+" style=dashed]
+ciphertext36 -> ciphertext0
+ciphertext36 -> ciphertext35
+ciphertext41 [label="+" style=dashed]
+ciphertext41 -> ciphertext36
+ciphertext41 -> ciphertext40
 ciphertext14 [label="rotate" style=dashed]
-ciphertext14 -> ciphertext0
-ciphertext14 -> 1
-ciphertext15 [label="+" style=dashed]
-ciphertext15 -> ciphertext0
-ciphertext15 -> ciphertext14
-ciphertext5 [label="rotate" style=dashed]
-ciphertext5 -> ciphertext15
-ciphertext5 -> 5
-ciphertext6 [label="+" style=dashed]
-ciphertext6 -> ciphertext15
-ciphertext6 -> ciphertext5
-ciphertext8 [label="=" style=dashed color=red fontcolor=red]
-ciphertext8 -> ciphertext6
+ciphertext14 -> ciphertext41
+ciphertext14 -> 32
+992 [label="992" style=solid]
+ciphertext6 [label="rotate" style=dashed]
+ciphertext6 -> ciphertext41
+ciphertext6 -> 992
+ciphertext16 [label="+" style=dashed]
+ciphertext16 -> ciphertext6
+ciphertext16 -> ciphertext41
+ciphertext17 [label="+" style=dashed]
+ciphertext17 -> ciphertext16
+ciphertext17 -> ciphertext14
+ciphertext18 [label="=" style=dashed color=red fontcolor=red]
+ciphertext18 -> ciphertext17
 subgraph cluster_key {
     graph[label="Key"]
     node [width=0.5]

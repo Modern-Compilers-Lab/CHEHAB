@@ -1,6 +1,7 @@
 #include "gen_he_box_blur.hpp"
 #include "utils.hpp"
 #include <chrono>
+#include <ctime>
 #include <iostream>
 #include <vector>
 
@@ -36,35 +37,46 @@ int main(int argc, char **argv)
   prepare_he_inputs(batch_encoder, encryptor, clear_inputs, encrypted_inputs, encoded_inputs);
   encrypted_args_map encrypted_outputs;
   encoded_args_map encoded_outputs;
+
   chrono::high_resolution_clock::time_point time_start, time_end;
-  chrono::microseconds time_sum(0);
+  chrono::duration<double, milli> time_sum(0);
+  clock_t c_start, c_end;
+  clock_t c_sum = 0;
+  c_start = clock();
   time_start = chrono::high_resolution_clock::now();
   box_blur(
     encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, batch_encoder, relin_keys,
     galois_keys, public_key);
+  c_end = clock();
   time_end = chrono::high_resolution_clock::now();
-  time_sum += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+  time_sum += time_end - time_start;
+  c_sum += c_end - c_start;
 
   clear_args_info_map obtained_clear_outputs;
   get_clear_outputs(
     batch_encoder, decryptor, encrypted_outputs, encoded_outputs, clear_outputs, obtained_clear_outputs);
+  print_encrypted_outputs_info(context, decryptor, encrypted_outputs);
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
-  print_variables_values(obtained_clear_outputs);
-  print_encrypted_outputs_info(context, decryptor, encrypted_outputs);
+  cout << "obtained clear outputs\n";
+  print_variables_values(obtained_clear_outputs, 8);
 
   // get peak memory from /proc
   getchar();
 
+  c_start = clock();
   time_start = chrono::high_resolution_clock::now();
   for (int i = 0; i < repeat - 1; ++i)
     box_blur(
       encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, batch_encoder, relin_keys,
       galois_keys, public_key);
+  c_end = clock();
   time_end = chrono::high_resolution_clock::now();
 
-  time_sum += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
-  cout << "exec_time: " << time_sum.count() / repeat << " µs"
-       << "\n";
+  time_sum += time_end - time_start;
+  c_sum += c_end - c_start;
+
+  cout << "time: " << time_sum.count() / repeat << " ms\n";
+  cout << "cpu time: " << 1000.0 * c_sum / CLOCKS_PER_SEC / repeat << " ms\n";
 }

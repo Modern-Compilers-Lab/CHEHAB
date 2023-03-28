@@ -439,7 +439,7 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
     else
       static_assert(utils::always_false_v<T>, "non-exhaustive visitor!");
 
-    utils::serialize_vector(v, file);
+    utils::print_vector(v, file);
   };
 
   file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << "\n";
@@ -493,7 +493,7 @@ void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) cons
     else
       static_assert(utils::always_false_v<T>, "non-exhaustive visitor!");
 
-    utils::serialize_vector(v, file);
+    utils::print_vector(v, file);
   };
 
   file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << "\n";

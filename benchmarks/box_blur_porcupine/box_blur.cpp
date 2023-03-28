@@ -9,13 +9,16 @@
 using namespace std;
 using namespace fhecompiler;
 
-void hamming_distance(int vector_size)
+void box_blur()
 {
-  Ciphertext v1("v1", VarType::input);
-  Ciphertext v2("v2", VarType::input);
-  Ciphertext slot_wise_xor = v1 + v2 - 2 * (v1 * v2);
-  Ciphertext result("result", VarType::output);
-  result = reduce_add(slot_wise_xor);
+  Ciphertext c0("c0", VarType::input);
+  Ciphertext c1 = c0 << 1;
+  Ciphertext c2 = c0 << 5;
+  Ciphertext c3 = c0 << 6;
+  Ciphertext c4 = c1 + c0;
+  Ciphertext c5 = c2 + c3;
+  Ciphertext c6("c6", VarType::output);
+  c6 = c4 + c5;
 }
 
 int main(int argc, char **argv)
@@ -33,9 +36,9 @@ int main(int argc, char **argv)
   cout << "vector_size: " << vector_size << ", "
        << "trs_passes: " << trs_passes << "\n";
 
-  string func_name = "hamming_distance";
+  string func_name = "box_blur";
   Compiler::create_func(func_name, vector_size, 16, false, Scheme::bfv);
-  hamming_distance(vector_size);
+  box_blur();
   Compiler::draw_ir(func_name + "_init_ir.dot");
   const auto &rand_inputs = Compiler::get_input_values();
   if (optimize)

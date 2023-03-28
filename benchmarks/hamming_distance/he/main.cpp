@@ -39,7 +39,7 @@ int main(int argc, char **argv)
   encoded_args_map encoded_outputs;
 
   chrono::high_resolution_clock::time_point time_start, time_end;
-  chrono::milliseconds time_sum(0);
+  chrono::duration<double, milli> time_sum(0);
   clock_t c_start, c_end;
   clock_t c_sum = 0;
   c_start = clock();
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     galois_keys, public_key);
   c_end = clock();
   time_end = chrono::high_resolution_clock::now();
-  time_sum += chrono::duration_cast<chrono::milliseconds>(time_end - time_start);
+  time_sum += time_end - time_start;
   c_sum += c_end - c_start;
 
   clear_args_info_map obtained_clear_outputs;
@@ -59,6 +59,7 @@ int main(int argc, char **argv)
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
+  cout << "obtained clear outputs\n";
   print_variables_values(obtained_clear_outputs, 8);
 
   // get peak memory from /proc
@@ -73,9 +74,9 @@ int main(int argc, char **argv)
   c_end = clock();
   time_end = chrono::high_resolution_clock::now();
 
-  time_sum += chrono::duration_cast<chrono::milliseconds>(time_end - time_start);
+  time_sum += time_end - time_start;
   c_sum += c_end - c_start;
 
   cout << "time: " << time_sum.count() / repeat << " ms\n";
-  cout << "cpu time: " << (1000.0 * c_sum / CLOCKS_PER_SEC) / repeat << " ms\n";
+  cout << "cpu time: " << 1000.0 * c_sum / CLOCKS_PER_SEC / repeat << " ms\n";
 }

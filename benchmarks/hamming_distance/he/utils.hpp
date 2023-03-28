@@ -42,8 +42,10 @@ void print_variables_values(const clear_args_info_map &m, std::size_t print_size
 
 void print_variables_values(const clear_args_info_map &m);
 
+void print_variables_values(const clear_args_info_map &m);
+
 template <typename T>
-inline void print_vector(const std::vector<T> &v, std::size_t print_size)
+inline void print_vector(const std::vector<T> &v, std::ostream &os, std::size_t print_size)
 {
   std::size_t size = v.size();
   if (size < 2 * print_size)
@@ -52,24 +54,22 @@ inline void print_vector(const std::vector<T> &v, std::size_t print_size)
   if (size == 0)
     return;
 
-  std::cout << "[";
   for (std::size_t i = 0; i < print_size; ++i)
-    std::cout << v[i] << ", ";
+    os << v[i] << " ";
   if (v.size() > 2 * print_size)
-    std::cout << "..., ";
+    os << "... ";
   for (std::size_t i = size - print_size; i < size - 1; ++i)
-    std::cout << v[i] << ", ";
-  std::cout << v.back() << "]";
+    os << v[i] << " ";
+  os << v.back();
 }
 
 template <typename T>
-inline void print_vector(const std::vector<T> &v)
+inline void print_vector(const std::vector<T> &v, std::ostream &os)
 {
   if (v.size() == 0)
     return;
 
-  std::cout << "[";
   for (std::size_t i = 0; i < v.size() - 1; ++i)
-    std::cout << v[i] << ", ";
-  std::cout << v.back() << "]";
+    os << v[i] << " ";
+  os << v.back();
 }

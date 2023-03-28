@@ -406,9 +406,9 @@ void print_variables_values(const variables_values_map &m, size_t print_size)
   {
     cout << variable.first << ": ";
     if (auto value = get_if<vector<int64_t>>(&variable.second))
-      print_vector(*value, print_size);
+      print_vector(*value, cout, print_size);
     else if (auto value = get_if<vector<uint64_t>>(&variable.second))
-      print_vector(*value, print_size);
+      print_vector(*value, cout, print_size);
     else
       throw logic_error("could not get variable value");
     cout << "\n";

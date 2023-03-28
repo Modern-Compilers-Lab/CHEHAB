@@ -8,37 +8,52 @@
 using namespace std;
 using namespace fhecompiler;
 
-int main()
+void box_blur(int width, int height)
 {
+  Ciphertext img("img", VarType::input);
+  Ciphertext top_row = img >> width;
+  Ciphertext bottom_row = img << width;
+  Ciphertext top_sum = top_row + (top_row >> 1) + (top_row << 1);
+  Ciphertext curr_sum = img + (img >> 1) + (img << 1);
+  Ciphertext bottom_sum = bottom_row + (bottom_row >> 1) + (bottom_row << 1);
+  Ciphertext result("result", VarType::output);
+  result = top_sum + curr_sum + bottom_sum;
+}
+
+int main(int argc, char **argv)
+{
+  int width = 32;
+  if (argc > 1)
+    width = stoi(argv[1]);
+
+  int height = 32;
+  if (argc > 2)
+    height = stoi(argv[2]);
+
+  int trs_passes = 1;
+  if (argc > 3)
+    trs_passes = stoi(argv[3]);
+
+  bool optimize = trs_passes > 0;
+
+  cout << "width: " << width << ", "
+       << "height: " << height << ", "
+       << "trs_passes: " << trs_passes << "\n";
+
   string func_name = "box_blur";
-  Compiler::create_func(func_name, 8);
-
-  Ciphertext c0("c0", VarType::input);
-
-  Ciphertext c1 = c0 << 1;
-  Ciphertext c2 = c0 << 5;
-  Ciphertext c3 = c0 << 6;
-  Ciphertext c4 = c1 + c0;
-  Ciphertext c5 = c2 + c3;
-  Ciphertext c6 = c4 + c5;
-  Ciphertext output("output", VarType::output);
-  output = c6;
-
-  const utils::variables_values_map &inputs_values = Compiler::get_input_values();
-
-  auto clear_outputs1 = Compiler::evaluate_on_clear(inputs_values);
-
-  if (clear_outputs1 != Compiler::get_output_values())
-    throw logic_error("clear_outputs1 != Compiler::get_output_values()");
-
-  Compiler::compile("he/gen_he_" + func_name + ".hpp");
-
-  auto clear_outputs2 = Compiler::evaluate_on_clear(inputs_values);
-
-  if (clear_outputs1 != clear_outputs2)
-    throw logic_error("clear_outputs1 != clear_outputs2");
+  Compiler::create_func(func_name, height * width, 16, false, Scheme::bfv);
+  box_blur(width, height);
+  Compiler::draw_ir(func_name + "_init_ir.dot");
+  const auto &rand_inputs = Compiler::get_input_values();
+  if (optimize)
+    Compiler::compile("he/gen_he_" + func_name + ".hpp", trs_passes);
+  else
+    Compiler::compile_noopt("he/gen_he_" + func_name + ".hpp");
+  Compiler::draw_ir(func_name + "_final_ir.dot");
+  auto outputs = Compiler::evaluate_on_clear(rand_inputs);
+  if (outputs != Compiler::get_output_values())
+    throw logic_error("compilation correctness-test failed");
 
   Compiler::serialize_inputs_outputs(func_name + "_rand_example.txt");
-
   return 0;
 }

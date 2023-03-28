@@ -1,27 +1,24 @@
-#include "gen_he_matrix_mul_16_16x16_16_log.hpp"
+#include "gen_he_matrix_mul.hpp"
 #include "utils.hpp"
 #include <chrono>
+#include <ctime>
 #include <iostream>
 #include <vector>
 
 using namespace std;
 using namespace seal;
 
-int main()
+int main(int argc, char **argv)
 {
-  int m_a = 16;
-  int n_a = 16;
-  int m_b = 16;
-  int n_b = 16;
-  string dim_info = to_string(m_a) + "_" + to_string(n_a) + "x" + to_string(m_b) + "_" + to_string(n_b);
+  int repeat = 100;
+  if (argc > 1)
+    repeat = stoi(argv[1]);
 
-  string func_name = "matrix_mul_" + dim_info + "_log";
-
+  string func_name = "matrix_mul";
   clear_args_info_map clear_inputs, clear_outputs;
   parse_inputs_outputs_file("../" + func_name + "_rand_example.txt", clear_inputs, clear_outputs);
 
   SEALContext context = create_context();
-
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
   const SecretKey &secret_key = keygen.secret_key();
@@ -38,41 +35,48 @@ int main()
   encrypted_args_map encrypted_inputs;
   encoded_args_map encoded_inputs;
   prepare_he_inputs(batch_encoder, encryptor, clear_inputs, encrypted_inputs, encoded_inputs);
-
-  auto &context_data = *context.first_context_data();
-
   encrypted_args_map encrypted_outputs;
   encoded_args_map encoded_outputs;
 
-  matrix_mul_16_16x16_16_log(
+  chrono::high_resolution_clock::time_point time_start, time_end;
+  chrono::duration<double, milli> time_sum(0);
+  clock_t c_start, c_end;
+  clock_t c_sum = 0;
+  c_start = clock();
+  time_start = chrono::high_resolution_clock::now();
+  matrix_mul(
     encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, batch_encoder, relin_keys,
     galois_keys, public_key);
+  c_end = clock();
+  time_end = chrono::high_resolution_clock::now();
+  time_sum += time_end - time_start;
+  c_sum += c_end - c_start;
 
   clear_args_info_map obtained_clear_outputs;
   get_clear_outputs(
     batch_encoder, decryptor, encrypted_outputs, encoded_outputs, clear_outputs, obtained_clear_outputs);
-
+  print_encrypted_outputs_info(context, decryptor, encrypted_outputs);
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
-  print_variables_values(obtained_clear_outputs);
-
-  print_encrypted_outputs_info(context, decryptor, encrypted_outputs);
+  cout << "obtained clear outputs\n";
+  print_variables_values(obtained_clear_outputs, 8);
 
   // get peak memory from /proc
   getchar();
 
-  int repeat = 1;
-
-  chrono::high_resolution_clock::time_point time_start, time_end;
+  c_start = clock();
   time_start = chrono::high_resolution_clock::now();
-  for (int i = 0; i < repeat; ++i)
-    matrix_mul_16_16x16_16_log(
+  for (int i = 0; i < repeat - 1; ++i)
+    matrix_mul(
       encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, batch_encoder, relin_keys,
       galois_keys, public_key);
+  c_end = clock();
   time_end = chrono::high_resolution_clock::now();
 
-  chrono::microseconds time_diff = chrono::duration_cast<chrono::microseconds>(time_end - time_start);
-  cout << "exec_time: " << time_diff.count() / repeat << " µs"
-       << "\n";
+  time_sum += time_end - time_start;
+  c_sum += c_end - c_start;
+
+  cout << "time: " << time_sum.count() / repeat << " ms\n";
+  cout << "cpu time: " << 1000.0 * c_sum / CLOCKS_PER_SEC / repeat << " ms\n";
 }
