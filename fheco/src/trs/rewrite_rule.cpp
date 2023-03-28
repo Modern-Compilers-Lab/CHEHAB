@@ -34,8 +34,6 @@ RewriteRule::RewriteRule(
 
 MatchingTerm RewriteRule::get_rhs(const ir::Program *program, const matching_term_ir_node_map &matching_map) const
 {
-  if (static_rhs.has_value())
-    return *static_rhs;
   return rhs_factory(program, matching_map);
 }
 
@@ -52,7 +50,7 @@ bool RewriteRule::substitute_in_ir(
   if (saving_circuit_flag && core::circuit_saving_condition_rewrite_rule_checker(lhs, matching_map) == false)
     return false;
 
-  core::substitute(ir_node, rhs_factory(program, matching_map), matching_map, program, functions_table);
+  core::substitute(ir_node, *static_rhs, matching_map, program, functions_table);
 
   return true;
 }
