@@ -1,6 +1,7 @@
 #include "gen_he_hamming_distance.hpp"
 #include "utils.hpp"
 #include <chrono>
+#include <ctime>
 #include <iostream>
 #include <vector>
 
@@ -36,14 +37,20 @@ int main(int argc, char **argv)
   prepare_he_inputs(batch_encoder, encryptor, clear_inputs, encrypted_inputs, encoded_inputs);
   encrypted_args_map encrypted_outputs;
   encoded_args_map encoded_outputs;
+
   chrono::high_resolution_clock::time_point time_start, time_end;
-  chrono::microseconds time_sum(0);
+  chrono::milliseconds time_sum(0);
+  clock_t c_start, c_end;
+  clock_t c_sum = 0;
+  c_start = clock();
   time_start = chrono::high_resolution_clock::now();
   hamming_distance(
     encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, batch_encoder, relin_keys,
     galois_keys, public_key);
+  c_end = clock();
   time_end = chrono::high_resolution_clock::now();
-  time_sum += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+  time_sum += chrono::duration_cast<chrono::milliseconds>(time_end - time_start);
+  c_sum += c_end - c_start;
 
   clear_args_info_map obtained_clear_outputs;
   get_clear_outputs(
@@ -57,14 +64,18 @@ int main(int argc, char **argv)
   // get peak memory from /proc
   getchar();
 
+  c_start = clock();
   time_start = chrono::high_resolution_clock::now();
   for (int i = 0; i < repeat - 1; ++i)
     hamming_distance(
       encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, batch_encoder, relin_keys,
       galois_keys, public_key);
+  c_end = clock();
   time_end = chrono::high_resolution_clock::now();
 
-  time_sum += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
-  cout << "exec_time: " << time_sum.count() / repeat << " µs"
-       << "\n";
+  time_sum += chrono::duration_cast<chrono::milliseconds>(time_end - time_start);
+  c_sum += c_end - c_start;
+
+  cout << "time: " << time_sum.count() / repeat << " ms\n";
+  cout << "cpu time: " << (1000.0 * c_sum / CLOCKS_PER_SEC) / repeat << " ms\n";
 }
