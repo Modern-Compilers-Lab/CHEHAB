@@ -35,6 +35,9 @@ fheco_trs::TermType MatchingTerm::deduce_term_type(fheco_trs::TermType lhs_term_
   if (lhs_term_type == rhs_term_type)
     return lhs_term_type;
 
+  else if (lhs_term_type == fheco_trs::TermType::variable || rhs_term_type == fheco_trs::TermType::variable)
+    return fheco_trs::TermType::variable;
+
   else if (lhs_term_type == fheco_trs::TermType::ciphertext || rhs_term_type == fheco_trs::TermType::ciphertext)
     return fheco_trs::TermType::ciphertext;
 
@@ -128,7 +131,7 @@ MatchingTerm operator-(const MatchingTerm &term)
 MatchingTerm exponentiate(const MatchingTerm &lhs, const MatchingTerm &rhs)
 {
   if (rhs.get_term_type() != fheco_trs::TermType::rawData)
-    throw("invalid exponentiate expression, exponent must of type rawData");
+    throw("invalid exponentiate expression, exponent must of type rawDataType");
 
   MatchingTerm new_term(
     fheco_trs::OpCode::exponentiate, std::vector<MatchingTerm>({lhs, rhs}), fheco_trs::TermType::ciphertext);
@@ -332,7 +335,7 @@ MatchingTerm MatchingTerm::isone(const MatchingTerm &m_term)
 
 MatchingTerm MatchingTerm::type_of(const MatchingTerm &m_term)
 {
-  MatchingTerm new_term(TermType::boolean);
+  MatchingTerm new_term(TermType::scalar);
   new_term.set_function_id(FunctionId::type_of);
   new_term.push_operand(m_term);
   return new_term;
