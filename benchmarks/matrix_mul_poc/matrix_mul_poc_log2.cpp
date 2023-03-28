@@ -93,7 +93,7 @@ int main()
 
   try
   {
-    fhecompiler::init("matrix_mul_poc_log2", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
+    fhecompiler::init("matrix_mul_poc_log2", fhecompiler::Scheme::bfv, false);
 
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
@@ -217,11 +217,7 @@ int main()
       C_encrypted.push_back(output_line);
     }
 
-    params_selector::EncryptionParameters params;
-    params.set_plaintext_modulus(plaintext_modulus);
-    params.set_polynomial_modulus_degree(polynomial_modulus_degree);
-
-    fhecompiler::compile("matrix_mul_poc_log2.hpp", &params);
+    fhecompiler::compile("matrix_mul_poc_log2.hpp");
   }
   catch (const char *message)
   {

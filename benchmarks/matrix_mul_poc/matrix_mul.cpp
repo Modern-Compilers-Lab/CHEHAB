@@ -95,10 +95,7 @@ int main()
 
   try
   {
-    fhecompiler::init("matrix_mul_poc", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
-
-    size_t polynomial_modulus_degree = 4096;
-    size_t plaintext_modulus = 786433;
+    fhecompiler::init("matrix_mul_poc", fhecompiler::Scheme::bfv, false);
 
     std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
     std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
@@ -220,11 +217,7 @@ int main()
       }
     }
 
-    params_selector::EncryptionParameters params;
-    params.set_plaintext_modulus(plaintext_modulus);
-    params.set_polynomial_modulus_degree(polynomial_modulus_degree);
-
-    fhecompiler::compile("matrix_mul_poc.hpp", &params);
+    fhecompiler::compile("matrix_mul_poc.hpp");
   }
   catch (const char *message)
   {

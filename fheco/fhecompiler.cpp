@@ -21,7 +21,7 @@ namespace fhecompiler
 
 void init(
   const std::string &name, int bit_width, bool signedness, std::size_t vec_size, SecurityLevel sec_level, Scheme scheme,
-  double scale)
+  double scale, fhecompiler::Backend targeted_backend = fhecompiler::Backend::SEAL)
 {
 
   if (program != nullptr)
@@ -35,6 +35,7 @@ void init(
   program->set_sec_level(sec_level);
   program->set_scheme(scheme);
   program->set_scale(scale);
+  program->set_targeted_backed(targeted_backend);
 
   if (scheme == Scheme::ckks && scale == 0.0)
   {
