@@ -21,7 +21,8 @@ namespace fhecompiler
 /*program init, scale is only for ckks*/
 void init(
   const std::string &name, int bit_width, bool signedness = true, std::size_t vec_size = 1024,
-  SecurityLevel sec_level = SecurityLevel::tc128, Scheme scheme = Scheme::bfv, double scale = 0.0);
+  SecurityLevel sec_level = SecurityLevel::tc128, Scheme scheme = Scheme::bfv, double scale = 0.0,
+  fhecompiler::Backend targeted_backend = fhecompiler::Backend::SEAL);
 
 // paramters selection manually
 

@@ -92,10 +92,9 @@ inline fhecompiler::Ciphertext sum_all_slots2(const fhecompiler::Ciphertext &x, 
 
 int main()
 {
-
   try
   {
-    fhecompiler::init("matrix_mul_poc", fhecompiler::Scheme::bfv, false);
+    fhecompiler::init("matrix_mul_poc", (int)60);
 
     std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
     std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
@@ -134,6 +133,7 @@ int main()
       now nb_lines_to_pack_in_one_ciphertext is the number of lines that needs to be flattened and packed in one
       plaintext to encrypt
     */
+    std::cout << "done with encoding and encrypting..\n";
     for (size_t i = 0; i < A.size(); i += nb_lines_to_pack_in_one_ciphertext)
     {
       std::vector<int64_t> lines_flattened;

@@ -222,4 +222,89 @@ Ciphertext exponentiate(const Ciphertext &lhs, uint32_t exponent)
   return lhs_copy.exponentiate(exponent);
 }
 
+Ciphertext square(const Ciphertext &lhs)
+{
+  return operate_unary<Ciphertext, Ciphertext>(lhs, ir::OpCode::square, ir::TermType::ciphertext);
+}
+
+Ciphertext operator<<(const Ciphertext &lhs, int steps)
+{
+  return rotate(lhs, steps);
+}
+
+Ciphertext operator>>(const Ciphertext &lhs, int steps)
+{
+  return rotate(lhs, -steps);
+}
+
+Ciphertext &Ciphertext::operator<<=(int steps)
+{
+  this->rotate(steps);
+  return *this;
+}
+
+Ciphertext &Ciphertext::operator>>=(int steps)
+{
+  this->rotate(-steps);
+  return *this;
+}
+
+Ciphertext rotate(const Ciphertext &lhs, int steps)
+{
+
+  ir::OpCode opcode = ir::OpCode::rotate;
+
+  return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), opcode, ir::TermType::ciphertext);
+}
+
+Ciphertext rotate_rows(const Ciphertext &lhs, int steps)
+{
+  ir::OpCode opcode = ir::OpCode::rotate;
+
+  /*
+  if (program->get_targeted_backend() != Backend::SEAL)
+  {
+    opcode = ir::OpCode::rotate;
+  }
+  else
+    opcode = ir::OpCode::rotate_rows;
+    */
+
+  return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), opcode, ir::TermType::ciphertext);
+}
+
+Ciphertext rotate_columns(const Ciphertext &lhs)
+{
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
+  if (program->get_targeted_backend() != Backend::SEAL)
+    return lhs;
+
+  return operate_unary<Ciphertext, Ciphertext>(lhs, ir::OpCode::rotate_columns, ir::TermType::ciphertext);
+}
+
+std::string Ciphertext::get_term_tag()
+{
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
+  auto table_entry = program->get_entry_form_constants_table(this->label);
+  if (table_entry != std::nullopt)
+  {
+    ir::ConstantTableEntry table_entry_dereferenced = *table_entry;
+    return table_entry_dereferenced.get_entry_value().tag;
+  }
+  else
+    return "";
+}
+
+bool Ciphertext::is_output() const
+{
+  if (program == nullptr)
+    throw(program_not_init_msg);
+  return (program->type_of(this->label) == ir::ConstantTableEntryType::output);
+}
+
 } // namespace fhecompiler

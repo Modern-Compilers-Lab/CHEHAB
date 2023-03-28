@@ -21,9 +21,9 @@ namespace fhecompiler
 
 void init(
   const std::string &name, int bit_width, bool signedness, std::size_t vec_size, SecurityLevel sec_level, Scheme scheme,
-  double scale, fhecompiler::Backend targeted_backend = fhecompiler::Backend::SEAL)
+  double scale, fhecompiler::Backend targeted_backend)
 {
-
+  std::cout << "init 26\n";
   if (program != nullptr)
     delete program;
 
@@ -37,15 +37,19 @@ void init(
   program->set_scale(scale);
   program->set_targeted_backed(targeted_backend);
 
+  std::cout << "init 40\n";
+
   if (scheme == Scheme::ckks && scale == 0.0)
   {
     throw("scale is missing for CKKS\n");
   }
+
+  std::cout << "init 47\n";
 }
 
 void compile(const std::string &output_filename)
 {
-
+  std::cout << "compiling ...\n";
   // compact assignement pass
   {
     const std::vector<Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
