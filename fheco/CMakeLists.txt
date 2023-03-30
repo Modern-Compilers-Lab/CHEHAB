@@ -1,5 +1,3 @@
-set(FHECOMPILER_INCLUDES_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR}/FHECOMPILER)
-
 set(SRC_ROOT src)
 set(SRC_DSL src/dsl)
 set(SRC_IR src/ir)
@@ -55,6 +53,10 @@ target_include_directories(fhecompiler
   PUBLIC ${SRC_TRS}
   PUBLIC ${SRC_TRS}/reduction_order)
 
+include(GNUInstallDirs)
+
+set(FHECOMPILER_INCLUDES_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR}/FHECOMPILER)
+
 install(FILES
   src/fhecompiler.hpp
   ${SRC_DSL}/compiler.hpp
@@ -95,4 +97,4 @@ install(FILES
   DESTINATION ${FHECOMPILER_INCLUDES_INSTALL_DIR}
 )
 
-install(TARGETS fhecompiler ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_LIBRARY_PREFIX})
+install(TARGETS fhecompiler ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
