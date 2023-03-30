@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.22.1)
+cmake_minimum_required(VERSION 3.13)
 
-project(fhecompiler VERSION 1.0 LANGUAGES CXX)
-
-add_subdirectory(third_party/SEAL4.0)
+project(FHECompiler VERSION 1.0 LANGUAGES CXX)
 
 add_subdirectory(fheco)
-add_subdirectory(ufhe)
+add_subdirectory(benchmarks/box_blur)
+add_subdirectory(benchmarks/box_blur_porcupine)
+add_subdirectory(benchmarks/gx_kernel_porcupine)
+add_subdirectory(benchmarks/hamming_distance)
+add_subdirectory(benchmarks/matrix_mul)

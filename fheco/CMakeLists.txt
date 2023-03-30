@@ -1,3 +1,6 @@
+set(FHECOMPILER_INCLUDES_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR}/FHECOMPILER)
+
+set(SRC_ROOT src)
 set(SRC_DSL src/dsl)
 set(SRC_IR src/ir)
 set(SRC_PASSES src/passes)
@@ -6,18 +9,7 @@ set(SRC_TRANSLATOR src/translator)
 set(SRC_UTILS src/utils)
 set(SRC_TRS src/trs)
 
-
-set(CMAKE_CXX_STANDARD 17)
-
-set(HEADERS_INSTALL_DIR include/fhecompiler)
-
-set(FHECOMPILER_STATIC_INSTALL_DIR lib)
-
-add_library(fhecompiler)
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_IR} PUBLIC ${SRC_DSL} PUBLIC ${SRC_PASSES} PUBLIC ${SRC_PARAMS_SELECTOR} PUBLIC ${SRC_TRANSLATOR} PUBLIC ${SRC_UTILS} PUBLIC ${SRC_TRS} PUBLIC ${SRC_TRS}/reduction_order)
-
-target_sources(fhecompiler PRIVATE
+set(FHECOMPILER_SOURCE_FILES
   ${SRC_DSL}/compiler.cpp
   ${SRC_DSL}/ciphertext.cpp
   ${SRC_DSL}/plaintext.cpp
@@ -47,6 +39,21 @@ target_sources(fhecompiler PRIVATE
   ${SRC_TRS}/ruleset.cpp
   ${SRC_PASSES}/normalize_pass.cpp
 )
+
+add_library(fhecompiler STATIC ${FHECOMPILER_SOURCE_FILES})
+target_compile_features(fhecompiler PUBLIC cxx_std_17)
+set_target_properties(fhecompiler PROPERTIES CXX_EXTENSIONS OFF)
+
+target_include_directories(fhecompiler
+  PUBLIC ${SRC_ROOT}
+  PUBLIC ${SRC_IR}
+  PUBLIC ${SRC_DSL}
+  PUBLIC ${SRC_PASSES}
+  PUBLIC ${SRC_PARAMS_SELECTOR}
+  PUBLIC ${SRC_TRANSLATOR}
+  PUBLIC ${SRC_UTILS}
+  PUBLIC ${SRC_TRS}
+  PUBLIC ${SRC_TRS}/reduction_order)
 
 install(FILES
   src/fhecompiler.hpp
@@ -85,9 +92,7 @@ install(FILES
   ${SRC_UTILS}/clear_data_evaluator.hpp
   ${SRC_UTILS}/evaluate_on_clear.hpp
   ${SRC_UTILS}/common.hpp
-  DESTINATION ${HEADERS_INSTALL_DIR}
+  DESTINATION ${FHECOMPILER_INCLUDES_INSTALL_DIR}
 )
 
-install(TARGETS 
-  fhecompiler LIBRARY DESTINATION ${FHECOMPILER_STATIC_INSTALL_DIR} 
-)
+install(TARGETS fhecompiler ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_LIBRARY_PREFIX})

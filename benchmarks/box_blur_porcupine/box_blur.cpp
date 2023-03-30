@@ -1,4 +1,4 @@
-#include "fhecompiler/fhecompiler.hpp"
+#include "fhecompiler.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
