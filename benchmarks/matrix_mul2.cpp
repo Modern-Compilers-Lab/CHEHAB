@@ -5,7 +5,7 @@ int main()
 
   try
   {
-    fhecompiler::init("matrix_mul2", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
+    fhecompiler::init("matrix_mul2", 40);
 
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
@@ -102,11 +102,8 @@ int main()
     }
     std::cout << "product compueted...\n";
     // result matrix needs to be transposed after decryption
-    params_selector::EncryptionParameters params;
-    params.set_plaintext_modulus(plaintext_modulus);
-    params.set_polynomial_modulus_degree(polynomial_modulus_degree);
 
-    fhecompiler::compile("matrix_mul2.hpp", &params);
+    fhecompiler::compile("matrix_mul2.hpp");
   }
   catch (const char *message)
   {

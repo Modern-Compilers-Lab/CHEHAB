@@ -10,7 +10,7 @@ int main()
   try
   {
 
-    fhecompiler::init("test1", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
+    fhecompiler::init("test1", 40);
 
     fhecompiler::Ciphertext A("A", fhecompiler::VarType::input);
     fhecompiler::Ciphertext B("B", fhecompiler::VarType::input);
@@ -98,14 +98,7 @@ int main()
 
     output1 = ((A << 1) + C) + (B << 1); // 23 * square(vec_test[0]) + 23 * vec_test[1]; // + A;
 
-    params_selector::EncryptionParameters params;
-    size_t polynomial_modulus_degree = 4096;
-    size_t plaintext_modulus = 786433;
-
-    params.set_plaintext_modulus(plaintext_modulus);
-    params.set_polynomial_modulus_degree(polynomial_modulus_degree);
-
-    fhecompiler::compile("test1.hpp", &params);
+    fhecompiler::compile("test1.hpp");
   }
   catch (const char *message)
   {

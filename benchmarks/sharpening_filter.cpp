@@ -5,7 +5,7 @@ int main()
 
   try
   {
-    fhecompiler::init("sharpening_filter", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
+    fhecompiler::init("sharpening_filter", 40);
 
     fhecompiler::Ciphertext img("img", fhecompiler::VarType::input);
 
@@ -54,11 +54,7 @@ int main()
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
 
-    params_selector::EncryptionParameters params;
-    params.set_plaintext_modulus(plaintext_modulus);
-    params.set_polynomial_modulus_degree(polynomial_modulus_degree);
-
-    fhecompiler::compile("sharpening_filter.hpp", &params);
+    fhecompiler::compile("sharpening_filter.hpp");
   }
   catch (const char *message)
   {

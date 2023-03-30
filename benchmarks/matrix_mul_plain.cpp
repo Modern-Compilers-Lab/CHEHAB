@@ -56,7 +56,7 @@ int main()
 
   try
   {
-    fhecompiler::init("matrix_mul_plain", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
+    fhecompiler::init("matrix_mul_plain", 40);
 
     size_t polynomial_modulus_degree = 4096;
     size_t plaintext_modulus = 786433;
@@ -132,12 +132,7 @@ int main()
       fhecompiler::Ciphertext output("output" + std::to_string(i), fhecompiler::VarType::output);
       output = c_line;
     }
-
-    params_selector::EncryptionParameters params;
-    params.set_plaintext_modulus(plaintext_modulus);
-    params.set_polynomial_modulus_degree(polynomial_modulus_degree);
-
-    fhecompiler::compile("matrix_mul_plain.hpp", &params);
+    fhecompiler::compile("matrix_mul_plain.hpp");
   }
   catch (const char *message)
   {

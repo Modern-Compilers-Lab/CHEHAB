@@ -33,7 +33,7 @@ int main()
 {
   try
   {
-    fhecompiler::init("l2_distance", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
+    fhecompiler::init("l2_distance", 40);
 
     size_t N = 8;
 
@@ -48,14 +48,7 @@ int main()
     fhecompiler::Ciphertext output("output", fhecompiler::VarType::output);
     output = y - (x * m + b);
 
-    size_t polynomial_modulus_degree = 4096;
-    size_t plaintext_modulus = 786433;
-
-    params_selector::EncryptionParameters params;
-    params.set_plaintext_modulus(plaintext_modulus);
-    params.set_polynomial_modulus_degree(polynomial_modulus_degree);
-
-    fhecompiler::compile("l2_distance.hpp", &params);
+    fhecompiler::compile("l2_distance.hpp");
   }
   catch (const char *message)
   {

@@ -94,7 +94,7 @@ int main()
 {
   try
   {
-    fhecompiler::init("matrix_mul_poc", (int)60);
+    fhecompiler::init("matrix_mul_poc", 50);
 
     std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
     std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};

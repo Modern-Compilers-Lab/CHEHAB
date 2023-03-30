@@ -108,14 +108,7 @@ void compile(const std::string &output_filename)
 
   // utils::draw_ir(program, output_filename + std::to_string(NB_TRS_CSE_PASS) + ".dot");
 
-  utils::draw_ir(program, output_filename + "2.dot");
-
-  param_selector::ParameterSelector param_selector(program);
-  param_selector.select_params();
-
-  // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
-  fheco_passes::RotationKeySelctionPass rs_pass(program);
-  rs_pass.decompose_rotations();
+  // utils::draw_ir(program, output_filename + "2.dot");
 
   // fheco_passes::RotationKeySelctionPass rs_pass(program, params);
   // rs_pass.collect_program_rotations_steps();
@@ -124,6 +117,13 @@ void compile(const std::string &output_filename)
     cse_pass.apply_cse2();
 
   ir::print_ops_counters(program);
+
+  param_selector::ParameterSelector param_selector(program);
+  param_selector.select_params(false);
+
+  // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
+  fheco_passes::RotationKeySelctionPass rs_pass(program);
+  rs_pass.decompose_rotations();
 
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
