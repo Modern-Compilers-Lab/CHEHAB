@@ -14,7 +14,7 @@ namespace fhecompiler
 class Scalar
 {
 private:
-  ir::ScalarValue data = 0;
+  ir::ScalarValue data;
 
   std::string label; // symbol
 
