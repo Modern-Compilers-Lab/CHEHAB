@@ -70,9 +70,9 @@ set<tuple<ir::OpCode, ir::TermType, ir::TermType>> all_cartesian_product()
   set<tuple<ir::OpCode, ir::TermType, ir::TermType>> result;
   for (int i = 0; i < static_cast<int>(ir::OpCode::decode); ++i)
   {
-    for (int j = 0; j < static_cast<int>(ir::TermType::plaintextType); ++j)
+    for (int j = 0; j < static_cast<int>(ir::TermType::plaintext); ++j)
     {
-      for (int k = 0; k < static_cast<int>(ir::TermType::plaintextType); ++k)
+      for (int k = 0; k < static_cast<int>(ir::TermType::plaintext); ++k)
       {
         result.insert({static_cast<ir::OpCode>(i), static_cast<ir::TermType>(j), static_cast<ir::TermType>(k)});
       }
@@ -86,33 +86,32 @@ map<string, size_t> utils::count_main_node_classes(ir::Program *program)
   map<tuple<ir::OpCode, ir::TermType, ir::TermType>, size_t> node_types_count_result = count_node_types(program);
 
   map<string, set<tuple<ir::OpCode, ir::TermType, ir::TermType>>> class_type_mapping = {
-    {"cipher_cipher_mul", {{ir::OpCode::mul, ir::TermType::ciphertextType, ir::TermType::ciphertextType}}},
+    {"cipher_cipher_mul", {{ir::OpCode::mul, ir::TermType::ciphertext, ir::TermType::ciphertext}}},
     {"cipher_plain_mul",
-     {{ir::OpCode::mul, ir::TermType::ciphertextType, ir::TermType::plaintextType},
-      {ir::OpCode::mul, ir::TermType::ciphertextType, ir::TermType::scalarType},
-      {ir::OpCode::mul, ir::TermType::plaintextType, ir::TermType::ciphertextType},
-      {ir::OpCode::mul, ir::TermType::scalarType, ir::TermType::ciphertextType}}},
-    {"he_square", {{ir::OpCode::square, ir::TermType::ciphertextType, ir::TermType::undefined}}},
+     {{ir::OpCode::mul, ir::TermType::ciphertext, ir::TermType::plaintext},
+      {ir::OpCode::mul, ir::TermType::ciphertext, ir::TermType::scalar},
+      {ir::OpCode::mul, ir::TermType::plaintext, ir::TermType::ciphertext},
+      {ir::OpCode::mul, ir::TermType::scalar, ir::TermType::ciphertext}}},
+    {"he_square", {{ir::OpCode::square, ir::TermType::ciphertext, ir::TermType::undefined}}},
     {"he_rotate",
-     {{ir::OpCode::rotate_rows, ir::TermType::ciphertextType, ir::TermType::rawDataType},
-      {ir::OpCode::rotate_rows, ir::TermType::rawDataType, ir::TermType::ciphertextType}}},
+     {{ir::OpCode::rotate, ir::TermType::ciphertext, ir::TermType::rawData},
+      {ir::OpCode::rotate, ir::TermType::rawData, ir::TermType::ciphertext}}},
     {"he_add_sub",
-     {{ir::OpCode::add, ir::TermType::ciphertextType, ir::TermType::ciphertextType},
-      {ir::OpCode::add, ir::TermType::ciphertextType, ir::TermType::plaintextType},
-      {ir::OpCode::add, ir::TermType::ciphertextType, ir::TermType::scalarType},
-      {ir::OpCode::add, ir::TermType::plaintextType, ir::TermType::ciphertextType},
-      {ir::OpCode::add, ir::TermType::scalarType, ir::TermType::ciphertextType},
-      {ir::OpCode::sub, ir::TermType::ciphertextType, ir::TermType::ciphertextType},
-      {ir::OpCode::sub, ir::TermType::ciphertextType, ir::TermType::plaintextType},
-      {ir::OpCode::sub, ir::TermType::ciphertextType, ir::TermType::scalarType},
-      {ir::OpCode::sub, ir::TermType::plaintextType, ir::TermType::ciphertextType},
-      {ir::OpCode::sub, ir::TermType::scalarType, ir::TermType::ciphertextType},
-      {ir::OpCode::negate, ir::TermType::ciphertextType, ir::TermType::undefined}}},
+     {{ir::OpCode::add, ir::TermType::ciphertext, ir::TermType::ciphertext},
+      {ir::OpCode::add, ir::TermType::ciphertext, ir::TermType::plaintext},
+      {ir::OpCode::add, ir::TermType::ciphertext, ir::TermType::scalar},
+      {ir::OpCode::add, ir::TermType::plaintext, ir::TermType::ciphertext},
+      {ir::OpCode::add, ir::TermType::scalar, ir::TermType::ciphertext},
+      {ir::OpCode::sub, ir::TermType::ciphertext, ir::TermType::ciphertext},
+      {ir::OpCode::sub, ir::TermType::ciphertext, ir::TermType::plaintext},
+      {ir::OpCode::sub, ir::TermType::ciphertext, ir::TermType::scalar},
+      {ir::OpCode::sub, ir::TermType::plaintext, ir::TermType::ciphertext},
+      {ir::OpCode::sub, ir::TermType::scalar, ir::TermType::ciphertext},
+      {ir::OpCode::negate, ir::TermType::ciphertext, ir::TermType::undefined}}},
     {"plain_plain_op",
      {cartesian_product(
        {ir::OpCode::mul, ir::OpCode::square, ir::OpCode::rotate, ir::OpCode::add, ir::OpCode::sub, ir::OpCode::negate},
-       {ir::TermType::plaintextType, ir::TermType::scalarType},
-       {ir::TermType::plaintextType, ir::TermType::scalarType})}},
+       {ir::TermType::plaintext, ir::TermType::scalar}, {ir::TermType::plaintext, ir::TermType::scalar})}},
     {"dag_size", all_cartesian_product()}};
   map<string, size_t> result;
 

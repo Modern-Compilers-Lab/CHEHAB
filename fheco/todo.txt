@@ -1,0 +1,7 @@
+- handling case of outputs in rewrite, so if lhs is an output then we have to make the rhs as an output as well (done)
+- after rewrite rule is applied node type could change, we need to consider that (done)
+- convert exponentiate to multiplication with squares (done)
+- replace rotate_rows by rotate in IR and later during code generation we generate rotate_rows if the backend is SEAL (done)
+- revisit isone and iszero (done)
+- automatic check before applying a rule instead of passing the flag CIRCUIT_SAVE_FLAG 
+- checking correctness of rules and problem of increasing mul in matrix mul also checking cse

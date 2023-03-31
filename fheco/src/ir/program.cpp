@@ -218,7 +218,7 @@ void Program::compact_assignement(const ir::Term::Ptr &node_ptr)
   }
   else
   {
-    node_ptr->replace_with(operand);
+    replace_with(node_ptr, operand);
   }
 }
 
@@ -274,7 +274,7 @@ bool Program::is_tracked_object(const std::string &label)
 
   ir::ConstantTableEntry::EntryValue entry_value = lhs_table_entry_value.get_entry_value();
 
-  return entry_value.get_tag().length() > 0;
+  return entry_value.get_tag().length() > 0 || type_of(label) == ir::ConstantTableEntryType::output;
 }
 
 void Program::insert_created_node_in_dataflow(const Ptr &node)
@@ -309,6 +309,51 @@ void Program::set_constant_value_value(const std::string &key, const ir::Constan
 void Program::add_node_to_outputs_nodes(const Ptr &node)
 {
   data_flow->insert_node(node, true);
+}
+
+void Program::set_as_output(const Ptr &node)
+{
+  std::string label = node->get_label();
+  if (find_node_in_dataflow(label) == nullptr)
+    throw("node doesnt exist in dataflow in set_as_output");
+  data_flow->add_output(node);
+}
+
+void Program::replace_with(const Ptr &lhs, const Ptr &rhs)
+{
+  // usually this function is called
+  TermType lhs_term_type = lhs->get_term_type();
+  TermType rhs_term_type = rhs->get_term_type();
+
+  if (update_if_output_entry(lhs->get_label(), rhs) == false)
+  {
+    lhs->replace_with(rhs);
+  }
+  else
+  {
+    if (lhs_term_type != rhs_term_type)
+    {
+      // insert encode or encrypt
+      if (lhs_term_type == ir::TermType::ciphertext)
+      {
+        auto new_encrypt_node =
+          insert_operation_node_in_dataflow(OpCode::encrypt, std::vector<Ptr>{rhs}, "", ir::TermType::ciphertext);
+
+        update_if_output_entry(lhs->get_label(), new_encrypt_node);
+      }
+    }
+    lhs->replace_with(rhs);
+  }
+}
+
+bool Program::update_if_output_entry(const std::string &output_label, const Ptr &node)
+{
+  return data_flow->update_if_output_entry(output_label, node);
+}
+
+bool Program::is_output_node(const std::string &label)
+{
+  return data_flow->is_output_node(label);
 }
 
 } // namespace ir

@@ -21,6 +21,18 @@ std::string Translator::get_identifier(const Ptr &term_ptr) const
     return term_ptr->get_label();
 }
 
+std::string Translator::get_output_identifier(const std::string &output_label)
+{
+  if (program->get_entry_form_constants_table(output_label) != std::nullopt)
+  {
+    ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(output_label));
+    ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
+    return entry_value.get_tag();
+  }
+  else
+    return output_label;
+}
+
 /*
 void Translator::compact_assignement(const ir::Term::Ptr &node_ptr)
 {
@@ -87,15 +99,13 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
   if (operands.size() == 0)
     throw("unexpected size of operands, 0 operands");
 
-  if (program->type_of(node_ptr->get_label()) == ir::ConstantTableEntryType::output)
+  if (program->is_output_node(node_ptr->get_label()))
     return;
 
-  std::unordered_set<ir::OpCode> instructions_to_be_converted = {
-    ir::OpCode::relinearize, ir::OpCode::modswitch}; // these instructions needs to be converted since those  are
-                                                     // usually applied directly on a ciphertext
+  // std::unordered_set<ir::OpCode> instructions_to_be_converted = {ir::OpCode::relinearize, ir::OpCode::modswitch};
 
-  bool conversion_condition =
-    (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end());
+  bool conversion_condition = false;
+  // (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end());
 
   if (operands.size() == 1)
   {
@@ -108,19 +118,19 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     {
       operand_ptr->delete_parent(node_ptr->get_label());
 
-      bool is_an_output_operand = (program->type_of(operand_ptr->get_label()) != ir::ConstantTableEntryType::output);
+      bool is_an_output_operand = (program->is_output_node(operand_ptr->get_label()));
 
       if (program->type_of(operand_ptr->get_label()) == ir::ConstantTableEntryType::input && !node_ptr->is_inplace())
         return;
 
-      if (is_an_output_operand && !conversion_condition)
+      if (is_an_output_operand /*&& !conversion_condition*/)
         return;
 
       // an additional condition to convert to inplace implicitly
 
       bool dependency_condition = operand_ptr->get_parents_labels().size() == 0;
 
-      conversion_condition = conversion_condition || dependency_condition;
+      conversion_condition = dependency_condition;
 
       if (conversion_condition)
       {
@@ -145,14 +155,14 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
     if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input && !commutative)
       return;
 
-    bool is_lhs_an_output = program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::output;
-    bool is_rhs_an_output = program->type_of(operands[1]->get_label()) == ir::ConstantTableEntryType::output;
+    bool is_lhs_an_output = program->is_output_node(operands[0]->get_label());
+    bool is_rhs_an_output = program->is_output_node(operands[1]->get_label());
 
     bool is_rhs_an_input = program->type_of(operands[1]->get_label()) == ir::ConstantTableEntryType::input;
 
     if (
-      commutative && operands[0]->get_term_type() == ir::ciphertextType &&
-      operands[1]->get_term_type() == ir::ciphertextType &&
+      commutative && operands[0]->get_term_type() == ir::TermType::ciphertext &&
+      operands[1]->get_term_type() == ir::TermType::ciphertext &&
       operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size() && !is_rhs_an_output &&
       !is_rhs_an_input)
     {
@@ -166,8 +176,8 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
       return;
 
     if (
-      program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::output &&
-      !conversion_condition) // in this case no need to check dependency condition since the lhs is an output, checking
+      program->is_output_node(operands[0]->get_label())/*&&
+      !conversion_condition*/) // in this case no need to check dependency condition since the lhs is an output, checking
                              // !conversion_condition is enough
       return;
 
@@ -201,7 +211,7 @@ void Translator::translate_constant_table_entry(
   // getting type
   std::string type_str;
 
-  if (term_type == ir::TermType::scalarType)
+  if (term_type == ir::TermType::scalar)
   {
     fhecompiler::Scheme scheme = program->get_encryption_scheme();
     if (scheme == fhecompiler::bfv || scheme == fhecompiler::bgv)
@@ -234,7 +244,7 @@ void Translator::translate_constant_table_entry(
     {
       encoding_writer.init(os);
     }
-    if (term_type == ir::plaintextType)
+    if (term_type == ir::TermType::plaintext)
     {
       // encoding
       using VectorValue = ir::VectorValue;
@@ -254,7 +264,7 @@ void Translator::translate_constant_table_entry(
         throw("unsupported data type by schemes\n");
     }
 
-    else if (term_type == ir::scalarType)
+    else if (term_type == ir::TermType::scalar)
     {
       // don't forget to reduce
       using ScalarValue = ir::ScalarValue;
@@ -311,7 +321,7 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
   std::string rhs_identifier = get_identifier(operands[1]);
 
   if (lhs_identifier.empty() || rhs_identifier.empty())
-    throw("empty lable operand");
+    throw("empty label operand");
 
   evaluation_writer.write_binary_operation(
     os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
@@ -396,13 +406,13 @@ void Translator::translate_program(std::ofstream &os)
 
   os << "\n";
 
-  if (program->get_rotations_steps().size())
-    write_rotations_steps_getter(program->get_rotations_steps(), os);
+  if (program->get_rotations_keys_steps().size())
+    write_rotations_steps_getter(program->get_rotations_keys_steps(), os);
 
   generate_function_signature(os);
   os << "{" << '\n';
 
-  fix_operands_order_pass();
+  fix_ir_instructions_pass();
   convert_to_inplace_pass();
 
   {
@@ -414,16 +424,13 @@ void Translator::translate_program(std::ofstream &os)
       translate_term(node_ptr, os);
     }
   }
-
   for (auto &output_node : program->get_outputs_nodes())
   {
-    /*
-    if (output_node.second->is_operation_node() == false)
-      continue;
-    */
-    write_output(get_identifier(output_node.second), (output_node.second)->get_term_type(), os);
+    // if (program->type_of(output_node.second->get_label()) == ir::ConstantTableEntryType::output)
+    write_output(
+      get_output_identifier(output_node.first), get_identifier(output_node.second),
+      (output_node.second)->get_term_type(), os);
   }
-
   os << "}" << '\n';
 }
 
@@ -432,11 +439,14 @@ void Translator::generate_function_signature(std::ofstream &os) const
   ArgumentList argument_list;
   os << "void " << program->get_program_tag()
      << argument_list(
-          {{encrypted_inputs_class_literal, inputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
-           {encoded_inputs_class_literal, inputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
-           {encrypted_outputs_class_literal, outputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
-           {encoded_outputs_class_literal, outputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
-           {context_type_literal, context_identifier, AccessType::readOnly},
+          {{encrypted_inputs_class_literal, inputs_class_identifier[ir::TermType::ciphertext],
+            AccessType::readAndModify},
+           {encoded_inputs_class_literal, inputs_class_identifier[ir::TermType::plaintext], AccessType::readAndModify},
+           {encrypted_outputs_class_literal, outputs_class_identifier[ir::TermType::ciphertext],
+            AccessType::readAndModify},
+           {encoded_outputs_class_literal, outputs_class_identifier[ir::TermType::plaintext],
+            AccessType::readAndModify},
+           {evaluator_type_literal, evaluator_identifier, AccessType::readOnly},
            {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
            {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
            {public_key_literal, public_key_identifier, AccessType::readOnly}})
@@ -450,11 +460,12 @@ void Translator::write_input(const std::string &input_identifier, ir::TermType t
      << stringfy_string(input_identifier) << "];" << '\n';
 }
 
-void Translator::write_output(const std::string &output_identifier, ir::TermType type, std::ostream &os)
+void Translator::write_output(
+  const std::string &output_tag, const std::string &output_identifier, ir::TermType type, std::ostream &os)
 {
   // insert output in object
-  os << outputs_class_identifier[type] << "." << insert_object_instruction << "({" << stringfy_string(output_identifier)
-     << "," << output_identifier << "})"
+  os << outputs_class_identifier[type] << "." << insert_object_instruction << "({" << stringfy_string(output_tag) << ","
+     << output_identifier << "})"
      << ";" << '\n';
 }
 
@@ -495,8 +506,8 @@ ir::OpCode Translator::deduce_opcode_to_generate(const Ptr &node) const
       return node->get_opcode();
 
     else if (
-      node->get_term_type() == ir::ciphertextType &&
-      (lhs->get_term_type() != ir::ciphertextType || rhs->get_term_type() != ir::ciphertextType))
+      node->get_term_type() == ir::TermType::ciphertext &&
+      (lhs->get_term_type() != ir::TermType::ciphertext || rhs->get_term_type() != ir::TermType::ciphertext))
     {
       switch (node->get_opcode())
       {
@@ -524,23 +535,25 @@ ir::OpCode Translator::deduce_opcode_to_generate(const Ptr &node) const
     throw("node with more than 2 operands in deduce_opcode_to_generate");
 }
 
-void Translator::write_rotations_steps_getter(const std::vector<int32_t> &steps, std::ostream &os)
+void Translator::write_rotations_steps_getter(const std::set<int32_t> &steps, std::ostream &os)
 {
   os << gen_steps_function_signature << "{\n";
   os << "std::vector<" << rotation_step_type_literal << ">"
      << " steps = {";
-  for (size_t i = 0; i < steps.size(); i++)
+  size_t i = 0;
+  for (auto &step : steps)
   {
-    os << steps[i];
+    os << step;
     if (i < steps.size() - 1)
       os << ",";
     else
       os << "};";
+    i++;
   }
   os << " return steps; }";
 }
 
-void Translator::order_operands(const ir::Program::Ptr &node)
+void Translator::fix_ir_instruction(const ir::Program::Ptr &node)
 {
   if (node->is_operation_node() == false)
     return;
@@ -550,19 +563,19 @@ void Translator::order_operands(const ir::Program::Ptr &node)
 
   ir::OpCode opcode = node->get_opcode();
 
-  if (node->get_term_type() == ir::ciphertextType)
+  if (node->get_term_type() == ir::TermType::ciphertext)
   {
 
     if (
-      node->get_operands()[0]->get_term_type() != ir::ciphertextType &&
-      node->get_operands()[1]->get_term_type() != ir::ciphertextType)
+      node->get_operands()[0]->get_term_type() != ir::TermType::ciphertext &&
+      node->get_operands()[1]->get_term_type() != ir::TermType::ciphertext)
     {
       throw("ciphertext node with non ciphertext operands");
     }
 
     if (opcode == ir::OpCode::add || opcode == ir::OpCode::mul)
     {
-      if (node->get_operands()[0]->get_term_type() != ir::ciphertextType)
+      if (node->get_operands()[0]->get_term_type() != ir::TermType::ciphertext)
         node->reverse_operands();
     }
     else if (opcode == ir::OpCode::sub)
@@ -571,21 +584,30 @@ void Translator::order_operands(const ir::Program::Ptr &node)
       ir::Program::Ptr rhs = node->get_operands()[1];
       ir::Program::Ptr node_copy = std::make_shared<ir::Term>(*node.get());
 
-      if (lhs->get_term_type() != ir::ciphertextType)
+      if (lhs->get_term_type() != ir::TermType::ciphertext)
       {
         ir::Program::Ptr negate_node = program->insert_operation_node_in_dataflow(
-          ir::OpCode::negate, std::vector<ir::Program::Ptr>({rhs}), "", ir::ciphertextType);
+          ir::OpCode::negate, std::vector<ir::Program::Ptr>({rhs}), "", ir::TermType::ciphertext);
         node->set_opcode(ir::OpCode::add);
         node->clear_operands();
         node->set_operands(std::vector<ir::Program::Ptr>({negate_node, lhs}));
       }
     }
+    else if (node->get_opcode() == ir::OpCode::rotate)
+    {
+      if (
+        program->get_targeted_backend() == fhecompiler::Backend::SEAL &&
+        program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
+      {
+        node->set_opcode(ir::OpCode::rotate_rows);
+      }
+    }
   }
-  else if (node->get_term_type() == ir::scalarType)
+  else if (node->get_term_type() == ir::TermType::scalar)
     throw("only plaintext and ciphertext operation terms are expected");
 }
 
-void Translator::fix_operands_order_pass()
+void Translator::fix_ir_instructions_pass()
 {
   auto nodes = program->get_dataflow_sorted_nodes(true);
   for (auto &node : nodes)
@@ -593,7 +615,7 @@ void Translator::fix_operands_order_pass()
     /*
       Order of calling the two functions is important
     */
-    order_operands(node);
+    fix_ir_instruction(node);
   }
 }
 

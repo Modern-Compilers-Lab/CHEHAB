@@ -1,13 +1,16 @@
 #pragma once
 
 #include "dag.hpp"
+#include "encryption_parameters.hpp"
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
 #include "term.hpp"
+#include <cstddef>
 #include <list>
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -79,21 +82,40 @@ private:
 
   std::unique_ptr<DAG> data_flow; // data_flow points to the IR which is a Directed Acyclic Graph (DAG)
 
+  /*
+    std::unordered_map<size_t, std::unique_ptr<DAG>> dags
+
+    in that case we gonna have multiple DAGs, where each dag is associated to an encryption context
+    an encryption context is difined by the set of parameters, from the user we need plaintext modulus
+  */
+
   std::unordered_map<std::string, ConstantTableEntry>
     constants_table; // we will have a symbol table, the data structure is a hash table
 
-  fhecompiler::Scheme program_scheme;
+  int bit_width;
 
-  fhecompiler::Backend target_backed;
+  bool signedness;
+
+  fhecompiler::SecurityLevel sec_level;
+
+  fhecompiler::Scheme scheme;
 
   double scale = 0.0; // for ckks
 
-  size_t vector_size;
+  std::size_t vector_size;
 
-  size_t plain_modulus = 786433; // 786433 is a good default value
+  std::size_t number_of_slots;
+
+  fhecompiler::Backend target_backed = fhecompiler::Backend::SEAL;
+
+  std::size_t plain_modulus = 786433;
 
   // rotation steps in the program, this vector will be empty until rotation keys selection pass
-  std::vector<int32_t> rotations_steps;
+  std::set<int> rotations_keys_steps;
+
+  param_selector::EncryptionParameters params;
+
+  bool uses_mod_switch = false;
 
 public:
   using Ptr = std::shared_ptr<Term>;
@@ -104,16 +126,10 @@ public:
 
   ~Program() {}
 
-  void set_targeted_backed(fhecompiler::Backend backend) { target_backed = backend; }
-
-  fhecompiler::Backend get_targeted_backend() { return this->target_backed; }
-
   Ptr insert_operation_node_in_dataflow(
     OpCode _opcode, const std::vector<Ptr> &_operands, std::string label, TermType term_type);
 
   Ptr find_node_in_dataflow(const std::string &label) const;
-
-  void set_symbol_as_output(const std::string &label, const std::string &tag);
 
   void delete_node_from_dataflow(const std::string &node_label);
 
@@ -130,6 +146,12 @@ public:
     return new_term;
   }
 
+  void set_targeted_backed(fhecompiler::Backend backend) { target_backed = backend; }
+
+  fhecompiler::Backend get_targeted_backend() { return this->target_backed; }
+
+  void set_as_output(const Ptr &node);
+
   void update_tag_value_in_constants_table_entry(const std::string &entry_key, const std::string &tag_value);
 
   std::string get_tag_value_in_constants_table_entry(const std::string &entry_key);
@@ -137,8 +159,6 @@ public:
   std::optional<std::string> get_tag_value_in_constants_table_entry_if_exists(const std::string &entry_key);
 
   void set_node_operands(const std::string &node_label, const std::vector<Ptr> &new_opreands);
-
-  void set_scheme(fhecompiler::Scheme program_scheme_value) { program_scheme = program_scheme_value; }
 
   void insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry);
 
@@ -162,15 +182,9 @@ public:
 
   ConstantTableEntryType type_of(const std::string &label);
 
-  void set_plain_modulus(size_t modulus) { this->plain_modulus = modulus; }
-
-  size_t get_plain_modulus() const { return this->plain_modulus; }
-
-  // size_t get_dimension() const { return this->dimension; }
-
   void compact_assignement(const ir::Term::Ptr &node_ptr);
 
-  void flatten_term_operand_by_one_level_at_index(const ir::Term::Ptr &term, size_t index);
+  void flatten_term_operand_by_one_level_at_index(const ir::Term::Ptr &term, std::size_t index);
 
   const std::vector<Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
 
@@ -186,15 +200,33 @@ public:
 
   const std::string &get_program_tag() const { return this->program_tag; }
 
-  fhecompiler::Scheme get_encryption_scheme() const { return this->program_scheme; }
+  fhecompiler::Scheme get_encryption_scheme() const { return this->scheme; }
+
+  void set_bit_width(int bit_width) { this->bit_width = bit_width; }
+
+  int get_bit_width() const { return this->bit_width; }
+
+  void set_signedness(bool signedness) { this->signedness = signedness; }
+
+  bool get_signedness() const { return this->signedness; }
+
+  size_t get_plain_modulus() const { return plain_modulus; }
+
+  void set_vector_size(std::size_t vector_size) { this->vector_size = vector_size; }
+
+  std::size_t get_vector_size() const { return vector_size; }
+
+  void set_sec_level(fhecompiler::SecurityLevel sec_level) { this->sec_level = sec_level; }
+
+  fhecompiler::SecurityLevel get_sec_level() const { return sec_level; }
+
+  void set_scheme(fhecompiler::Scheme scheme) { this->scheme = scheme; }
+
+  fhecompiler::Scheme get_scheme() const { return scheme; }
 
   void set_scale(double _scale) { scale = _scale; }
 
-  double get_scale() { return scale; }
-
-  void set_vector_size(size_t v_size) { vector_size = v_size; }
-
-  size_t get_vector_size() const { return vector_size; }
+  double get_scale() const { return scale; }
 
   bool is_tracked_object(const std::string &label);
 
@@ -202,13 +234,40 @@ public:
 
   void add_node_to_outputs_nodes(const Ptr &node);
 
-  void set_rotations_steps(std::vector<int32_t> &steps) { rotations_steps = steps; }
+  // void set_rotations_steps(std::vector<int32_t> &steps) { rotations_steps = steps; }
   /*
     key is the node label
   */
   std::optional<ConstantValue> get_entry_value_value(const std::string &key) const;
 
-  const std::vector<int32_t> &get_rotations_steps() const { return rotations_steps; }
+  // const std::vector<int32_t> &get_rotations_steps() const { return rotations_steps; }
+
+  /*
+    This method updates the entry in outputs_nodes map in data_flow, the reason is to keep the same identifier
+    introduced by the user but change the node associated to this identifier
+  */
+  bool update_if_output_entry(const std::string &output_label, const Ptr &node);
+
+  void replace_with(const Ptr &lhs, const Ptr &rhs);
+
+  bool is_output_node(const std::string &label);
+
+  void set_rotations_keys_steps(const std::set<int> &steps) { rotations_keys_steps = steps; }
+
+  const std::set<int> &get_rotations_keys_steps() const { return rotations_keys_steps; }
+
+  void set_params(const param_selector::EncryptionParameters &params) { this->params = params; }
+
+  const param_selector::EncryptionParameters &get_params() const { return params; }
+
+  void set_uses_mod_switch(bool uses_mod_switch) { this->uses_mod_switch = uses_mod_switch; }
+
+  bool get_uses_mod_switch() const { return uses_mod_switch; }
 };
+
+/*
+
+
+*/
 
 } // namespace ir

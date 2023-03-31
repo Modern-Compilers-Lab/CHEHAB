@@ -55,12 +55,15 @@ template <typename T1, typename T2>
 void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
 
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   auto lhs_node_ptr = program->find_node_in_dataflow(lhs.get_label());
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
 
   if (rhs_node_ptr == nullptr || lhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined maybe it was only declared, in operate_move_assignement");
   }
 
   Ptr new_lhs_node;
@@ -73,15 +76,15 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
     ir::TermType lhs_term_type = lhs_node_ptr->get_term_type();
     ir::TermType rhs_term_type = rhs_node_ptr->get_term_type();
 
-    if (lhs_term_type == ir::ciphertextType || rhs_term_type == ir::ciphertextType)
+    if (lhs_term_type == ir::TermType::ciphertext || rhs_term_type == ir::TermType::ciphertext)
       throw("unexpected, ciphertexts evaluation is not available at compile time");
 
-    if (lhs_term_type == ir::plaintextType && rhs_term_type == ir::plaintextType)
+    if (lhs_term_type == ir::TermType::plaintext && rhs_term_type == ir::TermType::plaintext)
     {
       new_lhs_node = ir::fold_const_plain(lhs_node_ptr, rhs_node_ptr, opcode, program);
       lhs.set_label(new_lhs_node->get_label());
     }
-    else if (lhs_term_type == ir::scalarType && rhs_term_type == ir::scalarType)
+    else if (lhs_term_type == ir::TermType::scalar && rhs_term_type == ir::TermType::scalar)
     {
       new_lhs_node = ir::fold_scalar(lhs_node_ptr, rhs_node_ptr, opcode, program);
       lhs.set_label(new_lhs_node->get_label());
@@ -149,11 +152,15 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
 template <typename T1, typename T2, typename T3>
 T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   auto lhs_node_ptr = program->find_node_in_dataflow(lhs.get_label());
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (lhs_node_ptr == nullptr || rhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined maybe it was only declared, in operate_binary");
   }
 
   auto is_evaluation_possible = is_compile_time_evaluation_possible<T2, T3>(lhs, rhs);
@@ -164,10 +171,10 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
     ir::TermType lhs_term_type = lhs_node_ptr->get_term_type();
     ir::TermType rhs_term_type = rhs_node_ptr->get_term_type();
 
-    if (lhs_term_type == ir::ciphertextType || rhs_term_type == ir::ciphertextType)
+    if (lhs_term_type == ir::TermType::ciphertext || rhs_term_type == ir::TermType::ciphertext)
       throw("ciphertexts evaluation is not available at compile time");
 
-    if (lhs_term_type == ir::plaintextType && rhs_term_type == ir::plaintextType)
+    if (lhs_term_type == ir::TermType::plaintext && rhs_term_type == ir::TermType::plaintext)
     {
       auto folded_term = ir::fold_const_plain(lhs_node_ptr, rhs_node_ptr, opcode, program);
       T1 new_T("");
@@ -175,7 +182,7 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
       return new_T;
     }
 
-    else if (lhs_term_type == ir::scalarType && rhs_term_type == ir::scalarType)
+    else if (lhs_term_type == ir::TermType::scalar && rhs_term_type == ir::TermType::scalar)
     {
       auto folded_term = ir::fold_scalar(lhs_node_ptr, rhs_node_ptr, opcode, program);
       T1 new_T("");
@@ -196,10 +203,14 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
 template <typename T1, typename T2>
 T1 operate_unary(const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (rhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined, maybe it was only declared, in operate_unary");
   }
   return operate<T1>(opcode, std::vector<Ptr>({rhs_node_ptr}), term_type);
 }
@@ -210,7 +221,7 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
   auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
   if (rhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined, maybe it was only declared, compound_operate_unary");
   }
   std::string old_label = rhs.get_label();
 
@@ -276,13 +287,16 @@ void operate_copy(const T &lhs, const T &t_copy, ir::TermType term_type)
 template <typename T>
 void operate_move(T &lhs, T &&t_move, ir::TermType term_type)
 {
+
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   // if (is_tracked_object(lhs.get_label()))
   //{
   Ptr move_node_ptr = program->insert_node_in_dataflow<T>(t_move);
 
   if (move_node_ptr->is_operation_node() == false)
   {
-
     auto const_value = program->get_entry_value_value(move_node_ptr->get_label());
     if (const_value != std::nullopt)
     {
@@ -316,6 +330,9 @@ template <typename T>
 T &operate_copy_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 {
 
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   if (lhs.get_label() == rhs.get_label())
     return lhs;
 
@@ -323,7 +340,7 @@ T &operate_copy_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 
   if (rhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined, maybe it was only declared in operate_copy_assignement");
   }
 
   std::string lhs_old_label = lhs.get_label(); // this will be used to keep track of tag
@@ -392,6 +409,9 @@ template <typename T>
 T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
 {
 
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   if (lhs.get_label() == rhs.get_label())
     return lhs;
 
@@ -401,7 +421,7 @@ T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
 
   if (rhs_node_ptr == nullptr)
   {
-    throw("operand is not defined, maybe it was only declared\n");
+    throw("operand is not defined, maybe it was only declared in operate_move_assignement");
   }
 
   std::string lhs_old_label = lhs.get_label(); // this will be used to keep track of tag
@@ -462,6 +482,9 @@ T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
 inline void operate_in_constants_table(const std::string &label, const std::string &tag, fhecompiler::VarType var_type)
 {
 
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
   if (tag.length() == 0 && var_type == fhecompiler::VarType::temp)
     return;
 
@@ -489,7 +512,10 @@ template <typename T>
 void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode opcode, ir::TermType term_type)
 {
 
-  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawDataType);
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
+  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawData);
   Ptr lhs_term = program->find_node_in_dataflow(lhs.get_label());
 
   if (lhs_term == nullptr)
@@ -522,9 +548,11 @@ void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode op
 template <typename T>
 T operate_with_raw(const T &lhs, datatype::rawData raw_data, ir::OpCode opcode, ir::TermType term_type)
 {
+  if (program == nullptr)
+    throw(program_not_init_msg);
 
   T new_T("");
-  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawDataType);
+  Ptr rhs_term = std::make_shared<ir::Term>(raw_data, ir::TermType::rawData);
   Ptr lhs_term = program->find_node_in_dataflow(lhs.get_label());
   if (lhs_term == nullptr)
     throw(" operand not defined, maybe it is a temporary and it is only declared \n");

@@ -7,28 +7,58 @@ namespace fheco_trs
 namespace core
 {
 
-  std::optional<MatchingMap> match_ir_node(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term)
+  std::optional<MatchingMap> match_ir_node(
+    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, ir::Program *program)
   {
     MatchingMap matching_map;
 
-    if (match_term(ir_node, matching_term, matching_map))
+    if (match_term(ir_node, matching_term, matching_map, program))
       return matching_map;
 
     return std::nullopt;
   }
 
-  bool match_term(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, MatchingMap &matching_map)
+  bool match_term(
+    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, MatchingMap &matching_map,
+    ir::Program *program)
   {
 
     // Order of if statements is important !!!
 
-    if (ir_node->get_term_type() != fheco_trs::term_type_map[matching_term.get_term_type()])
+    // if (ir_node->get_term_type() != fheco_trs::term_type_map[matching_term.get_term_type()])
+    // return false;
+
+    {
+      auto matching_term_const_value_opt = matching_term.get_value();
+      if (matching_term_const_value_opt != std::nullopt)
+      {
+        auto ir_node_const_value_opt = program->get_entry_value_value(ir_node->get_label());
+        if (ir_node_const_value_opt == std::nullopt)
+          return false;
+
+        return ir::check_constants_value_equality(
+          *ir_node_const_value_opt, *matching_term_const_value_opt,
+          ir_node
+            ->get_term_type()); // for this to work as expected, TermType passed need to be plaintextType or scalarType
+      }
+    }
+
+    auto valid_ir_types = term_type_map[matching_term.get_term_type()];
+
+    if (valid_ir_types.find(ir_node->get_term_type()) == valid_ir_types.end())
       return false;
 
     auto it = matching_map.find(matching_term.get_term_id());
 
     if (it != matching_map.end() && it->second != ir_node)
       return false;
+
+    if (matching_term.get_term_type() == TermType::constant)
+    {
+      auto const_value_opt = program->get_entry_value_value(ir_node->get_label());
+      if (const_value_opt == std::nullopt)
+        return false;
+    }
 
     if (matching_term.get_opcode() == fheco_trs::OpCode::undefined)
     {
@@ -49,7 +79,8 @@ namespace core
 
     for (size_t i = 0; i < matching_term_operands.size(); i++)
     {
-      matching_result = matching_result && match_term(ir_node_operands[i], matching_term_operands[i], matching_map);
+      matching_result =
+        matching_result && match_term(ir_node_operands[i], matching_term_operands[i], matching_map, program);
       if (matching_result == false)
         break;
     }
@@ -60,7 +91,7 @@ namespace core
     return matching_result;
   }
 
-  double arithmetic_eval(
+  ir::Number arithmetic_eval(
     const MatchingTerm &term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table)
   {
     /*
@@ -90,11 +121,11 @@ namespace core
           throw("arithmetic evaluation impossible");
         }
 
-        if (ir_term_itr->second->get_term_type() == ir::rawDataType)
+        if (ir_term_itr->second->get_term_type() == ir::TermType::rawData)
         {
           return std::stod(ir_term_itr->second->get_label());
         }
-        else if (ir_term_itr->second->get_term_type() == ir::scalarType)
+        else if (ir_term_itr->second->get_term_type() == ir::TermType::scalar)
         {
           ir::ConstantValue constant_value =
             *(*program->get_entry_form_constants_table(ir_term_itr->second->get_label())).get().get_entry_value().value;
@@ -111,8 +142,8 @@ namespace core
       if (term.get_operands().size() != 2)
         throw("only binary operations are supported at the moment in arithmetic_eval");
 
-      double lhs_value = arithmetic_eval(term.get_operands()[0], matching_map, program, functions_table);
-      double rhs_value = arithmetic_eval(term.get_operands()[1], matching_map, program, functions_table);
+      ir::Number lhs_value = arithmetic_eval(term.get_operands()[0], matching_map, program, functions_table);
+      ir::Number rhs_value = arithmetic_eval(term.get_operands()[1], matching_map, program, functions_table);
 
       switch (term.get_opcode())
       {
@@ -155,7 +186,7 @@ namespace core
         Here we don't care about calls with type as non booleanType because these concern arithmetic_eval and they are
         leaves so it will be handled below and in arithmetic_eval
       */
-      if (matching_term.get_term_type() == TermType::booleanType)
+      if (matching_term.get_term_type() == TermType::boolean)
       {
         if (matching_term.get_operands().size() == 0)
           throw("missing argument for function to call in evaluate_boolean_matching_term");
@@ -167,12 +198,21 @@ namespace core
       }
     }
 
+    if (matching_term.get_opcode() == OpCode::undefined && matching_term.get_term_type() == TermType::boolean)
+    {
+      auto const_value_opt = matching_term.get_value();
+      if (const_value_opt == std::nullopt)
+        throw("boolean leaf term with nullopt value in evaluate_boolean_matching_term");
+      ir::Number const_value = ir::get_constant_value_as_number(*const_value_opt);
+      return const_value == 1;
+    }
+
     if (matching_term.get_opcode() == fheco_trs::OpCode::undefined)
       return true;
 
     if (
       matching_term.get_opcode() != fheco_trs::OpCode::undefined &&
-      matching_term.get_term_type() != fheco_trs::TermType::booleanType)
+      matching_term.get_term_type() != fheco_trs::TermType::boolean)
       return false;
 
     MatchingTerm lhs = matching_term.get_operands()[0];
@@ -199,7 +239,7 @@ namespace core
       return false;
 
     // nodes which arithmetic operands are leaves
-    double lhs_value, rhs_value;
+    ir::Number lhs_value, rhs_value;
 
     lhs_value = arithmetic_eval(lhs, matching_map, program, functions_table);
     rhs_value = arithmetic_eval(rhs, matching_map, program, functions_table);
@@ -248,19 +288,18 @@ namespace core
       make_ir_node_from_matching_term(rewrite_rule_rhs, matching_map, program, functions_table);
     if (new_ir_node->is_operation_node())
     {
-      ir_node->clear_operands();
-      ir_node->set_opcode(new_ir_node->get_opcode());
-      ir_node->set_operands(new_ir_node->get_operands());
+      ir_node->rewrite_with_operation(new_ir_node);
     }
     else
     {
-      ir_node->replace_with(new_ir_node);
+      program->replace_with(ir_node, new_ir_node);
     }
   }
 
   std::shared_ptr<ir::Term> make_ir_node_from_matching_term(
     const MatchingTerm &matching_term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table)
   {
+
     auto it = matching_map.find(matching_term.get_term_id());
     if (it != matching_map.end())
     {
@@ -278,9 +317,10 @@ namespace core
         operands.push_back(make_ir_node_from_matching_term(m_term_operand, matching_map, program, functions_table));
       }
 
-      std::shared_ptr<ir::Term> ir_node = program->insert_operation_node_in_dataflow(
-        opcode_mapping[matching_term.get_opcode()], operands, "",
-        fheco_trs::term_type_map[matching_term.get_term_type()]);
+      ir::TermType term_type = ir::deduce_ir_term_type(operands);
+
+      std::shared_ptr<ir::Term> ir_node =
+        program->insert_operation_node_in_dataflow(opcode_mapping[matching_term.get_opcode()], operands, "", term_type);
 
       matching_map[matching_term.get_term_id()] = ir_node;
 
@@ -309,18 +349,16 @@ namespace core
         at this stage it means that wa have a MatchingTerm with a value (a constant), and we will consider it a
         temporary variable in IR
       */
-
       if (matching_term.get_value() == std::nullopt)
         throw("only constant matching terms are expected at this stage");
 
+      // this will work because constants generated by trs rules are either of type scalar or plaintext
       std::shared_ptr<ir::Term> ir_node =
-        std::make_shared<ir::Term>(fheco_trs::term_type_map[matching_term.get_term_type()]);
-
+        std::make_shared<ir::Term>(*fheco_trs::term_type_map[matching_term.get_term_type()].begin());
       /*
         Insert node in dataflow graph
       */
       program->insert_created_node_in_dataflow(ir_node);
-
       /*
         Insert in constants table
       */

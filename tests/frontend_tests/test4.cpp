@@ -21,7 +21,7 @@ int test4_frontend()
 
     pt1 = pt_input;
 
-    ct2 = ct1 + pt1 + fhecompiler::exponentiate(ct1, 3);
+    ct2 = ct1 + pt1 + exponentiate(ct1, 3);
 
     ct_output = ct2;
 

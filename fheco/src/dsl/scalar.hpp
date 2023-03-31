@@ -3,6 +3,7 @@
 #include "datatypes_const.hpp"
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <variant>
@@ -12,12 +13,8 @@ namespace fhecompiler
 
 class Scalar
 {
-
-public:
-  using ScalarValueType = std::variant<int64_t, double, uint64_t>;
-
 private:
-  ScalarValueType data = 0;
+  ir::ScalarValue data = 0;
 
   std::string label; // symbol
 
@@ -53,15 +50,11 @@ public:
 
   friend Scalar operator-(const Scalar &rhs);
 
-  void reduce(std::uint64_t plaintext_modulus);
-
   std::string get_label() const { return this->label; }
 
   void set_label(std::string label_value) { this->label = label_value; }
 
   void set_new_label();
-
-  friend void compound_operate(Scalar &lhs, const Scalar &rhs, ir::OpCode);
 };
 
 } // namespace fhecompiler

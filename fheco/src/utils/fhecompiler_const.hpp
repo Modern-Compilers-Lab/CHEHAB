@@ -5,6 +5,7 @@ namespace fhecompiler
 
 enum Scheme
 {
+  none,
   bfv,
   bgv,
   ckks
@@ -25,12 +26,15 @@ enum class Backend
   OpenFHE
 };
 
-enum class sec_level_type
+enum class SecurityLevel
 {
   none,
   tc128, // minimum according to he standard
   tc192,
   tc256
 };
+
+inline const char *program_not_init_msg =
+  "Program was not initialized properly, you need to call init function with all required arguments";
 
 } // namespace fhecompiler

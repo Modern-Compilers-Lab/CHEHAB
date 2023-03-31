@@ -18,7 +18,7 @@ class DAG
 private:
   std::unordered_map<std::string, Ptr> outputs_nodes;
 
-  std::vector<Ptr> outputs_nodes_topsorted; // nodes topologically sorted
+  std::vector<Ptr> sorted_nodes; // nodes topologically sorted
 
   std::unordered_map<std::string, Ptr> node_ptr_from_label;
 
@@ -37,9 +37,15 @@ public:
 
   void delete_node_from_outputs(const std::string &key);
 
+  void add_output(const Ptr &node);
+
+  bool is_output_node(const std::string &label);
+
   const std::unordered_map<std::string, Ptr> &get_outputs_nodes() const { return outputs_nodes; }
 
-  const std::vector<Ptr> &get_outputs_nodes_topsorted() const { return outputs_nodes_topsorted; }
+  const std::vector<Ptr> &get_outputs_nodes_topsorted() const { return sorted_nodes; }
+
+  bool update_if_output_entry(const std::string &output_label, const Ptr &node);
 };
 
 } // namespace ir

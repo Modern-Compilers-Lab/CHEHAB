@@ -1,6 +1,7 @@
 #include "trs.hpp"
 #include "draw_ir.hpp"
 #include "ir_utils.hpp"
+#include "test/dummy_ruleset.hpp"
 #include "trs_const.hpp"
 #include "trs_util_functions.hpp"
 #include <variant>
@@ -16,7 +17,7 @@ void TRS::apply_rule_on_ir_node(
 
   is_rule_applied = false;
 
-  auto matching_map = rule.match_with_ir_node(ir_node);
+  auto matching_map = rule.match_with_ir_node(ir_node, program);
 
   if (matching_map != std::nullopt)
   {
@@ -55,7 +56,40 @@ void TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const st
   }
 }
 
-void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
+void TRS::apply_rewrite_rules_on_program_from_static_ruleset()
+{
+
+  auto &sorted_nodes = program->get_dataflow_sorted_nodes(true);
+  for (auto &node : sorted_nodes)
+  {
+    if (node->get_opcode() == ir::OpCode::undefined)
+      continue;
+
+    switch (node->get_opcode())
+    {
+    case ir::OpCode::add:
+      apply_rules_on_ir_node(node, ruleset::add_ruleset);
+      break;
+
+    case ir::OpCode::sub:
+      apply_rules_on_ir_node(node, ruleset::sub_ruleset);
+      break;
+
+    case ir::OpCode::mul:
+      apply_rules_on_ir_node(node, ruleset::mul_ruleset);
+      break;
+
+    case ir::OpCode::rotate:
+      apply_rules_on_ir_node(node, ruleset::rotations_ruleset);
+      break;
+
+    default:
+      break;
+    }
+  }
+}
+
+void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &ruleset)
 {
   auto &sorted_nodes = program->get_dataflow_sorted_nodes(true);
   for (auto &node : sorted_nodes)
@@ -63,7 +97,7 @@ void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
     if (node->get_opcode() == ir::OpCode::undefined)
       continue;
 
-    apply_rules_on_ir_node(node, rules);
+    apply_rules_on_ir_node(node, ruleset);
   }
 }
 

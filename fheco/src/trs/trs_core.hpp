@@ -1,4 +1,5 @@
 #pragma once
+#include "ir_utils.hpp"
 #include "matching_term.hpp"
 #include "program.hpp"
 #include <functional>
@@ -37,11 +38,14 @@ namespace core
     ~MatchingPair() {}
   };
 
-  std::optional<MatchingMap> match_ir_node(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term);
+  std::optional<MatchingMap> match_ir_node(
+    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, ir::Program *program);
 
-  bool match_term(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, MatchingMap &matching_map);
+  bool match_term(
+    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, MatchingMap &matching_map,
+    ir::Program *program);
 
-  double arithmetic_eval(
+  ir::Number arithmetic_eval(
     const MatchingTerm &term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table);
 
   bool evaluate_boolean_matching_term(
