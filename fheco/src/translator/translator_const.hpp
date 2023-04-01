@@ -5,7 +5,6 @@
 #include "ir_const.hpp"
 #include <cstddef>
 #include <fstream>
-#include <iostream>
 #include <optional>
 #include <stdio.h>
 #include <string>

@@ -64,6 +64,11 @@ Plaintext &operator*=(Plaintext &lhs, const Plaintext &rhs);
 Plaintext &operator*=(Plaintext &lhs, const Scalar &rhs);
 Scalar &operator*=(Scalar &lhs, const Scalar &rhs);
 
+// negation
+Ciphertext operator-(const Ciphertext &lhs);
+Plaintext operator-(const Plaintext &lhs);
+Scalar operator-(const Scalar &lhs);
+
 // rotation
 Ciphertext operator<<(const Ciphertext &lhs, int steps);
 Ciphertext operator>>(const Ciphertext &lhs, int steps);

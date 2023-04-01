@@ -2,11 +2,9 @@
 
 #include "ir_const.hpp"
 #include "program.hpp"
-#include <memory>
-#include <string>
+#include <ostream>
 
 namespace utils
 {
-void draw_ir(ir::Program *program, const std::string &output_file);
-
+void draw_ir(ir::Program *program, std::ostream &os);
 } // namespace utils

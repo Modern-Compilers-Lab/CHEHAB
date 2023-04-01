@@ -3,17 +3,25 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
 namespace ir
 {
+template <class... Ts>
+struct overloaded : Ts...
+{
+  using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
 
-using ScalarValue = std::variant<std::int64_t, std::uint64_t, double>;
+using ScalarValue = std::variant<std::uint64_t, std::int64_t>;
 
-using VectorValue = std::variant<std::vector<std::int64_t>, std::vector<std::uint64_t>, std::vector<double>>;
+using VectorValue = std::variant<std::vector<std::uint64_t>, std::vector<std::int64_t>>;
 
-using ConstantValue = std::variant<ScalarValue, VectorValue>;
+using ConstantValue = std::variant<VectorValue, ScalarValue>;
 
 enum class TermType
 {
@@ -47,6 +55,8 @@ enum class OpCode
   encode,
   decode
 };
+
+const std::unordered_set<OpCode> non_commutative_ops = {OpCode::sub};
 
 enum class ConstantTableEntryType
 {
@@ -82,5 +92,4 @@ inline std::unordered_map<ir::OpCode, std::string> str_opcode = {
 /*
   Encode, Decode
 */
-
 } // namespace ir

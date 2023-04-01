@@ -1,7 +1,10 @@
 #include "trs_core.hpp"
 #include "ir_utils.hpp"
 #include "trs_const.hpp"
+#include <iostream>
 #include <stdexcept>
+
+using namespace std;
 
 namespace fheco_trs
 {
@@ -81,7 +84,17 @@ namespace core
       // a constant term, it must be a MatchingTerm with a value or it matches with a scalarType or rawdataType ir node
       if (term.get_value() != std::nullopt)
       {
-        return ir::get_constant_value_as_double(*term.get_value());
+        return visit(
+          ir::overloaded{
+            [](auto value_var) -> double { throw std::logic_error("unhandled vector arith eval"); },
+            [](const ir::ScalarValue &value_var) -> double {
+              return visit(
+                ir::overloaded{[](auto value) -> double {
+                  return value;
+                }},
+                value_var);
+            }},
+          *term.get_value());
       }
       else
       {
@@ -99,7 +112,17 @@ namespace core
         {
           ir::ConstantValue constant_value =
             *(*program->get_entry_form_constants_table(ir_term_itr->second->get_label())).get().get_entry_value().value;
-          return ir::get_constant_value_as_double(constant_value);
+          return visit(
+            ir::overloaded{
+              [](auto value_var) -> double { throw std::logic_error("unhandled vector arith eval"); },
+              [](const ir::ScalarValue &value_var) -> double {
+                return visit(
+                  ir::overloaded{[](auto value) -> double {
+                    return value;
+                  }},
+                  value_var);
+              }},
+            constant_value);
         }
         else
           throw("arithmetic evaluation impossible");

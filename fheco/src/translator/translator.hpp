@@ -4,9 +4,8 @@
 #include "program.hpp"
 #include "term.hpp"
 #include "translator_const.hpp"
-#include <fstream>
-#include <iostream>
 #include <memory>
+#include <ostream>
 #include <set>
 #include <string>
 
@@ -24,14 +23,16 @@ private:
   EvaluationWriter evaluation_writer;
   ContextWriter context_writer;
 
-  void translate_binary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os);
-  void translate_nary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os);
-  void translate_unary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os);
+  void translate_binary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os);
+
+  void translate_nary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os);
+
+  void translate_unary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os);
 
   void translate_constant_table_entry(
-    const std::string &identifier, ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os);
+    const std::string &identifier, ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ostream &os);
 
-  void translate_term(const ir::Term::Ptr &term_ptr, std::ofstream &os);
+  void translate_term(const ir::Term::Ptr &term_ptr, std::ostream &os);
 
   std::string get_identifier(const ir::Term::Ptr &term_ptr) const;
 
@@ -56,14 +57,14 @@ public:
       context_writer(params, program->get_encryption_scheme(), uses_mod_switch, sec_level)
   {}
 
-  void generate_function_signature(std::ofstream &os) const;
+  void generate_function_signature(std::ostream &os) const;
 
-  void generate_key_generator(std::ofstream &os) const;
+  void generate_key_generator(std::ostream &os) const;
 
-  void generate_rotation_keys(std::ofstream &os) const;
+  void generate_rotation_keys(std::ostream &os) const;
 
   void write_assign_operation(
-    std::ofstream &os, const std::string &lhs_id, const std::string &rhs_id, ir::TermType type);
+    std::ostream &os, const std::string &lhs_id, const std::string &rhs_id, ir::TermType type);
 
   void write_input(const std::string &identifier, const std::string &tag, ir::TermType type, std::ostream &os);
   void write_output(const std::string &identifier, const std::string &tag, ir::TermType type, std::ostream &os);
@@ -77,7 +78,7 @@ public:
   */
   ir::OpCode deduce_opcode_to_generate(const ir::Term::Ptr &node) const;
 
-  void translate_program(std::ofstream &os, const std::set<int> &rotations_keys_steps);
+  void translate_program(std::ostream &os, const std::set<int> &rotations_keys_steps);
 };
 
 } // namespace translator

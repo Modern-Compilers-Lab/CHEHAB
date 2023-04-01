@@ -30,6 +30,7 @@ set(FHECOMPILER_SOURCE_FILES
   ${SRC_TRS}/trs_util_functions.cpp
   ${SRC_UTILS}/draw_ir.cpp
   ${SRC_UTILS}/quantify_ir.cpp
+  ${SRC_UTILS}/clear_data_evaluator.cpp
   ${SRC_UTILS}/evaluate_on_clear.cpp
   ${SRC_UTILS}/common.cpp
   ${SRC_TRS}/reduction_order/utils.cpp

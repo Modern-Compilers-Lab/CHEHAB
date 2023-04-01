@@ -65,7 +65,7 @@ std::shared_ptr<ir::Term> multiply_scalars(const std::vector<std::shared_ptr<ir:
 
   using ScalarValue = ir::ScalarValue;
 
-  double product = 1;
+  int64_t product = 1;
   for (auto &scalar : scalars)
   {
     auto table_entry = program->get_entry_form_constants_table(scalar->get_label());
@@ -76,9 +76,7 @@ std::shared_ptr<ir::Term> multiply_scalars(const std::vector<std::shared_ptr<ir:
     else
     {
       ScalarValue scalar_value = std::get<ScalarValue>(*(*table_entry).get().get_entry_value().value);
-      if (auto value = std::get_if<double>(&scalar_value))
-        product *= *value;
-      else if (auto value = std::get_if<std::int64_t>(&scalar_value))
+      if (auto value = std::get_if<std::int64_t>(&scalar_value))
         product *= *value;
       else if (auto value = std::get_if<std::uint64_t>(&scalar_value))
         product *= *value;
@@ -110,7 +108,7 @@ std::shared_ptr<ir::Term> sum_scalars(const std::vector<std::shared_ptr<ir::Term
 
   using ScalarValue = ir::ScalarValue;
 
-  double sum = 0;
+  int64_t sum = 0;
   for (auto &scalar : scalars)
   {
     auto table_entry = program->get_entry_form_constants_table(scalar->get_label());
@@ -121,9 +119,7 @@ std::shared_ptr<ir::Term> sum_scalars(const std::vector<std::shared_ptr<ir::Term
     else
     {
       ScalarValue scalar_value = std::get<ScalarValue>(*(*table_entry).get().get_entry_value().value);
-      if (auto value = std::get_if<double>(&scalar_value))
-        sum += *value;
-      else if (auto value = std::get_if<std::int64_t>(&scalar_value))
+      if (auto value = std::get_if<std::int64_t>(&scalar_value))
         sum += *value;
       else if (auto value = std::get_if<std::uint64_t>(&scalar_value))
         sum += *value;
@@ -155,7 +151,7 @@ std::shared_ptr<ir::Term> subtract_scalars(const std::vector<std::shared_ptr<ir:
 
   using ScalarValue = ir::ScalarValue;
 
-  double subtraction = 0;
+  int64_t subtraction = 0;
   for (size_t i = 0; i < scalars.size(); i++)
   {
     auto scalar = scalars[i];
@@ -167,14 +163,7 @@ std::shared_ptr<ir::Term> subtract_scalars(const std::vector<std::shared_ptr<ir:
     else
     {
       ScalarValue scalar_value = std::get<ScalarValue>(*(*table_entry).get().get_entry_value().value);
-      if (auto value = std::get_if<double>(&scalar_value))
-      {
-        if (i == 0)
-          subtraction = *value;
-        else
-          subtraction -= *value;
-      }
-      else if (auto value = std::get_if<std::int64_t>(&scalar_value))
+      if (auto value = std::get_if<std::int64_t>(&scalar_value))
       {
         if (i == 0)
           subtraction = *value;
@@ -216,8 +205,6 @@ double get_constant_value_as_double(ir::ConstantValue const_value)
     return static_cast<double>(*v);
   else if (auto v = std::get_if<std::uint64_t>(&scalar_value))
     return static_cast<double>(*v);
-  else if (auto v = std::get_if<double>(&scalar_value))
-    return *v;
   else
     throw std::runtime_error("could not get scalar value");
 }
@@ -256,8 +243,6 @@ void get_constant_value_as_vector_of_double(ir::ConstantValue const_value, std::
     cast_int_vector_to_double(*v, double_vector);
   else if (auto v = std::get_if<std::vector<std::uint64_t>>(&vector_value))
     cast_int_vector_to_double(*v, double_vector);
-  else if (auto v = std::get_if<std::vector<double>>(&vector_value))
-    double_vector = *v;
   else
     throw std::runtime_error("could not get scalar value");
 }
@@ -309,12 +294,6 @@ std::shared_ptr<ir::Term> sum_const_plains(
     cast_double_vector_to_int(const_plains_sum, const_plains_sum_int);
     ir::ConstantTableEntry const_table_entry(
       ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum_int});
-    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
-  }
-  else
-  {
-    ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sum});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
   return plain_const_term;
@@ -369,12 +348,6 @@ std::shared_ptr<ir::Term> subtract_const_plains(
       ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sub_int});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
-  else
-  {
-    ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_sub});
-    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
-  }
   return plain_const_term;
 }
 
@@ -426,12 +399,6 @@ std::shared_ptr<ir::Term> multiply_const_plains(
     cast_double_vector_to_int(const_plains_product, cconst_plains_product_int);
     ir::ConstantTableEntry const_table_entry(
       ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), cconst_plains_product_int});
-    program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
-  }
-  else
-  {
-    ir::ConstantTableEntry const_table_entry(
-      ir::ConstantTableEntryType::constant, {plain_const_term->get_label(), const_plains_product});
     program->insert_entry_in_constants_table({plain_const_term->get_label(), const_table_entry});
   }
   return plain_const_term;

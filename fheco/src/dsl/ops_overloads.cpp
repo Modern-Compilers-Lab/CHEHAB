@@ -255,15 +255,33 @@ Scalar &operator*=(Scalar &lhs, const Scalar &rhs)
   return lhs;
 }
 
-// rotation
+// negation
+Ciphertext operator-(const Ciphertext &lhs)
+{
+  return operate_unary<Ciphertext, Ciphertext>(lhs, ir::OpCode::negate, ir::TermType::ciphertext);
+}
 
+Plaintext operator-(const Plaintext &lhs)
+{
+  return operate_unary<Plaintext, Plaintext>(lhs, ir::OpCode::negate, ir::TermType::plaintext);
+}
+
+Scalar operator-(const Scalar &lhs)
+{
+  return operate_unary<Scalar, Scalar>(lhs, ir::OpCode::negate, ir::TermType::scalar);
+}
+
+// rotation
 Ciphertext rotate(const Ciphertext &lhs, int steps)
 {
   size_t vector_size = Compiler::get_active()->get_vector_size();
   steps %= vector_size;
   if (steps < 0)
     steps += vector_size;
-  return operate_with_raw<Ciphertext>(lhs, std::to_string(steps), ir::OpCode::rotate, ir::TermType::ciphertext);
+  Ciphertext result =
+    operate_with_raw<Ciphertext>(lhs, std::to_string(steps), ir::OpCode::rotate, ir::TermType::ciphertext);
+  Compiler::operate_rotate(lhs.example_value(), steps, result.example_value());
+  return result;
 }
 
 Plaintext rotate(const Plaintext &lhs, int steps)
@@ -272,7 +290,10 @@ Plaintext rotate(const Plaintext &lhs, int steps)
   steps %= vector_size;
   if (steps < 0)
     steps += vector_size;
-  return operate_with_raw<Plaintext>(lhs, std::to_string(steps), ir::OpCode::rotate, ir::TermType::plaintext);
+  Plaintext result =
+    operate_with_raw<Plaintext>(lhs, std::to_string(steps), ir::OpCode::rotate, ir::TermType::plaintext);
+  Compiler::operate_rotate(lhs.example_value(), steps, result.example_value());
+  return result;
 }
 
 Ciphertext operator<<(const Ciphertext &lhs, int steps)

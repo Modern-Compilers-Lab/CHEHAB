@@ -1,5 +1,6 @@
 #include "fhecompiler.hpp"
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -29,13 +30,13 @@ void matrix_mul(int m_a, int n_b, int n_a_m_b, bool use_log_reduction)
   // encrypt by line for matrix A
   for (int i = 0; i < m_a; ++i)
   {
-    Ciphertext line("A[" + to_string(i) + "][]");
+    Ciphertext line("A[" + to_string(i) + "][]", -10, 10);
     A_row_encrypted.push_back(line);
   }
   // encrypt by column for matrix B
   for (int i = 0; i < n_b; ++i)
   {
-    Ciphertext column("B[][" + to_string(i) + "]");
+    Ciphertext column("B[][" + to_string(i) + "]", -10, 10);
     B_column_encrypted.push_back(column);
   }
 
@@ -97,19 +98,23 @@ int main(int argc, char **argv)
        << "trs_passes: " << trs_passes << "\n";
 
   string func_name = "matrix_mul";
-  Compiler::create_func(func_name, max(m_a, n_b), 16, true, Scheme::bfv);
+  Compiler::create_func(func_name, n_a_m_b, 16, true, Scheme::bfv);
   matrix_mul(m_a, n_b, n_a_m_b, use_log_reduction);
-  Compiler::draw_ir(func_name + "_init_ir.dot");
-  const auto &rand_inputs = Compiler::get_input_values();
+  ofstream init_ir_os(func_name + "_init_ir.dot");
+  Compiler::draw_ir(init_ir_os);
+  const auto &rand_inputs = Compiler::get_example_input_values();
+  ofstream gen_code_os("he/gen_he_" + func_name + ".hpp");
   if (optimize)
-    Compiler::compile("he/gen_he_" + func_name + ".hpp", trs_passes);
+    Compiler::compile(gen_code_os, trs_passes);
   else
-    Compiler::compile_noopt("he/gen_he_" + func_name + ".hpp");
-  Compiler::draw_ir(func_name + "_final_ir.dot");
+    Compiler::compile_noopt(gen_code_os);
+  ofstream final_ir_os(func_name + "_final_ir.dot");
+  Compiler::draw_ir(final_ir_os);
   auto outputs = Compiler::evaluate_on_clear(rand_inputs);
-  if (outputs != Compiler::get_output_values())
+  if (outputs != Compiler::get_example_output_values())
     throw logic_error("compilation correctness-test failed");
 
-  Compiler::serialize_inputs_outputs(func_name + "_rand_example.txt");
+  ofstream rand_example_os(func_name + "_rand_example.txt");
+  Compiler::print_inputs_outputs(rand_example_os);
   return 0;
 }

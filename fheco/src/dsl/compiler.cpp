@@ -10,17 +10,14 @@
 #include <cstdint>
 #include <fstream>
 #include <set>
-#include <type_traits>
 #include <variant>
 
 using namespace std;
 
 namespace fhecompiler
 {
-
 shared_ptr<ir::Program> Compiler::active_func_;
 unordered_map<string, Compiler::FuncEntry> Compiler::funcs_table_;
-utils::ClearDataEvaluator Compiler::clear_data_evaluator;
 
 void Compiler::create_func(const string &name, size_t vector_size, int bit_width, bool signedness, Scheme scheme)
 {
@@ -29,7 +26,6 @@ void Compiler::create_func(const string &name, size_t vector_size, int bit_width
     throw invalid_argument("funciton with this name already exists");
 
   active_func_ = make_shared<ir::Program>(name, bit_width, signedness, vector_size, scheme);
-  clear_data_evaluator = utils::ClearDataEvaluator(vector_size, bit_width, signedness);
   funcs_table_.insert({name, {active_func_}});
 }
 
@@ -51,13 +47,9 @@ void Compiler::set_active(const string &func_name)
     throw invalid_argument("no function with this name was found");
 
   active_func_ = function_it->second.func;
-  clear_data_evaluator = utils::ClearDataEvaluator(
-    active_func_->get_vector_size(), active_func_->get_bit_width(), active_func_->get_signedness());
 }
 
-void Compiler::compile(
-  const shared_ptr<ir::Program> &func, const string &output_file, int trs_passes, bool use_mod_switch,
-  SecurityLevel sec_level)
+void Compiler::FuncEntry::compile(ostream &os, int trs_passes, bool use_mod_switch, SecurityLevel sec_level)
 {
   fheco_passes::CSE cse_pass(func);
   fheco_trs::TRS trs(func);
@@ -79,14 +71,10 @@ void Compiler::compile(
   param_selector::EncryptionParameters params = param_selector.select_params(uses_mod_switch);
 
   translator::Translator tr(func, sec_level, params, uses_mod_switch);
-  ofstream translation_os(output_file);
-  if (!translation_os)
-    throw invalid_argument("couldn't open file for translation");
-
-  tr.translate_program(translation_os, rotation_keys_steps);
+  tr.translate_program(os, rotation_keys_steps);
 }
 
-void Compiler::compile_noopt(const shared_ptr<ir::Program> &func, const string &output_file, SecurityLevel sec_level)
+void Compiler::FuncEntry::compile_noopt(ostream &os, SecurityLevel sec_level)
 {
   fheco_passes::RotationKeySelctionPass rs_pass(func);
   set<int> rotation_keys_steps = rs_pass.decompose_rotations();
@@ -99,311 +87,81 @@ void Compiler::compile_noopt(const shared_ptr<ir::Program> &func, const string &
   param_selector::EncryptionParameters params = param_selector.select_params(uses_mod_switch);
 
   translator::Translator tr(func, sec_level, params, uses_mod_switch);
-  ofstream translation_os(output_file);
-  if (!translation_os)
-    throw invalid_argument("couldn't open file for translation");
-
-  tr.translate_program(translation_os, rotation_keys_steps);
+  tr.translate_program(os, rotation_keys_steps);
 }
 
-const utils::variables_values_map::mapped_type &Compiler::FuncEntry::get_node_value(const std::string &label) const
+void Compiler::FuncEntry::init_input(
+  const string &label, const string &tag, long long min_value, long long max_value, ir::VectorValue &destination)
 {
-  auto node_value_it = nodes_values.find(label);
-  if (node_value_it == nodes_values.end())
-    throw invalid_argument("node value not available");
-
-  return node_value_it->second;
-}
-
-void Compiler::FuncEntry::init_input(const string &label, const string &tag)
-{
-  auto node_it = nodes_values.find(label);
-  if (node_it != nodes_values.end())
+  auto node_it = example_inputs_values.find(tag);
+  if (node_it != example_inputs_values.end())
     throw logic_error("input node already initialized");
 
   if (func->get_signedness())
   {
     vector<int64_t> random_value(func->get_vector_size());
-    utils::init_random(random_value, -10, 10);
-    nodes_values.insert({label, random_value});
-    inputs_values.insert({tag, random_value});
+    utils::init_random(random_value, min_value, max_value);
+    example_inputs_values.insert({tag, random_value});
+    destination = random_value;
   }
   else
   {
     vector<uint64_t> random_value(func->get_vector_size());
-    utils::init_random(random_value, 0, 1);
-    utils::variables_values_map::value_type node_entry = {label, random_value};
-    nodes_values.insert({label, random_value});
-    inputs_values.insert({tag, random_value});
+    utils::init_random(random_value, min_value, max_value);
+    example_inputs_values.insert({tag, random_value});
+    destination = random_value;
   }
   tags_labels[tag] = label;
 }
 
-void Compiler::FuncEntry::add_const_node_value(
-  const string &label, const utils::variables_values_map::mapped_type &value)
+void Compiler::FuncEntry::init_input(
+  const string &label, const string &tag, const ir::VectorValue &example_value, ir::VectorValue &destination)
 {
-  auto node_it = nodes_values.find(label);
-  if (node_it != nodes_values.end())
-    throw logic_error("node value already added");
+  auto node_it = example_inputs_values.find(tag);
+  if (node_it != example_inputs_values.end())
+    throw logic_error("input node already initialized");
 
-  utils::variables_values_map::value_type node_entry = {label, value};
-  nodes_values.insert(node_entry);
+  const utils::ClearDataEvaluator &evaluator = func->get_clear_data_evaluator();
+  destination = visit(
+    ir::overloaded{[&evaluator](const auto &value) -> ir::VectorValue {
+      return utils::init_const(evaluator, value);
+    }},
+    example_value);
+  tags_labels[tag] = label;
 }
 
-void Compiler::FuncEntry::operate_unary(ir::OpCode op, const string &arg, const std::string &destination)
+void Compiler::FuncEntry::set_output(const string &label, const string &tag, const ir::VectorValue &value)
 {
-  // auto destination_value_it = nodes_values.find(destination);
-  // if (destination_value_it != nodes_values.end())
-  //   throw logic_error("destination node already has a value");
-
-  auto arg_value_var = get_node_value(arg);
-  if (auto arg_value = get_if<vector<int64_t>>(&arg_value_var))
-  {
-    switch (op)
-    {
-    case ir::OpCode::encrypt:
-    case ir::OpCode::assign:
-      nodes_values[destination] = *arg_value;
-      break;
-    case ir::OpCode::negate:
-    {
-      vector<int64_t> destination_value;
-      clear_data_evaluator.negate(*arg_value, destination_value);
-      nodes_values[destination] = destination_value;
-      break;
-    }
-    case ir::OpCode::square:
-    {
-      vector<int64_t> destination_value;
-      clear_data_evaluator.multiply(*arg_value, *arg_value, destination_value);
-      nodes_values[destination] = destination_value;
-      break;
-    }
-    default:
-      throw logic_error("unhandled unary operation");
-      break;
-    }
-  }
-  else if (auto arg_value = get_if<vector<uint64_t>>(&arg_value_var))
-  {
-    switch (op)
-    {
-    case ir::OpCode::encrypt:
-    case ir::OpCode::assign:
-      nodes_values[destination] = *arg_value;
-      break;
-    case ir::OpCode::negate:
-    {
-      vector<uint64_t> destination_value;
-      clear_data_evaluator.negate(*arg_value, destination_value);
-      nodes_values[destination] = destination_value;
-      break;
-    }
-    case ir::OpCode::square:
-    {
-      vector<uint64_t> destination_value;
-      clear_data_evaluator.multiply(*arg_value, *arg_value, destination_value);
-      nodes_values[destination] = destination_value;
-      break;
-    }
-    default:
-      throw logic_error("unhandled unary operation");
-      break;
-    }
-  }
-  else
-    throw logic_error("could not get child value");
+  example_outputs_values[tag] = value;
+  tags_labels[tag] = label;
 }
 
-void Compiler::FuncEntry::operate_binary(
-  ir::OpCode op, const string &arg1, const string &arg2, const std::string &destination)
+void Compiler::FuncEntry::print_inputs_outputs(
+  const utils::io_variables_values &inputs, const utils::io_variables_values &outputs, ostream &os) const
 {
-  // auto destination_value_it = nodes_values.find(destination);
-  // if (destination_value_it != nodes_values.end())
-  //   throw logic_error("destination node already has a value");
-
-  auto arg1_value_var = get_node_value(arg1);
-  auto arg2_value_var = get_node_value(arg2);
-
-  switch (op)
-  {
-  case ir::OpCode::add:
-  {
-    if (auto arg1_value = get_if<vector<int64_t>>(&arg1_value_var))
-    {
-      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
-      {
-        vector<int64_t> destination_value;
-        clear_data_evaluator.add(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
-      {
-        vector<uint64_t> destination_value;
-        clear_data_evaluator.add(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else
-        throw logic_error("could not get child value");
-    }
-    else if (auto arg1_value = get_if<vector<uint64_t>>(&arg1_value_var))
-    {
-      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
-      {
-        vector<uint64_t> destination_value;
-        clear_data_evaluator.add(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
-      {
-        vector<uint64_t> destination_value;
-        clear_data_evaluator.add(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else
-        throw logic_error("could not get child value");
-    }
-    else
-      throw logic_error("could not get child value");
-    break;
-  }
-  case ir::OpCode::sub:
-  {
-    if (auto arg1_value = get_if<vector<int64_t>>(&arg1_value_var))
-    {
-      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
-      {
-        vector<int64_t> destination_value;
-        clear_data_evaluator.sub(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
-      {
-        vector<uint64_t> destination_value;
-        clear_data_evaluator.sub(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else
-        throw logic_error("could not get child value");
-    }
-    else if (auto arg1_value = get_if<vector<uint64_t>>(&arg1_value_var))
-    {
-      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
-      {
-        vector<uint64_t> destination_value;
-        clear_data_evaluator.sub(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
-      {
-        vector<uint64_t> destination_value;
-        clear_data_evaluator.sub(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else
-        throw logic_error("could not get child value");
-    }
-    else
-      throw logic_error("could not get child value");
-    break;
-  }
-  case ir::OpCode::mul:
-  {
-    if (auto arg1_value = get_if<vector<int64_t>>(&arg1_value_var))
-    {
-      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
-      {
-        vector<int64_t> destination_value;
-        clear_data_evaluator.multiply(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
-      {
-        vector<uint64_t> destination_value;
-        clear_data_evaluator.multiply(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else
-        throw logic_error("could not get child value");
-    }
-    else if (auto arg1_value = get_if<vector<uint64_t>>(&arg1_value_var))
-    {
-      if (auto arg2_value = get_if<vector<int64_t>>(&arg2_value_var))
-      {
-        vector<uint64_t> destination_value;
-        clear_data_evaluator.multiply(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else if (auto arg2_value = get_if<vector<uint64_t>>(&arg2_value_var))
-      {
-        vector<uint64_t> destination_value;
-        clear_data_evaluator.multiply(*arg1_value, *arg2_value, destination_value);
-        nodes_values[destination] = destination_value;
-      }
-      else
-        throw logic_error("could not get child value");
-    }
-    else
-      throw logic_error("could not get child value");
-    break;
-  }
-  default:
-    throw logic_error("unhandled binary operation");
-    break;
-  }
-}
-
-void Compiler::FuncEntry::operate_rotate(const string &arg, int step, const std::string &destination)
-{
-  // auto destination_value_it = nodes_values.find(destination);
-  // if (destination_value_it != nodes_values.end())
-  //   throw logic_error("destination node already has a value");
-
-  auto arg_value_var = get_node_value(arg);
-  if (auto arg_value = get_if<vector<int64_t>>(&arg_value_var))
-  {
-    vector<int64_t> destination_value;
-    clear_data_evaluator.rotate(*arg_value, step, destination_value);
-    nodes_values[destination] = destination_value;
-  }
-  else if (auto arg_value = get_if<vector<uint64_t>>(&arg_value_var))
-  {
-    vector<uint64_t> destination_value;
-    clear_data_evaluator.rotate(*arg_value, step, destination_value);
-    nodes_values[destination] = destination_value;
-  }
-  else
-    throw logic_error("could not get child value");
-}
-
-void Compiler::FuncEntry::serialize_inputs_outputs(
-  const utils::variables_values_map &inputs, const utils::variables_values_map &outputs, const string &file_name) const
-{
-  if (inputs.size() != inputs_values.size())
+  if (inputs.size() != example_inputs_values.size())
     throw invalid_argument("invalid number of inputs");
 
   if (outputs.size() != outputs.size())
     throw invalid_argument("invalid number of outputs");
 
-  ofstream file(file_name);
-  file << boolalpha;
+  ios_base::fmtflags f(os.flags());
+  os << boolalpha;
 
-  auto value_var_visitor = [&file](const auto &v) {
-    using T = decay_t<decltype(v)>;
-    if constexpr (is_same_v<T, vector<int64_t>>)
-      file << true << " ";
-    else if constexpr (std::is_same_v<T, vector<uint64_t>>)
-      file << false << " ";
-    else
-      static_assert(utils::always_false_v<T>, "non-exhaustive visitor!");
-
-    utils::print_vector(v, file);
+  auto signed_value_var_visitor = [&os](const vector<int64_t> &v) {
+    os << true << " ";
+    os << v;
   };
 
-  file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << "\n";
+  auto unsigned_value_var_visitor = [&os](const vector<uint64_t> &v) {
+    os << false << " ";
+    os << v;
+  };
+
+  os << func->get_vector_size() << " " << example_inputs_values.size() << " " << example_inputs_values.size() << "\n";
   for (const auto &v : inputs)
   {
-    if (inputs_values.find(v.first) == inputs_values.end())
+    if (example_inputs_values.find(v.first) == example_inputs_values.end())
       throw invalid_argument("invalid input tag");
 
     auto v_label_it = tags_labels.find(v.first);
@@ -414,13 +172,13 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
     if (!node)
       throw logic_error("input node not found in the data flow");
 
-    file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
-    visit(value_var_visitor, v.second);
-    file << "\n";
+    os << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
+    visit(ir::overloaded{signed_value_var_visitor, unsigned_value_var_visitor}, v.second);
+    os << "\n";
   }
   for (const auto &v : outputs)
   {
-    if (outputs_values.find(v.first) == outputs_values.end())
+    if (example_inputs_values.find(v.first) == example_inputs_values.end())
       throw invalid_argument("invalid output tag");
 
     auto v_label_it = tags_labels.find(v.first);
@@ -431,37 +189,30 @@ void Compiler::FuncEntry::serialize_inputs_outputs(
     if (!node)
       throw logic_error("output node not found in the data flow");
 
-    file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
-    visit(value_var_visitor, v.second);
-    file << "\n";
+    os << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
+    visit(ir::overloaded{signed_value_var_visitor, unsigned_value_var_visitor}, v.second);
+    os << "\n";
   }
+  os.flags(f);
 }
 
-void Compiler::FuncEntry::set_output(const std::string &arg, const std::string &tag)
+void Compiler::FuncEntry::print_inputs_outputs(ostream &os) const
 {
-  outputs_values[tag] = nodes_values[arg];
-  tags_labels[tag] = arg;
-}
+  ios_base::fmtflags f(os.flags());
+  os << boolalpha;
 
-void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) const
-{
-  ofstream file(file_name);
-  file << boolalpha;
-
-  auto value_var_visitor = [&file](const auto &v) {
-    using T = decay_t<decltype(v)>;
-    if constexpr (is_same_v<T, vector<int64_t>>)
-      file << true << " ";
-    else if constexpr (std::is_same_v<T, vector<uint64_t>>)
-      file << false << " ";
-    else
-      static_assert(utils::always_false_v<T>, "non-exhaustive visitor!");
-
-    utils::print_vector(v, file);
+  auto signed_value_var_visitor = [&os](const vector<int64_t> &v) {
+    os << true << " ";
+    os << v;
   };
 
-  file << func->get_vector_size() << " " << inputs_values.size() << " " << outputs_values.size() << "\n";
-  for (const auto &v : inputs_values)
+  auto unsigned_value_var_visitor = [&os](const vector<uint64_t> &v) {
+    os << false << " ";
+    os << v;
+  };
+
+  os << func->get_vector_size() << " " << example_inputs_values.size() << " " << example_inputs_values.size() << "\n";
+  for (const auto &v : example_inputs_values)
   {
     auto v_label_it = tags_labels.find(v.first);
     if (v_label_it == tags_labels.end())
@@ -471,11 +222,11 @@ void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) cons
     if (!node)
       throw logic_error("input node not found in the data flow");
 
-    file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
-    visit(value_var_visitor, v.second);
-    file << "\n";
+    os << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
+    visit(ir::overloaded{signed_value_var_visitor, unsigned_value_var_visitor}, v.second);
+    os << "\n";
   }
-  for (const auto &v : outputs_values)
+  for (const auto &v : example_inputs_values)
   {
     auto v_label_it = tags_labels.find(v.first);
     if (v_label_it == tags_labels.end())
@@ -485,10 +236,10 @@ void Compiler::FuncEntry::serialize_inputs_outputs(const string &file_name) cons
     if (!node)
       throw logic_error("output node not found in the data flow");
 
-    file << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
-    visit(value_var_visitor, v.second);
-    file << "\n";
+    os << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
+    visit(ir::overloaded{signed_value_var_visitor, unsigned_value_var_visitor}, v.second);
+    os << "\n";
   }
+  os.flags(f);
 }
-
 } // namespace fhecompiler

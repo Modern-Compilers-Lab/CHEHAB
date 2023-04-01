@@ -1,6 +1,5 @@
 #include "matching_term.hpp"
 #include "trs_const.hpp"
-#include <iostream>
 
 namespace fheco_trs
 {
@@ -13,7 +12,6 @@ MatchingTerm::MatchingTerm(int64_t _value, fheco_trs::TermType _term_type)
 MatchingTerm::MatchingTerm(int _value, fheco_trs::TermType _term_type)
   : term_type(_term_type), value(_value), id(term_id++)
 {}
-MatchingTerm::MatchingTerm(double _value) : term_type(fheco_trs::TermType::scalar), value(_value), id(term_id++) {}
 
 MatchingTerm::MatchingTerm(FunctionId func_id) : term_type(fheco_trs::TermType::function), function_id(func_id) {}
 

@@ -1,6 +1,7 @@
 #include "fhecompiler.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -45,17 +46,21 @@ int main(int argc, char **argv)
   string func_name = "gx_kernel";
   Compiler::create_func(func_name, vector_size, 16, false, Scheme::bfv);
   gx_kernel();
-  Compiler::draw_ir(func_name + "_init_ir.dot");
-  const auto &rand_inputs = Compiler::get_input_values();
+  ofstream init_ir_os(func_name + "_init_ir.dot");
+  Compiler::draw_ir(init_ir_os);
+  const auto &rand_inputs = Compiler::get_example_input_values();
+  ofstream gen_code_os("he/gen_he_" + func_name + ".hpp");
   if (optimize)
-    Compiler::compile("he/gen_he_" + func_name + ".hpp", trs_passes);
+    Compiler::compile(gen_code_os, trs_passes);
   else
-    Compiler::compile_noopt("he/gen_he_" + func_name + ".hpp");
-  Compiler::draw_ir(func_name + "_final_ir.dot");
+    Compiler::compile_noopt(gen_code_os);
+  ofstream final_ir_os(func_name + "_final_ir.dot");
+  Compiler::draw_ir(final_ir_os);
   auto outputs = Compiler::evaluate_on_clear(rand_inputs);
-  if (outputs != Compiler::get_output_values())
+  if (outputs != Compiler::get_example_output_values())
     throw logic_error("compilation correctness-test failed");
 
-  Compiler::serialize_inputs_outputs(func_name + "_rand_example.txt");
+  ofstream rand_example_os(func_name + "_rand_example.txt");
+  Compiler::print_inputs_outputs(rand_example_os);
   return 0;
 }

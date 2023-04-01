@@ -10,21 +10,12 @@
 
 namespace fhecompiler
 {
-
 template <typename T>
 T operate(ir::OpCode opcode, const std::vector<ir::Term::Ptr> &operands, ir::TermType term_type, bool is_output = false)
 {
   T new_T;
   new_T.set_new_label();
   Compiler::get_active()->insert_operation_node_in_dataflow(opcode, operands, new_T.get_label(), term_type);
-
-  if (operands.size() == 2)
-    Compiler::operate_binary(opcode, operands[0]->get_label(), operands[1]->get_label(), new_T.get_label());
-  else if (operands.size() == 1)
-    Compiler::operate_unary(opcode, operands[0]->get_label(), new_T.get_label());
-  else
-    throw std::logic_error("invalide number of operands in operate");
-
   return new_T;
 }
 
@@ -70,8 +61,6 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
   auto new_operation_node_ptr = Compiler::get_active()->insert_operation_node_in_dataflow(
     opcode, {lhs_node_ptr, rhs_node_ptr}, lhs.get_label(), term_type);
   new_operation_node_ptr->set_inplace();
-
-  Compiler::operate_binary(opcode, old_label, rhs.get_label(), lhs.get_label(), is_output);
 }
 
 template <typename T1, typename T2, typename T3>
@@ -83,7 +72,9 @@ T1 operate_binary(const T2 &lhs, const T3 &rhs, ir::OpCode opcode, ir::TermType 
   {
     throw("operand is not defined, maybe it was only declared\n");
   }
-  return operate<T1>(opcode, std::vector<std::shared_ptr<ir::Term>>({lhs_node_ptr, rhs_node_ptr}), term_type);
+  T1 result = operate<T1>(opcode, std::vector<std::shared_ptr<ir::Term>>({lhs_node_ptr, rhs_node_ptr}), term_type);
+  Compiler::operate_binary(opcode, lhs.example_value(), rhs.example_value(), result.example_value());
+  return result;
 }
 
 template <typename T1, typename T2>
@@ -94,7 +85,9 @@ T1 operate_unary(const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
   {
     throw("operand is not defined, maybe it was only declared\n");
   }
-  return operate<T1>(opcode, std::vector<std::shared_ptr<ir::Term>>({rhs_node_ptr}), term_type);
+  T1 result = operate<T1>(opcode, std::vector<std::shared_ptr<ir::Term>>({rhs_node_ptr}), term_type);
+  Compiler::operate_unary(opcode, rhs.example_value(), result.example_value());
+  return result;
 }
 
 template <typename T1, typename T2>
@@ -133,11 +126,6 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
   auto new_operation_node_ptr = Compiler::get_active()->insert_operation_node_in_dataflow(
     opcode, std::vector<ir::Term::Ptr>({rhs_node_ptr}), rhs.get_label(), term_type);
   new_operation_node_ptr->set_inplace();
-
-  if (opcode != ir::OpCode::square)
-    throw std::logic_error("operation other than suqare in compound_operate_unary");
-
-  Compiler::operate_unary(ir::OpCode::square, old_label, rhs.get_label(), is_output);
 }
 
 template <typename T>
@@ -187,8 +175,6 @@ T &operate_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     // Compiler::get_active()->delete_node_from_dataflow(old_label);
     auto new_assign_operation = Compiler::get_active()->insert_operation_node_in_dataflow(
       ir::OpCode::assign, {rhs_node_ptr}, lhs.get_label(), term_type);
-
-    Compiler::operate_unary(ir::OpCode::assign, rhs.get_label(), lhs.get_label(), is_output);
   }
   else
   {
@@ -240,10 +226,6 @@ void operate_copy(const T &lhs, const T &t_copy, ir::TermType term_type)
   auto copy_node_ptr = Compiler::get_active()->insert_node_in_dataflow<T>(t_copy);
   Compiler::get_active()->insert_operation_node_in_dataflow(
     ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
-
-  Compiler::operate_unary(
-    ir::OpCode::assign, t_copy.get_label(), lhs.get_label(),
-    Compiler::get_active()->type_of(lhs.get_label()) == ir::ConstantTableEntryType::output);
 }
 
 template <typename T>
@@ -254,10 +236,6 @@ void operate_move(T &lhs, T &&t_move, ir::TermType term_type)
   auto move_node_ptr = Compiler::get_active()->insert_node_in_dataflow<T>(t_move);
   Compiler::get_active()->insert_operation_node_in_dataflow(
     ir::OpCode::assign, {move_node_ptr}, lhs.get_label(), term_type);
-
-  Compiler::operate_unary(
-    ir::OpCode::assign, t_move.get_label(), lhs.get_label(),
-    Compiler::get_active()->type_of(lhs.get_label()) == ir::ConstantTableEntryType::output);
   //}
   // else
   //{
@@ -298,11 +276,6 @@ void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode op
   auto new_operation_node_ptr =
     Compiler::get_active()->insert_operation_node_in_dataflow(opcode, {lhs_term, rhs_term}, lhs.get_label(), term_type);
   new_operation_node_ptr->set_inplace();
-
-  if (opcode != ir::OpCode::rotate)
-    throw std::logic_error("operation other than rotate in compound_operate_with_raw");
-
-  Compiler::operate_rotate(old_label, lhs.get_label(), std::stoi(raw_data), lhs.get_label(), is_output);
 }
 
 template <typename T>
@@ -318,13 +291,6 @@ T operate_with_raw(const T &lhs, datatype::rawData raw_data, ir::OpCode opcode, 
     throw(" operand not defined, maybe it is a temporary and it is only declared \n");
 
   Compiler::get_active()->insert_operation_node_in_dataflow(opcode, {lhs_term, rhs_term}, new_T.get_label(), term_type);
-
-  if (opcode != ir::OpCode::rotate)
-    throw std::logic_error("operation other than rotate in operate_with_raw");
-
-  Compiler::operate_rotate(lhs.get_label(), std::stoi(raw_data), new_T.get_label());
-
   return new_T;
 }
-
 } // namespace fhecompiler

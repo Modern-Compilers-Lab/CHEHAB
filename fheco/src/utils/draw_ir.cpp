@@ -1,7 +1,7 @@
 #include "draw_ir.hpp"
-#include <fstream>
-#include <map>
 #include <stdexcept>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 using namespace std;
@@ -61,27 +61,25 @@ string make_node_attrs(ir::Program *program, const ir::Term::Ptr &node)
   return attrs;
 }
 
-void utils::draw_ir(ir::Program *program, const std::string &output_file)
+void utils::draw_ir(ir::Program *program, ostream &os)
 {
   if (program == nullptr)
     throw invalid_argument("null pointer programtion, programiton is not initialized");
 
-  ofstream ofile;
-  ofile.open(output_file);
-  ofile << "digraph \"" << program->get_program_tag() << "\" {" << endl;
-  ofile << "node [shape=circle width=1 margin=0]" << endl;
-  ofile << "edge [dir=back]" << endl;
+  os << "digraph \"" << program->get_program_tag() << "\" {" << endl;
+  os << "node [shape=circle width=1 margin=0]" << endl;
+  os << "edge [dir=back]" << endl;
 
   const vector<ir::Term::Ptr> &nodes = program->get_dataflow_sorted_nodes(true);
   for (const ir::Term::Ptr &node : nodes)
   {
-    ofile << node->get_label() << " [" << make_node_attrs(program, node) << "]" << endl;
+    os << node->get_label() << " [" << make_node_attrs(program, node) << "]" << endl;
 
     if (node->is_operation_node() == false)
       continue;
 
     for (const ir::Term::Ptr &operand : node->get_operands())
-      ofile << node->get_label() << " -> " << operand->get_label() << endl;
+      os << node->get_label() << " -> " << operand->get_label() << endl;
   }
 
   string key = R"(subgraph cluster_key {
@@ -110,6 +108,6 @@ void utils::draw_ir(ir::Program *program, const std::string &output_file)
     in_plain -> other
     out_plain -> scalar
 })";
-  ofile << key << endl;
-  ofile << "}" << endl;
+  os << key << endl;
+  os << "}" << endl;
 }

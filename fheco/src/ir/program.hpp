@@ -1,5 +1,6 @@
 #pragma once
 
+#include "clear_data_evaluator.hpp"
 #include "dag.hpp"
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
@@ -94,6 +95,8 @@ private:
 
   double scale = 0.0; // for ckks
 
+  utils::ClearDataEvaluator clear_data_evaluator;
+
 public:
   Program(const std::string &name, int bit_width, bool signedness, std::size_t vector_size, fhecompiler::Scheme scheme)
     : program_tag(name), bit_width(bit_width), signedness(signedness), vector_size(vector_size), scheme(scheme)
@@ -105,6 +108,7 @@ public:
       throw std::invalid_argument("vector_size must be a power of two");
 
     data_flow = std::make_unique<DAG>();
+    clear_data_evaluator = utils::ClearDataEvaluator(vector_size, bit_width);
   }
 
   ir::Term::Ptr insert_operation_node_in_dataflow(
@@ -180,6 +184,8 @@ public:
   void set_scale(double _scale) { scale = _scale; }
 
   double get_scale() const { return scale; }
+
+  inline const utils::ClearDataEvaluator &get_clear_data_evaluator() const { return clear_data_evaluator; }
 
   bool is_tracked_object(const std::string &label);
 

@@ -2,10 +2,9 @@
 #include "cse_pass.hpp"
 #include "fhecompiler_const.hpp"
 #include "ir_const.hpp"
-#include "program.hpp"
 #include "rotationkeys_select_pass.hpp"
 #include <cstddef>
-#include <fstream>
+#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -194,7 +193,7 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
 }
 
 void Translator::translate_constant_table_entry(
-  const std::string &identifier, ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os)
+  const std::string &identifier, ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ostream &os)
 {
   /*
     basically in this function we need to generate a decalartion or a definition in C++ for a given entry.
@@ -220,7 +219,6 @@ void Translator::translate_constant_table_entry(
       VectorValue vector_value = std::get<VectorValue>(*(entry_value.value));
       using VectorInt = std::vector<std::int64_t>;
       using VectorUInt = std::vector<std::uint64_t>;
-      using VectorFloat = std::vector<double>;
 
       if (auto _vector_value = std::get_if<VectorInt>(&vector_value))
         encoding_writer.write_vector_encoding(
@@ -230,8 +228,6 @@ void Translator::translate_constant_table_entry(
         encoding_writer.write_vector_encoding(
           os, identifier, *_vector_value, scalar_uint,
           program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
-      else if (auto vector_literal = std::get_if<VectorFloat>(&vector_value))
-        encoding_writer.write_vector_encoding(os, identifier, *_vector_value, scalar_float, program->get_scale());
       else
         throw("unsupported data type by schemes\n");
     }
@@ -250,9 +246,6 @@ void Translator::translate_constant_table_entry(
         encoding_writer.write_scalar_encoding(
           os, identifier, std::to_string(*value), scalar_uint,
           program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
-      else if (auto value = std::get_if<double>(&scalar_value))
-        encoding_writer.write_scalar_encoding(
-          os, identifier, std::to_string(*value), scalar_float, program->get_scale());
       else
         throw("unsupported data type by schemes\n");
       /*
@@ -279,7 +272,7 @@ void Translator::translate_constant_table_entry(
   }
 }
 
-void Translator::translate_binary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os)
+void Translator::translate_binary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os)
 {
   std::string other_args(""); // this depends on the operation
   auto it = get_other_args_by_opcode.find(term_ptr->get_opcode());
@@ -306,12 +299,12 @@ void Translator::translate_binary_operation(const ir::Term::Ptr &term_ptr, std::
     os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
 }
 
-void Translator::translate_nary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os)
+void Translator::translate_nary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os)
 {
   std::cout << "translation of nary \n";
 }
 
-void Translator::translate_unary_operation(const ir::Term::Ptr &term_ptr, std::ofstream &os)
+void Translator::translate_unary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os)
 {
   std::string op_identifier = get_identifier(term_ptr);
   std::string rhs_identifier = get_identifier(term_ptr->get_operands()[0]);
@@ -328,7 +321,7 @@ void Translator::translate_unary_operation(const ir::Term::Ptr &term_ptr, std::o
   }
 }
 
-void Translator::translate_term(const ir::Term::Ptr &term, std::ofstream &os)
+void Translator::translate_term(const ir::Term::Ptr &term, std::ostream &os)
 {
 
   auto constant_table_entry_opt = program->get_entry_form_constants_table(term->get_label());
@@ -374,7 +367,7 @@ void Translator::translate_term(const ir::Term::Ptr &term, std::ofstream &os)
   }
 }
 
-void Translator::translate_program(std::ofstream &os, const std::set<int> &rotations_keys_steps)
+void Translator::translate_program(std::ostream &os, const std::set<int> &rotations_keys_steps)
 {
 
   os << headers_include;
@@ -419,7 +412,7 @@ void Translator::translate_program(std::ofstream &os, const std::set<int> &rotat
   os << "}" << '\n';
 }
 
-void Translator::generate_function_signature(std::ofstream &os) const
+void Translator::generate_function_signature(std::ostream &os) const
 {
   ArgumentList argument_list;
   os << "void " << program->get_program_tag()
@@ -456,7 +449,7 @@ void Translator::write_output(
 }
 
 void Translator::write_assign_operation(
-  std::ofstream &os, const std::string &lhs_id, const std::string &rhs_id, ir::TermType type)
+  std::ostream &os, const std::string &lhs_id, const std::string &rhs_id, ir::TermType type)
 {
   os << types_map[type] << " " << lhs_id << " = " << rhs_id << ";" << '\n';
 }
@@ -470,7 +463,7 @@ void Translator::convert_to_inplace_pass()
   }
 }
 
-void Translator::generate_key_generator(std::ofstream &os) const
+void Translator::generate_key_generator(std::ostream &os) const
 {
   os << key_generator_type_literal << " " << key_generator_identifier << "(" << context_identifier << ");\n";
 }

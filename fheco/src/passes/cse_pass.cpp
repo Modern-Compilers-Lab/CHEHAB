@@ -1,15 +1,17 @@
 #include "cse_pass.hpp"
+#include "clear_data_evaluator.hpp"
+#include "ir_const.hpp"
 #include "ir_utils.hpp"
-#include <sstream>
 #include <stdexcept>
+
+using namespace std;
 
 namespace fheco_passes
 {
-
 /*
-std::string CSE::calculate_id(const ir::Term::Ptr &term)
+string CSE::calculate_id(const ir::Term::Ptr &term)
 {
-  std::stringstream ss;
+  stringstream ss;
   if (term->is_operation_node() == false)
     ss << term;
 
@@ -42,18 +44,30 @@ bool CSE::check_scalars_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &
 
   auto lhs_const_table_entry = program->get_entry_form_constants_table(lhs->get_label());
 
-  if (lhs_const_table_entry == std::nullopt)
+  if (lhs_const_table_entry == nullopt)
     throw("lhs is expected to have an entry in constants table");
 
   auto rhs_const_table_entry = program->get_entry_form_constants_table(rhs->get_label());
 
-  if (rhs_const_table_entry == std::nullopt)
+  if (rhs_const_table_entry == nullopt)
     throw("rhs is expected to have an entry in constants table");
 
   ir::ConstantValue lhs_const_value = *(*lhs_const_table_entry).get().get_entry_value().value;
   ir::ConstantValue rhs_const_value = *(*rhs_const_table_entry).get().get_entry_value().value;
 
-  return ir::get_constant_value_as_double(lhs_const_value) == ir::get_constant_value_as_double(rhs_const_value);
+  return visit(
+    ir::overloaded{
+      [](const auto &lhs_value, const auto &rhs_value) -> bool {
+        throw logic_error("scalar terms having vector value");
+      },
+      [](const ir::ScalarValue &lhs_value_var, const ir::ScalarValue &rhs_value_var) -> bool {
+        return visit(
+          ir::overloaded{[](auto lhs_value, auto rhs_value) -> bool {
+            return lhs_value == rhs_value;
+          }},
+          lhs_value_var, rhs_value_var);
+      }},
+    lhs_const_value, rhs_const_value);
 }
 
 bool CSE::check_plains_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs)
@@ -69,31 +83,37 @@ bool CSE::check_plains_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &r
 
   auto lhs_const_table_entry = program->get_entry_form_constants_table(lhs->get_label());
 
-  if (lhs_const_table_entry == std::nullopt)
+  if (lhs_const_table_entry == nullopt)
     throw("lhs is expected to have an entry in constants table");
 
   auto rhs_const_table_entry = program->get_entry_form_constants_table(rhs->get_label());
 
-  if (rhs_const_table_entry == std::nullopt)
+  if (rhs_const_table_entry == nullopt)
     throw("rhs is expected to have an entry in constants table");
 
   ir::ConstantValue lhs_const_value = *(*lhs_const_table_entry).get().get_entry_value().value;
   ir::ConstantValue rhs_const_value = *(*rhs_const_table_entry).get().get_entry_value().value;
 
-  // checks vectors equality
-  std::vector<double> lhs_vector;
-  ir::get_constant_value_as_vector_of_double(lhs_const_value, lhs_vector);
-  std::vector<double> rhs_vector;
-  ir::get_constant_value_as_vector_of_double(rhs_const_value, rhs_vector);
-
-  if (lhs_vector.size() != rhs_vector.size())
-    throw("const plains vectors must have the same size");
-
-  for (size_t i = 0; i < lhs_vector.size(); i++)
-    if (lhs_vector[i] != rhs_vector[i])
-      return false;
-
-  return true;
+  return visit(
+    ir::overloaded{
+      [](const auto &lhs_value, const auto &rhs_value) -> bool {
+        throw logic_error("plaintext terms having scalar value");
+      },
+      [](const ir::VectorValue &lhs_value_var, const ir::VectorValue &rhs_value_var) -> bool {
+        return visit(
+          ir::overloaded{
+            [](const vector<int64_t> &lhs_value, const vector<int64_t> &rhs_value) -> bool {
+              return lhs_value == rhs_value;
+            },
+            [](const vector<uint64_t> &lhs_value, const vector<uint64_t> &rhs_value) -> bool {
+              return lhs_value == rhs_value;
+            },
+            [](const auto &lhs_value, const auto &rhs_value) -> bool {
+              return lhs_value == rhs_value;
+            }},
+          lhs_value_var, rhs_value_var);
+      }},
+    lhs_const_value, rhs_const_value);
 }
 
 bool CSE::check_constants_equality(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs)
@@ -177,7 +197,7 @@ bool CSE::check_syntactical_equality(const ir::Term::Ptr &lhs, const ir::Term::P
 void CSE::apply_cse()
 {
 
-  std::unordered_set<ir::Term::Ptr> processed_nodes;
+  unordered_set<ir::Term::Ptr> processed_nodes;
 
   auto nodes = program->get_dataflow_sorted_nodes(true);
 
@@ -188,12 +208,12 @@ void CSE::apply_cse()
     {
       if (program->find_node_in_dataflow(parent_label) == nullptr)
       {
-        std::cout << "this is a problem!\n";
+        cout << "this is a problem!\n";
       }
     }
   }
 
-  std::cout << nodes.size() << "\n";
+  cout << nodes.size() << "\n";
   for (size_t i = 0; i < nodes.size(); i++)
   {
     auto node = nodes[i];
@@ -226,8 +246,8 @@ void CSE::apply_cse2(bool allow_assign_insertion)
 
   // Please note that this pass may insert assign operation nodes
 
-  std::unordered_set<ir::Term::Ptr> processed_constants;
-  std::unordered_map<SEid, ir::Term::Ptr, SEidHash> calculated_expressions_ids;
+  unordered_set<ir::Term::Ptr> processed_constants;
+  unordered_map<SEid, ir::Term::Ptr, SEidHash> calculated_expressions_ids;
 
   auto nodes = program->get_dataflow_sorted_nodes(true);
   for (size_t i = 0; i < nodes.size(); i++)
@@ -270,7 +290,7 @@ void CSE::apply_cse2(bool allow_assign_insertion)
           {
             auto parent_node = program->find_node_in_dataflow(parent_label);
             if (parent_node == nullptr)
-              throw std::logic_error("parent node not found");
+              throw logic_error("parent node not found");
 
             parent_node->replace_operand_with(node, it->second);
           }
