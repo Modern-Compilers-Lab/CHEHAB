@@ -1,5 +1,4 @@
 #include "fhecompiler/fhecompiler.hpp"
-#include "utils.hpp"
 #include <bits/stdc++.h>
 
 using namespace std;
