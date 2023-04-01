@@ -397,10 +397,10 @@ EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
   if (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end())
     throw logic_error("could not find suitable parameters");
 
-  cout << "estimated circuit_noise: " << circuit_noise << endl;
+  cout << "estimated circuit_noise: " << circuit_noise << '\n';
   cout << "-> q: "
        << "nb_primes=" << params.coeff_mod_bit_sizes().size() << ", "
-       << "min_total_bit_count=" << params.coeff_mod_bit_count() << endl;
+       << "min_total_bit_count=" << params.coeff_mod_bit_count() << '\n';
 
   if (sec_level_ != fhecompiler::SecurityLevel::none)
   {

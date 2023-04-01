@@ -372,16 +372,16 @@ void Translator::translate_program(std::ostream &os, const std::set<int> &rotati
 
   os << headers_include;
 
-  os << "\n";
+  os << '\n';
 
   context_writer.write_context(os);
 
-  os << "\n";
+  os << '\n';
 
   if (rotations_keys_steps.size())
   {
     write_rotations_steps_getter(rotations_keys_steps, os);
-    os << "\n";
+    os << '\n';
   }
 
   generate_function_signature(os);

@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
   cout << "width: " << width << ", "
        << "height: " << height << ", "
-       << "trs_passes: " << trs_passes << "\n";
+       << "trs_passes: " << trs_passes << '\n';
 
   string func_name = "box_blur";
   Compiler::create_func(func_name, height * width, 16, false, Scheme::bfv);

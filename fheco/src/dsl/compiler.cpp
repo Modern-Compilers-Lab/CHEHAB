@@ -158,7 +158,7 @@ void Compiler::FuncEntry::print_inputs_outputs(
     os << v;
   };
 
-  os << func->get_vector_size() << " " << example_inputs_values.size() << " " << example_inputs_values.size() << "\n";
+  os << func->get_vector_size() << " " << example_inputs_values.size() << " " << example_inputs_values.size() << '\n';
   for (const auto &v : inputs)
   {
     if (example_inputs_values.find(v.first) == example_inputs_values.end())
@@ -174,7 +174,7 @@ void Compiler::FuncEntry::print_inputs_outputs(
 
     os << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(ir::overloaded{signed_value_var_visitor, unsigned_value_var_visitor}, v.second);
-    os << "\n";
+    os << '\n';
   }
   for (const auto &v : outputs)
   {
@@ -191,7 +191,7 @@ void Compiler::FuncEntry::print_inputs_outputs(
 
     os << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(ir::overloaded{signed_value_var_visitor, unsigned_value_var_visitor}, v.second);
-    os << "\n";
+    os << '\n';
   }
   os.flags(f);
 }
@@ -211,7 +211,7 @@ void Compiler::FuncEntry::print_inputs_outputs(ostream &os) const
     os << v;
   };
 
-  os << func->get_vector_size() << " " << example_inputs_values.size() << " " << example_inputs_values.size() << "\n";
+  os << func->get_vector_size() << " " << example_inputs_values.size() << " " << example_inputs_values.size() << '\n';
   for (const auto &v : example_inputs_values)
   {
     auto v_label_it = tags_labels.find(v.first);
@@ -224,7 +224,7 @@ void Compiler::FuncEntry::print_inputs_outputs(ostream &os) const
 
     os << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(ir::overloaded{signed_value_var_visitor, unsigned_value_var_visitor}, v.second);
-    os << "\n";
+    os << '\n';
   }
   for (const auto &v : example_inputs_values)
   {
@@ -238,7 +238,7 @@ void Compiler::FuncEntry::print_inputs_outputs(ostream &os) const
 
     os << v.first << " " << (node->get_term_type() == ir::TermType::ciphertext) << " ";
     visit(ir::overloaded{signed_value_var_visitor, unsigned_value_var_visitor}, v.second);
-    os << "\n";
+    os << '\n';
   }
   os.flags(f);
 }

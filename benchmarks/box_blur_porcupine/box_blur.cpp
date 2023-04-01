@@ -35,7 +35,7 @@ int main(int argc, char **argv)
   bool optimize = trs_passes > 0;
 
   cout << "vector_size: " << vector_size << ", "
-       << "trs_passes: " << trs_passes << "\n";
+       << "trs_passes: " << trs_passes << '\n';
 
   string func_name = "box_blur";
   Compiler::create_func(func_name, vector_size, 16, false, Scheme::bfv);

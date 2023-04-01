@@ -205,14 +205,14 @@ public:
   {
     is_init = true;
     os << encryptor_type_literal << " " << encryptor_identifier << "(" << context_identifier << ","
-       << public_key_identifier << ");" << '\n';
+       << public_key_identifier << ");\n";
   }
 
   void write_encryption(std::ostream &os, const std::string &plaintext_id, const std::string &destination_cipher) const
   {
-    os << types_map[ir::TermType::ciphertext] << " " << destination_cipher << ";" << '\n';
+    os << types_map[ir::TermType::ciphertext] << " " << destination_cipher << ";\n";
     os << encryptor_identifier << "." << encrypt_instruction_literal << "(" << plaintext_id << "," << destination_cipher
-       << ");" << '\n';
+       << ");\n";
   }
 
   bool is_initialized() const { return this->is_init; }
@@ -254,8 +254,7 @@ public:
     }
 
     if (!is_inplace)
-      os << types_map[type] << " " << destination_id << ";"
-         << "\n";
+      os << types_map[type] << " " << destination_id << ";\n";
 
     if (other_args.length() == 0)
     {
@@ -275,7 +274,7 @@ public:
       else
         os << ");";
     }
-    os << "\n";
+    os << '\n';
   }
 
   void write_binary_operation(
@@ -287,7 +286,7 @@ public:
     bool is_inplace = destination_id == lhs_id;
 
     if (!is_inplace)
-      os << types_map[type] << " " << destination_id << ";" << '\n';
+      os << types_map[type] << " " << destination_id << ";\n";
 
     std::string instruction_code = (is_inplace ? ops_map_inplace[opcode] : ops_map[opcode]);
     std::string other_args("");
@@ -306,7 +305,7 @@ public:
       os << "," << destination_id << ");";
     else
       os << ");";
-    os << "\n";
+    os << '\n';
   }
 };
 
@@ -333,18 +332,18 @@ public:
     // create a vector
     const std::string vector_id = plaintext_id + "_clear";
     os << "std::vector<" << scalar_type << ">"
-       << " " << vector_id << "(" << nb_slots << "," << scalar_value << ");" << '\n';
+       << " " << vector_id << "(" << nb_slots << "," << scalar_value << ");\n";
 
-    os << types_map[ir::TermType::plaintext] << " " << plaintext_id << ";" << '\n';
+    os << types_map[ir::TermType::plaintext] << " " << plaintext_id << ";\n";
     if (scale > 0.0)
     {
       os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << scale << ","
-         << plaintext_id << ");" << '\n';
+         << plaintext_id << ");\n";
     }
     else
     {
-      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
-         << '\n';
+      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id
+         << ");\n";
     }
   }
 
@@ -365,19 +364,19 @@ public:
     vector_value_str += "}";
     const std::string vector_id = plaintext_id + "_clear";
     os << "std::vector<" << vector_type << ">"
-       << " " << vector_id << " = " << vector_value_str << ";" << '\n';
+       << " " << vector_id << " = " << vector_value_str << ";\n";
 
     // encoding
-    os << types_map[ir::TermType::plaintext] << " " << plaintext_id << ";" << '\n';
+    os << types_map[ir::TermType::plaintext] << " " << plaintext_id << ";\n";
     if (scale > 0.0)
     {
       os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << scale << ","
-         << plaintext_id << ");" << '\n';
+         << plaintext_id << ");\n";
     }
     else
     {
-      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
-         << '\n';
+      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id
+         << ");\n";
     }
   }
 };
@@ -405,7 +404,7 @@ public:
   void write_plaintext_modulus(std::ostream &os)
   {
     os << params_identifier_literal << "." << set_plain_modulus_intruction << "(" << create_plain_modulus_intruction
-       << "(" << params.poly_modulus_degree() << "," << params.plain_modulus_bit_size() << "));" << '\n';
+       << "(" << params.poly_modulus_degree() << "," << params.plain_modulus_bit_size() << "));\n";
   }
 
   void write_coefficient_modulus(std::ostream &os)
@@ -418,20 +417,20 @@ public:
       if (i < params.coeff_mod_bit_sizes().size() - 1)
         os << ", ";
     }
-    os << "}));" << '\n';
+    os << "}));\n";
   }
 
   void write_polynomial_modulus_degree(std::ostream &os)
   {
     os << params_identifier_literal << "." << set_poly_modulus_degree_instruction << "(" << params.poly_modulus_degree()
-       << ");" << '\n';
+       << ");\n";
   }
 
   void write_parameters(std::ostream &os)
   {
 
     os << params_type_literal << " " << params_identifier_literal
-       << "(seal::scheme_type::" << scheme_type_str[static_cast<int>(scheme_type)] << ");" << '\n';
+       << "(seal::scheme_type::" << scheme_type_str[static_cast<int>(scheme_type)] << ");\n";
 
     write_polynomial_modulus_degree(os);
     if (scheme_type != fhecompiler::Scheme::ckks)
@@ -442,7 +441,7 @@ public:
   void write_context(std::ostream &os)
   {
     os << context_type_literal << " " << context_function_name << "()"
-       << "{" << '\n';
+       << "{\n";
     write_parameters(os);
     os << context_type_literal << " " << context_identifier << "(" << params_identifier_literal << ",";
     if (uses_mod_switch)
@@ -450,9 +449,9 @@ public:
     else
       os << "false";
     os << ","
-       << "seal::sec_level_type::" << security_level_str[static_cast<int>(sec_level)] << ");" << '\n';
-    os << "return " << context_identifier << ";" << '\n';
-    os << "}" << '\n';
+       << "seal::sec_level_type::" << security_level_str[static_cast<int>(sec_level)] << ");\n";
+    os << "return " << context_identifier << ";\n";
+    os << "}\n";
   };
 };
 

@@ -95,7 +95,7 @@ int main(int argc, char **argv)
   cout << "m_a: " << m_a << ", "
        << "n_a_m_b: " << n_a_m_b << ", "
        << "n_b: " << n_b << ", "
-       << "trs_passes: " << trs_passes << "\n";
+       << "trs_passes: " << trs_passes << '\n';
 
   string func_name = "matrix_mul";
   Compiler::create_func(func_name, n_a_m_b, 16, true, Scheme::bfv);

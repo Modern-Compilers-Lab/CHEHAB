@@ -512,7 +512,7 @@ void print_variables_values(const io_variables_values &m, size_t lead_trail_size
         print_vector(value, lead_trail_size, os);
       }},
       variable.second);
-    os << "\n";
+    os << '\n';
   }
 }
 } // namespace utils
@@ -529,7 +529,7 @@ ostream &operator<<(ostream &os, const utils::io_variables_values &m)
         os << value;
       }},
       variable.second);
-    os << "\n";
+    os << '\n';
   }
   return os;
 }

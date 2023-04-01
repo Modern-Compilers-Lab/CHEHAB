@@ -66,20 +66,20 @@ void utils::draw_ir(ir::Program *program, ostream &os)
   if (program == nullptr)
     throw invalid_argument("null pointer programtion, programiton is not initialized");
 
-  os << "digraph \"" << program->get_program_tag() << "\" {" << endl;
-  os << "node [shape=circle width=1 margin=0]" << endl;
-  os << "edge [dir=back]" << endl;
+  os << "digraph \"" << program->get_program_tag() << "\" {\n";
+  os << "node [shape=circle width=1 margin=0]\n";
+  os << "edge [dir=back]\n";
 
   const vector<ir::Term::Ptr> &nodes = program->get_dataflow_sorted_nodes(true);
   for (const ir::Term::Ptr &node : nodes)
   {
-    os << node->get_label() << " [" << make_node_attrs(program, node) << "]" << endl;
+    os << node->get_label() << " [" << make_node_attrs(program, node) << "]\n";
 
     if (node->is_operation_node() == false)
       continue;
 
     for (const ir::Term::Ptr &operand : node->get_operands())
-      os << node->get_label() << " -> " << operand->get_label() << endl;
+      os << node->get_label() << " -> " << operand->get_label() << '\n';
   }
 
   string key = R"(subgraph cluster_key {
@@ -108,6 +108,6 @@ void utils::draw_ir(ir::Program *program, ostream &os)
     in_plain -> other
     out_plain -> scalar
 })";
-  os << key << endl;
-  os << "}" << endl;
+  os << key << '\n';
+  os << "}\n";
 }
