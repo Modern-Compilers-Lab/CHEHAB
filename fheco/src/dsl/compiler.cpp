@@ -4,7 +4,6 @@
 #include "param_selector.hpp"
 #include "relin_pass.hpp"
 #include "rotationkeys_select_pass.hpp"
-#include "ruleset.hpp"
 #include "translator.hpp"
 #include "trs.hpp"
 #include <cstdint>
@@ -56,7 +55,7 @@ void Compiler::FuncEntry::compile(ostream &os, int trs_passes, bool use_mod_swit
   for (int i = 0; i < trs_passes; ++i)
   {
     cse_pass.apply_cse2(true);
-    trs.apply_rewrite_rules_on_program(fheco_trs::Ruleset::rules);
+    trs.run();
   }
 
   fheco_passes::RotationKeySelctionPass rs_pass(func);

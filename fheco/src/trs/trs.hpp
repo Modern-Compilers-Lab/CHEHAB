@@ -2,14 +2,11 @@
 
 #include "program.hpp"
 #include "rewrite_rule.hpp"
-#include "trs_core.hpp"
+#include "term.hpp"
 #include <memory>
-#include <optional>
-#include <unordered_map>
 
 namespace fheco_trs
 {
-
 class TRS
 {
 private:
@@ -24,6 +21,7 @@ public:
   TRS(const std::shared_ptr<ir::Program> &prgm) : program(prgm) {}
 
   void apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules);
-};
 
+  void run();
+};
 } // namespace fheco_trs

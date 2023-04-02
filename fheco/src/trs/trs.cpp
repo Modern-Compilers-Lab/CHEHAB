@@ -1,13 +1,12 @@
 #include "trs.hpp"
-#include "draw_ir.hpp"
 #include "ir_utils.hpp"
+#include "ruleset.hpp"
 #include "trs_const.hpp"
+#include "trs_core.hpp"
 #include "trs_util_functions.hpp"
-#include <variant>
 
 namespace fheco_trs
 {
-
 core::FunctionTable TRS::functions_table = util_functions::functions_table;
 
 void TRS::apply_rule_on_ir_node(
@@ -69,4 +68,31 @@ void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
   }
 }
 
+void TRS::run()
+{
+  auto &sorted_nodes = program->get_dataflow_sorted_nodes(true);
+  for (auto &node : sorted_nodes)
+  {
+    switch (node->get_opcode())
+    {
+    case ir::OpCode::mul:
+      apply_rules_on_ir_node(node, Ruleset::mul_rules);
+      break;
+    case ir::OpCode::rotate:
+      apply_rules_on_ir_node(node, Ruleset::rotate_rules);
+      break;
+    case ir::OpCode::add:
+      apply_rules_on_ir_node(node, Ruleset::add_rules);
+      break;
+    case ir::OpCode::sub:
+      apply_rules_on_ir_node(node, Ruleset::sub_rules);
+      break;
+    case ir::OpCode::undefined:
+      continue;
+    default:
+      apply_rules_on_ir_node(node, Ruleset::misc_rules);
+      break;
+    }
+  }
+}
 } // namespace fheco_trs

@@ -1,9 +1,10 @@
 #include "ruleset.hpp"
 #include <stdexcept>
 
-using namespace fheco_trs;
 using namespace std;
 
+namespace fheco_trs
+{
 MatchingTerm Ruleset::x = MatchingTerm("x", TermType::ciphertext);
 MatchingTerm Ruleset::y = MatchingTerm("y", TermType::ciphertext);
 MatchingTerm Ruleset::z = MatchingTerm("z", TermType::ciphertext);
@@ -13,6 +14,28 @@ MatchingTerm Ruleset::a = MatchingTerm("a", TermType::scalar);
 
 MatchingTerm Ruleset::n = MatchingTerm("n", fheco_trs::TermType::rawData);
 MatchingTerm Ruleset::m = MatchingTerm("m", fheco_trs::TermType::rawData);
+
+std::vector<RewriteRule> Ruleset::mul_rules = {
+  // {a * x, gen_rhs_scalar_mul_to_sum(a, x)},
+  // {x * a, gen_rhs_scalar_mul_to_sum(a, x)},
+  {(x << n) * (y << n), (x * y) << n},
+  {(x << n) * (y << m), (x * (y << MatchingTerm::fold(m - n))) << n, n < m},
+  {(x << n) * (y << m), ((x << MatchingTerm::fold(n - m)) * y) << m, n > m}};
+
+std::vector<RewriteRule> Ruleset::rotate_rules = {
+  {(x << n), x, n == 0}, {x << n << m, x << MatchingTerm::fold((n + m))}};
+
+std::vector<RewriteRule> Ruleset::add_rules = {
+  {(x << n) + (y << n), (x + y) << n},
+  {(x << n) + (y << m), (x + (y << MatchingTerm::fold(m - n))) << n, n < m},
+  {(x << n) + (y << m), ((x << MatchingTerm::fold(n - m)) + y) << m, n > m}};
+
+std::vector<RewriteRule> Ruleset::sub_rules = {
+  {(x << n) - (y << n), (x - y) << n},
+  {(x << n) - (y << m), (x - (y << MatchingTerm::fold(m - n))) << n, n < m},
+  {(x << n) - (y << m), ((x << MatchingTerm::fold(n - m)) - y) << m, n > m}};
+
+std::vector<RewriteRule> Ruleset::misc_rules = {};
 
 function<MatchingTerm(const ir::Program *prgm, const RewriteRule::matching_term_ir_node_map &)> Ruleset::
   gen_rhs_scalar_mul_to_sum(const MatchingTerm &a, const MatchingTerm &x)
@@ -39,12 +62,4 @@ function<MatchingTerm(const ir::Program *prgm, const RewriteRule::matching_term_
       throw logic_error("scalar mul by 0 to sum");
     };
 }
-
-std::vector<RewriteRule> Ruleset::rules = {
-  // {a * x, gen_rhs_scalar_mul_to_sum(a, x)},
-  // {x * a, gen_rhs_scalar_mul_to_sum(a, x)},
-  {(x << n), x, n == 0},
-  {x << n << m, x << MatchingTerm::fold((n + m))},
-  {(x << n) + (y << n), (x + y) << n},
-  {(x << n) + (y << m), (x + (y << MatchingTerm::fold(m - n))) << n, n < m},
-  {(x << n) + (y << m), ((x << MatchingTerm::fold(n - m)) + y) << m, n > m}};
+} // namespace fheco_trs
