@@ -3,14 +3,13 @@
 
 namespace fheco_trs
 {
-
 size_t MatchingTerm::term_id = 0;
 
-MatchingTerm::MatchingTerm(int64_t _value, fheco_trs::TermType _term_type)
-  : term_type(_term_type), value(_value), id(term_id++)
-{}
-MatchingTerm::MatchingTerm(int _value, fheco_trs::TermType _term_type)
-  : term_type(_term_type), value(_value), id(term_id++)
+MatchingTerm::MatchingTerm(uint64_t _value) : term_type(fheco_trs::TermType::scalar), value(_value), id(term_id++) {}
+MatchingTerm::MatchingTerm(int64_t _value) : term_type(TermType::scalar), value(_value), id(term_id++) {}
+MatchingTerm::MatchingTerm(int _value) : term_type(TermType::scalar), value(_value), id(term_id++) {}
+
+MatchingTerm::MatchingTerm(bool _value) : term_type(TermType::boolean), value(static_cast<int>(_value)), id(term_id++)
 {}
 
 MatchingTerm::MatchingTerm(FunctionId func_id) : term_type(fheco_trs::TermType::function), function_id(func_id) {}
@@ -34,11 +33,17 @@ fheco_trs::TermType MatchingTerm::deduce_term_type(fheco_trs::TermType lhs_term_
   if (lhs_term_type == rhs_term_type)
     return lhs_term_type;
 
+  else if (lhs_term_type == fheco_trs::TermType::variable || rhs_term_type == fheco_trs::TermType::variable)
+    return fheco_trs::TermType::variable;
+
   else if (lhs_term_type == fheco_trs::TermType::ciphertext || rhs_term_type == fheco_trs::TermType::ciphertext)
     return fheco_trs::TermType::ciphertext;
 
   else if (lhs_term_type == fheco_trs::TermType::plaintext || rhs_term_type == fheco_trs::TermType::plaintext)
     return fheco_trs::TermType::plaintext;
+
+  else if (lhs_term_type == fheco_trs::TermType::constant || rhs_term_type == fheco_trs::TermType::constant)
+    return fheco_trs::TermType::constant;
 
   else
     throw("cannot deduce term type");
@@ -124,7 +129,7 @@ MatchingTerm operator-(const MatchingTerm &term)
 MatchingTerm exponentiate(const MatchingTerm &lhs, const MatchingTerm &rhs)
 {
   if (rhs.get_term_type() != fheco_trs::TermType::rawData)
-    throw("invalid exponentiate expression, exponent must of type rawData");
+    throw("invalid exponentiate expression, exponent must of type rawDataType");
 
   MatchingTerm new_term(
     fheco_trs::OpCode::exponentiate, std::vector<MatchingTerm>({lhs, rhs}), fheco_trs::TermType::ciphertext);
@@ -148,6 +153,12 @@ MatchingTerm mod_switch(const MatchingTerm &term)
 {
   MatchingTerm new_term(
     fheco_trs::OpCode::modswitch, std::vector<MatchingTerm>({term}), fheco_trs::TermType::ciphertext);
+  return new_term;
+}
+
+MatchingTerm negate(const MatchingTerm &term)
+{
+  MatchingTerm new_term(fheco_trs::OpCode::negate, std::vector<MatchingTerm>({term}), fheco_trs::TermType::ciphertext);
   return new_term;
 }
 
@@ -264,7 +275,7 @@ void MatchingTerm::push_operand(const MatchingTerm &operand)
 }
 
 /*
-  Constant folding
+  util functions
 */
 
 /*
@@ -305,14 +316,26 @@ MatchingTerm MatchingTerm::depth_of(const MatchingTerm &m_term)
   return new_term;
 }
 
-/*
-MatchingTerm MatchingTerm::is_opcode_equal_to(const MatchingTerm &term, OpCode opcode)
+MatchingTerm MatchingTerm::iszero(const MatchingTerm &m_term)
 {
-  MatchingTerm new_term(TermType::opcodeAttribute);
-  new_term.set_operands({term});
-  new_term.set_opcode(opcode);
+  MatchingTerm new_term(TermType::boolean);
+  new_term.set_function_id(FunctionId::iszero);
+  new_term.push_operand(m_term);
   return new_term;
 }
-*/
+MatchingTerm MatchingTerm::isone(const MatchingTerm &m_term)
+{
+  MatchingTerm new_term(TermType::boolean);
+  new_term.set_function_id(FunctionId::isone);
+  new_term.push_operand(m_term);
+  return new_term;
+}
 
+MatchingTerm MatchingTerm::type_of(const MatchingTerm &m_term)
+{
+  MatchingTerm new_term(TermType::scalar);
+  new_term.set_function_id(FunctionId::type_of);
+  new_term.push_operand(m_term);
+  return new_term;
+}
 } // namespace fheco_trs

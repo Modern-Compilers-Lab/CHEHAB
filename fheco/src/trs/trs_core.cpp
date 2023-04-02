@@ -10,29 +10,59 @@ namespace fheco_trs
 {
 namespace core
 {
-
-  std::optional<MatchingMap> match_ir_node(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term)
+  std::optional<MatchingMap> match_ir_node(
+    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, ir::Program *program)
   {
     MatchingMap matching_map;
 
-    if (match_term(ir_node, matching_term, matching_map))
+    if (match_term(ir_node, matching_term, matching_map, program))
       return matching_map;
 
     return std::nullopt;
   }
 
-  bool match_term(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, MatchingMap &matching_map)
+  bool match_term(
+    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, MatchingMap &matching_map,
+    ir::Program *program)
   {
 
     // Order of if statements is important !!!
 
-    if (ir_node->get_term_type() != fheco_trs::term_type_map[matching_term.get_term_type()])
+    // if (ir_node->get_term_type() != fheco_trs::term_type_map[matching_term.get_term_type()])
+    // return false;
+
+    // {
+    //   auto matching_term_const_value_opt = matching_term.get_value();
+    //   if (matching_term_const_value_opt != std::nullopt)
+    //   {
+    //     auto ir_node_const_value_opt = program->get_entry_value_value(ir_node->get_label());
+    //     if (ir_node_const_value_opt == std::nullopt)
+    //       return false;
+
+    //     return ir::check_constants_value_equality(
+    //       *ir_node_const_value_opt, *matching_term_const_value_opt,
+    //       ir_node
+    //         ->get_term_type()); // for this to work as expected, TermType passed need to be plaintextType or
+    //         scalarType
+    //   }
+    // }
+
+    auto valid_ir_types = term_type_map[matching_term.get_term_type()];
+
+    if (valid_ir_types.find(ir_node->get_term_type()) == valid_ir_types.end())
       return false;
 
     auto it = matching_map.find(matching_term.get_term_id());
 
     if (it != matching_map.end() && it->second != ir_node)
       return false;
+
+    if (matching_term.get_term_type() == TermType::constant)
+    {
+      auto const_value_opt = program->get_entry_value_value(ir_node->get_label());
+      if (const_value_opt == std::nullopt)
+        return false;
+    }
 
     if (matching_term.get_opcode() == fheco_trs::OpCode::undefined)
     {
@@ -53,7 +83,8 @@ namespace core
 
     for (size_t i = 0; i < matching_term_operands.size(); i++)
     {
-      matching_result = matching_result && match_term(ir_node_operands[i], matching_term_operands[i], matching_map);
+      matching_result =
+        matching_result && match_term(ir_node_operands[i], matching_term_operands[i], matching_map, program);
       if (matching_result == false)
         break;
     }
@@ -64,6 +95,8 @@ namespace core
     return matching_result;
   }
 
+  // ir::Number arithmetic_eval(
+  //   const MatchingTerm &term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table)
   double arithmetic_eval(
     const MatchingTerm &term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table)
   {
@@ -95,6 +128,7 @@ namespace core
                 value_var);
             }},
           *term.get_value());
+        // return ir::get_constant_value_as_number(*term.get_value());
       }
       else
       {
@@ -123,6 +157,7 @@ namespace core
                   value_var);
               }},
             constant_value);
+          // return ir::get_constant_value_as_number(constant_value);
         }
         else
           throw("arithmetic evaluation impossible");
@@ -135,6 +170,8 @@ namespace core
       if (term.get_operands().size() != 2)
         throw("only binary operations are supported at the moment in arithmetic_eval");
 
+      // ir::Number lhs_value = arithmetic_eval(term.get_operands()[0], matching_map, program, functions_table);
+      // ir::Number rhs_value = arithmetic_eval(term.get_operands()[1], matching_map, program, functions_table);
       double lhs_value = arithmetic_eval(term.get_operands()[0], matching_map, program, functions_table);
       double rhs_value = arithmetic_eval(term.get_operands()[1], matching_map, program, functions_table);
 
@@ -191,6 +228,15 @@ namespace core
       }
     }
 
+    // if (matching_term.get_opcode() == OpCode::undefined && matching_term.get_term_type() == TermType::boolean)
+    // {
+    //   auto const_value_opt = matching_term.get_value();
+    //   if (const_value_opt == std::nullopt)
+    //     throw("boolean leaf term with nullopt value in evaluate_boolean_matching_term");
+    //   ir::Number const_value = ir::get_constant_value_as_number(*const_value_opt);
+    //   return const_value == 1;
+    // }
+
     if (matching_term.get_opcode() == fheco_trs::OpCode::undefined)
       return true;
 
@@ -223,6 +269,7 @@ namespace core
       return false;
 
     // nodes which arithmetic operands are leaves
+    // ir::Number lhs_value, rhs_value;
     double lhs_value, rhs_value;
 
     lhs_value = arithmetic_eval(lhs, matching_map, program, functions_table);
@@ -272,23 +319,22 @@ namespace core
       make_ir_node_from_matching_term(rewrite_rule_rhs, matching_map, program, functions_table);
     if (new_ir_node->is_operation_node())
     {
-      ir_node->clear_operands();
-      ir_node->set_opcode(new_ir_node->get_opcode());
-      ir_node->set_operands(new_ir_node->get_operands());
+      ir_node->rewrite_with_operation(new_ir_node);
     }
     else
     {
-      auto node_parents = ir_node->get_parents_labels();
-      for (const auto &parent_label : node_parents)
-      {
-        ir::Term::Ptr parent = program->find_node_in_dataflow(parent_label);
-        if (parent == nullptr)
-          throw std::logic_error("node parent not found");
+      // auto node_parents = ir_node->get_parents_labels();
+      // for (const auto &parent_label : node_parents)
+      // {
+      //   ir::Term::Ptr parent = program->find_node_in_dataflow(parent_label);
+      //   if (parent == nullptr)
+      //     throw std::logic_error("node parent not found");
 
-        parent->delete_operand_term(ir_node->get_label());
-        parent->add_operand(new_ir_node);
-      }
-      ir_node->clear_operands();
+      //   parent->delete_operand_term(ir_node->get_label());
+      //   parent->add_operand(new_ir_node);
+      // }
+      // ir_node->clear_operands();
+      program->replace_with(ir_node, new_ir_node);
     }
   }
 
@@ -312,9 +358,10 @@ namespace core
         operands.push_back(make_ir_node_from_matching_term(m_term_operand, matching_map, program, functions_table));
       }
 
-      std::shared_ptr<ir::Term> ir_node = program->insert_operation_node_in_dataflow(
-        opcode_mapping[matching_term.get_opcode()], operands, "",
-        fheco_trs::term_type_map[matching_term.get_term_type()]);
+      ir::TermType term_type = ir::deduce_ir_term_type(operands);
+
+      std::shared_ptr<ir::Term> ir_node =
+        program->insert_operation_node_in_dataflow(opcode_mapping[matching_term.get_opcode()], operands, "", term_type);
 
       matching_map[matching_term.get_term_id()] = ir_node;
 
@@ -343,18 +390,16 @@ namespace core
         at this stage it means that wa have a MatchingTerm with a value (a constant), and we will consider it a
         temporary variable in IR
       */
-
       if (matching_term.get_value() == std::nullopt)
         throw("only constant matching terms are expected at this stage");
 
+      // this will work because constants generated by trs rules are either of type scalar or plaintext
       std::shared_ptr<ir::Term> ir_node =
-        std::make_shared<ir::Term>(fheco_trs::term_type_map[matching_term.get_term_type()]);
-
+        std::make_shared<ir::Term>(*fheco_trs::term_type_map[matching_term.get_term_type()].begin());
       /*
         Insert node in dataflow graph
       */
       program->insert_created_node_in_dataflow(ir_node);
-
       /*
         Insert in constants table
       */
@@ -366,6 +411,37 @@ namespace core
     }
   }
 
-} // namespace core
+  bool circuit_saving_condition(const ir::Term::Ptr &ir_node)
+  {
+    return (ir_node->is_operation_node() && ir_node->get_parents_labels().size() <= 1) ||
+           (ir_node->is_operation_node() == false);
+  }
 
+  bool circuit_saving_condition_rewrite_rule_checker(const MatchingTerm &term, MatchingMap &matching_map)
+  {
+
+    {
+      auto it = matching_map.find(term.get_term_id());
+      if (it == matching_map.end())
+        throw("missing matched node in IR in circuit_saving_condition_rewrite_rule_checker");
+    }
+
+    for (auto &operand_term : term.get_operands())
+    {
+      if (operand_term.get_opcode() == fheco_trs::OpCode::undefined)
+        continue;
+      auto it = matching_map.find(operand_term.get_term_id());
+      if (it == matching_map.end())
+        throw("missing matched node in IR in circuit_saving_condition_rewrite_rule_checker");
+
+      if (circuit_saving_condition(it->second) == false)
+        return false;
+
+      if (circuit_saving_condition_rewrite_rule_checker(operand_term, matching_map) == false)
+        return false;
+    }
+
+    return true;
+  }
+} // namespace core
 } // namespace fheco_trs

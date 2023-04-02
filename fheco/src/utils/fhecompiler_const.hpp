@@ -2,7 +2,6 @@
 
 namespace fhecompiler
 {
-
 enum Scheme
 {
   none,
@@ -33,5 +32,4 @@ enum class SecurityLevel
   tc192,
   tc256
 };
-
 } // namespace fhecompiler

@@ -82,6 +82,13 @@ private:
 
   std::unique_ptr<DAG> data_flow; // data_flow points to the IR which is a Directed Acyclic Graph (DAG)
 
+  /*
+    std::unordered_map<size_t, std::unique_ptr<DAG>> dags
+
+    in that case we gonna have multiple DAGs, where each dag is associated to an encryption context
+    an encryption context is difined by the set of parameters, from the user we need plaintext modulus
+  */
+
   std::unordered_map<std::string, ConstantTableEntry>
     constants_table; // we will have a symbol table, the data structure is a hash table
 
@@ -116,8 +123,6 @@ public:
 
   ir::Term::Ptr find_node_in_dataflow(const std::string &label) const;
 
-  void set_symbol_as_output(const std::string &label, const std::string &tag);
-
   void delete_node_from_dataflow(const std::string &node_label);
 
   template <typename T>
@@ -143,9 +148,19 @@ public:
 
   void insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry);
 
+  /*
+    if is_a_constant is false, then the entry is for a temporary term
+  */
+  void insert_or_update_entry_in_constants_table(
+    const std::string &label, const ir::ConstantValue &constant_value, bool is_a_constant = false);
+
+  void reset_constant_value_value(const std::string &key);
+
+  void set_constant_value_value(const std::string &key, const ir::ConstantValue &value);
+
   bool delete_entry_from_constants_table(std::string entry_key);
 
-  void insert_node_to_outputs(const std::string &key);
+  void set_node_as_output(const std::string &key);
 
   void delete_node_from_outputs(const std::string &key);
 
@@ -190,6 +205,25 @@ public:
   bool is_tracked_object(const std::string &label);
 
   void insert_created_node_in_dataflow(const ir::Term::Ptr &node);
-};
 
+  void add_node_to_outputs_nodes(const Ptr &node);
+
+  // void set_rotations_steps(std::vector<int32_t> &steps) { rotations_steps = steps; }
+  /*
+    key is the node label
+  */
+  std::optional<ConstantValue> get_entry_value_value(const std::string &key) const;
+
+  // const std::vector<int32_t> &get_rotations_steps() const { return rotations_steps; }
+
+  /*
+    This method updates the entry in outputs_nodes map in data_flow, the reason is to keep the same identifier
+    introduced by the user but change the node associated to this identifier
+  */
+  bool update_if_output_entry(const std::string &output_label, const Ptr &node);
+
+  void replace_with(const Ptr &lhs, const Ptr &rhs);
+
+  bool is_output_node(const std::string &label);
+};
 } // namespace ir

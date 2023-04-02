@@ -18,10 +18,8 @@
 
 namespace ir
 {
-
 class Term
 {
-
 public:
   using Ptr = std::shared_ptr<Term>;
 
@@ -162,7 +160,8 @@ public:
 
   void sort_operands(std::function<bool(const Ptr &, const Ptr &)> comp);
 
+  void rewrite_with_operation(const Ptr &node);
+
   void set_a_default_label();
 };
-
 } // namespace ir

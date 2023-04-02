@@ -4,7 +4,6 @@
 
 namespace ir
 {
-
 std::shared_ptr<ir::Term> fold_raw(
   const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, ir::OpCode opcode);
 std::shared_ptr<ir::Term> fold_scalar(
@@ -40,10 +39,9 @@ void cast_int_vector_to_double(const std::vector<int64_t> &int_vector, std::vect
 
 void cast_double_vector_to_int(const std::vector<double> &double_vector, std::vector<int64_t> &int_vector);
 
-ir::TermType deduce_ir_term_type(const ir::Term::Ptr &lhs, const ir::Term::Ptr &rhs);
+ir::TermType deduce_ir_term_type(const std::vector<ir::Term::Ptr> &operands);
 
 int32_t get_rotation_step(const std::shared_ptr<ir::Term> &node);
 
 int32_t compute_depth_of(const std::shared_ptr<ir::Term> &node);
-
 } // namespace ir

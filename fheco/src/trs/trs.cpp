@@ -15,7 +15,7 @@ void TRS::apply_rule_on_ir_node(
 
   is_rule_applied = false;
 
-  auto matching_map = rule.match_with_ir_node(ir_node);
+  auto matching_map = rule.match_with_ir_node(ir_node, program.get());
 
   if (matching_map != std::nullopt)
   {
@@ -25,14 +25,12 @@ void TRS::apply_rule_on_ir_node(
       // std::cout << "checking condition ...\n";
       if (rule.evaluate_rewrite_condition(*matching_map, program.get(), functions_table))
       {
-        is_rule_applied = true;
-        rule.substitute_in_ir(ir_node, *matching_map, program.get(), functions_table);
+        is_rule_applied = rule.substitute_in_ir(ir_node, *matching_map, program.get(), functions_table);
       }
     }
     else
     {
-      is_rule_applied = true;
-      rule.substitute_in_ir(ir_node, *matching_map, program.get(), functions_table);
+      is_rule_applied = rule.substitute_in_ir(ir_node, *matching_map, program.get(), functions_table);
     }
   }
 }
@@ -56,7 +54,7 @@ void TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const st
   }
 }
 
-void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
+void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &ruleset)
 {
   auto &sorted_nodes = program->get_dataflow_sorted_nodes(true);
   for (auto &node : sorted_nodes)
@@ -64,7 +62,7 @@ void TRS::apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules)
     if (node->get_opcode() == ir::OpCode::undefined)
       continue;
 
-    apply_rules_on_ir_node(node, rules);
+    apply_rules_on_ir_node(node, ruleset);
   }
 }
 

@@ -37,6 +37,7 @@ set(FHECOMPILER_SOURCE_FILES
   ${SRC_TRS}/reduction_order/component_orders.cpp
   ${SRC_TRS}/ruleset.cpp
   ${SRC_PASSES}/normalize_pass.cpp
+  # ${SRC_PASSES}/additional_passes.cpp
 )
 
 add_library(fhecompiler STATIC ${FHECOMPILER_SOURCE_FILES})
@@ -81,6 +82,7 @@ install(FILES
   ${SRC_UTILS}/fhecompiler_const.hpp
   ${SRC_PASSES}/rotationkeys_select_pass.hpp
   ${SRC_PASSES}/normalize_pass.hpp
+  # ${SRC_PASSES}/additional_passes.hpp
   ${SRC_TRS}/trs.hpp
   ${SRC_TRS}/matching_term.hpp
   ${SRC_TRS}/rewrite_rule.hpp

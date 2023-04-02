@@ -1,3 +1,4 @@
+#include "../utils.hpp"
 #include "fhecompiler/cse_pass.hpp"
 #include "fhecompiler/draw_ir.hpp"
 #include "fhecompiler/fhecompiler.hpp"

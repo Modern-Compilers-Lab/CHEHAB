@@ -7,7 +7,6 @@
 
 namespace ir
 {
-
 using Ptr = std::shared_ptr<Term>;
 
 void DAG::insert_node(Ptr node, bool is_output)
@@ -52,7 +51,7 @@ void DAG::delete_node(const std::string &node_label)
   node_ptr_from_label.erase(it);
 }
 
-void DAG::insert_node_to_outputs(const std::string &key)
+void DAG::set_node_as_output(const std::string &key)
 {
   auto node = find_node(key);
   if (!node)
@@ -61,7 +60,7 @@ void DAG::insert_node_to_outputs(const std::string &key)
   outputs_nodes.insert({key, node});
 }
 
-void DAG::delete_node_from_outputs(const std::string &key)
+void DAG::unset_node_from_output(const std::string &key)
 {
   auto it = this->outputs_nodes.find(key);
   if (it != this->outputs_nodes.end())
@@ -72,21 +71,17 @@ void DAG::delete_node_from_outputs(const std::string &key)
 
 void DAG::apply_topological_sort(bool clear_existing_order)
 {
-
-  if (outputs_nodes_topsorted.size() && clear_existing_order == false)
+  if (sorted_nodes.size() && clear_existing_order == false)
     return;
 
-  outputs_nodes_topsorted.clear();
-
+  sorted_nodes.clear();
   std::stack<std::pair<bool, Ptr>> traversal_stack;
-
-  std::unordered_set<Ptr> visited_labels;
-
+  std::unordered_set<Ptr> visited_nodes;
   for (auto &e : outputs_nodes)
   {
     auto &node_ptr = e.second;
 
-    if (visited_labels.find(node_ptr) == visited_labels.end())
+    if (visited_nodes.find(node_ptr) == visited_nodes.end())
     {
       traversal_stack.push(std::make_pair(false, node_ptr));
     }
@@ -97,22 +92,21 @@ void DAG::apply_topological_sort(bool clear_existing_order)
       traversal_stack.pop();
       if (top_node.first)
       {
-        outputs_nodes_topsorted.push_back(top_node.second);
+        sorted_nodes.push_back(top_node.second);
         continue;
       }
-      if (visited_labels.find(top_node.second) != visited_labels.end())
+      if (visited_nodes.find(top_node.second) != visited_nodes.end())
         continue;
 
-      visited_labels.insert(top_node.second);
+      visited_nodes.insert(top_node.second);
       traversal_stack.push(std::make_pair(true, top_node.second));
       if (top_node.second->is_operation_node())
       {
-        // const std::vector<Ptr> &operands = *(top_node.second)->get_operands();
         auto &operands = top_node.second->get_operands();
 
         for (auto &operand_ptr : operands)
         {
-          if (visited_labels.find(operand_ptr) == visited_labels.end())
+          if (visited_nodes.find(operand_ptr) == visited_nodes.end())
           {
             traversal_stack.push(std::make_pair(false, operand_ptr));
           }
@@ -121,32 +115,7 @@ void DAG::apply_topological_sort(bool clear_existing_order)
     }
   }
   // remove dead parents
-  /*
-  for (auto &node_ptr : outputs_nodes_topsorted)
-  {
-    std::string parent_to_delete_label = "";
-    for (auto &parent_label : node_ptr->get_parents_labels())
-    {
-      auto parent_ptr = find_node(parent_label);
-      if (parent_to_delete_label.length())
-      {
-        node_ptr->delete_parent(parent_to_delete_label);
-        parent_to_delete_label = "";
-      }
-
-      if (parent_ptr == nullptr || visited_labels.find(parent_ptr) == visited_labels.end())
-      {
-        parent_to_delete_label = parent_label;
-      }
-    }
-    if (parent_to_delete_label.length())
-    {
-      node_ptr->delete_parent(parent_to_delete_label);
-      parent_to_delete_label = "";
-    }
-  }
-  */
-  for (auto &node_ptr : outputs_nodes_topsorted)
+  for (auto &node_ptr : sorted_nodes)
   {
     node_ptr->clear_parents();
     if (node_ptr->is_operation_node())
@@ -159,4 +128,22 @@ void DAG::apply_topological_sort(bool clear_existing_order)
   }
 }
 
+bool DAG::update_if_output_entry(const std::string &output_label, const Ptr &node)
+{
+  auto it = outputs_nodes.find(output_label);
+
+  if (it != outputs_nodes.end())
+  {
+    outputs_nodes[output_label] = node;
+    return true;
+  }
+
+  return false;
+}
+
+bool DAG::is_output_node(const std::string &label)
+{
+  auto it = outputs_nodes.find(label);
+  return it != outputs_nodes.end();
+}
 } // namespace ir

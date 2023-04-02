@@ -9,7 +9,6 @@
 
 namespace fheco_trs
 {
-
 class MatchingTerm
 {
 private:
@@ -32,8 +31,10 @@ public:
 
   ~MatchingTerm() {}
 
-  MatchingTerm(int64_t, fheco_trs::TermType = TermType::scalar);
-  MatchingTerm(int, fheco_trs::TermType = TermType::scalar);
+  MatchingTerm(uint64_t);
+  MatchingTerm(int64_t);
+  MatchingTerm(int);
+  MatchingTerm(bool);
   MatchingTerm(fheco_trs::OpCode, const std::vector<MatchingTerm> &, fheco_trs::TermType);
   MatchingTerm(fheco_trs::TermType); // a leaf node
   MatchingTerm(const std::string &, fheco_trs::TermType);
@@ -58,13 +59,19 @@ public:
   FunctionId get_function_id() const { return function_id; }
   void set_function_id(FunctionId func_id) { function_id = func_id; }
   void push_operand(const MatchingTerm &operand);
+  void set_term_type(fheco_trs::TermType _type) { term_type = _type; }
 
-  // utils functions
+  /*
+    utils functions
+  */
 
   static MatchingTerm fold(MatchingTerm m_term);
   static MatchingTerm opcode_of(const MatchingTerm &m_term);
   static MatchingTerm depth_of(const MatchingTerm &m_term);
   static MatchingTerm isconst(const MatchingTerm &m_term);
+  static MatchingTerm iszero(const MatchingTerm &m_term);
+  static MatchingTerm isone(const MatchingTerm &m_term);
+  static MatchingTerm type_of(const MatchingTerm &m_term);
 };
 
 /*
@@ -80,6 +87,7 @@ MatchingTerm exponentiate(const MatchingTerm &lhs, const MatchingTerm &rhs);
 MatchingTerm square(const MatchingTerm &term);
 MatchingTerm relin(const MatchingTerm &term);
 MatchingTerm mod_switch(const MatchingTerm &term);
+MatchingTerm negate(const MatchingTerm &term);
 
 /*
   Operators for rewrite condition

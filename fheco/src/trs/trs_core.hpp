@@ -1,4 +1,5 @@
 #pragma once
+#include "ir_utils.hpp"
 #include "matching_term.hpp"
 #include "program.hpp"
 #include <functional>
@@ -7,10 +8,8 @@
 
 namespace fheco_trs
 {
-
 namespace core
 {
-
   typedef std::unordered_map<size_t, ir::Term::Ptr> MatchingMap;
 
   typedef std::function<MatchingTerm(MatchingTerm, MatchingMap &, ir::Program *)> CallableFunction;
@@ -37,9 +36,15 @@ namespace core
     ~MatchingPair() {}
   };
 
-  std::optional<MatchingMap> match_ir_node(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term);
+  std::optional<MatchingMap> match_ir_node(
+    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, ir::Program *program);
 
-  bool match_term(std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, MatchingMap &matching_map);
+  bool match_term(
+    std::shared_ptr<ir::Term> ir_node, const MatchingTerm &matching_term, MatchingMap &matching_map,
+    ir::Program *program);
+
+  // ir::Number arithmetic_eval(
+  //   const MatchingTerm &term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table);
 
   double arithmetic_eval(
     const MatchingTerm &term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table);
@@ -54,6 +59,9 @@ namespace core
   std::shared_ptr<ir::Term> make_ir_node_from_matching_term(
     const MatchingTerm &matching_term, MatchingMap &matching_map, ir::Program *program, FunctionTable &functions_table);
 
-} // namespace core
+  bool circuit_saving_condition(const ir::Term::Ptr &ir_node);
 
+  bool circuit_saving_condition_rewrite_rule_checker(const MatchingTerm &term, MatchingMap &matching_map);
+
+} // namespace core
 } // namespace fheco_trs

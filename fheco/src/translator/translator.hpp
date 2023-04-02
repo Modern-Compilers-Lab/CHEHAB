@@ -11,10 +11,8 @@
 
 namespace translator
 {
-
 class Translator
 {
-
 private:
   std::shared_ptr<ir::Program> program;
 
@@ -79,6 +77,14 @@ public:
   ir::OpCode deduce_opcode_to_generate(const ir::Term::Ptr &node) const;
 
   void translate_program(std::ostream &os, const std::set<int> &rotations_keys_steps);
-};
 
+  /*
+    every change that needs to be done on IR node before code generation happens in fix_ir_instruction
+  */
+  void fix_ir_instruction(const ir::Term::Ptr &node);
+
+  void fix_ir_instructions_pass();
+
+  // std::string get_output_identifier(const std::string &output_label);
+};
 } // namespace translator

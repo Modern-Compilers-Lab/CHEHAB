@@ -9,16 +9,14 @@
 
 namespace ir
 {
-
 class DAG
 {
-
   using Ptr = std::shared_ptr<Term>;
 
 private:
   std::map<std::string, Ptr> outputs_nodes;
 
-  std::vector<Ptr> outputs_nodes_topsorted; // nodes topologically sorted
+  std::vector<Ptr> sorted_nodes; // nodes topologically sorted
 
   std::unordered_map<std::string, Ptr> node_ptr_from_label;
 
@@ -35,13 +33,16 @@ public:
 
   Ptr find_node(const std::string &node_label) const;
 
-  void insert_node_to_outputs(const std::string &key);
+  void set_node_as_output(const std::string &key);
 
-  void delete_node_from_outputs(const std::string &key);
+  void unset_node_from_output(const std::string &key);
 
   const std::map<std::string, Ptr> &get_outputs_nodes() const { return outputs_nodes; }
 
-  const std::vector<Ptr> &get_outputs_nodes_topsorted() const { return outputs_nodes_topsorted; }
-};
+  bool is_output_node(const std::string &label);
 
+  const std::vector<Ptr> &get_outputs_nodes_topsorted() const { return sorted_nodes; }
+
+  bool update_if_output_entry(const std::string &output_label, const Ptr &node);
+};
 } // namespace ir

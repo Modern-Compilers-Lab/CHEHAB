@@ -4,7 +4,6 @@
 
 namespace ir
 {
-
 std::shared_ptr<ir::Term> fold_raw(
   const std::shared_ptr<ir::Term> &lhs, const std::shared_ptr<ir::Term> &rhs, ir::OpCode opcode)
 {
@@ -454,6 +453,25 @@ ir::TermType deduce_ir_term_type(const ir::Term::Ptr &lhs, const ir::Term::Ptr &
   throw("couldn't deduce ir term type");
 }
 
+ir::TermType deduce_ir_term_type(const std::vector<ir::Term::Ptr> &terms)
+{
+  if (terms.size() == 1)
+    return terms[0]->get_term_type();
+
+  if (terms.size() == 2)
+    return deduce_ir_term_type(terms[0], terms[1]);
+
+  for (size_t i = 0; i < terms.size(); i++)
+  {
+    if (terms[i]->get_term_type() == ir::TermType::ciphertext)
+      return ir::TermType::ciphertext;
+
+    if (terms[i]->get_term_type() == ir::TermType::plaintext)
+      return ir::TermType::plaintext;
+  }
+  return terms[0]->get_term_type();
+}
+
 std::shared_ptr<ir::Term> fold_ir_term(const std::shared_ptr<ir::Term> &term, ir::Program *program)
 {
 
@@ -505,5 +523,4 @@ int32_t compute_depth_of(const std::shared_ptr<ir::Term> &node)
 {
   return 1;
 }
-
 } // namespace ir

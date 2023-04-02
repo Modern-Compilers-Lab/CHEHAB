@@ -17,11 +17,23 @@ inline std::vector<int64_t> make_single_value_vector(size_t size, int64_t value)
   return v;
 }
 
+int32_t l2_distance_clear(const std::vector<int32_t> &p1, const std::vector<int32_t> &p2)
+{
+  int32_t r = 0;
+  if (p1.size() != p2.size())
+    throw("different dimension");
+  for (size_t i = 0; i < p1.size(); i++)
+  {
+    r += ((p1[i] - p2[i]) * (p1[i] - p2[i]));
+  }
+  return r;
+}
+
 int main()
 {
   try
   {
-    fhecompiler::init("linear_regression", 40);
+    fhecompiler::init("l2_distance", 40);
 
     size_t N = 8;
 
@@ -36,7 +48,7 @@ int main()
     fhecompiler::Ciphertext output("output", fhecompiler::VarType::output);
     output = y - (x * m + b);
 
-    fhecompiler::compile("linear_regression.hpp");
+    fhecompiler::compile("l2_distance.hpp");
   }
   catch (const char *message)
   {

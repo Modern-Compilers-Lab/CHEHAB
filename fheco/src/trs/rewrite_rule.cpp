@@ -4,31 +4,56 @@ namespace fheco_trs
 {
 size_t RewriteRule::rule_id = 0;
 
-RewriteRule::RewriteRule(const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory)
-  : lhs(_lhs), rhs_factory(_rhs_factory), id(rule_id++)
+/*
+RewriteRule::RewriteRule(const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, bool _saving_circuit_flag)
+  : lhs(_lhs), rhs_factory(_rhs_factory), id(rule_id++), saving_circuit_flag(_saving_circuit_flag)
+{}
+*/
+
+/*
+RewriteRule::RewriteRule(
+  const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, const MatchingTerm &_condition,
+  bool _saving_circuit_flag)
+  : lhs(_lhs), rhs_factory(_rhs_factory), rewrite_condition(_condition), id(rule_id++),
+    saving_circuit_flag(_saving_circuit_flag)
+{}
+*/
+
+/*
+RewriteRule::RewriteRule(const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, bool _saving_circuit_flag)
+  : lhs(_lhs), rhs_factory(_rhs_factory), id(rule_id++), saving_circuit_flag(_saving_circuit_flag)
+{}
+*/
+
+RewriteRule::RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs, bool _saving_circuit_flag)
+  : lhs(_lhs), static_rhs(_rhs), id(rule_id++), saving_circuit_flag(_saving_circuit_flag)
 {}
 
 RewriteRule::RewriteRule(
-  const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, const MatchingTerm &_condition)
-  : lhs(_lhs), rhs_factory(_rhs_factory), rewrite_condition(_condition), id(rule_id++)
+  const MatchingTerm &_lhs, const MatchingTerm &_rhs, const MatchingTerm &_condition, bool _saving_circuit_flag)
+  : lhs(_lhs), static_rhs(_rhs), rewrite_condition(_condition), id(rule_id++), saving_circuit_flag(_saving_circuit_flag)
 {}
 
-RewriteRule::RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs)
-  : lhs(_lhs), static_rhs(_rhs), id(rule_id++)
+/*
+RewriteRule::RewriteRule(
+  const MatchingTerm &_lhs, const rhs_factory_function &_rhs_factory, const MatchingTerm &_condition,
+  bool _saving_circuit_flag)
+  : lhs(_lhs), rhs_factory(_rhs_factory), rewrite_condition(_condition), id(rule_id++),
+    saving_circuit_flag(_saving_circuit_flag)
 {}
-
-RewriteRule::RewriteRule(const MatchingTerm &_lhs, const MatchingTerm &_rhs, const MatchingTerm &_condition)
-  : lhs(_lhs), static_rhs(_rhs), rewrite_condition(_condition), id(rule_id++)
-{}
+*/
 
 MatchingTerm RewriteRule::get_rhs(const ir::Program *program, const matching_term_ir_node_map &matching_map) const
 {
-  if (static_rhs.has_value())
-    return *static_rhs;
-  return rhs_factory(program, matching_map);
+  if (rhs_factory != std::nullopt)
+  {
+    return (*rhs_factory)(program, matching_map);
+  }
+  else
+    return static_rhs;
 }
 
-void RewriteRule::substitute_in_ir(
+bool RewriteRule::substitute_in_ir(
   std::shared_ptr<ir::Term> ir_node, core::MatchingMap &matching_map, ir::Program *program,
   core::FunctionTable &functions_table) const
 {
@@ -36,28 +61,36 @@ void RewriteRule::substitute_in_ir(
     We call this function after ir_node is matched with lhs of rewrite rule
   */
 
-  core::substitute(ir_node, get_rhs(program, matching_map), matching_map, program, functions_table);
+  // saving_circuit_flag = false; //disable the check
+
+  if (saving_circuit_flag && core::circuit_saving_condition_rewrite_rule_checker(lhs, matching_map) == false)
+    return false;
+
+  core::substitute(ir_node, static_rhs, matching_map, program, functions_table);
+
+  return true;
 }
 
 bool RewriteRule::evaluate_rewrite_condition(
   core::MatchingMap &matching_map, ir::Program *program, core::FunctionTable &functions_table) const
 {
+
   if (rewrite_condition == std::nullopt)
     throw("rewrite condition is not defined");
 
   return core::evaluate_boolean_matching_term(*rewrite_condition, matching_map, program, functions_table);
 }
 
-std::optional<core::MatchingMap> RewriteRule::match_with_ir_node(const ir::Term::Ptr &ir_node) const
+std::optional<core::MatchingMap> RewriteRule::match_with_ir_node(
+  const ir::Term::Ptr &ir_node, ir::Program *program) const
 {
 
   core::MatchingMap matching_map;
-  bool matching_result = core::match_term(ir_node, lhs, matching_map);
+  bool matching_result = core::match_term(ir_node, lhs, matching_map, program);
 
   if (matching_result)
     return matching_map;
 
   return std::nullopt;
 }
-
 } // namespace fheco_trs

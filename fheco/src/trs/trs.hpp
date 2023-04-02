@@ -20,7 +20,7 @@ private:
 public:
   TRS(const std::shared_ptr<ir::Program> &prgm) : program(prgm) {}
 
-  void apply_rewrite_rules_on_program(const std::vector<RewriteRule> &rules);
+  void apply_rewrite_rules_on_program(const std::vector<RewriteRule> &ruleset);
 
   void run();
 };

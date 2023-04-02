@@ -6,7 +6,6 @@
 
 namespace fheco_passes
 {
-
 struct SEid
 {
   ir::Term::Ptr expr_ptr;
@@ -134,5 +133,4 @@ public:
   */
   void apply_cse2(bool allow_assign_insertion = false);
 };
-
 } // namespace fheco_passes

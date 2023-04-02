@@ -19,7 +19,7 @@ int main()
 
   try
   {
-    fhecompiler::init("dot_product", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
+    fhecompiler::init("dot_product", 40);
 
     fhecompiler::Ciphertext A("A", fhecompiler::VarType::input);
     fhecompiler::Ciphertext B("B", fhecompiler::VarType::input);
@@ -31,14 +31,7 @@ int main()
     fhecompiler::Ciphertext C("C", fhecompiler::VarType::output);
     C = sum_all_slots(simd_product, vector_size); // Result of the dot product is stored in the first slot
 
-    size_t polynomial_modulus_degree = 4096;
-    size_t plaintext_modulus = 786433;
-
-    params_selector::EncryptionParameters params;
-    params.set_plaintext_modulus(plaintext_modulus);
-    params.set_polynomial_modulus_degree(polynomial_modulus_degree);
-
-    fhecompiler::compile("dot_product.hpp", &params);
+    fhecompiler::compile("dot_product.hpp");
   }
   catch (const char *message)
   {

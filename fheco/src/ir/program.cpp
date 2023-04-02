@@ -2,7 +2,6 @@
 
 namespace ir
 {
-
 using Ptr = std::shared_ptr<Term>;
 
 Ptr Program::insert_operation_node_in_dataflow(
@@ -53,14 +52,14 @@ void Program::insert_entry_in_constants_table(std::pair<std::string, ConstantTab
   }
 }
 
-void Program::insert_node_to_outputs(const std::string &key)
+void Program::set_node_as_output(const std::string &key)
 {
-  data_flow->insert_node_to_outputs(key);
+  data_flow->set_node_as_output(key);
 }
 
 void Program::delete_node_from_outputs(const std::string &key)
 {
-  this->data_flow->delete_node_from_outputs(key);
+  this->data_flow->unset_node_from_output(key);
 }
 
 bool Program::delete_entry_from_constants_table(std::string entry_key)
@@ -201,7 +200,7 @@ void Program::compact_assignement(const ir::Term::Ptr &node_ptr)
   }
   else
   {
-    node_ptr->replace_with(operand);
+    replace_with(node_ptr, operand);
   }
 }
 
@@ -257,7 +256,7 @@ bool Program::is_tracked_object(const std::string &label)
 
   ir::ConstantTableEntry::EntryValue entry_value = lhs_table_entry_value.get_entry_value();
 
-  return entry_value.get_tag().length() > 0;
+  return entry_value.get_tag().length() > 0 || type_of(label) == ir::ConstantTableEntryType::output;
 }
 
 void Program::insert_created_node_in_dataflow(const Ptr &node)
@@ -265,4 +264,91 @@ void Program::insert_created_node_in_dataflow(const Ptr &node)
   data_flow->insert_node(node);
 }
 
+void Program::insert_or_update_entry_in_constants_table(
+  const std::string &label, const ir::ConstantValue &constant_value, bool is_a_constant)
+{
+
+  auto existing_entry = get_entry_form_constants_table(label);
+
+  if (existing_entry != std::nullopt)
+  {
+    // update
+    set_constant_value_value(label, constant_value);
+  }
+  else
+  {
+    ir::ConstantTableEntryType entry_type =
+      (is_a_constant ? ir::ConstantTableEntryType::constant : ir::ConstantTableEntryType::temp);
+
+    ir::ConstantTableEntry const_entry(entry_type, {constant_value});
+
+    insert_entry_in_constants_table({label, const_entry});
+  }
+}
+
+std::optional<ConstantValue> Program::get_entry_value_value(const std::string &key) const
+{
+  auto table_entry = get_const_entry_form_constants_table(key);
+  if (table_entry == std::nullopt)
+    return std::nullopt;
+  return (*table_entry).get().entry_value.value;
+}
+
+void Program::reset_constant_value_value(const std::string &key)
+{
+  auto table_entry_opt = get_entry_form_constants_table(key);
+  if (table_entry_opt == std::nullopt)
+    return;
+  (*table_entry_opt).get().entry_value.value = std::nullopt;
+}
+
+void Program::set_constant_value_value(const std::string &key, const ir::ConstantValue &value)
+{
+  auto table_entry = get_entry_form_constants_table(key);
+  if (table_entry == std::nullopt)
+    return;
+  (*table_entry).get().entry_value.value = value;
+}
+
+void Program::add_node_to_outputs_nodes(const Ptr &node)
+{
+  data_flow->insert_node(node, true);
+}
+
+void Program::replace_with(const Ptr &lhs, const Ptr &rhs)
+{
+  // usually this function is called
+  TermType lhs_term_type = lhs->get_term_type();
+  TermType rhs_term_type = rhs->get_term_type();
+
+  if (update_if_output_entry(lhs->get_label(), rhs) == false)
+  {
+    lhs->replace_with(rhs);
+  }
+  else
+  {
+    if (lhs_term_type != rhs_term_type)
+    {
+      // insert encode or encrypt
+      if (lhs_term_type == ir::TermType::ciphertext)
+      {
+        auto new_encrypt_node =
+          insert_operation_node_in_dataflow(OpCode::encrypt, std::vector<Ptr>{rhs}, "", ir::TermType::ciphertext);
+
+        update_if_output_entry(lhs->get_label(), new_encrypt_node);
+      }
+    }
+    lhs->replace_with(rhs);
+  }
+}
+
+bool Program::update_if_output_entry(const std::string &output_label, const Ptr &node)
+{
+  return data_flow->update_if_output_entry(output_label, node);
+}
+
+bool Program::is_output_node(const std::string &label)
+{
+  return data_flow->is_output_node(label);
+}
 } // namespace ir

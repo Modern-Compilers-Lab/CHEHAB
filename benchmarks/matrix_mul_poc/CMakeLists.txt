@@ -1,0 +1,5 @@
+add_executable(matrix_mul_poc matrix_mul.cpp)
+add_executable(matrix_mul_poc_log2 matrix_mul_poc_log2.cpp)
+
+target_link_libraries(matrix_mul_poc fhecompiler)
+target_link_libraries(matrix_mul_poc_log2 fhecompiler)

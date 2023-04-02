@@ -1,86 +1,15 @@
 #pragma once
+#include "fhecompiler/params_selector.hpp"
 
-#include <seal/seal.h>
-#include <string>
-#include <unordered_map>
-#include <variant>
-
-class Outputs
+namespace benchmarks_utils
 {
-private:
-  std::unordered_map<std::string, std::variant<seal::Ciphertext, seal::Plaintext>> container;
-
-public:
-  template <typename T>
-  void insert(const std::pair<std::string, T> &entry)
-  {
-    container.insert(entry);
-  }
-  seal::Ciphertext get_ciphertext(const std::string &key)
-  {
-    auto it = container.find(key);
-    if (it == container.end())
-      throw("no input with the given label\n");
-
-    if (auto cipher = std::get_if<seal::Ciphertext>(&(container[key])))
-    {
-      return *cipher;
-    }
-    else
-      throw("no ciphertext with the given label\n");
-  }
-
-  seal::Plaintext get_plaintext(const std::string &key)
-  {
-    auto it = container.find(key);
-    if (it == container.end())
-      throw("no input with the given label\n");
-
-    if (auto plain = std::get_if<seal::Plaintext>(&(container[key])))
-    {
-      return *plain;
-    }
-    else
-      throw("no plaintext with the given label\n");
-  }
-};
-
-class Inputs
+void set_default_parameters(params_selector::EncryptionParameters *params)
 {
-private:
-  std::unordered_map<std::string, std::variant<seal::Ciphertext, seal::Plaintext>> container;
+  size_t polynomial_modulus_degree = 4096;
+  size_t plaintext_modulus = 786433;
 
-public:
-  template <typename T>
-  void insert(const std::pair<std::string, T> &entry)
-  {
-    container.insert(entry);
-  }
-  seal::Ciphertext get_ciphertext(const std::string &key)
-  {
-    auto it = container.find(key);
-    if (it == container.end())
-      throw("no input with the given label\n");
+  params->set_plaintext_modulus(plaintext_modulus);
+  params->set_polynomial_modulus_degree(polynomial_modulus_degree);
+}
 
-    if (auto cipher = std::get_if<seal::Ciphertext>(&(container[key])))
-    {
-      return *cipher;
-    }
-    else
-      throw("no ciphertext with the given label\n");
-  }
-
-  seal::Plaintext get_plaintext(const std::string &key)
-  {
-    auto it = container.find(key);
-    if (it == container.end())
-      throw("no input with the given label\n");
-
-    if (auto plain = std::get_if<seal::Plaintext>(&(container[key])))
-    {
-      return *plain;
-    }
-    else
-      throw("no plaintext with the given label\n");
-  }
-};
+} // namespace benchmarks_utils
