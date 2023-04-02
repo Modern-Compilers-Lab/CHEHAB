@@ -25,23 +25,23 @@ template <typename T1, typename T2> /* T1 nor T2 be a Ciphertext since we don't 
 bool is_compile_time_evaluation_possible(const T1 &lhs, const T2 &rhs)
 {
   /*
-    ir::ConstantTableEntryType lhs_entry_type = program->type_of(lhs.get_label());
+    ir::ConstantTableEntryType lhs_entry_type = Compiler::get_active()->type_of(lhs.get_label());
     return lhs_entry_type == ir::ConstantTableEntryType::constant && lhs_entry_type ==
-    program->type_of(rhs.get_label());
+    Compiler::get_active()->type_of(rhs.get_label());
   */
-  Ptr lhs_node_ptr = program->find_node_in_dataflow(lhs.get_label());
-  Ptr rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
+  ir::Term::Ptr lhs_node_ptr = Compiler::get_active()->find_node_in_dataflow(lhs.get_label());
+  ir::Term::Ptr rhs_node_ptr = Compiler::get_active()->find_node_in_dataflow(rhs.get_label());
 
   if (lhs_node_ptr->is_operation_node() == true)
     return false;
   else if (rhs_node_ptr->is_operation_node() == true)
     return false;
 
-  auto lhs_const_value = program->get_entry_value_value(lhs.get_label());
+  auto lhs_const_value = Compiler::get_active()->get_entry_value_value(lhs.get_label());
   if (lhs_const_value == std::nullopt)
     return false;
 
-  auto rhs_const_value = program->get_entry_value_value(rhs.get_label());
+  auto rhs_const_value = Compiler::get_active()->get_entry_value_value(rhs.get_label());
   if (rhs_const_value == std::nullopt)
     return false;
 
@@ -51,7 +51,6 @@ bool is_compile_time_evaluation_possible(const T1 &lhs, const T2 &rhs)
 template <typename T1, typename T2>
 void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 {
-
   auto lhs_node_ptr = Compiler::get_active()->find_node_in_dataflow(lhs.get_label());
   auto rhs_node_ptr = Compiler::get_active()->find_node_in_dataflow(rhs.get_label());
 
@@ -60,44 +59,42 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
     throw("operand is not defined maybe it was only declared, in operate_move_assignement");
   }
 
-  Ptr new_lhs_node;
+  ir::Term::Ptr new_lhs_node;
   std ::string lhs_old_label = lhs.get_label();
 
   bool is_evaluation_possible = is_compile_time_evaluation_possible<T1, T2>(lhs, rhs);
 
-  if (is_evaluation_possible)
-  {
-    ir::TermType lhs_term_type = lhs_node_ptr->get_term_type();
-    ir::TermType rhs_term_type = rhs_node_ptr->get_term_type();
+  // if (is_evaluation_possible)
+  // {
+  //   ir::TermType lhs_term_type = lhs_node_ptr->get_term_type();
+  //   ir::TermType rhs_term_type = rhs_node_ptr->get_term_type();
 
-    if (lhs_term_type == ir::TermType::ciphertext || rhs_term_type == ir::TermType::ciphertext)
-      throw("unexpected, ciphertexts evaluation is not available at compile time");
+  //   if (lhs_term_type == ir::TermType::ciphertext || rhs_term_type == ir::TermType::ciphertext)
+  //     throw("unexpected, ciphertexts evaluation is not available at compile time");
 
-    if (lhs_term_type == ir::TermType::plaintext && rhs_term_type == ir::TermType::plaintext)
-    {
-      new_lhs_node = ir::fold_const_plain(lhs_node_ptr, rhs_node_ptr, opcode, program);
-      lhs.set_label(new_lhs_node->get_label());
-    }
-    else if (lhs_term_type == ir::TermType::scalar && rhs_term_type == ir::TermType::scalar)
-    {
-      new_lhs_node = ir::fold_scalar(lhs_node_ptr, rhs_node_ptr, opcode, program);
-      lhs.set_label(new_lhs_node->get_label());
-    }
-    else
-    {
-      /* this will be changed */
-      new_lhs_node = ir::fold_plain_scalar(lhs_node_ptr, rhs_node_ptr, opcode, program);
-      lhs.set_label(new_lhs_node->get_label());
-    }
-  }
-  else
-    lhs.set_new_label();
+  //   if (lhs_term_type == ir::TermType::plaintext && rhs_term_type == ir::TermType::plaintext)
+  //   {
+  //     new_lhs_node = ir::fold_const_plain(lhs_node_ptr, rhs_node_ptr, opcode, program);
+  //     lhs.set_label(new_lhs_node->get_label());
+  //   }
+  //   else if (lhs_term_type == ir::TermType::scalar && rhs_term_type == ir::TermType::scalar)
+  //   {
+  //     new_lhs_node = ir::fold_scalar(lhs_node_ptr, rhs_node_ptr, opcode, program);
+  //     lhs.set_label(new_lhs_node->get_label());
+  //   }
+  //   else
+  //   {
+  //     /* this will be changed */
+  //     new_lhs_node = ir::fold_plain_scalar(lhs_node_ptr, rhs_node_ptr, opcode, program);
+  //     lhs.set_label(new_lhs_node->get_label());
+  //   }
+  // }
+  // else
+  lhs.set_new_label();
 
-  auto table_entry_opt = program->get_entry_form_constants_table(lhs_old_label);
+  auto table_entry_opt = Compiler::get_active()->get_entry_form_constants_table(lhs_old_label);
   bool is_output(false), is_input(false);
 
-  bool is_output = false;
-  auto table_entry_opt = Compiler::get_active()->get_entry_form_constants_table(old_label);
   if (table_entry_opt != std::nullopt)
   {
 
@@ -105,7 +102,7 @@ void compound_operate(T1 &lhs, const T2 &rhs, ir::OpCode opcode, ir::TermType te
     is_output = table_entry.get_entry_type() == ir::ConstantTableEntryType::output;
     bool is_input = table_entry.get_entry_type() == ir::ConstantTableEntryType::input;
 
-    if (is_output || Compiler::get_active()->is_tracked_object(old_label))
+    if (is_output || Compiler::get_active()->is_tracked_object(lhs_old_label))
     {
       // Compiler::get_active()->delete_node_from_dataflow(old_label);
       if (!is_input)
@@ -249,30 +246,31 @@ void compound_operate_unary(T2 &rhs, ir::OpCode opcode, ir::TermType term_type)
 template <typename T>
 void operate_copy(const T &lhs, const T &t_copy, ir::TermType term_type)
 {
-  auto copy_node_ptr = program->insert_node_in_dataflow<T>(t_copy);
+  auto copy_node_ptr = Compiler::get_active()->insert_node_in_dataflow<T>(t_copy);
 
-  // auto copy_node_ptr = program->find_node_in_dataflow(t_copy.get_label());
+  // auto copy_node_ptr = Compiler::get_active()->find_node_in_dataflow(t_copy.get_label());
 
   // node
   if (copy_node_ptr->is_operation_node() == false)
   {
     /* we care about const_value because it is the only thing that's important, all other information in constant table
      are related to the term itself, including type, label, tag ... */
-    auto const_value = program->get_entry_value_value(t_copy.get_label());
+    auto const_value = Compiler::get_active()->get_entry_value_value(t_copy.get_label());
     if (const_value != std::nullopt)
     {
-      program->insert_or_update_entry_in_constants_table(lhs.get_label(), *const_value, false);
-      program->insert_node_in_dataflow<T>(lhs);
+      Compiler::get_active()->insert_or_update_entry_in_constants_table(lhs.get_label(), *const_value, false);
+      Compiler::get_active()->insert_node_in_dataflow<T>(lhs);
     }
     else
     {
       // you have no information about t_copy, for example in case it is an input ciphertext
-      program->insert_operation_node_in_dataflow(ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
+      Compiler::get_active()->insert_operation_node_in_dataflow(
+        ir::OpCode::assign, {copy_node_ptr}, lhs.get_label(), term_type);
     }
   }
   else
   {
-    program->insert_operation_node_in_dataflow(
+    Compiler::get_active()->insert_operation_node_in_dataflow(
       copy_node_ptr->get_opcode(), copy_node_ptr->get_operands(), lhs.get_label(), term_type);
   }
   // constants table entry
@@ -281,34 +279,31 @@ void operate_copy(const T &lhs, const T &t_copy, ir::TermType term_type)
 template <typename T>
 void operate_move(T &lhs, T &&t_move, ir::TermType term_type)
 {
-
-  if (program == nullptr)
-    throw(program_not_init_msg);
-
   // if (is_tracked_object(lhs.get_label()))
   //{
-  Ptr move_node_ptr = program->insert_node_in_dataflow<T>(t_move);
+  ir::Term::Ptr move_node_ptr = Compiler::get_active()->insert_node_in_dataflow<T>(t_move);
 
   if (move_node_ptr->is_operation_node() == false)
   {
-    auto const_value = program->get_entry_value_value(move_node_ptr->get_label());
+    auto const_value = Compiler::get_active()->get_entry_value_value(move_node_ptr->get_label());
     if (const_value != std::nullopt)
     {
-      program->insert_or_update_entry_in_constants_table(lhs.get_label(), *const_value, false);
-      program->insert_node_in_dataflow<T>(lhs);
-      program->reset_constant_value_value(move_node_ptr->get_label());
+      Compiler::get_active()->insert_or_update_entry_in_constants_table(lhs.get_label(), *const_value, false);
+      Compiler::get_active()->insert_node_in_dataflow<T>(lhs);
+      Compiler::get_active()->reset_constant_value_value(move_node_ptr->get_label());
     }
     else
     {
       /* in that case the user means that he wants to perform a move that needs to be performed by the backend later;
       and we don't handle that for the moment, so basically we just generate a copy since it is more generic */
-      program->insert_operation_node_in_dataflow(ir::OpCode::assign, {move_node_ptr}, lhs.get_label(), term_type);
+      Compiler::get_active()->insert_operation_node_in_dataflow(
+        ir::OpCode::assign, {move_node_ptr}, lhs.get_label(), term_type);
       // throw("move semantics are not defined for inputs ciphertexts");
     }
   }
   else
   {
-    program->insert_operation_node_in_dataflow(
+    Compiler::get_active()->insert_operation_node_in_dataflow(
       move_node_ptr->get_opcode(), move_node_ptr->get_operands(), lhs.get_label(), term_type);
     move_node_ptr.reset();
   }
@@ -323,14 +318,10 @@ void operate_move(T &lhs, T &&t_move, ir::TermType term_type)
 template <typename T>
 T &operate_copy_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 {
-
-  if (program == nullptr)
-    throw(program_not_init_msg);
-
   if (lhs.get_label() == rhs.get_label())
     return lhs;
 
-  auto rhs_node_ptr = program->find_node_in_dataflow(rhs.get_label());
+  auto rhs_node_ptr = Compiler::get_active()->find_node_in_dataflow(rhs.get_label());
 
   if (rhs_node_ptr == nullptr)
   {
@@ -339,24 +330,24 @@ T &operate_copy_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 
   std::string lhs_old_label = lhs.get_label(); // this will be used to keep track of tag
   lhs.set_new_label();
-  Ptr new_lhs_node;
+  ir::Term::Ptr new_lhs_node;
 
-  bool is_lhs_output = program->type_of(lhs_old_label) == ir::ConstantTableEntryType::output;
+  bool is_lhs_output = Compiler::get_active()->type_of(lhs_old_label) == ir::ConstantTableEntryType::output;
 
-  bool is_lhs_input = program->type_of(lhs_old_label) == ir::ConstantTableEntryType::input;
+  bool is_lhs_input = Compiler::get_active()->type_of(lhs_old_label) == ir::ConstantTableEntryType::input;
 
-  if (program->is_tracked_object(lhs_old_label))
+  if (Compiler::get_active()->is_tracked_object(lhs_old_label))
   {
     if (!is_lhs_input)
     {
-      program->insert_new_entry_from_existing_with_delete(lhs.get_label(), lhs_old_label);
+      Compiler::get_active()->insert_new_entry_from_existing_with_delete(lhs.get_label(), lhs_old_label);
     }
 
     if (is_lhs_output)
     {
-      program->delete_node_from_outputs(lhs_old_label);
+      Compiler::get_active()->delete_node_from_outputs(lhs_old_label);
     }
-    // program->delete_node_from_dataflow(old_label);
+    // Compiler::get_active()->delete_node_from_dataflow(old_label);
   }
 
   operate_copy(lhs, rhs, term_type);
@@ -364,22 +355,23 @@ T &operate_copy_assignement(T &lhs, const T &rhs, ir::TermType term_type)
   /*
   if (rhs_node_ptr->is_operation_node() == false)
   {
-    auto const_value = program->get_entry_value_value(rhs.get_label());
+    auto const_value = Compiler::get_active()->get_entry_value_value(rhs.get_label());
     if (const_value != std::nullopt)
     {
-      program->set_constant_value_value(lhs_old_label, *const_value);
-      new_lhs_node = program->insert_node_in_dataflow<T>(lhs);
+      Compiler::get_active()->set_constant_value_value(lhs_old_label, *const_value);
+      new_lhs_node = Compiler::get_active()->insert_node_in_dataflow<T>(lhs);
     }
     else
     {
       // you have no information about t_copy, for example in case it is an input ciphertext
       new_lhs_node =
-        program->insert_operation_node_in_dataflow(ir::OpCode::assign, {rhs_node_ptr}, lhs.get_label(), term_type);
+        Compiler::get_active()->insert_operation_node_in_dataflow(ir::OpCode::assign, {rhs_node_ptr}, lhs.get_label(),
+  term_type);
     }
   }
   else
   {
-    new_lhs_node = program->insert_operation_node_in_dataflow(
+    new_lhs_node = Compiler::get_active()->insert_operation_node_in_dataflow(
       rhs_node_ptr->get_opcode(), rhs_node_ptr->get_operands(), lhs.get_label(), term_type);
   }
   */
@@ -402,10 +394,6 @@ T &operate_copy_assignement(T &lhs, const T &rhs, ir::TermType term_type)
 template <typename T>
 T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
 {
-
-  if (program == nullptr)
-    throw(program_not_init_msg);
-
   if (lhs.get_label() == rhs.get_label())
     return lhs;
 
@@ -420,7 +408,7 @@ T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
 
   std::string lhs_old_label = lhs.get_label(); // this will be used to keep track of tag
   lhs.set_new_label();
-  Ptr new_lhs_node;
+  ir::Term::Ptr new_lhs_node;
 
   bool is_lhs_output = Compiler::get_active()->type_of(lhs_old_label) == ir::ConstantTableEntryType::output;
 
@@ -436,7 +424,7 @@ T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
 
     if (is_lhs_output)
       Compiler::get_active()->delete_node_from_outputs(lhs_old_label);
-    // program->delete_node_from_dataflow(old_label);
+    // Compiler::get_active()->delete_node_from_dataflow(old_label);
   }
 
   operate_move<T>(lhs, std::move(rhs), term_type);
@@ -444,24 +432,26 @@ T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
   /*
   if (rhs_node_ptr->is_operation_node() == false)
   {
-    auto const_value = program->get_entry_value_value(rhs.get_label());
+    auto const_value = Compiler::get_active()->get_entry_value_value(rhs.get_label());
     if (const_value != std::nullopt)
     {
-      program->set_constant_value_value(lhs.get_label(), *const_value);
-      new_lhs_node = program->insert_node_in_dataflow<T>(lhs);
+      Compiler::get_active()->set_constant_value_value(lhs.get_label(), *const_value);
+      new_lhs_node = Compiler::get_active()->insert_node_in_dataflow<T>(lhs);
     }
     else
     {
       // you have no information about t_copy, for example in case it is an input ciphertext
       new_lhs_node =
-        program->insert_operation_node_in_dataflow(ir::OpCode::assign, {rhs_node_ptr}, lhs.get_label(), term_type);
+        Compiler::get_active()->insert_operation_node_in_dataflow(ir::OpCode::assign, {rhs_node_ptr}, lhs.get_label(),
+  term_type);
     }
   }
   else
   {
     std::vector<ir::Program::Ptr> operands = rhs_node_ptr->get_operands();
     new_lhs_node =
-      program->insert_operation_node_in_dataflow(rhs_node_ptr->get_opcode(), operands, lhs.get_label(), term_type);
+      Compiler::get_active()->insert_operation_node_in_dataflow(rhs_node_ptr->get_opcode(), operands, lhs.get_label(),
+  term_type);
   }
   */
 
@@ -496,7 +486,7 @@ inline void operate_in_constants_table(const std::string &label, const std::stri
     ir::ConstantTableEntry::EntryValue entry_value = tag_to_insert;
     Compiler::get_active()->insert_entry_in_constants_table({label, {entry_type, entry_value}});
     if (entry_type == ir::ConstantTableEntryType::output)
-      Compiler::get_active()->insert_node_to_outputs(label);
+      Compiler::get_active()->set_node_as_output(label);
   }
 }
 
@@ -538,9 +528,6 @@ void compound_operate_with_raw(T &lhs, datatype::rawData raw_data, ir::OpCode op
 template <typename T>
 T operate_with_raw(const T &lhs, datatype::rawData raw_data, ir::OpCode opcode, ir::TermType term_type)
 {
-  if (program == nullptr)
-    throw(program_not_init_msg);
-
   T new_T;
   new_T.set_new_label();
 

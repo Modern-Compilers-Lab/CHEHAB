@@ -214,37 +214,38 @@ void Translator::translate_constant_table_entry(
   ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
   ir::ConstantTableEntryType entry_type = table_entry.get_entry_type();
   std::string tag = entry_value.get_tag();
-  // getting type
-  std::string type_str;
+  // // getting type
+  // std::string type_str;
 
-  if (term_type == ir::TermType::scalar)
-  {
-    fhecompiler::Scheme scheme = program->get_encryption_scheme();
-    if (scheme == fhecompiler::bfv || scheme == fhecompiler::bgv)
-      type_str = scalar_int;
-    else if (scheme == fhecompiler::ckks)
-    {
-      /*
-      using ScalarValue = ir::ConstantTableEntry::ScalarValue;
-      ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
-      if (auto scalar_constant = std::get_if<int64_t>(&scalar_value))
-      {
-        type_str = scalar_int;
-      }
-      */
-      type_str = scalar_float;
-    }
-    else
-      throw("scheme not supported\n");
-  }
-  else
-    type_str = types_map[term_type];
+  // if (term_type == ir::TermType::scalar)
+  // {
+  //   fhecompiler::Scheme scheme = program->get_encryption_scheme();
+  //   if (scheme == fhecompiler::bfv || scheme == fhecompiler::bgv)
+  //     type_str = scalar_int;
+  //   else if (scheme == fhecompiler::ckks)
+  //   {
+  //     /*
+  //     using ScalarValue = ir::ConstantTableEntry::ScalarValue;
+  //     ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
+  //     if (auto scalar_constant = std::get_if<int64_t>(&scalar_value))
+  //     {
+  //       type_str = scalar_int;
+  //     }
+  //     */
+  //     type_str = scalar_float;
+  //   }
+  //   else
+  //     throw("scheme not supported\n");
+  // }
+  // else
+  //   type_str = types_map[term_type];
 
   if (entry_type == ir::ConstantTableEntryType::input)
   {
     write_input(identifier, tag, term_type, os);
   }
-  else if (entry_type == ir::ConstantTableEntryType::constant || entry_value.value != std::nullopt)
+  // else if (entry_type == ir::ConstantTableEntryType::constant || entry_value.value != std::nullopt)
+  else if (entry_type == ir::ConstantTableEntryType::constant)
   {
     if (term_type == ir::TermType::plaintext)
     {
@@ -254,7 +255,7 @@ void Translator::translate_constant_table_entry(
       using VectorInt = std::vector<std::int64_t>;
       using VectorUInt = std::vector<std::uint64_t>;
 
-      type_str = (program->get_encryption_scheme() == fhecompiler::ckks ? scalar_float : scalar_int);
+      // type_str = (program->get_encryption_scheme() == fhecompiler::ckks ? scalar_float : scalar_int);
 
       if (auto _vector_value = std::get_if<VectorInt>(&vector_value))
         encoding_writer.write_vector_encoding(
@@ -274,7 +275,7 @@ void Translator::translate_constant_table_entry(
       using ScalarValue = ir::ScalarValue;
       ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
 
-      if (auto value = std::get_if<int64_t>(&scalar_value))
+      if (auto value = std::get_if<std::int64_t>(&scalar_value))
         encoding_writer.write_scalar_encoding(
           os, identifier, std::to_string(*value), scalar_int,
           program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
@@ -329,7 +330,7 @@ void Translator::translate_binary_operation(const ir::Term::Ptr &term_ptr, std::
   }
 
   if (lhs_identifier.empty() || rhs_identifier.empty())
-    throw("empty label operand");
+    std::cout << "empty lable operand\n";
 
   evaluation_writer.write_binary_operation(
     os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
@@ -385,9 +386,7 @@ void Translator::translate_term(const ir::Term::Ptr &term, std::ostream &os)
         encryption_writer.write_encryption(os, plaintext_id, destination_cipher);
       }
       else
-      {
         translate_unary_operation(term, os);
-      }
     }
     else if (operands.size() == 2)
     {
@@ -425,11 +424,10 @@ void Translator::translate_program(std::ostream &os, const std::set<int> &rotati
   generate_function_signature(os);
   os << "{" << '\n';
 
-  fix_ir_instructions_pass();
-  convert_to_inplace_pass();
+  // convert_to_inplace_pass();
 
   {
-    auto &nodes_ptr = program->get_dataflow_sorted_nodes(false);
+    const std::vector<ir::Term::Ptr> &nodes_ptr = program->get_dataflow_sorted_nodes(true);
 
     // after doing all passes, now we do the last pass to translate and generate the code
     for (auto &node_ptr : nodes_ptr)
@@ -551,87 +549,20 @@ ir::OpCode Translator::deduce_opcode_to_generate(const ir::Term::Ptr &node) cons
     throw("node with more than 2 operands in deduce_opcode_to_generate");
 }
 
-void Translator::write_rotations_steps_getter(const std::set<int32_t> &steps, std::ostream &os)
+void Translator::write_rotations_steps_getter(const std::set<int> &steps, std::ostream &os)
 {
   os << gen_steps_function_signature << "{\n";
   os << "std::vector<" << rotation_step_type_literal << ">"
      << " steps = {";
-  size_t i = 0;
-  for (auto &step : steps)
+  std::vector<int> steps_vector(steps.begin(), steps.end());
+  for (size_t i = 0; i < steps_vector.size(); ++i)
   {
-    os << step;
-    if (i < steps.size() - 1)
+    os << steps_vector[i];
+    if (i < steps_vector.size() - 1)
       os << ",";
     else
       os << "};";
-    i++;
   }
   os << "\nreturn steps; \n}\n";
-}
-
-void Translator::fix_ir_instruction(const ir::Term::Ptr &node)
-{
-  if (node->is_operation_node() == false)
-    return;
-
-  if (node->get_operands().size() != 2)
-    return;
-
-  ir::OpCode opcode = node->get_opcode();
-
-  if (node->get_term_type() == ir::TermType::ciphertext)
-  {
-
-    if (
-      node->get_operands()[0]->get_term_type() != ir::TermType::ciphertext &&
-      node->get_operands()[1]->get_term_type() != ir::TermType::ciphertext)
-    {
-      throw("ciphertext node with non ciphertext operands");
-    }
-
-    if (opcode == ir::OpCode::add || opcode == ir::OpCode::mul)
-    {
-      if (node->get_operands()[0]->get_term_type() != ir::TermType::ciphertext)
-        node->reverse_operands();
-    }
-    else if (opcode == ir::OpCode::sub)
-    {
-      ir::Term::Ptr lhs = node->get_operands()[0];
-      ir::Term::Ptr rhs = node->get_operands()[1];
-      ir::Term::Ptr node_copy = std::make_shared<ir::Term>(*node.get());
-
-      if (lhs->get_term_type() != ir::TermType::ciphertext)
-      {
-        ir::Term::Ptr negate_node = program->insert_operation_node_in_dataflow(
-          ir::OpCode::negate, std::vector<ir::Term::Ptr>({rhs}), "", ir::TermType::ciphertext);
-        node->set_opcode(ir::OpCode::add);
-        node->clear_operands();
-        node->set_operands(std::vector<ir::Term::Ptr>({negate_node, lhs}));
-      }
-    }
-    else if (node->get_opcode() == ir::OpCode::rotate)
-    {
-      // if (
-      //   program->get_targeted_backend() == fhecompiler::Backend::SEAL &&
-      //   program->get_encryption_scheme() != fhecompiler::Scheme::ckks)
-      // {
-      node->set_opcode(ir::OpCode::rotate_rows);
-      // }
-    }
-  }
-  else if (node->get_term_type() == ir::TermType::scalar)
-    throw("only plaintext and ciphertext operation terms are expected");
-}
-
-void Translator::fix_ir_instructions_pass()
-{
-  auto nodes = program->get_dataflow_sorted_nodes(true);
-  for (auto &node : nodes)
-  {
-    /*
-      Order of calling the two functions is important
-    */
-    fix_ir_instruction(node);
-  }
 }
 } // namespace translator

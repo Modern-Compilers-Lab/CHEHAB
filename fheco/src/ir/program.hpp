@@ -34,7 +34,7 @@ struct ConstantTableEntry
 
     EntryValue(std::optional<ConstantValue> _value) : value(_value), tag("") {}
 
-    std::string get_tag() { return this->tag; }
+    std::string get_tag() { return tag; }
 
     ~EntryValue() {}
   };
@@ -71,7 +71,7 @@ public:
 
   const EntryValue &get_const_entry_value() const { return entry_value; }
 
-  ConstantTableEntryType get_entry_type() const { return this->entry_type; }
+  ConstantTableEntryType get_entry_type() const { return entry_type; }
 };
 
 class Program
@@ -118,23 +118,23 @@ public:
     clear_data_evaluator = utils::ClearDataEvaluator(vector_size, bit_width);
   }
 
-  ir::Term::Ptr insert_operation_node_in_dataflow(
-    OpCode _opcode, const std::vector<ir::Term::Ptr> &_operands, std::string label, TermType term_type);
+  Term::Ptr insert_operation_node_in_dataflow(
+    OpCode _opcode, const std::vector<Term::Ptr> &_operands, std::string label, TermType term_type);
 
-  ir::Term::Ptr find_node_in_dataflow(const std::string &label) const;
+  Term::Ptr find_node_in_dataflow(const std::string &label) const;
 
   void delete_node_from_dataflow(const std::string &node_label);
 
   template <typename T>
-  ir::Term::Ptr insert_node_in_dataflow(const T &operand)
+  Term::Ptr insert_node_in_dataflow(const T &operand)
   {
     auto node_ptr_in_program = find_node_in_dataflow(operand.get_label());
     if (node_ptr_in_program)
     {
       return node_ptr_in_program;
     }
-    ir::Term::Ptr new_term = std::make_shared<Term>(operand);
-    this->data_flow->insert_node(new_term, this->type_of(new_term->get_label()) == ConstantTableEntryType::output);
+    Term::Ptr new_term = std::make_shared<Term>(operand);
+    data_flow->insert_node(new_term, type_of(new_term->get_label()) == ConstantTableEntryType::output);
     return new_term;
   }
 
@@ -144,7 +144,7 @@ public:
 
   std::optional<std::string> get_tag_value_in_constants_table_entry_if_exists(const std::string &entry_key);
 
-  void set_node_operands(const std::string &node_label, const std::vector<ir::Term::Ptr> &new_opreands);
+  void set_node_operands(const std::string &node_label, const std::vector<Term::Ptr> &new_opreands);
 
   void insert_entry_in_constants_table(std::pair<std::string, ConstantTableEntry> table_entry);
 
@@ -152,11 +152,11 @@ public:
     if is_a_constant is false, then the entry is for a temporary term
   */
   void insert_or_update_entry_in_constants_table(
-    const std::string &label, const ir::ConstantValue &constant_value, bool is_a_constant = false);
+    const std::string &label, const ConstantValue &constant_value, bool is_a_constant = false);
 
   void reset_constant_value_value(const std::string &key);
 
-  void set_constant_value_value(const std::string &key, const ir::ConstantValue &value);
+  void set_constant_value_value(const std::string &key, const ConstantValue &value);
 
   bool delete_entry_from_constants_table(std::string entry_key);
 
@@ -170,13 +170,13 @@ public:
 
   ConstantTableEntryType type_of(const std::string &label);
 
-  void compact_assignement(const ir::Term::Ptr &node_ptr);
+  void compact_assignement(const Term::Ptr &node_ptr);
 
-  void flatten_term_operand_by_one_level_at_index(const ir::Term::Ptr &term, std::size_t index);
+  void flatten_term_operand_by_one_level_at_index(const Term::Ptr &term, std::size_t index);
 
-  const std::vector<ir::Term::Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
+  const std::vector<Term::Ptr> &get_dataflow_sorted_nodes(bool clear_existing_order = false) const;
 
-  const std::map<std::string, ir::Term::Ptr> &get_outputs_nodes() const;
+  const std::map<std::string, Term::Ptr> &get_outputs_nodes() const;
   /*
     Search key here is node label. In order to use just call get_label() method of the object you are manipulating
   */
@@ -186,11 +186,11 @@ public:
   std::optional<std::reference_wrapper<const ConstantTableEntry>> get_const_entry_form_constants_table(
     const std::string &) const;
 
-  const std::string &get_program_tag() const { return this->program_tag; }
+  const std::string &get_program_tag() const { return program_tag; }
 
-  int get_bit_width() const { return this->bit_width; }
+  int get_bit_width() const { return bit_width; }
 
-  bool get_signedness() const { return this->signedness; }
+  bool get_signedness() const { return signedness; }
 
   std::size_t get_vector_size() const { return vector_size; }
 
@@ -204,9 +204,9 @@ public:
 
   bool is_tracked_object(const std::string &label);
 
-  void insert_created_node_in_dataflow(const ir::Term::Ptr &node);
+  void insert_created_node_in_dataflow(const Term::Ptr &node);
 
-  void add_node_to_outputs_nodes(const Ptr &node);
+  void add_node_to_outputs_nodes(const Term::Ptr &node);
 
   // void set_rotations_steps(std::vector<int32_t> &steps) { rotations_steps = steps; }
   /*
@@ -220,9 +220,9 @@ public:
     This method updates the entry in outputs_nodes map in data_flow, the reason is to keep the same identifier
     introduced by the user but change the node associated to this identifier
   */
-  bool update_if_output_entry(const std::string &output_label, const Ptr &node);
+  bool update_if_output_entry(const std::string &output_label, const Term::Ptr &node);
 
-  void replace_with(const Ptr &lhs, const Ptr &rhs);
+  void replace_with(const Term::Ptr &lhs, const Term::Ptr &rhs);
 
   bool is_output_node(const std::string &label);
 };

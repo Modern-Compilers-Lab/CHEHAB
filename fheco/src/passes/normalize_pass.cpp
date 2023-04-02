@@ -134,7 +134,8 @@ ir::Term::Ptr Normalizer::recover_binary_form_helper(
   ir::Term::Ptr rhs = recover_binary_form_helper(origin_node, operands, mid + 1, end_index);
 
   ir::Term::Ptr new_op_node = program->insert_operation_node_in_dataflow(
-    origin_node->get_opcode(), std::vector<ir::Term::Ptr>({lhs, rhs}), "", ir::deduce_ir_term_type(lhs, rhs));
+    origin_node->get_opcode(), std::vector<ir::Term::Ptr>{lhs, rhs}, "",
+    ir::deduce_ir_term_type(std::vector<ir::Term::Ptr>{lhs, rhs}));
 
   return new_op_node;
 }
