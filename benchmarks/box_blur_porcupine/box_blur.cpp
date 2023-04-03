@@ -12,7 +12,7 @@ using namespace fhecompiler;
 
 void box_blur()
 {
-  Ciphertext c0("c0");
+  Ciphertext c0("c0", 0, 255);
   Ciphertext c1 = c0 << 1;
   Ciphertext c2 = c0 << 5;
   Ciphertext c3 = c0 << 6;

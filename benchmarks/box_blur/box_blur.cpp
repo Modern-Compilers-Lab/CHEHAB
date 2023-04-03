@@ -11,7 +11,7 @@ using namespace fhecompiler;
 
 void box_blur(int width, int height)
 {
-  Ciphertext img("img");
+  Ciphertext img("img", 0, 255);
   Ciphertext top_row = img >> width;
   Ciphertext bottom_row = img << width;
   Ciphertext top_sum = top_row + (top_row >> 1) + (top_row << 1);
