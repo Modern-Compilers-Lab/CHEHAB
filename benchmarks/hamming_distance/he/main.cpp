@@ -59,9 +59,6 @@ int main(int argc, char **argv)
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
-  cout << "obtained clear outputs\n";
-  print_variables_values(obtained_clear_outputs, 8);
-
   // get peak memory from /proc
   getchar();
 
