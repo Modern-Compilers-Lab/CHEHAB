@@ -42,7 +42,6 @@ int main()
 
     fhecompiler::Plaintext pt_taged_tmp("pt_const", fhecompiler::VarType::temp);
 
-    /*
     fhecompiler::Scalar n = 3;
 
     fhecompiler::Scalar s(12);
@@ -68,7 +67,7 @@ int main()
 
     output1 = (A + (5 - B)) + pt_output + pt_input1 + D + C + 1337; // * pt2 + (pt1 + pt2));
 
-    // output2 = (((A + pt_output) + pt_output) * pt_output) * (pt_output * 23);
+    output2 = (((A + pt_output) + pt_output) * pt_output) * (pt_output * 23);
 
     std::vector<int64_t> zero_vector;
     for (size_t i = 0; i < 124; i++)
@@ -89,7 +88,6 @@ int main()
     output4 = C + B + exponentiate(D, 5) + (A << 5);
 
     output5 = (E * (B * (C * D)));
-    */
 
     std::vector<fhecompiler::Ciphertext> vec_test;
 

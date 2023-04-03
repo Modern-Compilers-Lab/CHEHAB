@@ -343,6 +343,7 @@ T &operate_copy_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     throw("operand is not defined, maybe it was only declared in operate_copy_assignement");
   }
 
+  /*
   std::string lhs_old_label = lhs.get_label(); // this will be used to keep track of tag
   lhs.set_new_label();
   Ptr new_lhs_node;
@@ -364,6 +365,7 @@ T &operate_copy_assignement(T &lhs, const T &rhs, ir::TermType term_type)
     }
     // program->delete_node_from_dataflow(old_label);
   }
+  */
 
   operate_copy(lhs, rhs, term_type);
 
@@ -424,6 +426,7 @@ T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
     throw("operand is not defined, maybe it was only declared in operate_move_assignement");
   }
 
+  /*
   std::string lhs_old_label = lhs.get_label(); // this will be used to keep track of tag
   lhs.set_new_label();
   Ptr new_lhs_node;
@@ -444,7 +447,7 @@ T &operate_move_assignement(T &lhs, T &&rhs, ir::TermType term_type)
       program->delete_node_from_outputs(lhs_old_label);
     // program->delete_node_from_dataflow(old_label);
   }
-
+  */
   operate_move<T>(lhs, std::move(rhs), term_type);
 
   /*
