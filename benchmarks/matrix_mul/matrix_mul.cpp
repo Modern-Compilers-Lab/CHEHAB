@@ -10,7 +10,7 @@
 using namespace std;
 using namespace fhecompiler;
 
-Ciphertext sum_slots_lin(const Ciphertext &x, int vector_size)
+Ciphertext reduce_add_lin(const Ciphertext &x, int vector_size)
 {
   Ciphertext result = x;
   Ciphertext rotated_cipher = x;
@@ -53,7 +53,7 @@ void matrix_mul(int m_a, int n_b, int n_a_m_b, bool use_log_reduction)
       if (use_log_reduction)
         slot = reduce_add(A_row_encrypted[i] * B_column_encrypted[j]);
       else
-        slot = sum_slots_lin(A_row_encrypted[i] * B_column_encrypted[j], n_a_m_b);
+        slot = reduce_add_lin(A_row_encrypted[i] * B_column_encrypted[j], n_a_m_b);
       if (j == 0)
         cline = slot * mask;
       else
