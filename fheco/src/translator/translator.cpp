@@ -21,6 +21,18 @@ std::string Translator::get_identifier(const Ptr &term_ptr) const
     return term_ptr->get_label();
 }
 
+std::string Translator::get_identifier(const std::string &label) const
+{
+  if (program->get_entry_form_constants_table(label) != std::nullopt)
+  {
+    ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(label));
+    ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
+    return entry_value.get_tag();
+  }
+  else
+    return label;
+}
+
 std::string Translator::get_output_identifier(const std::string &output_label)
 {
   if (program->get_entry_form_constants_table(output_label) != std::nullopt)
@@ -315,10 +327,10 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
   if (it != get_other_args_by_opcode.end())
     other_args = it->second;
 
-  std::string op_identifier = get_identifier(term_ptr);
+  std::string op_identifier = get_identifier(label_in_destination_code[term_ptr->get_label()]);
   auto &operands = term_ptr->get_operands();
-  std::string lhs_identifier = get_identifier(operands[0]);
-  std::string rhs_identifier = get_identifier(operands[1]);
+  std::string lhs_identifier = get_identifier(label_in_destination_code[operands[0]->get_label()]);
+  std::string rhs_identifier = get_identifier(label_in_destination_code[operands[1]->get_label()]);
 
   if (lhs_identifier.empty() || rhs_identifier.empty())
     throw("empty label operand");
@@ -334,8 +346,8 @@ void Translator::translate_nary_operation(const Ptr &term_ptr, std::ofstream &os
 
 void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &os)
 {
-  std::string op_identifier = get_identifier(term_ptr);
-  std::string rhs_identifier = get_identifier(term_ptr->get_operands()[0]);
+  std::string op_identifier = get_identifier(label_in_destination_code[term_ptr->get_label()]);
+  std::string rhs_identifier = get_identifier(label_in_destination_code[term_ptr->get_operands()[0]->get_label()]);
   // os << op_type << " " << op_identifier << ops_map[term_ptr->get_opcode()] << rhs_identifier << end_of_command <<
   // '\n';
   if (term_ptr->get_opcode() == ir::OpCode::assign)
@@ -413,7 +425,7 @@ void Translator::translate_program(std::ofstream &os)
   os << "{" << '\n';
 
   fix_ir_instructions_pass();
-  convert_to_inplace_pass();
+  // convert_to_inplace_pass();
 
   {
     auto &nodes_ptr = program->get_dataflow_sorted_nodes(false);
@@ -421,6 +433,13 @@ void Translator::translate_program(std::ofstream &os)
     // after doing all passes, now we do the last pass to translate and generate the code
     for (auto &node_ptr : nodes_ptr)
     {
+
+      if (is_convertable_to_inplace(node_ptr))
+      {
+        label_in_destination_code[node_ptr->get_operands()[0]->get_label()] = node_ptr->get_label();
+      }
+      label_in_destination_code[node_ptr->get_label()] = node_ptr->get_label();
+
       translate_term(node_ptr, os);
     }
   }
@@ -612,11 +631,106 @@ void Translator::fix_ir_instructions_pass()
   auto nodes = program->get_dataflow_sorted_nodes(true);
   for (auto &node : nodes)
   {
-    /*
-      Order of calling the two functions is important
-    */
     fix_ir_instruction(node);
   }
+}
+
+bool Translator::is_convertable_to_inplace(const ir::Program::Ptr &node_ptr)
+{
+  if (!node_ptr->is_operation_node())
+    return false;
+
+  auto &operands = node_ptr->get_operands();
+
+  if (operands.size() == 0)
+    throw std::logic_error("unexpected size of operands, 0 operands in is_convertable_to_inplace");
+
+  if (program->is_output_node(node_ptr->get_label()))
+    return false;
+
+  // std::unordered_set<ir::OpCode> instructions_to_be_converted = {ir::OpCode::relinearize, ir::OpCode::modswitch};
+
+  bool conversion_condition = false;
+  // (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end());
+
+  if (operands.size() == 1)
+  {
+    auto &operand_ptr = operands[0];
+    ir::OpCode opcode = node_ptr->get_opcode();
+
+    if (opcode == ir::OpCode::assign || opcode == ir::OpCode::encrypt)
+      return false;
+    else
+    {
+      operand_ptr->delete_parent(node_ptr->get_label());
+
+      bool is_an_output_operand = (program->is_output_node(operand_ptr->get_label()));
+
+      if (program->type_of(operand_ptr->get_label()) == ir::ConstantTableEntryType::input && !node_ptr->is_inplace())
+        return false;
+
+      if (is_an_output_operand /*&& !conversion_condition*/)
+        return false;
+
+      // an additional condition to convert to inplace implicitly
+
+      bool dependency_condition = operand_ptr->get_parents_labels().size() == 0;
+
+      conversion_condition = dependency_condition;
+
+      return conversion_condition;
+    }
+  }
+  else if (operands.size() == 2)
+  {
+    auto &lhs_ptr = operands[0];
+    auto &rhs_ptr = operands[1];
+    ir::OpCode opcode = node_ptr->get_opcode();
+
+    rhs_ptr->delete_parent(node_ptr->get_label());
+    lhs_ptr->delete_parent(node_ptr->get_label());
+
+    // an additional condition to convert to inplace implicitly
+
+    bool commutative = (node_ptr->get_opcode() == ir::OpCode::add) || (node_ptr->get_opcode() == ir::OpCode::mul);
+
+    if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input && !commutative)
+      return false;
+
+    bool is_lhs_an_output = program->is_output_node(operands[0]->get_label());
+    bool is_rhs_an_output = program->is_output_node(operands[1]->get_label());
+
+    bool is_rhs_an_input = program->type_of(operands[1]->get_label()) == ir::ConstantTableEntryType::input;
+
+    if (
+      commutative && operands[0]->get_term_type() == ir::TermType::ciphertext &&
+      operands[1]->get_term_type() == ir::TermType::ciphertext &&
+      operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size() && !is_rhs_an_output &&
+      !is_rhs_an_input)
+    {
+      node_ptr->reverse_operands();
+    }
+
+    if (program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::constant)
+      return false;
+
+    if (program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::input)
+      return false;
+
+    if (
+      program->is_output_node(operands[0]->get_label())/*&&
+      !conversion_condition*/) // in this case no need to check dependency condition since the lhs is an output, checking
+                             // !conversion_condition is enough
+      return false;
+
+    bool dependency_condition = lhs_ptr->get_parents_labels().size() == 0;
+
+    conversion_condition = conversion_condition || dependency_condition;
+
+    return conversion_condition;
+  }
+  else
+    throw("unexpected size of operands, more than 2");
 }
 
 } // namespace translator
