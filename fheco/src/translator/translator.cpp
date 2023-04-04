@@ -335,6 +335,9 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
   if (lhs_identifier.empty() || rhs_identifier.empty())
     throw("empty label operand");
 
+  if (evaluation_writer.is_initialized() == false)
+    evaluation_writer.init(os);
+
   evaluation_writer.write_binary_operation(
     os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
 }
@@ -356,6 +359,9 @@ void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &o
   }
   else
   {
+    if (evaluation_writer.is_initialized() == false)
+      evaluation_writer.init(os);
+
     evaluation_writer.write_unary_operation(
       os, term_ptr->get_opcode(), op_identifier, rhs_identifier, term_ptr->get_term_type());
   }
@@ -426,7 +432,6 @@ void Translator::translate_program(std::ofstream &os)
 
   fix_ir_instructions_pass();
   // convert_to_inplace_pass();
-
   {
     auto &nodes_ptr = program->get_dataflow_sorted_nodes(false);
 
@@ -465,7 +470,7 @@ void Translator::generate_function_signature(std::ofstream &os) const
             AccessType::readAndModify},
            {encoded_outputs_class_literal, outputs_class_identifier[ir::TermType::plaintext],
             AccessType::readAndModify},
-           {evaluator_type_literal, evaluator_identifier, AccessType::readOnly},
+           {context_type_literal, context_identifier, AccessType::readOnly},
            {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
            {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
            {public_key_literal, public_key_identifier, AccessType::readOnly}})

@@ -224,6 +224,7 @@ private:
   std::string evaluator_identifier;
   std::string context_identifier;
   std::string evaluator_type_literal;
+  bool is_init = false;
 
 public:
   EvaluationWriter() = default;
@@ -233,6 +234,12 @@ public:
   {}
 
   ~EvaluationWriter() {}
+
+  void init(std::ostream &os)
+  {
+    is_init = true;
+    os << evaluator_type_literal << " " << evaluator_identifier << "(" << context_identifier << ");" << '\n';
+  }
 
   void write_unary_operation(
     std::ostream &os, ir::OpCode opcode, const std::string &destination_id, const std::string &lhs_id,
@@ -305,6 +312,8 @@ public:
     else
       os << ");";
   }
+
+  bool is_initialized() const { return this->is_init; }
 };
 
 struct EncodingWriter
