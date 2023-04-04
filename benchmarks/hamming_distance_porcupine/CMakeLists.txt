@@ -1,0 +1,2 @@
+add_executable(hamming_distance_porcupine hamming_distance.cpp)
+target_link_libraries(hamming_distance_porcupine PRIVATE fhecompiler)
