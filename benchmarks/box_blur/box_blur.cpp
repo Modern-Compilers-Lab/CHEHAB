@@ -14,9 +14,9 @@ void box_blur(int width, int height)
   Ciphertext img("img", 0, 255);
   Ciphertext top_row = img >> width;
   Ciphertext bottom_row = img << width;
-  Ciphertext top_sum = top_row + (top_row >> 1) + (top_row << 1);
-  Ciphertext curr_sum = img + (img >> 1) + (img << 1);
-  Ciphertext bottom_sum = bottom_row + (bottom_row >> 1) + (bottom_row << 1);
+  Ciphertext top_sum = (top_row >> 1) + top_row + (top_row << 1);
+  Ciphertext curr_sum = (img >> 1) + img + (img << 1);
+  Ciphertext bottom_sum = (bottom_row >> 1) + bottom_row + (bottom_row << 1);
   Ciphertext result = top_sum + curr_sum + bottom_sum;
   result.set_output("result");
 }

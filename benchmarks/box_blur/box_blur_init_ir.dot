@@ -15,8 +15,8 @@ ciphertext11 [label="rotate" style=dashed]
 ciphertext11 -> ciphertext2
 ciphertext11 -> 1023
 ciphertext12 [label="+" style=dashed]
-ciphertext12 -> ciphertext2
 ciphertext12 -> ciphertext11
+ciphertext12 -> ciphertext2
 ciphertext14 [label="+" style=dashed]
 ciphertext14 -> ciphertext12
 ciphertext14 -> ciphertext13
@@ -29,8 +29,8 @@ ciphertext7 [label="rotate" style=dashed]
 ciphertext7 -> ciphertext0
 ciphertext7 -> 1023
 ciphertext8 [label="+" style=dashed]
-ciphertext8 -> ciphertext0
 ciphertext8 -> ciphertext7
+ciphertext8 -> ciphertext0
 ciphertext10 [label="+" style=dashed]
 ciphertext10 -> ciphertext8
 ciphertext10 -> ciphertext9
@@ -47,8 +47,8 @@ ciphertext3 [label="rotate" style=dashed]
 ciphertext3 -> ciphertext1
 ciphertext3 -> 1023
 ciphertext4 [label="+" style=dashed]
-ciphertext4 -> ciphertext1
 ciphertext4 -> ciphertext3
+ciphertext4 -> ciphertext1
 ciphertext6 [label="+" style=dashed]
 ciphertext6 -> ciphertext4
 ciphertext6 -> ciphertext5

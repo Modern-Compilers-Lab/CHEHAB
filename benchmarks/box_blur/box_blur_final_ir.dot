@@ -12,8 +12,8 @@ ciphertext34 [label="rotate" style=dashed]
 ciphertext34 -> ciphertext0
 ciphertext34 -> 1023
 ciphertext35 [label="+" style=dashed]
-ciphertext35 -> ciphertext0
 ciphertext35 -> ciphertext34
+ciphertext35 -> ciphertext0
 ciphertext40 [label="+" style=dashed]
 ciphertext40 -> ciphertext35
 ciphertext40 -> ciphertext39

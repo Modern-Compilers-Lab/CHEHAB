@@ -25,7 +25,7 @@ evaluator.rotate_rows(ciphertext0,1, galois_keys,ciphertext39);
 seal::Ciphertext ciphertext34;
 evaluator.rotate_rows(ciphertext0,1023, galois_keys,ciphertext34);
 seal::Ciphertext ciphertext35;
-evaluator.add(ciphertext0,ciphertext34,ciphertext35);
+evaluator.add(ciphertext34,ciphertext0,ciphertext35);
 seal::Ciphertext ciphertext40;
 evaluator.add(ciphertext35,ciphertext39,ciphertext40);
 seal::Ciphertext ciphertext14;
