@@ -13,37 +13,48 @@ return context;
 }
 
 std::vector<int> get_rotations_steps(){
-std::vector<int> steps = {1,33,993,1022,1023};
+std::vector<int> steps = {1,33,993,1023,1055,2015};
 return steps; 
 }
 
 void gx_kernel(std::map<std::string, seal::Ciphertext>& encrypted_inputs, std::map<std::string, seal::Plaintext>& encoded_inputs, std::map<std::string, seal::Ciphertext>& encrypted_outputs, std::map<std::string, seal::Plaintext>& encoded_outputs, const seal::Evaluator& evaluator, const seal::BatchEncoder& encoder, const seal::RelinKeys& relin_keys, const seal::GaloisKeys& galois_keys, const seal::PublicKey& public_key)
 {
 seal::Ciphertext ciphertext0 = encrypted_inputs["img"];
-seal::Ciphertext ciphertext35;
-evaluator.rotate_rows(ciphertext0,1022, galois_keys,ciphertext35);
-seal::Ciphertext ciphertext36;
-evaluator.sub(ciphertext35,ciphertext0,ciphertext36);
+seal::Ciphertext ciphertext14;
+evaluator.rotate_rows(ciphertext0,33, galois_keys,ciphertext14);
+seal::Ciphertext ciphertext12;
+evaluator.rotate_rows(ciphertext0,1055, galois_keys,ciphertext12);
 seal::Ciphertext ciphertext13;
-evaluator.rotate_rows(ciphertext36,33, galois_keys,ciphertext13);
-seal::Ciphertext ciphertext8;
-evaluator.rotate_rows(ciphertext0,1, galois_keys,ciphertext8);
+evaluator.negate(ciphertext12,ciphertext13);
+seal::Ciphertext ciphertext15;
+evaluator.add(ciphertext13,ciphertext14,ciphertext15);
+seal::Ciphertext ciphertext9;
+evaluator.rotate_rows(ciphertext0,1, galois_keys,ciphertext9);
 std::vector<std::int64_t> scalar1_clear(8192,2);
 seal::Plaintext scalar1;
 encoder.encode(scalar1_clear,scalar1);
-seal::Ciphertext ciphertext9;
-evaluator.multiply_plain(ciphertext8,scalar1,ciphertext9);
-seal::Ciphertext ciphertext6;
-evaluator.rotate_rows(ciphertext0,1023, galois_keys,ciphertext6);
-seal::Ciphertext ciphertext7;
-evaluator.multiply_plain(ciphertext6,scalar1,ciphertext7);
 seal::Ciphertext ciphertext10;
-evaluator.sub(ciphertext7,ciphertext9,ciphertext10);
+evaluator.multiply_plain(ciphertext9,scalar1,ciphertext10);
+seal::Ciphertext ciphertext7;
+evaluator.rotate_rows(ciphertext0,1023, galois_keys,ciphertext7);
+std::vector<std::int64_t> scalar0_clear(8192,-2);
+seal::Plaintext scalar0;
+encoder.encode(scalar0_clear,scalar0);
+seal::Ciphertext ciphertext8;
+evaluator.multiply_plain(ciphertext7,scalar0,ciphertext8);
+seal::Ciphertext ciphertext11;
+evaluator.add(ciphertext8,ciphertext10,ciphertext11);
 seal::Ciphertext ciphertext5;
-evaluator.rotate_rows(ciphertext36,993, galois_keys,ciphertext5);
-seal::Ciphertext ciphertext14;
-evaluator.add(ciphertext5,ciphertext10,ciphertext14);
-seal::Ciphertext ciphertext15;
-evaluator.add(ciphertext14,ciphertext13,ciphertext15);
-encrypted_outputs.insert({"result",ciphertext15});
+evaluator.rotate_rows(ciphertext0,993, galois_keys,ciphertext5);
+seal::Ciphertext ciphertext3;
+evaluator.rotate_rows(ciphertext0,2015, galois_keys,ciphertext3);
+seal::Ciphertext ciphertext4;
+evaluator.negate(ciphertext3,ciphertext4);
+seal::Ciphertext ciphertext6;
+evaluator.add(ciphertext4,ciphertext5,ciphertext6);
+seal::Ciphertext ciphertext16;
+evaluator.add(ciphertext6,ciphertext11,ciphertext16);
+seal::Ciphertext ciphertext17;
+evaluator.add(ciphertext16,ciphertext15,ciphertext17);
+encrypted_outputs.insert({"result",ciphertext17});
 }

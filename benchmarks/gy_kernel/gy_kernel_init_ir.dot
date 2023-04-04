@@ -7,48 +7,50 @@ ciphertext0 [label="img" style=dashed color=blue fontcolor=blue]
 ciphertext2 [label="rotate" style=dashed]
 ciphertext2 -> ciphertext0
 ciphertext2 -> 32
-ciphertext11 [label="rotate" style=dashed]
-ciphertext11 -> ciphertext2
-ciphertext11 -> 1
+ciphertext12 [label="rotate" style=dashed]
+ciphertext12 -> ciphertext2
+ciphertext12 -> 1
+scalar1 [label="scalar1" style=solid color=darkgreen fontcolor=darkgreen]
+ciphertext10 [label="*" style=dashed]
+ciphertext10 -> scalar1
+ciphertext10 -> ciphertext2
 1023 [label="1023" style=solid]
 ciphertext9 [label="rotate" style=dashed]
 ciphertext9 -> ciphertext2
 ciphertext9 -> 1023
-scalar1 [label="scalar1" style=solid color=darkgreen fontcolor=darkgreen]
-ciphertext8 [label="*" style=dashed]
-ciphertext8 -> scalar1
-ciphertext8 -> ciphertext2
-ciphertext10 [label="-" style=dashed]
-ciphertext10 -> ciphertext8
-ciphertext10 -> ciphertext9
-ciphertext12 [label="-" style=dashed]
-ciphertext12 -> ciphertext10
-ciphertext12 -> ciphertext11
+ciphertext11 [label="+" style=dashed]
+ciphertext11 -> ciphertext9
+ciphertext11 -> ciphertext10
+ciphertext13 [label="+" style=dashed]
+ciphertext13 -> ciphertext11
+ciphertext13 -> ciphertext12
 1 [label="1" style=solid]
 992 [label="992" style=solid]
 ciphertext1 [label="rotate" style=dashed]
 ciphertext1 -> ciphertext0
 ciphertext1 -> 992
-ciphertext6 [label="rotate" style=dashed]
-ciphertext6 -> ciphertext1
-ciphertext6 -> 1
-1023 [label="1023" style=solid]
-ciphertext4 [label="rotate" style=dashed]
-ciphertext4 -> ciphertext1
-ciphertext4 -> 1023
+ciphertext7 [label="rotate" style=dashed]
+ciphertext7 -> ciphertext1
+ciphertext7 -> 1
 scalar0 [label="scalar0" style=solid color=darkgreen fontcolor=darkgreen]
-ciphertext3 [label="*" style=dashed]
-ciphertext3 -> scalar0
+ciphertext5 [label="*" style=dashed]
+ciphertext5 -> scalar0
+ciphertext5 -> ciphertext1
+1023 [label="1023" style=solid]
+ciphertext3 [label="rotate" style=dashed]
 ciphertext3 -> ciphertext1
-ciphertext5 [label="+" style=dashed]
-ciphertext5 -> ciphertext3
-ciphertext5 -> ciphertext4
-ciphertext7 [label="+" style=dashed]
-ciphertext7 -> ciphertext5
-ciphertext7 -> ciphertext6
-ciphertext13 [label="+" style=dashed color=red fontcolor=red]
-ciphertext13 -> ciphertext7
-ciphertext13 -> ciphertext12
+ciphertext3 -> 1023
+ciphertext4 [label="-" style=dashed]
+ciphertext4 -> ciphertext3
+ciphertext6 [label="-" style=dashed]
+ciphertext6 -> ciphertext4
+ciphertext6 -> ciphertext5
+ciphertext8 [label="-" style=dashed]
+ciphertext8 -> ciphertext6
+ciphertext8 -> ciphertext7
+ciphertext14 [label="+" style=dashed color=red fontcolor=red]
+ciphertext14 -> ciphertext8
+ciphertext14 -> ciphertext13
 subgraph cluster_key {
     graph[label="Key"]
     node [width=0.5]
