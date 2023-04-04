@@ -1,0 +1,43 @@
+digraph "linear_reg" {
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+ciphertext3 [label="c3" style=dashed color=blue fontcolor=blue]
+ciphertext0 [label="c0" style=dashed color=blue fontcolor=blue]
+ciphertext2 [label="c2" style=dashed color=blue fontcolor=blue]
+ciphertext4 [label="*" style=dashed]
+ciphertext4 -> ciphertext2
+ciphertext4 -> ciphertext0
+ciphertext1 [label="c1" style=dashed color=blue fontcolor=blue]
+ciphertext5 [label="-" style=dashed]
+ciphertext5 -> ciphertext1
+ciphertext5 -> ciphertext4
+ciphertext6 [label="-" style=dashed color=red fontcolor=red]
+ciphertext6 -> ciphertext5
+ciphertext6 -> ciphertext3
+subgraph cluster_key {
+    graph[label="Key"]
+    node [width=0.5]
+    edge [dir=forward style=invis]
+    in_cipher [label=input color=blue fontcolor=blue style=dashed]
+    tmp_cipher [label=tmp color=black fontcolor=black style=dashed]
+    out_cipher [label=out color=red fontcolor=red style=dashed]
+    cipher [shape=plain]
+
+    in_plain [label=in icolor=blue fontcolor=blue style=dotted]
+    tmp_plain [label=tmp color=black fontcolor=black style=dotted]
+    out_plain [label=out color=red fontcolor=red style=dotted]
+    plain [shape=plain]
+    
+    other [color=black fontcolor=black style=solid]
+    scalar [color=darkgreen fontcolor=darkgreen style=solid]
+    const[shape=plain]
+    
+    cipher -> plain
+    plain -> const
+    out_cipher -> out_plain
+    in_cipher -> in_plain
+    tmp_cipher -> tmp_plain
+    in_plain -> other
+    out_plain -> scalar
+}
+}
