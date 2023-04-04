@@ -343,6 +343,11 @@ Plaintext &operator>>=(Plaintext &lhs, int steps)
 
 // square, expo, multiply many, add_many, reduce*
 
+Ciphertext square(const Ciphertext &encrypted)
+{
+  return encrypted * encrypted;
+}
+
 Ciphertext reduce_add(const Ciphertext &encrypted)
 {
   Ciphertext result = encrypted;

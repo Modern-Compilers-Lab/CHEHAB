@@ -83,6 +83,8 @@ Plaintext &operator>>=(Plaintext &lhs, int steps);
 
 // square, expo, multiply many, add_many, reduce*
 
+Ciphertext square(const Ciphertext &encrypted);
+
 Ciphertext reduce_add(const Ciphertext &encrypted);
 
 Ciphertext add_many(const std::vector<Ciphertext> &encrypteds);
