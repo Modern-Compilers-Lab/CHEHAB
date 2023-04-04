@@ -1,0 +1,2 @@
+add_executable(roberts_cross_porcupine roberts_cross.cpp)
+target_link_libraries(roberts_cross_porcupine PRIVATE fhecompiler)
