@@ -22,26 +22,15 @@ Ciphertext reduce_add_lin(const Ciphertext &x, size_t vector_size)
   return result;
 }
 
-void dot_product(size_t vector_size, bool use_log_reduction)
+void l2_distance(size_t vector_size, bool use_log_reduction)
 {
-  Ciphertext c0("c0", -10, 10);
-  Ciphertext c1("c1", -10, 10);
-  Ciphertext slot_wise_mul = c0 * c1;
+  Ciphertext c1("c1", -5, 5);
+  Ciphertext c2("c2", -5, 5);
+  Ciphertext slot_wise_diff = square(c1 - c2);
   if (use_log_reduction)
-    reduce_add(slot_wise_mul).set_output("result");
+    reduce_add(slot_wise_diff).set_output("result");
   else
-    reduce_add_lin(slot_wise_mul, vector_size).set_output("result");
-}
-
-void dot_product_plain(size_t vector_size, bool use_log_reduction)
-{
-  Ciphertext c0("c0", -10, 10);
-  Plaintext v1("v1", -10, 10);
-  Ciphertext slot_wise_mul = c0 * v1;
-  if (use_log_reduction)
-    reduce_add(slot_wise_mul).set_output("result");
-  else
-    reduce_add_lin(slot_wise_mul, vector_size).set_output("result");
+    reduce_add_lin(slot_wise_diff, vector_size).set_output("result");
 }
 
 int main(int argc, char **argv)
@@ -50,37 +39,26 @@ int main(int argc, char **argv)
   if (argc > 1)
     vector_size = stoull(argv[1]);
 
-  bool is_cipher_cipher = true;
+  bool use_log_reduction = true;
   if (argc > 2)
   {
     std::stringstream ss(argv[2]);
-    if (!(ss >> boolalpha >> is_cipher_cipher))
-      throw invalid_argument("could not parse is_cipher_cipher to bools");
-  }
-
-  bool use_log_reduction = true;
-  if (argc > 3)
-  {
-    std::stringstream ss(argv[3]);
     if (!(ss >> boolalpha >> use_log_reduction))
       throw invalid_argument("could not parse use_log_reduction to bools");
   }
 
   int trs_passes = 1;
-  if (argc > 4)
-    trs_passes = stoi(argv[4]);
+  if (argc > 3)
+    trs_passes = stoi(argv[3]);
 
   bool optimize = trs_passes > 0;
 
   cout << "vector_size: " << vector_size << ", "
        << "trs_passes: " << trs_passes << '\n';
 
-  string func_name = "dot_product";
+  string func_name = "l2_distance";
   Compiler::create_func(func_name, vector_size, 16, true, Scheme::bfv);
-  if (is_cipher_cipher)
-    dot_product(vector_size, use_log_reduction);
-  else
-    dot_product_plain(vector_size, use_log_reduction);
+  l2_distance(vector_size, use_log_reduction);
   ofstream init_ir_os(func_name + "_init_ir.dot");
   Compiler::draw_ir(init_ir_os);
   const auto &rand_inputs = Compiler::get_example_input_values();

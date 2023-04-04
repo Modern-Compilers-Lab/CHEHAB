@@ -1,0 +1,2 @@
+add_executable(l2_distance l2_distance.cpp)
+target_link_libraries(l2_distance PRIVATE fhecompiler)

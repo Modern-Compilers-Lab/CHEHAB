@@ -10,7 +10,7 @@
 using namespace std;
 using namespace fhecompiler;
 
-void hamming_distance(int vector_size)
+void hamming_distance(size_t vector_size)
 {
   Ciphertext c1("c1", 0, 1);
   Ciphertext c2("c2", 0, 1);
