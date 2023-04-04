@@ -25,7 +25,7 @@ void Compiler::create_func(const string &name, size_t vector_size, int bit_width
     throw invalid_argument("funciton with this name already exists");
 
   active_func_ = make_shared<ir::Program>(name, bit_width, signedness, vector_size, scheme);
-  funcs_table_.insert({name, {active_func_}});
+  funcs_table_.emplace(name, active_func_);
 }
 
 void Compiler::delete_func(const string &name)
@@ -100,15 +100,15 @@ void Compiler::FuncEntry::init_input(
   {
     vector<int64_t> random_value(func->get_vector_size());
     utils::init_random(random_value, min_value, max_value);
-    example_inputs_values.insert({tag, random_value});
     destination = random_value;
+    example_inputs_values.emplace(tag, destination);
   }
   else
   {
     vector<uint64_t> random_value(func->get_vector_size());
     utils::init_random(random_value, min_value, max_value);
-    example_inputs_values.insert({tag, random_value});
     destination = random_value;
+    example_inputs_values.emplace(tag, destination);
   }
   tags_labels[tag] = label;
 }
@@ -126,6 +126,7 @@ void Compiler::FuncEntry::init_input(
       return utils::init_const(evaluator, value);
     }},
     example_value);
+  example_inputs_values.emplace(tag, destination);
   tags_labels[tag] = label;
 }
 

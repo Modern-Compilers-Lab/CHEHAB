@@ -220,6 +220,8 @@ private:
     utils::io_variables_values example_inputs_values;
     utils::io_variables_values example_outputs_values;
 
+    FuncEntry(const std::shared_ptr<ir::Program> &f) : func(f) {}
+
     void init_input(
       const std::string &label, const std::string &tag, long long min_value, long long max_value,
       ir::VectorValue &destination);
