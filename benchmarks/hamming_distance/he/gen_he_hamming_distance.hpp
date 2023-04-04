@@ -19,8 +19,8 @@ return steps;
 
 void hamming_distance(std::map<std::string, seal::Ciphertext>& encrypted_inputs, std::map<std::string, seal::Plaintext>& encoded_inputs, std::map<std::string, seal::Ciphertext>& encrypted_outputs, std::map<std::string, seal::Plaintext>& encoded_outputs, const seal::Evaluator& evaluator, const seal::BatchEncoder& encoder, const seal::RelinKeys& relin_keys, const seal::GaloisKeys& galois_keys, const seal::PublicKey& public_key)
 {
-seal::Ciphertext ciphertext1 = encrypted_inputs["v2"];
-seal::Ciphertext ciphertext0 = encrypted_inputs["v1"];
+seal::Ciphertext ciphertext1 = encrypted_inputs["c2"];
+seal::Ciphertext ciphertext0 = encrypted_inputs["c1"];
 seal::Ciphertext ciphertext38;
 evaluator.multiply(ciphertext0,ciphertext1,ciphertext38);
 seal::Ciphertext ciphertext3;

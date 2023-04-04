@@ -11,8 +11,8 @@ edge [dir=back]
 128 [label="128" style=solid]
 256 [label="256" style=solid]
 512 [label="512" style=solid]
-ciphertext1 [label="v2" style=dashed color=blue fontcolor=blue]
-ciphertext0 [label="v1" style=dashed color=blue fontcolor=blue]
+ciphertext1 [label="c2" style=dashed color=blue fontcolor=blue]
+ciphertext0 [label="c1" style=dashed color=blue fontcolor=blue]
 ciphertext3 [label="*" style=dashed]
 ciphertext3 -> ciphertext0
 ciphertext3 -> ciphertext1

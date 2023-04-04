@@ -12,9 +12,9 @@ using namespace fhecompiler;
 
 void hamming_distance(int vector_size)
 {
-  Ciphertext v1("v1", 0, 1);
-  Ciphertext v2("v2", 0, 1);
-  Ciphertext slot_wise_xor = v1 + v2 - 2 * (v1 * v2);
+  Ciphertext c1("c1", 0, 1);
+  Ciphertext c2("c2", 0, 1);
+  Ciphertext slot_wise_xor = c1 + c2 - 2 * (c1 * c2);
   Ciphertext result = reduce_add(slot_wise_xor);
   result.set_output("result");
 }

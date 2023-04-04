@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <vector>
 
+using namespace std;
+
 namespace fhecompiler
 {
 
@@ -351,18 +353,18 @@ Ciphertext square(const Ciphertext &encrypted)
 Ciphertext reduce_add(const Ciphertext &encrypted)
 {
   Ciphertext result = encrypted;
-  std::size_t step = Compiler::get_active()->get_vector_size() >> 1;
-  while (step > 0)
+  size_t steps = Compiler::get_active()->get_vector_size() >> 1;
+  while (steps > 0)
   {
-    result += result << step;
-    step >>= 1;
+    result += result << steps;
+    steps >>= 1;
   }
   return result;
 }
 
-Ciphertext add_many(const std::vector<Ciphertext> &encrypteds)
+Ciphertext add_many(const vector<Ciphertext> &encrypteds)
 {
-  std::vector<Ciphertext> sum_vec;
+  vector<Ciphertext> sum_vec;
   for (size_t i = 0; i < encrypteds.size() - 1; i += 2)
     sum_vec.push_back(encrypteds[i] + encrypteds[i + 1]);
 
