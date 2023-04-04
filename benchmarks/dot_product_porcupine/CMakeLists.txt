@@ -1,0 +1,2 @@
+add_executable(dot_product_porcupine dot_product.cpp)
+target_link_libraries(dot_product_porcupine PRIVATE fhecompiler)
