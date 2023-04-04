@@ -21,7 +21,12 @@ private:
   EvaluationWriter evaluation_writer;
   ContextWriter context_writer;
 
-  void translate_binary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os);
+  std::unordered_map<std::string, std::string> label_in_destination_code; // we don't have to create a map but it is
+                                                                          // just more elegant with the map
+
+  void translate_binary_operation(const Ptr &term_ptr, std::ofstream &os);
+  void translate_nary_operation(const Ptr &term_ptr, std::ofstream &os);
+  void translate_unary_operation(const Ptr &term_ptr, std::ofstream &os);
 
   void translate_nary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os);
 
@@ -36,7 +41,11 @@ private:
 
   std::string get_tag(const ir::Term::Ptr &term_ptr) const;
 
+  std::string get_identifier(const std::string &label) const;
+
   void convert_to_inplace(const ir::Term::Ptr &node_ptr);
+
+  bool is_convertable_to_inplace(const ir::Term::Ptr &node_ptr);
 
   void convert_to_square(const ir::Term::Ptr &node_ptr);
 

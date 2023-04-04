@@ -317,10 +317,10 @@ void Translator::translate_binary_operation(const ir::Term::Ptr &term_ptr, std::
   if (it != get_other_args_by_opcode.end())
     other_args = it->second;
 
-  std::string op_identifier = get_identifier(term_ptr);
+  std::string op_identifier = get_identifier(label_in_destination_code[term_ptr->get_label()]);
   auto &operands = term_ptr->get_operands();
-  std::string lhs_identifier = get_identifier(operands[0]);
-  std::string rhs_identifier = get_identifier(operands[1]);
+  std::string lhs_identifier = get_identifier(label_in_destination_code[operands[0]->get_label()]);
+  std::string rhs_identifier = get_identifier(label_in_destination_code[operands[1]->get_label()]);
 
   if (operands[0]->get_term_type() != ir::TermType::ciphertext)
   {
@@ -343,8 +343,8 @@ void Translator::translate_nary_operation(const ir::Term::Ptr &term_ptr, std::os
 
 void Translator::translate_unary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os)
 {
-  std::string op_identifier = get_identifier(term_ptr);
-  std::string rhs_identifier = get_identifier(term_ptr->get_operands()[0]);
+  std::string op_identifier = get_identifier(label_in_destination_code[term_ptr->get_label()]);
+  std::string rhs_identifier = get_identifier(label_in_destination_code[term_ptr->get_operands()[0]->get_label()]);
   // os << op_type << " " << op_identifier << ops_map[term_ptr->get_opcode()] << rhs_identifier << end_of_command <<
   // '\n';
   if (term_ptr->get_opcode() == ir::OpCode::assign)
@@ -428,6 +428,13 @@ void Translator::translate_program(std::ostream &os, const std::set<int> &rotati
     // after doing all passes, now we do the last pass to translate and generate the code
     for (auto &node_ptr : nodes_ptr)
     {
+
+      if (is_convertable_to_inplace(node_ptr))
+      {
+        label_in_destination_code[node_ptr->get_operands()[0]->get_label()] = node_ptr->get_label();
+      }
+      label_in_destination_code[node_ptr->get_label()] = node_ptr->get_label();
+
       translate_term(node_ptr, os);
     }
   }
