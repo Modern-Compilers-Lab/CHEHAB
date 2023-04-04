@@ -10,7 +10,7 @@
 using namespace std;
 using namespace fhecompiler;
 
-void roberts_cross()
+void roberts_cross_opt()
 {
   int w = 5;
   Ciphertext c0("c0", 0, 255);
@@ -18,11 +18,9 @@ void roberts_cross()
   Ciphertext c0_rot_1 = c0 >> 1;
   Ciphertext c1 = c0_rot_w - c0_rot_1;
   Ciphertext c2 = c1 * c1;
-
   Ciphertext c0_rot_6 = c0 >> (w + 1);
   Ciphertext c3 = c0 - c0_rot_6;
   Ciphertext c4 = c3 * c3;
-
   Ciphertext c_result = c2 + c4;
   c_result.set_output("c_result");
 }
@@ -44,7 +42,7 @@ int main(int argc, char **argv)
 
   string func_name = "roberts_cross";
   Compiler::create_func(func_name, vector_size, 20, true, Scheme::bfv);
-  roberts_cross();
+  roberts_cross_opt();
   ofstream init_ir_os(func_name + "_init_ir.dot");
   Compiler::draw_ir(init_ir_os);
   const auto &rand_inputs = Compiler::get_example_input_values();

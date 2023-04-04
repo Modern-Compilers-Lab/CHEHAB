@@ -9,7 +9,7 @@
 using namespace std;
 using namespace fhecompiler;
 
-void poly_reg()
+void poly_reg_opt()
 {
   Ciphertext c0("c0", -10, 10);
   Ciphertext c1("c1", -10, 10);
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
   string func_name = "poly_reg";
   Compiler::create_func(func_name, vector_size, 16, true, Scheme::bfv);
-  poly_reg();
+  poly_reg_opt();
   ofstream init_ir_os(func_name + "_init_ir.dot");
   Compiler::draw_ir(init_ir_os);
   const auto &rand_inputs = Compiler::get_example_input_values();

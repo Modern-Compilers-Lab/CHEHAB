@@ -10,7 +10,7 @@
 using namespace std;
 using namespace fhecompiler;
 
-void dot_product()
+void dot_product_opt()
 {
   Ciphertext c0("c0", -100, 100);
   Ciphertext c00("c00", -100, 100);
@@ -24,7 +24,7 @@ void dot_product()
   c_result.set_output("c_result");
 }
 
-void dot_product_plain()
+void dot_product_plain_opt()
 {
   Ciphertext c0("c0", -100, 100);
   Plaintext v1("v1", -100, 100);
@@ -64,9 +64,9 @@ int main(int argc, char **argv)
   string func_name = "dot_product";
   Compiler::create_func(func_name, vector_size, 16, true, Scheme::bfv);
   if (is_cipher_cipher)
-    dot_product();
+    dot_product_opt();
   else
-    dot_product_plain();
+    dot_product_plain_opt();
   ofstream init_ir_os(func_name + "_init_ir.dot");
   Compiler::draw_ir(init_ir_os);
   const auto &rand_inputs = Compiler::get_example_input_values();

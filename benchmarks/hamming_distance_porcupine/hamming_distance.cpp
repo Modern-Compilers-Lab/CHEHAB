@@ -10,13 +10,14 @@
 using namespace std;
 using namespace fhecompiler;
 
-void hamming_distance()
+void hamming_distance_opt()
 {
+  Scalar d0 = 2;
   Ciphertext c0("c0", 0, 1);
   Ciphertext c1("c1", 0, 1);
   Ciphertext c2 = c1 + c0;
   Ciphertext c2_neg = -c2;
-  Ciphertext c3 = c2_neg + 2;
+  Ciphertext c3 = c2_neg + d0;
   Ciphertext c4 = c3 * c2;
   Ciphertext c4_rot_2 = c4 << 2;
   Ciphertext c5 = c4_rot_2 + c4;
@@ -42,7 +43,7 @@ int main(int argc, char **argv)
 
   string func_name = "hamming_distance";
   Compiler::create_func(func_name, vector_size, 16, true, Scheme::bfv);
-  hamming_distance();
+  hamming_distance_opt();
   ofstream init_ir_os(func_name + "_init_ir.dot");
   Compiler::draw_ir(init_ir_os);
   const auto &rand_inputs = Compiler::get_example_input_values();

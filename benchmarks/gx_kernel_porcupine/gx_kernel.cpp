@@ -10,7 +10,7 @@
 using namespace std;
 using namespace fhecompiler;
 
-void gx_kernel()
+void gx_kernel_naive()
 {
   Ciphertext c0("c0", 0, 255);
   Ciphertext c1 = c0 << 1;
@@ -26,6 +26,18 @@ void gx_kernel()
   Ciphertext c11 = c9 + c9;
   Ciphertext c12 = c10 + c11;
   c12.set_output("c12");
+}
+
+void gx_kernel_opt()
+{
+  Ciphertext c0("c0", 0, 255);
+  Ciphertext c1 = c0 << -5;
+  Ciphertext c2 = c0 + c1;
+  Ciphertext c3 = c2 << 5;
+  Ciphertext c4 = c3 + c2;
+  Ciphertext c5 = c4 << -1;
+  Ciphertext c6 = c4 << 1;
+  Ciphertext c7 = c6 - c5;
 }
 
 int main(int argc, char **argv)
@@ -45,7 +57,7 @@ int main(int argc, char **argv)
 
   string func_name = "gx_kernel";
   Compiler::create_func(func_name, vector_size, 16, false, Scheme::bfv);
-  gx_kernel();
+  gx_kernel_naive();
   ofstream init_ir_os(func_name + "_init_ir.dot");
   Compiler::draw_ir(init_ir_os);
   const auto &rand_inputs = Compiler::get_example_input_values();

@@ -10,7 +10,7 @@
 using namespace std;
 using namespace fhecompiler;
 
-void box_blur()
+void box_blur_naive()
 {
   Ciphertext c0("c0", 0, 255);
   Ciphertext c1 = c0 << 1;
@@ -20,6 +20,16 @@ void box_blur()
   Ciphertext c5 = c2 + c3;
   Ciphertext c6 = c4 + c5;
   c6.set_output("c6");
+}
+
+void box_blur_opt()
+{
+  Ciphertext c0("c0", 0, 255);
+  Ciphertext c1 = c0 << 1;
+  Ciphertext c2 = c0 + c1;
+  Ciphertext c3 = c2 << 5;
+  Ciphertext c4 = c2 + c3;
+  c4.set_output("c4");
 }
 
 int main(int argc, char **argv)
@@ -39,7 +49,7 @@ int main(int argc, char **argv)
 
   string func_name = "box_blur";
   Compiler::create_func(func_name, vector_size, 16, false, Scheme::bfv);
-  box_blur();
+  box_blur_naive();
   ofstream init_ir_os(func_name + "_init_ir.dot");
   Compiler::draw_ir(init_ir_os);
   const auto &rand_inputs = Compiler::get_example_input_values();
