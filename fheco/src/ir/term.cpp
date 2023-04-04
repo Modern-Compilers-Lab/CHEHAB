@@ -1,6 +1,8 @@
 #include "term.hpp"
 #include <unordered_set>
 
+using namespace std;
+
 namespace ir
 {
 size_t Term::term_id = 0;
@@ -19,7 +21,7 @@ void Term::replace_operand_with(const Ptr &operand, const Ptr &to_replace_with)
   }
 }
 
-void Term::delete_operand_term(const std::string &term_label)
+size_t Term::delete_operand_term(const string &term_label)
 {
   // this needs to be changed later .. since it is unecessary linear in terms of complexity
   size_t pos = -1;
@@ -36,21 +38,23 @@ void Term::delete_operand_term(const std::string &term_label)
   {
     size_t degree = operation_attribute->operands.size();
     operation_attribute->operands[pos]->delete_parent(this->label);
-    // operation_attribute->operands.erase(operation_attribute->operands.begin() + pos);
-    operation_attribute->operands[pos] = operation_attribute->operands.back();
-    operation_attribute->operands.pop_back();
+    operation_attribute->operands.erase(operation_attribute->operands.begin() + pos);
   }
+  return pos;
 }
 
-void Term::insert_parent_label(const std::string &label)
+void Term::insert_parent_label(const string &label)
 {
   parents_labels.insert(label);
 }
 
-void Term::add_operand(const Ptr &operand)
+void Term::add_operand(const Ptr &operand, size_t index)
 {
   operand->add_parent_label(this->label);
-  (*operation_attribute).operands.push_back(operand);
+  if (index >= 0)
+    operation_attribute->operands.insert(operation_attribute->operands.begin() + index, operand);
+  else
+    operation_attribute->operands.push_back(operand);
 }
 
 /*
@@ -60,7 +64,7 @@ void Term::add_operand(const Ptr &operand)
 
 */
 
-void Term::delete_parent(const std::string &parent_label)
+void Term::delete_parent(const string &parent_label)
 {
   auto it = parents_labels.find(parent_label);
   if (it == parents_labels.end())
@@ -68,7 +72,7 @@ void Term::delete_parent(const std::string &parent_label)
   parents_labels.erase(it);
 }
 
-void Term::add_parent_label(const std::string &parent_label)
+void Term::add_parent_label(const string &parent_label)
 {
   parents_labels.insert(parent_label);
 }
@@ -115,7 +119,7 @@ void Term::delete_operand_at_index(size_t index)
   operation_attribute->operands.pop_back();
 }
 
-void Term::sort_operands(std::function<bool(const Ptr &, const Ptr &)> comp)
+void Term::sort_operands(function<bool(const Ptr &, const Ptr &)> comp)
 {
   if (!is_operation_node())
     return;
@@ -148,7 +152,7 @@ void Term::set_a_default_label()
   if (type == TermType::rawData)
     return; /* we don't change the label of a rawDataType node as it is the actual value
              */
-  label = term_type_label_map[type] + std::to_string(term_id);
+  label = term_type_label_map[type] + to_string(term_id);
 }
 
 void Term::rewrite_with_operation(const Ptr &node)

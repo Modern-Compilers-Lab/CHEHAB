@@ -634,8 +634,11 @@ bool ParameterSelector::insert_mod_switch_bfv(
             if (!arg1_matching_level)
               throw logic_error("leveled version of node supposed to be present");
 
-            node->delete_operand_term(arg1->get_label());
-            node->add_operand(arg1_matching_level);
+            size_t operand_index = node->delete_operand_term(arg1->get_label());
+            if (operand_index < 0)
+              throw logic_error("verified parent however could not delete child operand from parent");
+
+            node->add_operand(arg1_matching_level, operand_index);
           }
           else if (arg1_level_data.justified_level < arg2_level_data.justified_level)
           {
@@ -671,8 +674,11 @@ bool ParameterSelector::insert_mod_switch_bfv(
             if (!arg2_matching_level)
               throw logic_error("leveled version of node supposed to be present");
 
-            node->delete_operand_term(arg2->get_label());
-            node->add_operand(arg2_matching_level);
+            size_t operand_index = node->delete_operand_term(arg2->get_label());
+            if (operand_index < 0)
+              throw logic_error("verified parent however could not delete child operand from parent");
+
+            node->add_operand(arg2_matching_level, operand_index);
           }
         }
 
@@ -744,8 +750,11 @@ bool ParameterSelector::insert_mod_switch_bfv(
           if (!parent)
             throw logic_error("parent node not found");
 
-          parent->delete_operand_term(node->get_label());
-          parent->add_operand(mod_switch_arg);
+          size_t operand_index = parent->delete_operand_term(node->get_label());
+          if (operand_index < 0)
+            throw logic_error("verified parent however could not delete child operand from parent");
+
+          parent->add_operand(mod_switch_arg, operand_index);
         }
       }
       nodes_level_data.insert({mod_switch_arg->get_label(), {node_level, node_level, node->get_label()}});

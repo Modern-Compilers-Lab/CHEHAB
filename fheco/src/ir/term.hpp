@@ -5,6 +5,7 @@
 #include "plaintext.hpp"
 #include "scalar.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <functional>
 #include <list>
 #include <memory>
@@ -137,7 +138,7 @@ public:
 
   void set_parents_label(std::unordered_multiset<std::string> p_labels) { parents_labels = p_labels; }
 
-  void delete_operand_term(const std::string &term_label);
+  std::size_t delete_operand_term(const std::string &term_label);
 
   void delete_parent(const std::string &parent_label);
 
@@ -147,7 +148,7 @@ public:
 
   OpCode get_opcode() const { return opcode; }
 
-  void add_operand(const Ptr &operand);
+  void add_operand(const Ptr &operand, std::size_t index = -1);
 
   void set_term_type(TermType term_type) { this->type = term_type; }
 
