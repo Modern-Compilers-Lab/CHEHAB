@@ -390,8 +390,9 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
         {
           encryption_writer.init(os);
         }
-        const std::string &plaintext_id = get_identifier(term->get_operands()[0]);
-        const std::string &destination_cipher = get_identifier(term);
+        const std::string &plaintext_id =
+          get_identifier(label_in_destination_code[term->get_operands()[0]->get_label()]);
+        const std::string &destination_cipher = get_identifier(label_in_destination_code[term->get_label()]);
         encryption_writer.write_encryption(os, plaintext_id, destination_cipher);
       }
       else
@@ -435,15 +436,15 @@ void Translator::translate_program(std::ofstream &os)
   {
     auto &nodes_ptr = program->get_dataflow_sorted_nodes(true);
 
-    // after doing all passes, now we do the last pass to translate and generate the code
     for (auto &node_ptr : nodes_ptr)
     {
-
       if (is_convertable_to_inplace(node_ptr))
       {
-        label_in_destination_code[node_ptr->get_operands()[0]->get_label()] = node_ptr->get_label();
+        label_in_destination_code[node_ptr->get_label()] =
+          label_in_destination_code[node_ptr->get_operands()[0]->get_label()];
       }
-      label_in_destination_code[node_ptr->get_label()] = node_ptr->get_label();
+      else
+        label_in_destination_code[node_ptr->get_label()] = node_ptr->get_label();
 
       translate_term(node_ptr, os);
     }
@@ -452,8 +453,9 @@ void Translator::translate_program(std::ofstream &os)
   {
     // if (program->type_of(output_node.second->get_label()) == ir::ConstantTableEntryType::output)
     write_output(
-      get_output_identifier(output_node.first), get_identifier(output_node.second),
-      (output_node.second)->get_term_type(), os);
+      get_output_identifier(output_node.first),
+      get_identifier(label_in_destination_code[output_node.second->get_label()]), (output_node.second)->get_term_type(),
+      os);
   }
   os << "}" << '\n';
 }

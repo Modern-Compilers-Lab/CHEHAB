@@ -49,7 +49,7 @@ int main()
     fhecompiler::Plaintext pt_tmp = -pt1 + pt1 + (100 * s - pt2); // + pt2 + (23 + s);
 
     pt_output = pt_tmp;
-    // pt_taged_tmp = pt_input1 + pt_input2;
+    pt_taged_tmp = pt_input1 + pt_input2;
 
     pt_output += 888;
 
@@ -63,9 +63,7 @@ int main()
 
     // fhecompiler::Plaintext pt_one(std::vector<int64_t>({1, 1, 1}));
 
-    output1 = (0 - A) * pt_input1;
-
-    output1 = (A + (5 - B)) + pt_output + pt_input1 + D + C + 1337; // * pt2 + (pt1 + pt2));
+    output1 = (A + (5 - B)) + pt_output + pt_input1 + D + C + 1337 + pt_taged_tmp; // * pt2 + (pt1 + pt2));
 
     output2 = (((A + pt_output) + pt_output) * pt_output) * (pt_output * 23);
 
