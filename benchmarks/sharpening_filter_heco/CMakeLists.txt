@@ -1,0 +1,2 @@
+add_executable(sharpening_filter sharpening_filter.cpp)
+target_link_libraries(sharpening_filter PRIVATE fhecompiler)
