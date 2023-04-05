@@ -31,6 +31,11 @@ Plaintext &Plaintext::operator=(Plaintext &&pt_move)
   return *this;
 }
 
+Plaintext::Plaintext(Plaintext &&ct_move) : label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++))
+{
+  operate_move<Plaintext>(*this, std::move(ct_move), ir::TermType::plaintext);
+}
+
 Plaintext::Plaintext(const std::vector<std::int64_t> &message)
   : label(datatype::pt_label_prefix + std::to_string(Plaintext::plaintext_id++))
 {

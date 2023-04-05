@@ -34,7 +34,7 @@ public:
   Plaintext &operator=(const Plaintext &pt_copy);
 
   Plaintext &operator=(Plaintext &&pt_move);
-  Plaintext(Plaintext &&pt_move) = default;
+  Plaintext(Plaintext &&pt_move);
 
   Plaintext &operator+=(const Plaintext &rhs);
 
