@@ -74,5 +74,10 @@ int main(int argc, char **argv)
 
   ofstream rand_example_os(func_name + "_rand_example.txt");
   Compiler::print_inputs_outputs(rand_example_os);
+
+  Compiler::create_func(func_name + "_opt", vector_size, 16, false, Scheme::bfv);
+  if (Compiler::evaluate_on_clear(rand_inputs) != outputs)
+    throw logic_error("opt version not equivalent to naive");
+
   return 0;
 }

@@ -323,18 +323,20 @@ namespace core
     }
     else
     {
-      // auto node_parents = ir_node->get_parents_labels();
-      // for (const auto &parent_label : node_parents)
-      // {
-      //   ir::Term::Ptr parent = program->find_node_in_dataflow(parent_label);
-      //   if (parent == nullptr)
-      //     throw std::logic_error("node parent not found");
+      ir_node->delete_operand_term(new_ir_node->get_label());
+      const auto node_parents = ir_node->get_parents_labels();
+      for (const auto &parent_label : node_parents)
+      {
+        ir::Term::Ptr parent = program->find_node_in_dataflow(parent_label);
+        if (!parent)
+          throw logic_error("parent node not found");
 
-      //   parent->delete_operand_term(ir_node->get_label());
-      //   parent->add_operand(new_ir_node);
-      // }
-      // ir_node->clear_operands();
-      program->replace_with(ir_node, new_ir_node);
+        size_t operand_index = parent->delete_operand_term(ir_node->get_label());
+        if (operand_index < 0)
+          throw logic_error("verified parent however could not delete child operand from parent");
+
+        parent->add_operand(new_ir_node, operand_index);
+      }
     }
   }
 
