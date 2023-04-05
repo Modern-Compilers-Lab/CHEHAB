@@ -433,7 +433,7 @@ void Translator::translate_program(std::ofstream &os)
   fix_ir_instructions_pass();
   // convert_to_inplace_pass();
   {
-    auto &nodes_ptr = program->get_dataflow_sorted_nodes(false);
+    auto &nodes_ptr = program->get_dataflow_sorted_nodes(true);
 
     // after doing all passes, now we do the last pass to translate and generate the code
     for (auto &node_ptr : nodes_ptr)
