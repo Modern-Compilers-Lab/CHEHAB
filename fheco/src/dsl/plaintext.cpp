@@ -53,14 +53,9 @@ Plaintext &Plaintext::set_output(const std::string &tag)
   {
     Plaintext input = *this;
     set_new_label();
-    if (tag != *tag_)
-      tag_ = tag;
-    else
-      tag_ = tag + "(copy)";
     operate_copy<Plaintext>(*this, input, ir::TermType::ciphertext);
   }
-  else
-    tag_ = tag;
+  tag_ = tag;
   operate_in_constants_table(label_, *tag_, VarType::output);
   Compiler::set_output(label_, *tag_, example_value_);
   return *this;
