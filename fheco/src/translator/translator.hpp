@@ -48,9 +48,8 @@ public:
   Translator(
     const std::shared_ptr<ir::Program> &prgm, fhecompiler::SecurityLevel sec_level,
     const param_selector::EncryptionParameters &params, bool uses_mod_switch)
-    : program(prgm), encoding_writer(params.poly_modulus_degree(), encoder_type_identifier, encode_literal),
-      encryption_writer(
-        encryptor_type_literal, encryptor_type_identifier, encrypt_literal, public_key_identifier, context_identifier),
+    : program(prgm), encoding_writer(params.poly_modulus_degree(), encoder_identifier, encode_literal),
+      encryption_writer(encryptor_identifier, encrypt_literal),
       evaluation_writer(evaluator_type_literal, evaluator_identifier, context_identifier),
       context_writer(params, program->get_encryption_scheme(), uses_mod_switch, sec_level)
   {}

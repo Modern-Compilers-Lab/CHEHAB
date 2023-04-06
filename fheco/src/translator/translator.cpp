@@ -377,10 +377,6 @@ void Translator::translate_term(const ir::Term::Ptr &term, std::ostream &os)
     {
       if (term->get_opcode() == ir::OpCode::encrypt)
       {
-        if (!encryption_writer.is_initialized())
-        {
-          encryption_writer.init(os);
-        }
         const std::string &plaintext_id = get_identifier(term->get_operands()[0]);
         const std::string &destination_cipher = get_identifier(term);
         encryption_writer.write_encryption(os, plaintext_id, destination_cipher);
@@ -459,11 +455,11 @@ void Translator::generate_function_signature(std::ostream &os) const
             AccessType::readAndModify},
            {encoded_outputs_class_literal, outputs_class_identifier[ir::TermType::plaintext],
             AccessType::readAndModify},
+           {bv_encoder_type_literal, encoder_identifier, AccessType::readOnly},
+           {encryptor_type_literal, encryptor_identifier, AccessType::readOnly},
            {evaluator_type_literal, evaluator_identifier, AccessType::readOnly},
-           {bv_encoder_type_literal, encoder_type_identifier, AccessType::readOnly},
            {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
-           {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
-           {public_key_literal, public_key_identifier, AccessType::readOnly}})
+           {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly}})
      << '\n';
 }
 

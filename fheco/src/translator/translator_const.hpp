@@ -100,9 +100,9 @@ INLINE std::string evaluator_type_literal = "seal::Evaluator";
 INLINE std::string evaluator_identifier = "evaluator";
 INLINE std::string bv_encoder_type_literal = "seal::BatchEncoder";
 INLINE std::string ckks_encoder_type_literal = "seal::CKKSEncoder";
-INLINE std::string encoder_type_identifier = "encoder";
+INLINE std::string encoder_identifier = "encoder";
 INLINE std::string encryptor_type_literal = "seal::Encryptor";
-INLINE std::string encryptor_type_identifier = "encryptor";
+INLINE std::string encryptor_identifier = "encryptor";
 INLINE std::string insert_object_instruction = "insert"; // instruction to insert inputs/outputs
 INLINE std::string context_function_name = "create_context";
 INLINE std::string set_plain_modulus_intruction = "set_plain_modulus";
@@ -183,30 +183,15 @@ public:
 struct EncryptionWriter
 {
 private:
-  std::string public_key_identifier;
-  std::string context_identifier;
   std::string encryptor_identifier;
-  std::string encryptor_type_literal;
   std::string encrypt_instruction_literal;
-  bool is_init = false;
 
 public:
   EncryptionWriter() = default;
 
-  EncryptionWriter(
-    const std::string &encryptor_type, const std::string &encryptor_id, const std::string &encrypt_instruction,
-    const std::string &pk_id, const std::string &ctxt_id)
-    : public_key_identifier(pk_id), context_identifier(ctxt_id), encryptor_identifier(encryptor_id),
-      encrypt_instruction_literal(encrypt_instruction), encryptor_type_literal(encryptor_type)
+  EncryptionWriter(const std::string &encryptor_id, const std::string &encrypt_instruction)
+    : encryptor_identifier(encryptor_id), encrypt_instruction_literal(encrypt_instruction)
   {}
-  ~EncryptionWriter() {}
-
-  void init(std::ostream &os)
-  {
-    is_init = true;
-    os << encryptor_type_literal << " " << encryptor_identifier << "(" << context_identifier << ","
-       << public_key_identifier << ");\n";
-  }
 
   void write_encryption(std::ostream &os, const std::string &plaintext_id, const std::string &destination_cipher) const
   {
@@ -214,8 +199,6 @@ public:
     os << encryptor_identifier << "." << encrypt_instruction_literal << "(" << plaintext_id << "," << destination_cipher
        << ");\n";
   }
-
-  bool is_initialized() const { return this->is_init; }
 };
 
 struct EvaluationWriter
