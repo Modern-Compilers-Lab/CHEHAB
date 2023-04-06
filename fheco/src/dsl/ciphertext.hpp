@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ir_const.hpp"
+#include "plaintext.hpp"
+#include "scalar.hpp"
 #include <optional>
 #include <string>
 #include <variant>
@@ -25,6 +27,10 @@ public:
   Ciphertext(const std::string &tag, long long min_value = 0, long long ming_value = 100);
 
   Ciphertext(const std::string &tag, const ir::VectorValue &example_value);
+
+  Ciphertext(const Plaintext &plain);
+
+  Ciphertext(const Scalar &scalar);
 
   Ciphertext(const Ciphertext &) = default;
 

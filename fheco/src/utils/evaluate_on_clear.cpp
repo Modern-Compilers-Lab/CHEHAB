@@ -1,5 +1,4 @@
 #include "evaluate_on_clear.hpp"
-#include <stdexcept>
 #include <variant>
 
 using namespace std;
@@ -142,11 +141,25 @@ io_variables_values evaluate_on_clear(ir::Program *program, const io_variables_v
         if (arg_value_it == temps_values.end())
           throw logic_error("parent handled before child");
 
-        visit(
-          ir::overloaded{[&temps_values, &node, &evaluator](const auto &arg_value) {
-            temps_values.emplace(node->get_label(), operate_unary(evaluator, node->get_opcode(), arg_value));
-          }},
-          arg_value_it->second);
+        if (arg->get_term_type() == ir::TermType::scalar && node->get_term_type() != ir::TermType::scalar)
+        {
+          visit(
+            ir::overloaded{
+              [](const auto &arg_value) { throw logic_error("scalar node having vector value (non scalar value)"); },
+              [&temps_values, &node, &evaluator](const ir::ScalarValue &arg_value) {
+                temps_values.emplace(
+                  node->get_label(), operate_unary_vectorize(evaluator, node->get_opcode(), arg_value));
+              }},
+            arg_value_it->second);
+        }
+        else
+        {
+          visit(
+            ir::overloaded{[&temps_values, &node, &evaluator](const auto &arg_value) {
+              temps_values.emplace(node->get_label(), operate_unary(evaluator, node->get_opcode(), arg_value));
+            }},
+            arg_value_it->second);
+        }
       }
       else
         throw logic_error("operation node with invalid number of operands (not 1 nor 2)");
@@ -181,10 +194,19 @@ ir::VectorValue init_const(const ClearDataEvaluator &evaluator, const ir::Vector
     value_var);
 }
 
+ir::VectorValue init_const_vectorize(const ClearDataEvaluator &evaluator, const ir::ScalarValue &value_var)
+{
+  return visit(
+    ir::overloaded{[&evaluator](const auto &value) -> ir::VectorValue {
+      return evaluator.make_element(value);
+    }},
+    value_var);
+}
+
 ir::ScalarValue init_const(const ClearDataEvaluator &evaluator, const ir::ScalarValue &value_var)
 {
   return visit(
-    ir::overloaded{[&evaluator](auto value) -> ir::ScalarValue {
+    ir::overloaded{[](auto value) -> ir::ScalarValue {
       return value;
     }},
     value_var);
@@ -203,12 +225,30 @@ ir::VectorValue operate_unary(const ClearDataEvaluator &evaluator, ir::OpCode op
         return evaluator.mul(arg_value, arg_value);
         break;
       case ir::OpCode::assign:
+      case ir::OpCode::encrypt:
       case ir::OpCode::relinearize:
       case ir::OpCode::modswitch:
         return arg_value;
         break;
       default:
-        throw logic_error("unhandled unary operation");
+        throw logic_error("unhandled unary operation vector->vector");
+        break;
+      }
+    }},
+    arg);
+}
+
+ir::VectorValue operate_unary_vectorize(const ClearDataEvaluator &evaluator, ir::OpCode op, const ir::ScalarValue &arg)
+{
+  return visit(
+    ir::overloaded{[op, &evaluator](const auto &arg_value) -> ir::VectorValue {
+      switch (op)
+      {
+      case ir::OpCode::encrypt:
+        return evaluator.make_element(arg_value);
+        break;
+      default:
+        throw logic_error("unhandled unary operation scalar->vector");
         break;
       }
     }},
@@ -235,8 +275,11 @@ ir::ScalarValue operate_unary(const ClearDataEvaluator &evaluator, ir::OpCode op
       case ir::OpCode::modswitch:
         throw logic_error("relinearize || modswitch on node having scalar value");
         break;
+      case ir::OpCode::encrypt:
+        throw logic_error("encrypt scalar is a vectorizing operation");
+        break;
       default:
-        throw logic_error("unhandled unary operation");
+        throw logic_error("unhandled unary operation scalar->scalar");
         break;
       }
     }},
@@ -267,7 +310,7 @@ ir::VectorValue operate_binary(
             return evaluator.mul(arg1_value, arg2_value);
             break;
           default:
-            throw logic_error("unhandled commutative binary operation");
+            throw logic_error("unhandled commutative binary operation vector x vector->vector");
             break;
           }
         }},
@@ -289,7 +332,7 @@ ir::VectorValue operate_binary(
               return evaluator.sub(arg1_value, arg2_value);
               break;
             default:
-              throw logic_error("unhandled non commutative binary operation");
+              throw logic_error("unhandled non commutative binary operation vector x vector->vector");
               break;
             }
           }},
@@ -309,7 +352,7 @@ ir::VectorValue operate_binary(
               return evaluator.add(evaluator.negate(arg1_value), arg2_value);
               break;
             default:
-              throw logic_error("unhandled non commutative binary operation");
+              throw logic_error("unhandled non commutative binary operation vector x vector->vector");
               break;
             }
           }},
@@ -342,7 +385,7 @@ ir::VectorValue operate_binary(
               return evaluator.mul(arg1_value, arg2_value);
               break;
             default:
-              throw logic_error("unhandled commutative binary operation");
+              throw logic_error("unhandled commutative binary operation vector x scalar -> vector");
               break;
             }
           }},
@@ -366,7 +409,7 @@ ir::VectorValue operate_binary(
               return evaluator.mul(arg1_value, arg2_value);
               break;
             default:
-              throw logic_error("unhandled commutative binary operation");
+              throw logic_error("unhandled commutative binary operation vector x scalar -> vector");
               break;
             }
           }},
@@ -389,7 +432,7 @@ ir::VectorValue operate_binary(
               return evaluator.sub(arg1_value, arg2_value);
               break;
             default:
-              throw logic_error("unhandled non commutative binary operation");
+              throw logic_error("unhandled non commutative binary operation vector x scalar -> vector");
               break;
             }
           }},
@@ -409,7 +452,7 @@ ir::VectorValue operate_binary(
               return evaluator.add(evaluator.negate(arg1_value), arg2_value);
               break;
             default:
-              throw logic_error("unhandled non commutative binary operation");
+              throw logic_error("unhandled non commutative binary operation vector x scalar -> vector");
               break;
             }
           }},
@@ -442,7 +485,7 @@ ir::ScalarValue operate_binary(
             return evaluator.mul(arg1_value, arg2_value);
             break;
           default:
-            throw logic_error("unhandled commutative binary operation");
+            throw logic_error("unhandled commutative binary operation scalar x scalar -> scalar");
             break;
           }
         }},
@@ -464,7 +507,7 @@ ir::ScalarValue operate_binary(
               return evaluator.sub(arg1_value, arg2_value);
               break;
             default:
-              throw logic_error("unhandled non commutative binary operation");
+              throw logic_error("unhandled non commutative binary operation scalar x scalar -> scalar");
               break;
             }
           }},
@@ -484,7 +527,7 @@ ir::ScalarValue operate_binary(
               return evaluator.add(evaluator.negate(arg1_value), arg2_value);
               break;
             default:
-              throw logic_error("unhandled non commutative binary operation");
+              throw logic_error("unhandled non commutative binary operation scalar x scalar -> scalar");
               break;
             }
           }},

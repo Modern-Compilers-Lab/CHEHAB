@@ -7,6 +7,7 @@
 #include <map>
 #include <ostream>
 #include <random>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -20,9 +21,13 @@ io_variables_values evaluate_on_clear(ir::Program *program, const io_variables_v
 
 ir::VectorValue init_const(const ClearDataEvaluator &evaluator, const ir::VectorValue &value_var);
 
+ir::VectorValue init_const_vectorize(const ClearDataEvaluator &evaluator, const ir::ScalarValue &value_var);
+
 ir::ScalarValue init_const(const ClearDataEvaluator &evaluator, const ir::ScalarValue &value_var);
 
 ir::VectorValue operate_unary(const ClearDataEvaluator &evaluator, ir::OpCode op, const ir::VectorValue &arg);
+
+ir::VectorValue operate_unary_vectorize(const ClearDataEvaluator &evaluator, ir::OpCode op, const ir::ScalarValue &arg);
 
 ir::ScalarValue operate_unary(const ClearDataEvaluator &evaluator, ir::OpCode op, const ir::ScalarValue &arg);
 
@@ -35,7 +40,21 @@ ir::VectorValue operate_binary(
 inline ir::VectorValue operate_binary(
   const ClearDataEvaluator &evaluator, ir::OpCode op, const ir::ScalarValue &arg1, const ir::VectorValue &arg2)
 {
-  return operate_binary(evaluator, op, arg2, arg1);
+  // commutative operations
+  if (ir::non_commutative_ops.find(op) == ir::non_commutative_ops.end())
+    return operate_binary(evaluator, op, arg2, arg1);
+  else
+  {
+    switch (op)
+    {
+    case ir::OpCode::sub:
+      return operate_binary(evaluator, ir::OpCode::add, operate_unary(evaluator, ir::OpCode::negate, arg2), arg1);
+      break;
+    default:
+      throw std::logic_error("unhandled non commutative binary operation");
+      break;
+    }
+  }
 }
 
 ir::ScalarValue operate_binary(

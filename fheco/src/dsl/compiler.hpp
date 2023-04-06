@@ -119,6 +119,11 @@ public:
     destination = utils::init_const(get_active()->get_clear_data_evaluator(), value);
   }
 
+  static inline void init_const(const ir::ScalarValue &value, ir::VectorValue &destination)
+  {
+    destination = utils::init_const_vectorize(get_active()->get_clear_data_evaluator(), value);
+  }
+
   static inline void init_const(const ir::ScalarValue &value, ir::ScalarValue &destination)
   {
     destination = utils::init_const(get_active()->get_clear_data_evaluator(), value);
@@ -127,6 +132,11 @@ public:
   static inline void operate_unary(ir::OpCode op, const ir::VectorValue &arg, ir::VectorValue &destination)
   {
     destination = utils::operate_unary(get_active()->get_clear_data_evaluator(), op, arg);
+  }
+
+  static inline void operate_unary(ir::OpCode op, const ir::ScalarValue &arg, ir::VectorValue &destination)
+  {
+    destination = utils::operate_unary_vectorize(get_active()->get_clear_data_evaluator(), op, arg);
   }
 
   static inline void operate_unary(ir::OpCode op, const ir::ScalarValue &arg, ir::ScalarValue &destination)

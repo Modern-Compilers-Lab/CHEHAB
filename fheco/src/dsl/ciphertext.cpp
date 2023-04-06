@@ -28,6 +28,18 @@ Ciphertext::Ciphertext(const string &tag, const ir::VectorValue &example_value)
   operate_in_constants_table(label_, tag, VarType::input);
 }
 
+Ciphertext::Ciphertext(const Plaintext &plain)
+{
+  *this = operate_unary<Ciphertext, Plaintext>(plain, ir::OpCode::encrypt, ir::TermType::ciphertext);
+}
+
+Ciphertext::Ciphertext(const Scalar &scalar)
+{
+  // // instead of calling operate_unary with encrypt then vectorizing the result
+  // Compiler::init_const(scalar.example_value(), example_value_);
+  *this = operate_unary<Ciphertext, Scalar>(scalar, ir::OpCode::encrypt, ir::TermType::ciphertext);
+}
+
 Ciphertext &Ciphertext::set_output(const string &tag)
 {
   // input output
