@@ -16,14 +16,14 @@
 namespace translator
 {
 /* return types map, it maps IR types with corresponding literal for code generation that targets the API */
-INLINE std::unordered_map<ir::TermType, const char *> types_map = {
+INLINE std::unordered_map<ir::TermType, std::string> types_map = {
 
   {ir::TermType::ciphertext, "seal::Ciphertext"}, {ir::TermType::plaintext, "seal::Plaintext"}
 
 };
 
 /* ops_map maps IR operation code with corresponding literal for code generation that targets the API */
-INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
+INLINE std::unordered_map<ir::OpCode, std::string> ops_map = {
 
   {ir::OpCode::encrypt, "encrypt"},
   {ir::OpCode::add, "add"},
@@ -45,7 +45,7 @@ INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
 
 };
 
-INLINE std::unordered_map<ir::OpCode, const char *> ops_map_inplace = {
+INLINE std::unordered_map<ir::OpCode, std::string> ops_map_inplace = {
 
   {ir::OpCode::encrypt, "encrypt"},
   {ir::OpCode::add, "add_inplace"},
@@ -75,57 +75,57 @@ INLINE std::unordered_set<ir::OpCode> inplace_instructions = {
   ir::OpCode::exponentiate, ir::OpCode::square};
 
 /* literals related to api/backend */
-INLINE const char *params_type_literal = "seal::EncryptionParameters";
-INLINE const char *params_identifier_literal = "params";
-INLINE const char *scalar_int = "std::int64_t";
-INLINE const char *scalar_uint = "std::uint64_t";
-INLINE const char *scalar_float = "double";
-INLINE const char *encode_literal = "encode";
-INLINE const char *decode_literal = "decode";
-INLINE const char *encrypt_literal = "encrypt";
-INLINE const char *decrypt_literal = "decrypt";
-INLINE const char *context_type_literal = "seal::SEALContext";
-INLINE const char *context_identifier = "context";
-INLINE const char *public_key_literal = "seal::PublicKey";
-INLINE const char *public_key_identifier = "public_key";
-INLINE const char *secret_key_literal = "seal::SecretKey";
-INLINE const char *secret_key_identifier = "secret_key";
-INLINE const char *relin_keys_type_literal = "seal::RelinKeys";
-INLINE const char *relin_keys_identifier = "relin_keys";
-INLINE const char *galois_keys_type_literal = "seal::GaloisKeys";
-INLINE const char *galois_keys_identifier = "galois_keys";
-INLINE const char *key_generator_type_literal = "seal::KeyGenerator";
-INLINE const char *key_generator_identifier = "key_gen";
-INLINE const char *evaluator_type_literal = "seal::Evaluator";
-INLINE const char *evaluator_identifier = "evaluator";
-INLINE const char *bv_encoder_type_literal = "seal::BatchEncoder";
-INLINE const char *ckks_encoder_type_literal = "seal::CKKSEncoder";
-INLINE const char *encoder_type_identifier = "encoder";
-INLINE const char *encryptor_type_literal = "seal::Encryptor";
-INLINE const char *encryptor_type_identifier = "encryptor";
-INLINE const char *insert_object_instruction = "insert"; // instruction to insert inputs/outputs
-INLINE const char *context_function_name = "create_context";
-INLINE const char *set_plain_modulus_intruction = "set_plain_modulus";
-INLINE const char *create_plain_modulus_intruction = "seal::PlainModulus::Batching";
-INLINE const char *set_coeff_modulus_instruction = "set_coeff_modulus";
-INLINE const char *create_coeff_modulus_instruction = "seal::CoeffModulus::Create";
-INLINE const char *set_poly_modulus_degree_instruction = "set_poly_modulus_degree";
-INLINE const char *encrypted_inputs_class_literal = "std::map<std::string, seal::Ciphertext>";
-INLINE const char *encoded_inputs_class_literal = "std::map<std::string, seal::Plaintext>";
-INLINE const char *encoded_outputs_class_literal = "std::map<std::string, seal::Plaintext>";
-INLINE const char *encrypted_outputs_class_literal = "std::map<std::string, seal::Ciphertext>";
-INLINE const char *headers_include =
+INLINE std::string params_type_literal = "seal::EncryptionParameters";
+INLINE std::string params_identifier_literal = "params";
+INLINE std::string scalar_int = "std::int64_t";
+INLINE std::string scalar_uint = "std::uint64_t";
+INLINE std::string scalar_float = "double";
+INLINE std::string encode_literal = "encode";
+INLINE std::string decode_literal = "decode";
+INLINE std::string encrypt_literal = "encrypt";
+INLINE std::string decrypt_literal = "decrypt";
+INLINE std::string context_type_literal = "seal::SEALContext";
+INLINE std::string context_identifier = "context";
+INLINE std::string public_key_literal = "seal::PublicKey";
+INLINE std::string public_key_identifier = "public_key";
+INLINE std::string secret_key_literal = "seal::SecretKey";
+INLINE std::string secret_key_identifier = "secret_key";
+INLINE std::string relin_keys_type_literal = "seal::RelinKeys";
+INLINE std::string relin_keys_identifier = "relin_keys";
+INLINE std::string galois_keys_type_literal = "seal::GaloisKeys";
+INLINE std::string galois_keys_identifier = "galois_keys";
+INLINE std::string key_generator_type_literal = "seal::KeyGenerator";
+INLINE std::string key_generator_identifier = "key_gen";
+INLINE std::string evaluator_type_literal = "seal::Evaluator";
+INLINE std::string evaluator_identifier = "evaluator";
+INLINE std::string bv_encoder_type_literal = "seal::BatchEncoder";
+INLINE std::string ckks_encoder_type_literal = "seal::CKKSEncoder";
+INLINE std::string encoder_type_identifier = "encoder";
+INLINE std::string encryptor_type_literal = "seal::Encryptor";
+INLINE std::string encryptor_type_identifier = "encryptor";
+INLINE std::string insert_object_instruction = "insert"; // instruction to insert inputs/outputs
+INLINE std::string context_function_name = "create_context";
+INLINE std::string set_plain_modulus_intruction = "set_plain_modulus";
+INLINE std::string create_plain_modulus_intruction = "seal::PlainModulus::Batching";
+INLINE std::string set_coeff_modulus_instruction = "set_coeff_modulus";
+INLINE std::string create_coeff_modulus_instruction = "seal::CoeffModulus::Create";
+INLINE std::string set_poly_modulus_degree_instruction = "set_poly_modulus_degree";
+INLINE std::string encrypted_inputs_class_literal = "std::map<std::string, seal::Ciphertext>";
+INLINE std::string encoded_inputs_class_literal = "std::map<std::string, seal::Plaintext>";
+INLINE std::string encoded_outputs_class_literal = "std::map<std::string, seal::Plaintext>";
+INLINE std::string encrypted_outputs_class_literal = "std::map<std::string, seal::Ciphertext>";
+INLINE std::string headers_include =
   "#include \"seal/seal.h\"\n#include <vector>\n#include <map>\n#include <cstdint>\n";
-INLINE const char *rotation_step_type_literal = "int";
-INLINE const char *gen_steps_function_signature = "std::vector<int> get_rotations_steps()";
+INLINE std::string rotation_step_type_literal = "int";
+INLINE std::string gen_steps_function_signature = "std::vector<int> get_rotations_steps()";
 
-INLINE std::unordered_map<ir::TermType, const char *> outputs_class_identifier = {
+INLINE std::unordered_map<ir::TermType, std::string> outputs_class_identifier = {
   {ir::TermType::plaintext, "encoded_outputs"}, {ir::TermType::ciphertext, "encrypted_outputs"}};
 
-INLINE std::unordered_map<ir::TermType, const char *> inputs_class_identifier = {
+INLINE std::unordered_map<ir::TermType, std::string> inputs_class_identifier = {
   {ir::TermType::plaintext, "encoded_inputs"}, {ir::TermType::ciphertext, "encrypted_inputs"}};
 
-INLINE std::unordered_map<ir::OpCode, const char *> get_other_args_by_opcode = {
+INLINE std::unordered_map<ir::OpCode, std::string> get_other_args_by_opcode = {
   {ir::OpCode::rotate, galois_keys_identifier},
   {ir::OpCode::exponentiate, relin_keys_identifier},
   {ir::OpCode::rotate_rows, galois_keys_identifier},
@@ -148,7 +148,7 @@ struct Argument
 
   ~Argument() {}
 
-  Argument(const char *type, const char *identifier, AccessType _access_type)
+  Argument(std::string type, std::string identifier, AccessType _access_type)
     : arg_type(type), arg_identifier(identifier), access_type(_access_type)
   {}
 };
