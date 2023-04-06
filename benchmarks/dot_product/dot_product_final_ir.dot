@@ -5,6 +5,7 @@ edge [dir=back]
 2 [label="2" style=solid]
 4 [label="4" style=solid]
 8 [label="8" style=solid]
+16 [label="16" style=solid]
 32 [label="32" style=solid]
 64 [label="64" style=solid]
 128 [label="128" style=solid]
@@ -49,13 +50,12 @@ ciphertext12 -> ciphertext10
 ciphertext12 -> ciphertext11
 ciphertext12_level0 [label="mod_switch" style=dashed]
 ciphertext12_level0 -> ciphertext12
-16 [label="16" style=solid]
 ciphertext13 [label="rotate" style=dashed]
-ciphertext13 -> 16
 ciphertext13 -> ciphertext12_level0
+ciphertext13 -> 16
 ciphertext14 [label="+" style=dashed]
-ciphertext14 -> ciphertext13
 ciphertext14 -> ciphertext12_level0
+ciphertext14 -> ciphertext13
 ciphertext15 [label="rotate" style=dashed]
 ciphertext15 -> ciphertext14
 ciphertext15 -> 8

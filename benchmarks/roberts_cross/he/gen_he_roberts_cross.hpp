@@ -17,7 +17,7 @@ std::vector<int> steps = {1,31,33};
 return steps; 
 }
 
-void roberts_cross(std::map<std::string, seal::Ciphertext>& encrypted_inputs, std::map<std::string, seal::Plaintext>& encoded_inputs, std::map<std::string, seal::Ciphertext>& encrypted_outputs, std::map<std::string, seal::Plaintext>& encoded_outputs, const seal::Evaluator& evaluator, const seal::BatchEncoder& encoder, const seal::RelinKeys& relin_keys, const seal::GaloisKeys& galois_keys, const seal::PublicKey& public_key)
+void roberts_cross(std::map<std::string, seal::Ciphertext>& encrypted_inputs, std::map<std::string, seal::Plaintext>& encoded_inputs, std::map<std::string, seal::Ciphertext>& encrypted_outputs, std::map<std::string, seal::Plaintext>& encoded_outputs, const seal::BatchEncoder& encoder, const seal::Encryptor& encryptor, const seal::Evaluator& evaluator, const seal::RelinKeys& relin_keys, const seal::GaloisKeys& galois_keys)
 {
 seal::Ciphertext ciphertext0 = encrypted_inputs["img"];
 seal::Ciphertext ciphertext15;

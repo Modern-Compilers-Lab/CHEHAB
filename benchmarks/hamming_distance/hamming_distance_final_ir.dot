@@ -1,6 +1,7 @@
 digraph "hamming_distance" {
 node [shape=circle width=1 margin=0]
 edge [dir=back]
+1 [label="1" style=solid]
 2 [label="2" style=solid]
 4 [label="4" style=solid]
 8 [label="8" style=solid]
@@ -9,6 +10,7 @@ edge [dir=back]
 64 [label="64" style=solid]
 128 [label="128" style=solid]
 256 [label="256" style=solid]
+512 [label="512" style=solid]
 ciphertext1 [label="c2" style=dashed color=blue fontcolor=blue]
 ciphertext0 [label="c1" style=dashed color=blue fontcolor=blue]
 ciphertext38 [label="*" style=dashed]
@@ -26,17 +28,16 @@ ciphertext2 -> ciphertext1
 ciphertext5 [label="-" style=dashed]
 ciphertext5 -> ciphertext2
 ciphertext5 -> ciphertext4
-ciphertext5_level1 [label="mod_switch" style=dashed]
-ciphertext5_level1 -> ciphertext5
-512 [label="512" style=solid]
 ciphertext6 [label="rotate" style=dashed]
 ciphertext6 -> ciphertext5
 ciphertext6 -> 512
 ciphertext6_level1 [label="mod_switch" style=dashed]
 ciphertext6_level1 -> ciphertext6
+ciphertext5_level1 [label="mod_switch" style=dashed]
+ciphertext5_level1 -> ciphertext5
 ciphertext7 [label="+" style=dashed]
-ciphertext7 -> ciphertext6_level1
 ciphertext7 -> ciphertext5_level1
+ciphertext7 -> ciphertext6_level1
 ciphertext8 [label="rotate" style=dashed]
 ciphertext8 -> ciphertext7
 ciphertext8 -> 256
@@ -85,17 +86,16 @@ ciphertext22 -> 2
 ciphertext23 [label="+" style=dashed]
 ciphertext23 -> ciphertext21
 ciphertext23 -> ciphertext22
-ciphertext23_level0 [label="mod_switch" style=dashed]
-ciphertext23_level0 -> ciphertext23
-1 [label="1" style=solid]
 ciphertext24 [label="rotate" style=dashed]
 ciphertext24 -> ciphertext23
 ciphertext24 -> 1
 ciphertext24_level0 [label="mod_switch" style=dashed]
 ciphertext24_level0 -> ciphertext24
+ciphertext23_level0 [label="mod_switch" style=dashed]
+ciphertext23_level0 -> ciphertext23
 ciphertext25 [label="+" style=dashed color=red fontcolor=red]
-ciphertext25 -> ciphertext24_level0
 ciphertext25 -> ciphertext23_level0
+ciphertext25 -> ciphertext24_level0
 subgraph cluster_key {
     graph[label="Key"]
     node [width=0.5]

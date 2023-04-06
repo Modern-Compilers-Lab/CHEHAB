@@ -27,7 +27,6 @@ int main(int argc, char **argv)
   RelinKeys relin_keys;
   keygen.create_relin_keys(relin_keys);
   GaloisKeys galois_keys;
-  keygen.create_galois_keys(vector<int>{}, galois_keys);
   Encryptor encryptor(context, public_key);
   Evaluator evaluator(context);
   Decryptor decryptor(context, secret_key);
@@ -45,8 +44,8 @@ int main(int argc, char **argv)
   c_start = clock();
   time_start = chrono::high_resolution_clock::now();
   linear_reg(
-    encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, batch_encoder, relin_keys,
-    galois_keys, public_key);
+    encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
+    relin_keys, galois_keys);
   c_end = clock();
   time_end = chrono::high_resolution_clock::now();
   time_sum += time_end - time_start;
@@ -66,8 +65,8 @@ int main(int argc, char **argv)
   time_start = chrono::high_resolution_clock::now();
   for (int i = 0; i < repeat - 1; ++i)
     linear_reg(
-      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, evaluator, batch_encoder, relin_keys,
-      galois_keys, public_key);
+      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
+      relin_keys, galois_keys);
   c_end = clock();
   time_end = chrono::high_resolution_clock::now();
 

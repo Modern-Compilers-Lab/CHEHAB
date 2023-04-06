@@ -12,7 +12,7 @@ seal::SEALContext context(params,true,seal::sec_level_type::tc128);
 return context;
 }
 
-void poly_reg(std::map<std::string, seal::Ciphertext>& encrypted_inputs, std::map<std::string, seal::Plaintext>& encoded_inputs, std::map<std::string, seal::Ciphertext>& encrypted_outputs, std::map<std::string, seal::Plaintext>& encoded_outputs, const seal::Evaluator& evaluator, const seal::BatchEncoder& encoder, const seal::RelinKeys& relin_keys, const seal::GaloisKeys& galois_keys, const seal::PublicKey& public_key)
+void poly_reg(std::map<std::string, seal::Ciphertext>& encrypted_inputs, std::map<std::string, seal::Plaintext>& encoded_inputs, std::map<std::string, seal::Ciphertext>& encrypted_outputs, std::map<std::string, seal::Plaintext>& encoded_outputs, const seal::BatchEncoder& encoder, const seal::Encryptor& encryptor, const seal::Evaluator& evaluator, const seal::RelinKeys& relin_keys, const seal::GaloisKeys& galois_keys)
 {
 seal::Ciphertext ciphertext2 = encrypted_inputs["c2"];
 seal::Ciphertext ciphertext2_level0;
