@@ -454,6 +454,7 @@ int ParameterSelector::simulate_noise_bfv(
     {{ir::OpCode::rotate, ir::TermType::rawData, ir::TermType::ciphertext}, 5},
     {{ir::OpCode::assign, ir::TermType::ciphertext, ir::TermType::undefined}, 0},
     {{ir::OpCode::encrypt, ir::TermType::plaintext, ir::TermType::undefined}, fresh_noise},
+    {{ir::OpCode::encrypt, ir::TermType::scalar, ir::TermType::undefined}, fresh_noise},
     {{ir::OpCode::relinearize, ir::TermType::ciphertext, ir::TermType::undefined}, 0}};
 
   int circuit_noise = fresh_noise;
@@ -608,7 +609,7 @@ bool ParameterSelector::insert_mod_switch_bfv(
               ir::Term::Ptr arg1_lowest_level;
               if (arg1_level_data.root_label != arg1->get_label())
               {
-                program_->find_node_in_dataflow(
+                arg1_lowest_level = program_->find_node_in_dataflow(
                   make_leveled_node_label(arg1_level_data.root_label, arg1_level_data.lowest_level));
                 if (!arg1_lowest_level)
                   throw logic_error("node lowest level not found in the data flow");
@@ -648,7 +649,7 @@ bool ParameterSelector::insert_mod_switch_bfv(
               ir::Term::Ptr arg2_lowest_level;
               if (arg2_level_data.root_label != arg2->get_label())
               {
-                program_->find_node_in_dataflow(
+                arg2_lowest_level = program_->find_node_in_dataflow(
                   make_leveled_node_label(arg2_level_data.root_label, arg2_level_data.lowest_level));
                 if (!arg2_lowest_level)
                   throw logic_error("node lowest level not found in the data flow");
