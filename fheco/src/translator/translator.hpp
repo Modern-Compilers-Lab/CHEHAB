@@ -23,6 +23,10 @@ private:
   EncryptionWriter encryption_writer;
   EvaluationWriter evaluation_writer;
   ContextWriter context_writer;
+  std::unordered_map<ir::Program::Ptr, size_t> size_of;
+  std::unordered_map<ir::Program::Ptr, size_t> func_id_by_root;
+  std::unordered_map<ir::Program::Ptr, std::vector<std::string>> outputs;
+  std::unordered_map<ir::Program::Ptr, std::unordered_set<size_t>> scopes_by_node;
 
   std::unordered_map<std::string, std::string> label_in_destination_code; // we don't have to create a map but it is
                                                                           // just more elegant with the map
@@ -86,8 +90,9 @@ public:
   */
   ir::OpCode deduce_opcode_to_generate(const Ptr &node) const;
 
-  void translate_program(std::ofstream &os);
+  void translate_program(std::ofstream &source_os, std::ofstream &header_os, size_t threshold);
 
+  void translate_program(std::ofstream &os, size_t threshold);
   /*
     every change that needs to be done on IR node before code generation happens in fix_ir_instruction
   */
@@ -96,6 +101,18 @@ public:
   void fix_ir_instructions_pass();
 
   std::string get_output_identifier(const std::string &output_label);
+
+  std::string get_function_identifier(size_t func_id);
+
+  std::string get_static_object_identifier(const ir::Program::Ptr &node_ptr);
+
+  void write_as_a_static_object(const ir::Program::Ptr &node, std::ofstream &os);
+
+  void generate_function_from_nodes(
+    std::ofstream &os, const std::vector<ir::Program::Ptr> &nodes, bool void_func = false,
+    const std::string &func_id = "");
+
+  void define_class_in_header(std::ofstream &header_os);
 };
 
 } // namespace translator

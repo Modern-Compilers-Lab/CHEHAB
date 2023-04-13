@@ -252,10 +252,12 @@ void Translator::translate_constant_table_entry(
   }
   else if (entry_type == ir::ConstantTableEntryType::constant || entry_value.value != std::nullopt)
   {
+    /*
     if (!encoding_writer.is_initialized())
     {
       encoding_writer.init(os);
     }
+    */
     if (term_type == ir::TermType::plaintext)
     {
       // encoding
@@ -329,14 +331,30 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
 
   std::string op_identifier = get_identifier(label_in_destination_code[term_ptr->get_label()]);
   auto &operands = term_ptr->get_operands();
-  std::string lhs_identifier = get_identifier(label_in_destination_code[operands[0]->get_label()]);
-  std::string rhs_identifier = get_identifier(label_in_destination_code[operands[1]->get_label()]);
+
+  std::string lhs_identifier;
+  if (func_id_by_root.find(operands[0]) != func_id_by_root.end())
+    lhs_identifier = get_function_identifier(func_id_by_root[operands[0]]);
+  else if (scopes_by_node[operands[0]].size() > 1)
+    lhs_identifier = get_static_object_identifier(operands[0]);
+  else
+    lhs_identifier = get_identifier(label_in_destination_code[operands[0]->get_label()]);
+
+  std::string rhs_identifier;
+  if (func_id_by_root.find(operands[1]) != func_id_by_root.end())
+    rhs_identifier = get_function_identifier(func_id_by_root[operands[1]]);
+  else if (scopes_by_node[operands[1]].size() > 1)
+    rhs_identifier = get_static_object_identifier(operands[1]);
+  else
+    rhs_identifier = get_identifier(label_in_destination_code[operands[1]->get_label()]);
 
   if (lhs_identifier.empty() || rhs_identifier.empty())
     throw("empty label operand");
 
+  /*
   if (evaluation_writer.is_initialized() == false)
     evaluation_writer.init(os);
+  */
 
   evaluation_writer.write_binary_operation(
     os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
@@ -350,7 +368,15 @@ void Translator::translate_nary_operation(const Ptr &term_ptr, std::ofstream &os
 void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &os)
 {
   std::string op_identifier = get_identifier(label_in_destination_code[term_ptr->get_label()]);
-  std::string rhs_identifier = get_identifier(label_in_destination_code[term_ptr->get_operands()[0]->get_label()]);
+  std::string rhs_identifier;
+
+  if (func_id_by_root.find(term_ptr->get_operands()[0]) != func_id_by_root.end())
+    rhs_identifier = get_function_identifier(func_id_by_root[term_ptr->get_operands()[0]]);
+  else if (scopes_by_node[term_ptr->get_operands()[0]].size() > 1)
+    rhs_identifier = get_static_object_identifier(term_ptr->get_operands()[0]);
+  else
+    rhs_identifier = get_identifier(label_in_destination_code[term_ptr->get_operands()[0]->get_label()]);
+
   // os << op_type << " " << op_identifier << ops_map[term_ptr->get_opcode()] << rhs_identifier << end_of_command <<
   // '\n';
   if (term_ptr->get_opcode() == ir::OpCode::assign)
@@ -359,8 +385,10 @@ void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &o
   }
   else
   {
+    /*
     if (evaluation_writer.is_initialized() == false)
       evaluation_writer.init(os);
+    */
 
     evaluation_writer.write_unary_operation(
       os, term_ptr->get_opcode(), op_identifier, rhs_identifier, term_ptr->get_term_type());
@@ -371,7 +399,6 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
 {
 
   auto constant_table_entry_opt = program->get_entry_form_constants_table(term->get_label());
-
   // we need to tranlsate the operation node
   if (term->is_operation_node())
   {
@@ -386,12 +413,23 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
     {
       if (term->get_opcode() == ir::OpCode::encrypt)
       {
+        /*
         if (!encryption_writer.is_initialized())
         {
           encryption_writer.init(os);
         }
-        const std::string &plaintext_id =
-          get_identifier(label_in_destination_code[term->get_operands()[0]->get_label()]);
+        */
+        std::string plaintext_id;
+        if (func_id_by_root.find(term->get_operands()[0]) != func_id_by_root.end())
+        {
+          if (scopes_by_node[term->get_operands()[0]].size() > 1)
+            plaintext_id = get_static_object_identifier(term->get_operands()[0]);
+          else
+            plaintext_id = get_function_identifier(func_id_by_root[term->get_operands()[0]]);
+        }
+        else
+          plaintext_id = get_identifier(label_in_destination_code[term->get_operands()[0]->get_label()]);
+
         const std::string &destination_cipher = get_identifier(label_in_destination_code[term->get_label()]);
         encryption_writer.write_encryption(os, plaintext_id, destination_cipher);
       }
@@ -414,28 +452,49 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
     ir::ConstantTableEntry &constant_table_entry = *constant_table_entry_opt;
     translate_constant_table_entry(constant_table_entry, term->get_term_type(), os);
   }
+
+  if (scopes_by_node[term].size() > 1 && func_id_by_root.find(term) == func_id_by_root.end())
+  {
+    write_as_a_static_object(term, os);
+  }
+
+  if (outputs.find(term) != outputs.end())
+  {
+    for (auto &equal_output_label : outputs[term])
+    {
+      write_output(get_identifier(equal_output_label), get_identifier(term->get_label()), term->get_term_type(), os);
+    }
+  }
 }
 
-void Translator::translate_program(std::ofstream &os)
+void Translator::translate_program(std::ofstream &source_os, std::ofstream &header_os, size_t threshold)
 {
 
-  os << headers_include;
+  header_os << headers_include << "\n";
+  source_os << source_headers_include << "\n";
 
-  context_writer.write_context(os);
-
-  os << "\n";
+  context_writer.write_context(source_os);
+  header_os << context_function_signature << ";\n";
 
   if (program->get_rotations_keys_steps().size())
-    write_rotations_steps_getter(program->get_rotations_keys_steps(), os);
+    write_rotations_steps_getter(program->get_rotations_keys_steps(), source_os);
+  header_os << gen_steps_function_signature << ";\n";
 
-  generate_function_signature(os);
-  os << "{" << '\n';
+  define_class_in_header(header_os);
+
+  // generate_function_signature(os);
+  // os << "{" << '\n';
 
   fix_ir_instructions_pass();
-  // convert_to_inplace_pass();
+
+  for (auto &output_entry : program->get_outputs_nodes())
+  {
+    outputs[output_entry.second].push_back(output_entry.first);
+  }
+
   {
     auto &nodes_ptr = program->get_dataflow_sorted_nodes(true);
-
+    /*
     for (auto &node_ptr : nodes_ptr)
     {
       if (is_convertable_to_inplace(node_ptr))
@@ -448,16 +507,148 @@ void Translator::translate_program(std::ofstream &os)
 
       translate_term(node_ptr, os);
     }
+    */
+    size_t func_id(0);
+    std::vector<std::vector<ir::Program::Ptr>> functions_nodes;
+    {
+      std::vector<ir::Program::Ptr> function_nodes;
+      for (auto &node_ptr : nodes_ptr)
+      {
+
+        label_in_destination_code[node_ptr->get_label()] = node_ptr->get_label();
+        size_of[node_ptr] = 1;
+
+        if (node_ptr->get_term_type() == ir::TermType::rawData)
+          continue;
+
+        if (node_ptr->is_operation_node())
+        {
+          for (auto &operand : node_ptr->get_operands())
+          {
+            size_of[node_ptr] =
+              size_of[node_ptr] + (func_id_by_root.find(operand) == func_id_by_root.end() ? size_of[operand] : 1);
+          }
+          if (size_of[node_ptr] >= threshold)
+          {
+            // order of instructions below is important !!
+            func_id_by_root.insert(std::make_pair(node_ptr, func_id++));
+            function_nodes.push_back(node_ptr);
+            for (auto &function_node : function_nodes)
+            {
+              scopes_by_node[function_node].insert(func_id - 1);
+              if (function_node->is_operation_node())
+              {
+                for (auto &operand : function_node->get_operands())
+                {
+                  if (operand->get_term_type() == ir::TermType::rawData)
+                    continue;
+                  scopes_by_node[operand].insert(func_id - 1);
+                }
+              }
+            }
+            functions_nodes.push_back(function_nodes);
+            function_nodes.clear();
+          }
+          else
+            function_nodes.push_back(node_ptr);
+        }
+        else
+          function_nodes.push_back(node_ptr);
+      }
+      if (function_nodes.size() > 0)
+      {
+        func_id_by_root.insert(std::make_pair(function_nodes.back(), func_id++));
+        for (auto &function_node : function_nodes)
+        {
+          scopes_by_node[function_node].insert(func_id - 1);
+          if (function_node->is_operation_node())
+          {
+            for (auto &operand : function_node->get_operands())
+            {
+              if (operand->get_term_type() == ir::TermType::rawData)
+                continue;
+              scopes_by_node[operand].insert(func_id - 1);
+            }
+          }
+        }
+        functions_nodes.push_back(function_nodes);
+        function_nodes.clear();
+      }
+    }
+    for (size_t i = 0; i < functions_nodes.size(); i++)
+    {
+      if (i < functions_nodes.size() - 1)
+      {
+        {
+          // writing in header
+          ArgumentList argument_list;
+          header_os << types_map[functions_nodes[i].back()->get_term_type()] << " "
+                    << method_signature_prefix + std::to_string(func_id_by_root[functions_nodes[i].back()])
+                    << argument_list(
+                         {{encrypted_inputs_class_literal, inputs_class_identifier[ir::TermType::ciphertext],
+                           AccessType::readAndModify},
+                          {encoded_inputs_class_literal, inputs_class_identifier[ir::TermType::plaintext],
+                           AccessType::readAndModify}})
+                    << ";\n";
+        }
+        generate_function_from_nodes(source_os, functions_nodes[i]);
+      }
+      else
+      {
+        {
+          header_os << "public: \n";
+          // attribute 1
+          header_os << encrypted_outputs_class_literal << " " << outputs_class_identifier[ir::TermType::ciphertext]
+                    << ";\n";
+          // attribute 2
+          header_os << encoded_outputs_class_literal << " " << outputs_class_identifier[ir::TermType::plaintext]
+                    << ";\n";
+          ArgumentList argument_list;
+          header_os << "void " << program->get_program_tag()
+                    << argument_list(
+                         {{encrypted_inputs_class_literal, inputs_class_identifier[ir::TermType::ciphertext],
+                           AccessType::readAndModify},
+                          {encoded_inputs_class_literal, inputs_class_identifier[ir::TermType::plaintext],
+                           AccessType::readAndModify}})
+                    << ";\n";
+        }
+        generate_function_from_nodes(source_os, functions_nodes[i], true, program->get_program_tag());
+      }
+    }
+
+    {
+      fhecompiler::Scheme schm = program->get_scheme();
+      ArgumentList argument_list;
+      header_os << generated_class_name
+                << argument_list(
+                     {{relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
+                      {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
+                      {context_type_literal, context_identifier, AccessType::readOnly},
+                      {public_key_literal, public_key_identifier, AccessType::readOnly}})
+                << ": " << relin_keys_identifier << "(" << relin_keys_identifier << ")"
+                << ", " << encoder_type_identifier << "(" << context_identifier << ")"
+                << "," << galois_keys_identifier << "(" << galois_keys_identifier << ")"
+                << "," << evaluator_identifier << "(" << context_identifier << ")"
+                << "," << encryptor_type_identifier << "(" << context_identifier << "," << public_key_identifier << ")"
+                << "{} \n";
+
+      // header_os << generated_class_name << ;
+      header_os << "}; \n";
+    }
   }
+  /*
   for (auto &output_node : program->get_outputs_nodes())
   {
     // if (program->type_of(output_node.second->get_label()) == ir::ConstantTableEntryType::output)
+    std::cout << output_node.first << " " << get_output_identifier(output_node.first) << "\n";
     write_output(
       get_output_identifier(output_node.first),
       get_identifier(label_in_destination_code[output_node.second->get_label()]), (output_node.second)->get_term_type(),
       os);
   }
-  os << "}" << '\n';
+  */
+
+  // os << "}" << '\n';
 }
 
 void Translator::generate_function_signature(std::ofstream &os) const
@@ -467,7 +658,7 @@ void Translator::generate_function_signature(std::ofstream &os) const
      << argument_list(
           {{encrypted_inputs_class_literal, inputs_class_identifier[ir::TermType::ciphertext],
             AccessType::readAndModify},
-           {encoded_inputs_class_literal, inputs_class_identifier[ir::TermType::plaintext], AccessType::readAndModify},
+           {encoded_inputs_class_literal, inputs_class_identifier[ir::TermType::plaintext], AccessType::readAndModify}/*,
            {encrypted_outputs_class_literal, outputs_class_identifier[ir::TermType::ciphertext],
             AccessType::readAndModify},
            {encoded_outputs_class_literal, outputs_class_identifier[ir::TermType::plaintext],
@@ -475,7 +666,7 @@ void Translator::generate_function_signature(std::ofstream &os) const
            {context_type_literal, context_identifier, AccessType::readOnly},
            {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
            {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
-           {public_key_literal, public_key_identifier, AccessType::readOnly}})
+           {public_key_literal, public_key_identifier, AccessType::readOnly}*/})
      << '\n';
 }
 
@@ -738,6 +929,118 @@ bool Translator::is_convertable_to_inplace(const ir::Program::Ptr &node_ptr)
   }
   else
     throw("unexpected size of operands, more than 2");
+}
+
+void Translator::generate_function_from_nodes(
+  std::ofstream &os, const std::vector<ir::Program::Ptr> &nodes, bool void_func, const std::string &func_id)
+{
+
+  if (nodes.size() == 0)
+    return;
+
+  auto &root = nodes.back();
+
+  if (root->get_term_type() == ir::TermType::rawData)
+    return;
+
+  std::string return_type = types_map[ir::TermType::ciphertext];
+
+  std::string ident = get_identifier(label_in_destination_code[root->get_label()]);
+
+  if (root->get_term_type() != ir::TermType::ciphertext)
+    return_type = types_map[ir::TermType::plaintext];
+
+  ArgumentList argument_list;
+  os << (void_func == false ? types_map[root->get_term_type()] : "void") << " " << generated_class_name
+     << "::" << (func_id.empty() ? (method_signature_prefix + std::to_string(func_id_by_root[root])) : func_id)
+     << argument_list(
+          {{encrypted_inputs_class_literal, inputs_class_identifier[ir::TermType::ciphertext],
+            AccessType::readAndModify},
+           {encoded_inputs_class_literal, inputs_class_identifier[ir::TermType::plaintext], AccessType::readAndModify}})
+     << "{\n";
+
+  if (nodes.size() == 0)
+    translate_term(root, os);
+  else
+  {
+    for (auto &node : nodes)
+      translate_term(node, os);
+  }
+
+  if (void_func == false)
+  {
+    os << "return " << get_identifier(ident) << ";";
+  }
+  os << "}";
+}
+
+std::string Translator::get_function_identifier(size_t func_id)
+{
+  return std::string(method_signature_prefix) + std::to_string(func_id) + "(" +
+         inputs_class_identifier[ir::TermType::ciphertext] + "," + inputs_class_identifier[ir::TermType::plaintext] +
+         ")";
+}
+
+std::string Translator::get_static_object_identifier(const ir::Program::Ptr &node_ptr)
+{
+  if (node_ptr->get_term_type() == ir::TermType::rawData)
+    throw std::logic_error("unexpected term type in get_static_object_identifier");
+
+  std::string node_ident = get_identifier(node_ptr);
+  std::string map_ident = static_ciphertexts_map_id;
+  if (node_ptr->get_term_type() != ir::TermType::ciphertext)
+    map_ident = static_plaintexts_map_id;
+
+  return map_ident + "[\"" + node_ident + "\"]";
+}
+
+void Translator::write_as_a_static_object(const ir::Program::Ptr &node, std::ofstream &os)
+{
+  std::string ident;
+  if (func_id_by_root.find(node) != func_id_by_root.end())
+  {
+    ident = get_function_identifier(func_id_by_root[node]);
+  }
+  else
+  {
+    ident = get_identifier(node);
+  }
+
+  if (node->get_term_type() == ir::TermType::ciphertext)
+  {
+    os << static_ciphertexts_map_id << "[\"" << ident << "\"] = " << ident << ";";
+  }
+  else if (node->get_term_type() == ir::TermType::plaintext || node->get_term_type() == ir::TermType::scalar)
+  {
+    os << static_plaintexts_map_id << "[\"" << ident << "\"] = " << ident << ";";
+  }
+  else if (node->get_term_type() != ir::TermType::rawData)
+    throw std::logic_error("unexpected term type in write_as_a_static_object");
+}
+
+void Translator::define_class_in_header(std::ofstream &header_os)
+{
+  header_os << "\n";
+  header_os << "class " << generated_class_name << "{";
+  header_os << "private:\n"; // visibility
+  // attribute 3
+  header_os << galois_keys_type_literal << " " << galois_keys_identifier << ";\n";
+  // attribute 4
+  header_os << relin_keys_type_literal << " " << relin_keys_identifier << ";\n";
+  // attribute 7
+  header_os << evaluator_type_literal << " " << evaluator_identifier << ";\n";
+  // attribute 8
+  if (program->get_scheme() == fhecompiler::ckks)
+    header_os << ckks_encoder_type_literal << " ";
+  else
+    header_os << bv_encoder_type_literal << " ";
+  header_os << encoder_type_identifier << ";\n";
+  // attribute 9
+  header_os << encryptor_type_literal << " " << encryptor_type_identifier << ";\n";
+  // attribute 10
+  header_os << encrypted_outputs_class_literal << " " << static_ciphertexts_map_id << ";\n";
+  // attribute 11
+  header_os << encoded_outputs_class_literal << " " << static_plaintexts_map_id << ";\n";
 }
 
 } // namespace translator

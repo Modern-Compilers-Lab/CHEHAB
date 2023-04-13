@@ -104,7 +104,7 @@ INLINE const char *encoder_type_identifier = "encoder";
 INLINE const char *encryptor_type_literal = "seal::Encryptor";
 INLINE const char *encryptor_type_identifier = "encryptor";
 INLINE const char *insert_object_instruction = "insert"; // instruction to insert inputs/outputs
-INLINE const char *context_function_name = "create_context";
+INLINE const char *context_function_signature = "seal::SEALContext create_context()";
 INLINE const char *set_plain_modulus_intruction = "set_plain_modulus";
 INLINE const char *create_plain_modulus_intruction = "seal::PlainModulus::Batching";
 INLINE const char *set_coeff_modulus_instruction = "set_coeff_modulus";
@@ -116,8 +116,16 @@ INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::stri
 INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, seal::Ciphertext>";
 INLINE const char *headers_include =
   "#include\"seal/seal.h\"\n#include<vector>\n#include<unordered_map>\n#include<cstdint>\n";
+INLINE const char *source_headers_include = "#include\"computation.hpp\"\n";
 INLINE const char *rotation_step_type_literal = "int32_t";
 INLINE const char *gen_steps_function_signature = "std::vector<int32_t> get_rotations_steps()";
+INLINE const char *static_plaintexts_map_id = "static_plaintexts";
+INLINE const char *static_ciphertexts_map_id = "static_ciphertexts";
+INLINE const char *method_signature_prefix = "func";
+INLINE const char *setter_method_signature_prefix = "set_";
+INLINE const char *generated_class_name = "Computation";
+INLINE const char *destination_header_file = "computation.hpp";
+INLINE const char *destination_source_file = "computation.cpp";
 
 INLINE std::unordered_map<ir::TermType, const char *> outputs_class_identifier = {
   {ir::TermType::plaintext, "encoded_outputs"}, {ir::TermType::ciphertext, "encrypted_outputs"}};
@@ -459,8 +467,7 @@ public:
 
   void write_context(std::ostream &os)
   {
-    os << context_type_literal << " " << context_function_name << "()"
-       << "{" << '\n';
+    os << context_function_signature << "{" << '\n';
     write_parameters(os);
     os << context_type_literal << " " << context_identifier << "(" << params_identifier_literal << ",";
     if (uses_mod_switch)
