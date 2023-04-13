@@ -1,48 +1,85 @@
 #pragma once
 
+#include "op_code.hpp"
 #include "term.hpp"
-#include <map>
+#include "term_type.hpp"
+#include <cstddef>
+#include <functional>
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
+namespace fhecompiler
+{
 namespace ir
 {
-class DAG
-{
-  using Ptr = std::shared_ptr<Term>;
+  class DAG
+  {
+  public:
+    using TermSet = std::set<Term *, std::function<bool(Term *, Term *)>>;
 
-private:
-  std::map<std::string, Ptr> outputs_nodes;
+    using TermUSet =
+      std::unordered_set<Term *, std::function<std::size_t(Term *)>, std::function<bool(Term *, Term *)>>;
 
-  std::vector<Ptr> sorted_nodes; // nodes topologically sorted
+    DAG() = default;
 
-  std::unordered_map<std::string, Ptr> node_ptr_from_label;
+    Term *insert_term(std::string label, OpCode op_code, std::vector<Term *> operands);
 
-public:
-  DAG() = default;
+    Term *insert_leaf(std::string label, TermType type);
 
-  ~DAG() {}
+    Term *find_term(const std::string &label) const;
 
-  void insert_node(Ptr node_ptr, bool is_output = false);
+    void delete_term(Term *t);
 
-  void delete_node(const std::string &node_label);
+    void replace_term_with(Term *t1, Term *t2)
+    {
+      if (*t1 == *t2)
+        return;
 
-  void apply_topological_sort(bool clear_existing_order);
+      t1->replace_with(t2);
+      valid_top_sort = false;
+    }
 
-  Ptr find_node(const std::string &node_label) const;
+    std::vector<Term *> topological_sort() const;
 
-  void set_node_as_output(const std::string &key);
+    bool set_output(Term *t);
 
-  void unset_node_from_output(const std::string &key);
+    bool unset_output(Term *t);
 
-  const std::map<std::string, Ptr> &get_outputs_nodes() const { return outputs_nodes; }
+    inline const std::vector<Term *> &get_top_sorted_terms()
+    {
+      if (valid_top_sort)
+        return sorted_terms_;
 
-  bool is_output_node(const std::string &label);
+      sorted_terms_ = topological_sort();
+      valid_top_sort = true;
+      return sorted_terms_;
+    }
 
-  const std::vector<Ptr> &get_outputs_nodes_topsorted() const { return sorted_nodes; }
+    inline const std::unordered_map<std::string, std::shared_ptr<Term>> &leaves() const { return leaves_; }
 
-  bool update_if_output_entry(const std::string &output_label, const Ptr &node);
-};
+    inline const TermSet &outputs() const { return outputs_; }
+
+  private:
+    std::vector<Term *> sorted_terms_; // nodes topologically sorted
+
+    bool valid_top_sort = false;
+
+    TermUSet terms_{
+      0, [](Term *e) -> std::size_t { return std::hash<std::string>{}(e->label_); },
+      [](Term *lhs, Term *rhs) -> bool {
+        return *lhs == *rhs;
+      }};
+
+    TermSet outputs_{[](Term *lhs, Term *rhs) -> bool {
+      return *lhs < *rhs;
+    }};
+
+    // should be declared last for correct destruction
+    std::unordered_map<std::string, std::shared_ptr<Term>> leaves_;
+  };
 } // namespace ir
+} // namespace fhecompiler

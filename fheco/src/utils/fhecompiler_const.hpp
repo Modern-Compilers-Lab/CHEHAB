@@ -2,27 +2,15 @@
 
 namespace fhecompiler
 {
-enum Scheme
+enum class Scheme
 {
   none,
-  bfv,
-  bgv,
-  ckks
-};
-
-enum class VarType
-{
-  input,
-  output,
-  constant,
-  temp
+  bfv
 };
 
 enum class Backend
 {
-  SEAL,
-  HELib,
-  OpenFHE
+  SEAL
 };
 
 enum class SecurityLevel

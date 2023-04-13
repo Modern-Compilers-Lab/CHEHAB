@@ -1,26 +1,28 @@
 #pragma once
 
 #include "ir_const.hpp"
+#include "term_type.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 
 namespace fhecompiler
 {
 class Scalar
 {
-private:
-  std::string label_; // symbol
-
-  ir::ScalarValue example_value_;
-
-  static size_t scalar_id;
-
 public:
-  Scalar() {}
+  Scalar() : label_(term_type().auto_name_prefix() + std::to_string(id_++)) {}
 
-  Scalar(int64_t data);
+  Scalar(std::int64_t data, std::string tag);
 
-  Scalar(int data) : Scalar((int64_t)data) {}
+  Scalar(std::int64_t data);
+
+  Scalar(int data, std::string tag) : Scalar(static_cast<std::int64_t>(data), std::move(tag)) {}
+
+  Scalar(int data) : Scalar(static_cast<std::int64_t>(data)) {}
+
+  Scalar(uint64_t data, std::string tag);
 
   Scalar(uint64_t data);
 
@@ -32,14 +34,21 @@ public:
 
   Scalar &operator=(Scalar &&) = default;
 
-  const std::string &get_label() const { return label_; }
+  static inline ir::TermType term_type() { return ir::TermType::scalar; }
 
-  inline ir::ScalarValue &example_value() { return example_value_; }
+  const Scalar &tag(std::string tag) const;
+
+  const std::string &label() const { return label_; }
 
   inline const ir::ScalarValue &example_value() const { return example_value_; }
 
-  void set_label(const std::string &label) { label_ = label; }
+private:
+  inline ir::ScalarValue &example_value() { return example_value_; }
 
-  void set_new_label();
+  static std::size_t id_;
+
+  std::string label_;
+
+  ir::ScalarValue example_value_;
 };
 } // namespace fhecompiler

@@ -1,67 +1,39 @@
 #include "ciphertext.hpp"
 #include "compiler.hpp"
-#include "datatypes_const.hpp"
-#include "datatypes_util.hpp"
-#include "evaluate_on_clear.hpp"
-#include <cstdint>
-#include <vector>
+#include <utility>
 
 using namespace std;
 
 namespace fhecompiler
 {
-size_t Ciphertext::ciphertext_id = 0;
+size_t Ciphertext::id_ = 0;
 
-Ciphertext::Ciphertext(const string &tag, long long min_value, long long max_value)
-  : label_(datatype::ct_label_prefix + to_string(Ciphertext::ciphertext_id++)), tag_(tag)
+Ciphertext::Ciphertext(string tag) : Ciphertext()
 {
-  Compiler::init_input(label_, tag, min_value, max_value, example_value_);
-  Compiler::get_active()->insert_node_in_dataflow(*this);
-  operate_in_constants_table(label_, tag, VarType::input);
+  Compiler::get_active().init_input_term(label_, term_type(), move(tag));
 }
 
-Ciphertext::Ciphertext(const string &tag, const ir::VectorValue &example_value)
-  : label_(datatype::ct_label_prefix + to_string(Ciphertext::ciphertext_id++)), tag_(tag)
+Ciphertext::Ciphertext(string tag, long long min_value, long long max_value) : Ciphertext()
 {
-  Compiler::init_input(label_, tag, example_value, example_value_);
-  Compiler::get_active()->insert_node_in_dataflow(*this);
-  operate_in_constants_table(label_, tag, VarType::input);
+  Compiler::get_active().init_input_term(label_, term_type(), move(tag));
+  // Compiler::init_input(label_, tag, min_value, max_value, example_value_);
 }
 
-Ciphertext::Ciphertext(const Plaintext &plain)
+Ciphertext::Ciphertext(string tag, const ir::VectorValue &example_value) : Ciphertext()
 {
-  *this = operate_unary<Ciphertext, Plaintext>(plain, ir::OpCode::encrypt, ir::TermType::ciphertext);
+  Compiler::get_active().init_input_term(label_, term_type(), move(tag));
+  // Compiler::init_input(label_, tag, example_value, example_value_);
 }
 
-Ciphertext::Ciphertext(const Scalar &scalar)
+const Ciphertext &Ciphertext::tag(string tag) const
 {
-  // // instead of calling operate_unary with encrypt then vectorizing the result
-  // Compiler::init_const(scalar.example_value(), example_value_);
-  *this = operate_unary<Ciphertext, Scalar>(scalar, ir::OpCode::encrypt, ir::TermType::ciphertext);
-}
-
-Ciphertext &Ciphertext::set_output(const string &tag)
-{
-  // input output
-  if (tag_.has_value())
-  {
-    Ciphertext input = *this;
-    set_new_label();
-    operate_copy<Ciphertext>(*this, input, ir::TermType::ciphertext);
-  }
-  tag_ = tag;
-  operate_in_constants_table(label_, *tag_, VarType::output);
-  Compiler::set_output(label_, *tag_, example_value_);
+  Compiler::get_active().tag_term(label_, move(tag));
   return *this;
 }
 
-void Ciphertext::set_new_label()
+const Ciphertext &Ciphertext::set_output(string tag) const
 {
-  label_ = datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++);
-}
-
-bool Ciphertext::is_output() const
-{
-  return (Compiler::get_active()->type_of(label_) == ir::ConstantTableEntryType::output);
+  Compiler::get_active().set_term_output(label_, tag);
+  return *this;
 }
 } // namespace fhecompiler

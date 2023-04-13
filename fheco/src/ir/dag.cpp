@@ -1,149 +1,133 @@
 #include "dag.hpp"
-#include <algorithm>
-#include <optional>
 #include <stack>
 #include <stdexcept>
-#include <unordered_set>
+#include <utility>
 
+using namespace std;
+
+namespace fhecompiler
+{
 namespace ir
 {
-using Ptr = std::shared_ptr<Term>;
-
-void DAG::insert_node(Ptr node, bool is_output)
-{
-  if (is_output)
-    outputs_nodes.insert({node->get_label(), node});
-
-  this->node_ptr_from_label[node->get_label()] = node;
-}
-
-Ptr DAG::find_node(const std::string &node_label) const
-{
-  auto it = node_ptr_from_label.find(node_label);
-  if (it != node_ptr_from_label.end())
-    return (*it).second;
-  return nullptr;
-}
-
-void DAG::delete_node(const std::string &node_label)
-{
-  auto it = node_ptr_from_label.find(node_label);
-
-  if (it == node_ptr_from_label.end())
-    return;
-
-  if (it->second->is_operation_node())
+  Term *DAG::insert_term(string label, OpCode op_code, vector<Term *> operands)
   {
-    for (auto &operand : it->second->get_operands())
-    {
-      operand->delete_parent(node_label);
-    }
-  }
+    if (auto term = find_term(label); term != nullptr)
+      return term;
 
-  for (auto &parent_label : it->second->get_parents_labels())
-  {
-    auto it_parent = node_ptr_from_label.find(parent_label);
-    if (it_parent != node_ptr_from_label.end())
-    {
-      it_parent->second->delete_operand_term(node_label);
-    }
-  }
-  node_ptr_from_label.erase(it);
-}
-
-void DAG::set_node_as_output(const std::string &key)
-{
-  auto node = find_node(key);
-  if (!node)
-    throw std::invalid_argument("node not found");
-
-  outputs_nodes.insert({key, node});
-}
-
-void DAG::unset_node_from_output(const std::string &key)
-{
-  auto it = this->outputs_nodes.find(key);
-  if (it != this->outputs_nodes.end())
-  {
-    this->outputs_nodes.erase(it);
-  }
-}
-
-void DAG::apply_topological_sort(bool clear_existing_order)
-{
-  if (sorted_nodes.size() && clear_existing_order == false)
-    return;
-
-  sorted_nodes.clear();
-  std::stack<std::pair<bool, Ptr>> traversal_stack;
-  std::unordered_set<Ptr> visited_nodes;
-  for (auto &e : outputs_nodes)
-  {
-    auto &node_ptr = e.second;
-
-    if (visited_nodes.find(node_ptr) == visited_nodes.end())
-    {
-      traversal_stack.push(std::make_pair(false, node_ptr));
-    }
-
-    while (!traversal_stack.empty())
-    {
-      auto top_node = traversal_stack.top();
-      traversal_stack.pop();
-      if (top_node.first)
+    shared_ptr<Term> term(new Term(move(label), move(op_code), move(operands)), [this](Term *t) {
+      this->terms_.erase(t);
+      if (auto it = outputs_.find(t); it != outputs_.end())
       {
-        sorted_nodes.push_back(top_node.second);
-        continue;
+        outputs_.erase(it);
+        valid_top_sort = false;
       }
-      if (visited_nodes.find(top_node.second) != visited_nodes.end())
-        continue;
+      delete t;
+    });
+    if (!term->is_operation())
+      leaves_.emplace(term->label_, term);
+    else
+    {
+      for (auto operand : term->operands_)
+        operand->add_parent(term);
+    }
+    terms_.insert(term.get());
+    return term.get();
+  }
 
-      visited_nodes.insert(top_node.second);
-      traversal_stack.push(std::make_pair(true, top_node.second));
-      if (top_node.second->is_operation_node())
+  Term *DAG::insert_leaf(std::string label, TermType type)
+  {
+    shared_ptr<Term> term = make_shared<Term>(move(label), move(type));
+    leaves_.emplace(term->label_, term);
+    terms_.insert(term.get());
+    return term.get();
+  }
+
+  Term *DAG::find_term(const string &label) const
+  {
+    // temporary object used as a search key (only label matters)
+    Term t(label, TermType::ciphertext);
+    auto it = terms_.find(&t);
+    if (it != terms_.end())
+      return *it;
+
+    return nullptr;
+  }
+
+  void DAG::delete_term(Term *t)
+  {
+    if (t->parents_.size() != 0)
+      throw invalid_argument("cannot delete term having parents, this will invalidate the parents and the DAG");
+
+    if (auto it = outputs_.find(t); it != outputs_.end())
+    {
+      outputs_.erase(it);
+      valid_top_sort = false;
+    }
+
+    if (!t->is_operation())
+      leaves_.erase(t->label_);
+    else
+    {
+      for (auto operand : t->operands_)
+        operand->delete_parent(t->label_);
+    }
+  }
+
+  vector<Term *> DAG::topological_sort() const
+  {
+    vector<Term *> sorted_nodes;
+    stack<pair<bool, Term *>> traversal_stack;
+    unordered_set<Term *> visited_nodes;
+    for (auto node : outputs_)
+    {
+      if (visited_nodes.find(node) == visited_nodes.end())
+        traversal_stack.push(make_pair(false, node));
+
+      while (!traversal_stack.empty())
       {
-        auto &operands = top_node.second->get_operands();
-
-        for (auto &operand_ptr : operands)
+        auto top_node = traversal_stack.top();
+        traversal_stack.pop();
+        if (top_node.first)
         {
-          if (visited_nodes.find(operand_ptr) == visited_nodes.end())
+          sorted_nodes.push_back(top_node.second);
+          continue;
+        }
+        if (visited_nodes.find(top_node.second) != visited_nodes.end())
+          continue;
+
+        visited_nodes.insert(top_node.second);
+        traversal_stack.push(make_pair(true, top_node.second));
+        if (top_node.second->is_operation())
+        {
+          for (auto operand : top_node.second->operands())
           {
-            traversal_stack.push(std::make_pair(false, operand_ptr));
+            if (visited_nodes.find(operand) == visited_nodes.end())
+              traversal_stack.push(make_pair(false, operand));
           }
         }
       }
     }
+    return sorted_nodes;
   }
-  // remove dead parents
-  for (auto &node_ptr : sorted_nodes)
+
+  bool DAG::set_output(Term *t)
   {
-    node_ptr->clear_parents();
-    if (node_ptr->is_operation_node())
+    if (outputs_.insert(t).second)
     {
-      for (auto &operand : node_ptr->get_operands())
-      {
-        operand->insert_parent_label(node_ptr->get_label());
-      }
+      valid_top_sort = false;
+      return true;
     }
+    return false;
   }
-}
 
-bool DAG::update_if_output_entry(const std::string &output_label, const Ptr &node)
-{
-  auto it = outputs_nodes.find(output_label);
-
-  if (it != outputs_nodes.end())
+  bool DAG::unset_output(Term *t)
   {
-    outputs_nodes[output_label] = node;
-    return true;
+    if (outputs_.erase(t))
+    {
+      valid_top_sort = false;
+      return true;
+    }
+    return false;
   }
-
-  return false;
-}
-
-bool DAG::is_output_node(const std::string &label)
-{
-  auto it = outputs_nodes.find(label);
-  return it != outputs_nodes.end();
-}
 } // namespace ir
+} // namespace fhecompiler

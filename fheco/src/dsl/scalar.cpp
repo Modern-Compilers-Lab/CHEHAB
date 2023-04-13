@@ -1,30 +1,40 @@
 #include "scalar.hpp"
 #include "compiler.hpp"
-#include "datatypes_const.hpp"
-#include "datatypes_util.hpp"
+#include <utility>
+
+using namespace std;
 
 namespace fhecompiler
 {
-size_t Scalar::scalar_id = 0;
+size_t Scalar::id_ = 0;
 
-Scalar::Scalar(std::int64_t data) : label_(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
+Scalar::Scalar(int64_t data, string tag) : Scalar()
 {
-  Compiler::init_const(data, example_value_);
-  Compiler::get_active()->insert_node_in_dataflow<Scalar>(*this);
-  Compiler::get_active()->insert_entry_in_constants_table(
-    {label_, {ir::ConstantTableEntryType::constant, {label_, data}}});
+  Compiler::get_active().init_const_term(label_, term_type(), move(tag), data);
+  // Compiler::init_const(data, example_value_);
 }
 
-Scalar::Scalar(std::uint64_t data) : label_(datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++))
+Scalar::Scalar(int64_t data) : Scalar()
 {
-  Compiler::init_const(data, example_value_);
-  Compiler::get_active()->insert_node_in_dataflow<Scalar>(*this);
-  Compiler::get_active()->insert_entry_in_constants_table(
-    {label_, {ir::ConstantTableEntryType::constant, {label_, data}}});
+  Compiler::get_active().init_const_term(label_, term_type(), label_, data);
+  // Compiler::init_const(data, example_value_);
 }
 
-void Scalar::set_new_label()
+Scalar::Scalar(uint64_t data, string tag) : Scalar()
 {
-  label_ = datatype::sc_label_prefix + std::to_string(Scalar::scalar_id++);
+  Compiler::get_active().init_const_term(label_, term_type(), move(tag), data);
+  // Compiler::init_const(data, example_value_);
+}
+
+Scalar::Scalar(uint64_t data) : Scalar()
+{
+  Compiler::get_active().init_const_term(label_, term_type(), label_, data);
+  // Compiler::init_const(data, example_value_);
+}
+
+const Scalar &Scalar::tag(string tag) const
+{
+  Compiler::get_active().tag_term(label_, move(tag));
+  return *this;
 }
 } // namespace fhecompiler

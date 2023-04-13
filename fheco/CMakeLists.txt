@@ -13,30 +13,32 @@ set(FHECOMPILER_SOURCE_FILES
   ${SRC_DSL}/plaintext.cpp
   ${SRC_DSL}/scalar.cpp
   ${SRC_DSL}/ops_overloads.cpp
+  ${SRC_IR}/term_type.cpp
+  ${SRC_IR}/op_code.cpp
   ${SRC_IR}/dag.cpp
   ${SRC_IR}/program.cpp
   ${SRC_IR}/term.cpp
-  ${SRC_IR}/ir_utils.cpp
-  ${SRC_PASSES}/cse_pass.cpp
-  ${SRC_PASSES}/relin_pass.cpp
-  ${SRC_PASSES}/rotationkeys_select_pass.cpp
-  ${SRC_PARAMS_SELECTOR}/param_selector.cpp
-  ${SRC_PARAMS_SELECTOR}/encryption_parameters.cpp
-  ${SRC_TRANSLATOR}/translator.cpp
-  ${SRC_TRS}/trs.cpp
-  ${SRC_TRS}/matching_term.cpp
-  ${SRC_TRS}/rewrite_rule.cpp
-  ${SRC_TRS}/trs_core.cpp
-  ${SRC_TRS}/trs_util_functions.cpp
+  # ${SRC_IR}/ir_utils.cpp
+  # ${SRC_PASSES}/cse_pass.cpp
+  # ${SRC_PASSES}/relin_pass.cpp
+  # ${SRC_PASSES}/rotationkeys_select_pass.cpp
+  # ${SRC_PARAMS_SELECTOR}/param_selector.cpp
+  # ${SRC_PARAMS_SELECTOR}/encryption_parameters.cpp
+  # ${SRC_TRANSLATOR}/translator.cpp
+  # ${SRC_TRS}/trs.cpp
+  # ${SRC_TRS}/matching_term.cpp
+  # ${SRC_TRS}/rewrite_rule.cpp
+  # ${SRC_TRS}/trs_core.cpp
+  # ${SRC_TRS}/trs_util_functions.cpp
   ${SRC_UTILS}/draw_ir.cpp
-  ${SRC_UTILS}/quantify_ir.cpp
-  ${SRC_UTILS}/clear_data_evaluator.cpp
-  ${SRC_UTILS}/evaluate_on_clear.cpp
-  ${SRC_UTILS}/common.cpp
-  ${SRC_TRS}/reduction_order/utils.cpp
-  ${SRC_TRS}/reduction_order/component_orders.cpp
-  ${SRC_TRS}/ruleset.cpp
-  ${SRC_PASSES}/normalize_pass.cpp
+  # ${SRC_UTILS}/quantify_ir.cpp
+  # ${SRC_UTILS}/clear_data_evaluator.cpp
+  # ${SRC_UTILS}/evaluate_on_clear.cpp
+  # ${SRC_UTILS}/common.cpp
+  # ${SRC_TRS}/reduction_order/utils.cpp
+  # ${SRC_TRS}/reduction_order/component_orders.cpp
+  # ${SRC_TRS}/ruleset.cpp
+  # ${SRC_PASSES}/normalize_pass.cpp
   # ${SRC_PASSES}/additional_passes.cpp
 )
 
@@ -59,45 +61,47 @@ include(GNUInstallDirs)
 
 set(FHECOMPILER_INCLUDES_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR}/FHECOMPILER)
 
-install(FILES
-  src/fhecompiler.hpp
-  ${SRC_DSL}/compiler.hpp
-  ${SRC_DSL}/ciphertext.hpp 
-  ${SRC_DSL}/datatypes_const.hpp
-  ${SRC_DSL}/datatypes_util.hpp 
-  ${SRC_DSL}/ops_overloads.hpp 
-  ${SRC_DSL}/plaintext.hpp
-  ${SRC_DSL}/scalar.hpp
-  ${SRC_IR}/dag.hpp
-  ${SRC_IR}/ir_const.hpp
-  ${SRC_IR}/program.hpp
-  ${SRC_IR}/term.hpp
-  ${SRC_IR}/ir_utils.hpp
-  ${SRC_PASSES}/cse_pass.hpp
-  ${SRC_PASSES}/relin_pass.hpp
-  ${SRC_PARAMS_SELECTOR}/encryption_parameters.hpp
-  ${SRC_PARAMS_SELECTOR}/param_selector.hpp
-  ${SRC_TRANSLATOR}/translator.hpp
-  ${SRC_TRANSLATOR}/translator_const.hpp
-  ${SRC_UTILS}/fhecompiler_const.hpp
-  ${SRC_PASSES}/rotationkeys_select_pass.hpp
-  ${SRC_PASSES}/normalize_pass.hpp
-  # ${SRC_PASSES}/additional_passes.hpp
-  ${SRC_TRS}/trs.hpp
-  ${SRC_TRS}/matching_term.hpp
-  ${SRC_TRS}/rewrite_rule.hpp
-  ${SRC_TRS}/trs_const.hpp
-  ${SRC_TRS}/reduction_order/utils.hpp
-  ${SRC_TRS}/reduction_order/component_orders.hpp
-  ${SRC_TRS}/trs_core.hpp
-  ${SRC_TRS}/trs_util_functions.hpp
-  ${SRC_TRS}/ruleset.hpp
-  ${SRC_UTILS}/draw_ir.hpp
-  ${SRC_UTILS}/quantify_ir.hpp
-  ${SRC_UTILS}/clear_data_evaluator.hpp
-  ${SRC_UTILS}/evaluate_on_clear.hpp
-  ${SRC_UTILS}/common.hpp
-  DESTINATION ${FHECOMPILER_INCLUDES_INSTALL_DIR}
-)
+# install(FILES
+#   src/fhecompiler.hpp
+#   ${SRC_DSL}/compiler.hpp
+#   ${SRC_DSL}/ciphertext.hpp 
+#   ${SRC_DSL}/datatypes_const.hpp
+#   ${SRC_DSL}/datatypes_util.hpp 
+#   ${SRC_DSL}/ops_overloads.hpp 
+#   ${SRC_DSL}/plaintext.hpp
+#   ${SRC_DSL}/scalar.hpp
+#   ${SRC_IR}/term_type.hpp
+#   ${SRC_IR}/op_code.hpp
+#   ${SRC_IR}/dag.hpp
+#   ${SRC_IR}/ir_const.hpp
+#   ${SRC_IR}/program.hpp
+#   ${SRC_IR}/term.hpp
+#   ${SRC_IR}/ir_utils.hpp
+#   ${SRC_PASSES}/cse_pass.hpp
+#   ${SRC_PASSES}/relin_pass.hpp
+#   ${SRC_PARAMS_SELECTOR}/encryption_parameters.hpp
+#   ${SRC_PARAMS_SELECTOR}/param_selector.hpp
+#   ${SRC_TRANSLATOR}/translator.hpp
+#   ${SRC_TRANSLATOR}/translator_const.hpp
+#   ${SRC_UTILS}/fhecompiler_const.hpp
+#   ${SRC_PASSES}/rotationkeys_select_pass.hpp
+#   ${SRC_PASSES}/normalize_pass.hpp
+#   # ${SRC_PASSES}/additional_passes.hpp
+#   ${SRC_TRS}/trs.hpp
+#   ${SRC_TRS}/matching_term.hpp
+#   ${SRC_TRS}/rewrite_rule.hpp
+#   ${SRC_TRS}/trs_const.hpp
+#   ${SRC_TRS}/reduction_order/utils.hpp
+#   ${SRC_TRS}/reduction_order/component_orders.hpp
+#   ${SRC_TRS}/trs_core.hpp
+#   ${SRC_TRS}/trs_util_functions.hpp
+#   ${SRC_TRS}/ruleset.hpp
+#   ${SRC_UTILS}/draw_ir.hpp
+#   ${SRC_UTILS}/quantify_ir.hpp
+#   ${SRC_UTILS}/clear_data_evaluator.hpp
+#   ${SRC_UTILS}/evaluate_on_clear.hpp
+#   ${SRC_UTILS}/common.hpp
+#   DESTINATION ${FHECOMPILER_INCLUDES_INSTALL_DIR}
+# )
 
 install(TARGETS fhecompiler ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})

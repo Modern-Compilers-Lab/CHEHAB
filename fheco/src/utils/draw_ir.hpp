@@ -1,10 +1,12 @@
 #pragma once
 
-#include "ir_const.hpp"
 #include "program.hpp"
 #include <ostream>
 
-namespace utils
+namespace fhecompiler
 {
-void draw_ir(ir::Program *program, std::ostream &os);
-} // namespace utils
+namespace util
+{
+  void draw_ir(const ir::Program &program, std::ostream &os);
+} // namespace util
+} // namespace fhecompiler

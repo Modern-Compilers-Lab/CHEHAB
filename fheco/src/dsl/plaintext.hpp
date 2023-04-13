@@ -1,32 +1,34 @@
 #pragma once
 
 #include "ir_const.hpp"
-#include <optional>
+#include "term_type.hpp"
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
 namespace fhecompiler
 {
-
 class Plaintext
 {
-private:
-  std::string label_; // symbol
-
-  std::optional<std::string> tag_;
-
-  ir::VectorValue example_value_;
-
-  static std::size_t plaintext_id;
-
 public:
-  Plaintext() {}
+  Plaintext() : label_{term_type().auto_name_prefix() + std::to_string(id_++)} {}
 
-  Plaintext(const std::string &tag, long long min_value = 0, long long max_value = 100);
+  explicit Plaintext(std::string tag);
 
-  Plaintext(const std::string &tag, const ir::VectorValue &example_value);
+  Plaintext(std::string tag, long long slot_min_value, long long slot_max_value);
+
+  Plaintext(std::string tag, const ir::VectorValue &example_value);
+
+  Plaintext(const std::vector<std::int64_t> &data, std::string tag);
 
   Plaintext(const std::vector<std::int64_t> &data);
+
+  Plaintext(const std::vector<int> &data, std::string tag);
+
+  Plaintext(const std::vector<int> &data);
+
+  Plaintext(const std::vector<std::uint64_t> &data, std::string tag);
 
   Plaintext(const std::vector<std::uint64_t> &data);
 
@@ -38,19 +40,23 @@ public:
 
   Plaintext(Plaintext &&pt_move) = default;
 
-  Plaintext &set_output(const std::string &tag);
+  static ir::TermType term_type() { return ir::TermType::plaintext; }
 
-  const std::string &get_label() const { return label_; }
+  const Plaintext &tag(std::string tag) const;
 
-  const std::optional<std::string> &get_tag() const { return tag_; }
+  const Plaintext &set_output(std::string tag) const;
 
-  inline ir::VectorValue &example_value() { return example_value_; }
+  const std::string &label() const { return label_; }
 
   inline const ir::VectorValue &example_value() const { return example_value_; }
 
-  void set_label(const std::string &label) { label_ = label; }
+private:
+  inline ir::VectorValue &example_value() { return example_value_; }
 
-  void set_new_label();
+  static std::size_t id_;
+
+  std::string label_;
+
+  ir::VectorValue example_value_;
 };
-
 } // namespace fhecompiler

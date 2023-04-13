@@ -1,5 +1,6 @@
 #include "ops_overloads.hpp"
-#include "datatypes_util.hpp"
+#include "compiler.hpp"
+#include "op_code.hpp"
 #include <cstddef>
 #include <vector>
 
@@ -7,51 +8,68 @@ using namespace std;
 
 namespace fhecompiler
 {
-
 // addition
 Ciphertext operator+(const Ciphertext &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(lhs, rhs, ir::OpCode::add, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::add, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator+(const Ciphertext &lhs, const Plaintext &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::add, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::add, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator+(const Ciphertext &lhs, const Scalar &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::add, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::add, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator+(const Plaintext &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Plaintext, Ciphertext>(lhs, rhs, ir::OpCode::add, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::add, lhs, rhs, destination);
+  return destination;
 }
 
 Plaintext operator+(const Plaintext &lhs, const Plaintext &rhs)
 {
-  return operate_binary<Plaintext, Plaintext, Plaintext>(lhs, rhs, ir::OpCode::add, ir::TermType::plaintext);
+  Plaintext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::add, lhs, rhs, destination);
+  return destination;
 }
 
 Plaintext operator+(const Plaintext &lhs, const Scalar &rhs)
 {
-  return operate_binary<Plaintext, Plaintext, Scalar>(lhs, rhs, ir::OpCode::add, ir::TermType::plaintext);
+  Plaintext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::add, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator+(const Scalar &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Scalar, Ciphertext>(lhs, rhs, ir::OpCode::add, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::add, lhs, rhs, destination);
+  return destination;
 }
 
 Plaintext operator+(const Scalar &lhs, const Plaintext &rhs)
 {
-  return operate_binary<Plaintext, Scalar, Plaintext>(lhs, rhs, ir::OpCode::add, ir::TermType::plaintext);
+  Plaintext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::add, lhs, rhs, destination);
+  return destination;
 }
 
 Scalar operator+(const Scalar &lhs, const Scalar &rhs)
 {
-  return operate_binary<Scalar, Scalar, Scalar>(lhs, rhs, ir::OpCode::add, ir::TermType::scalar);
+  Scalar destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::add, lhs, rhs, destination);
+  return destination;
 }
 
 // addition assignement
@@ -94,47 +112,65 @@ Scalar &operator+=(Scalar &lhs, const Scalar &rhs)
 // subtraction
 Ciphertext operator-(const Ciphertext &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(lhs, rhs, ir::OpCode::sub, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator-(const Ciphertext &lhs, const Plaintext &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::sub, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator-(const Ciphertext &lhs, const Scalar &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::sub, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator-(const Plaintext &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Plaintext, Ciphertext>(lhs, rhs, ir::OpCode::sub, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
+  return destination;
 }
 
 Plaintext operator-(const Plaintext &lhs, const Plaintext &rhs)
 {
-  return operate_binary<Plaintext, Plaintext, Plaintext>(lhs, rhs, ir::OpCode::sub, ir::TermType::plaintext);
+  Plaintext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
+  return destination;
 }
 
 Plaintext operator-(const Plaintext &lhs, const Scalar &rhs)
 {
-  return operate_binary<Plaintext, Plaintext, Scalar>(lhs, rhs, ir::OpCode::sub, ir::TermType::plaintext);
+  Plaintext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator-(const Scalar &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Scalar, Ciphertext>(lhs, rhs, ir::OpCode::sub, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
+  return destination;
 }
 
 Plaintext operator-(const Scalar &lhs, const Plaintext &rhs)
 {
-  return operate_binary<Plaintext, Scalar, Plaintext>(lhs, rhs, ir::OpCode::sub, ir::TermType::plaintext);
+  Plaintext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
+  return destination;
 }
 
 Scalar operator-(const Scalar &lhs, const Scalar &rhs)
 {
-  return operate_binary<Scalar, Scalar, Scalar>(lhs, rhs, ir::OpCode::sub, ir::TermType::scalar);
+  Scalar destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
+  return destination;
 }
 
 // subtraction assignement
@@ -177,47 +213,65 @@ Scalar &operator-=(Scalar &lhs, const Scalar &rhs)
 // multiplication
 Ciphertext operator*(const Ciphertext &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Ciphertext>(lhs, rhs, ir::OpCode::mul, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator*(const Ciphertext &lhs, const Plaintext &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Plaintext>(lhs, rhs, ir::OpCode::mul, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator*(const Ciphertext &lhs, const Scalar &rhs)
 {
-  return operate_binary<Ciphertext, Ciphertext, Scalar>(lhs, rhs, ir::OpCode::mul, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator*(const Plaintext &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Plaintext, Ciphertext>(lhs, rhs, ir::OpCode::mul, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
+  return destination;
 }
 
 Plaintext operator*(const Plaintext &lhs, const Plaintext &rhs)
 {
-  return operate_binary<Plaintext, Plaintext, Plaintext>(lhs, rhs, ir::OpCode::mul, ir::TermType::plaintext);
+  Plaintext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
+  return destination;
 }
 
 Plaintext operator*(const Plaintext &lhs, const Scalar &rhs)
 {
-  return operate_binary<Plaintext, Plaintext, Scalar>(lhs, rhs, ir::OpCode::mul, ir::TermType::plaintext);
+  Plaintext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
+  return destination;
 }
 
 Ciphertext operator*(const Scalar &lhs, const Ciphertext &rhs)
 {
-  return operate_binary<Ciphertext, Scalar, Ciphertext>(lhs, rhs, ir::OpCode::mul, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
+  return destination;
 }
 
 Plaintext operator*(const Scalar &lhs, const Plaintext &rhs)
 {
-  return operate_binary<Plaintext, Scalar, Plaintext>(lhs, rhs, ir::OpCode::mul, ir::TermType::plaintext);
+  Plaintext destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
+  return destination;
 }
 
 Scalar operator*(const Scalar &lhs, const Scalar &rhs)
 {
-  return operate_binary<Scalar, Scalar, Scalar>(lhs, rhs, ir::OpCode::mul, ir::TermType::scalar);
+  Scalar destination{};
+  Compiler::get_active().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
+  return destination;
 }
 
 // multiplication assignement
@@ -258,44 +312,47 @@ Scalar &operator*=(Scalar &lhs, const Scalar &rhs)
 }
 
 // negation
-Ciphertext operator-(const Ciphertext &lhs)
+Ciphertext operator-(const Ciphertext &arg)
 {
-  return operate_unary<Ciphertext, Ciphertext>(lhs, ir::OpCode::negate, ir::TermType::ciphertext);
+  Ciphertext destination{};
+  Compiler::get_active().operate_unary(ir::OpCode::negate, arg, destination);
+  return destination;
 }
 
-Plaintext operator-(const Plaintext &lhs)
+Plaintext operator-(const Plaintext &arg)
 {
-  return operate_unary<Plaintext, Plaintext>(lhs, ir::OpCode::negate, ir::TermType::plaintext);
+  Plaintext destination{};
+  Compiler::get_active().operate_unary(ir::OpCode::negate, arg, destination);
+  return destination;
 }
 
-Scalar operator-(const Scalar &lhs)
+Scalar operator-(const Scalar &arg)
 {
-  return operate_unary<Scalar, Scalar>(lhs, ir::OpCode::negate, ir::TermType::scalar);
+  Scalar destination{};
+  Compiler::get_active().operate_unary(ir::OpCode::negate, arg, destination);
+  return destination;
 }
 
 // rotation
-Ciphertext rotate(const Ciphertext &lhs, int steps)
+Ciphertext rotate(const Ciphertext &arg, int steps)
 {
-  size_t vector_size = Compiler::get_active()->get_vector_size();
+  size_t vector_size = Compiler::get_active().vector_size();
+  // this should work since vector_size is a power of 2
   steps %= vector_size;
-  if (steps < 0)
-    steps += vector_size;
-  Ciphertext result =
-    operate_with_raw<Ciphertext>(lhs, std::to_string(steps), ir::OpCode::rotate, ir::TermType::ciphertext);
-  Compiler::operate_rotate(lhs.example_value(), steps, result.example_value());
-  return result;
+  Ciphertext destination{};
+  Compiler::get_active().operate_unary(ir::OpCode::rotate(steps), arg, destination);
+  return destination;
+  // Compiler::operate_rotate(lhs.example_value(), steps, result.example_value());
 }
 
-Plaintext rotate(const Plaintext &lhs, int steps)
+Plaintext rotate(const Plaintext &arg, int steps)
 {
-  size_t vector_size = Compiler::get_active()->get_vector_size();
+  size_t vector_size = Compiler::get_active().vector_size();
+  // this should work since vector_size is a power of 2
   steps %= vector_size;
-  if (steps < 0)
-    steps += vector_size;
-  Plaintext result =
-    operate_with_raw<Plaintext>(lhs, std::to_string(steps), ir::OpCode::rotate, ir::TermType::plaintext);
-  Compiler::operate_rotate(lhs.example_value(), steps, result.example_value());
-  return result;
+  Plaintext destination{};
+  Compiler::get_active().operate_unary(ir::OpCode::rotate(steps), arg, destination);
+  return destination; // Compiler::operate_rotate(lhs.example_value(), steps, result.example_value());
 }
 
 Ciphertext operator<<(const Ciphertext &lhs, int steps)
@@ -353,7 +410,7 @@ Ciphertext square(const Ciphertext &encrypted)
 Ciphertext reduce_add(const Ciphertext &encrypted)
 {
   Ciphertext result = encrypted;
-  size_t steps = Compiler::get_active()->get_vector_size() >> 1;
+  size_t steps = Compiler::get_active().vector_size() >> 1;
   while (steps > 0)
   {
     result += result << steps;

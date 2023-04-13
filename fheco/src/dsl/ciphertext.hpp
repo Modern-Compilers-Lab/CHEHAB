@@ -1,36 +1,22 @@
 #pragma once
 
 #include "ir_const.hpp"
-#include "plaintext.hpp"
-#include "scalar.hpp"
-#include <optional>
+#include "term_type.hpp"
+#include <cstddef>
 #include <string>
-#include <variant>
-#include <vector>
 
 namespace fhecompiler
 {
 class Ciphertext
 {
-private:
-  std::string label_; // symbol
-
-  std::optional<std::string> tag_;
-
-  ir::VectorValue example_value_;
-
-  static size_t ciphertext_id;
-
 public:
-  Ciphertext() {}
+  Ciphertext() : label_{term_type().auto_name_prefix() + std::to_string(id_++)} {}
 
-  Ciphertext(const std::string &tag, long long min_value = 0, long long ming_value = 100);
+  explicit Ciphertext(std::string tag);
 
-  Ciphertext(const std::string &tag, const ir::VectorValue &example_value);
+  Ciphertext(std::string tag, long long slot_min_value, long long slot_max_value);
 
-  Ciphertext(const Plaintext &plain);
-
-  Ciphertext(const Scalar &scalar);
+  Ciphertext(std::string tag, const ir::VectorValue &example_value);
 
   Ciphertext(const Ciphertext &) = default;
 
@@ -40,20 +26,23 @@ public:
 
   Ciphertext &operator=(Ciphertext &&) = default;
 
-  Ciphertext &set_output(const std::string &tag);
+  static ir::TermType term_type() { return ir::TermType::ciphertext; }
 
-  const std::string &get_label() const { return label_; }
+  const Ciphertext &tag(std::string tag) const;
 
-  const std::optional<std::string> &get_tag() const { return tag_; }
+  const Ciphertext &set_output(std::string tag) const;
 
-  void set_label(const std::string &label) { label_ = label; }
-
-  inline ir::VectorValue &example_value() { return example_value_; }
+  const std::string &label() const { return label_; }
 
   inline const ir::VectorValue &example_value() const { return example_value_; }
 
-  void set_new_label();
+private:
+  inline ir::VectorValue &example_value() { return example_value_; }
 
-  bool is_output() const;
+  static std::size_t id_;
+
+  std::string label_;
+
+  ir::VectorValue example_value_;
 };
 } // namespace fhecompiler
