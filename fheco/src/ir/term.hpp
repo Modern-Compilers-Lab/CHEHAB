@@ -2,9 +2,11 @@
 
 #include "op_code.hpp"
 #include "term_type.hpp"
-#include <memory>
+#include <cstddef>
+#include <functional>
+#include <set>
 #include <string>
-#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -15,10 +17,14 @@ namespace ir
   class Term
   {
   public:
-    Term(std::string label, OpCode op_code, std::vector<Term *> operands)
-      : label_{std::move(label)}, op_code_{std::move(op_code)}, operands_{std::move(operands)},
-        type_{OpCode::deduce_result_type(op_code_, operands_)}
-    {}
+    using Set = std::set<Term *, std::function<bool(Term *, Term *)>>;
+
+    using USet = std::unordered_set<Term *, std::function<std::size_t(Term *)>, std::function<bool(Term *, Term *)>>;
+
+    using UMultiSet =
+      std::unordered_multiset<Term *, std::function<std::size_t(Term *)>, std::function<bool(Term *, Term *)>>;
+
+    Term(std::string label, OpCode op_code, std::vector<Term *> operands);
 
     Term(std::string label, TermType type)
       : label_{std::move(label)}, op_code_{OpCode::nop}, operands_{}, type_{std::move(type)}
@@ -36,20 +42,11 @@ namespace ir
 
     inline const std::vector<Term *> &operands() const { return operands_; }
 
-    inline const std::unordered_multimap<std::string, std::shared_ptr<Term>> &parents() const { return parents_; }
+    inline const UMultiSet &parents() const { return parents_; }
 
     inline bool is_operation() const { return op_code_ != OpCode::nop; }
 
   private:
-    inline void add_parent(std::shared_ptr<Term> parent) { parents_.emplace(parent->label_, std::move(parent)); }
-
-    inline void delete_parent(const std::string &label)
-    {
-      auto it = parents_.find(label);
-      if (it != parents_.end())
-        parents_.erase(it);
-    }
-
     void replace_with(Term *t);
 
     std::string label_;
@@ -60,7 +57,13 @@ namespace ir
 
     TermType type_;
 
-    std::unordered_multimap<std::string, std::shared_ptr<Term>> parents_;
+    static inline std::size_t hash(Term *t) { return std::hash<std::string>{}(t->label_); }
+
+    static inline bool equal(Term *lhs, Term *rhs) { return *lhs == *rhs; }
+
+    static inline bool less(Term *lhs, Term *rhs) { return *lhs < *rhs; }
+
+    UMultiSet parents_{0, hash, equal};
 
     friend class DAG;
   };

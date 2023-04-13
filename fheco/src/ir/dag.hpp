@@ -4,12 +4,9 @@
 #include "term.hpp"
 #include "term_type.hpp"
 #include <cstddef>
-#include <functional>
-#include <memory>
 #include <set>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace fhecompiler
@@ -19,12 +16,17 @@ namespace ir
   class DAG
   {
   public:
-    using TermSet = std::set<Term *, std::function<bool(Term *, Term *)>>;
-
-    using TermUSet =
-      std::unordered_set<Term *, std::function<std::size_t(Term *)>, std::function<bool(Term *, Term *)>>;
-
     DAG() = default;
+
+    ~DAG();
+
+    DAG(const DAG &other) = delete;
+
+    DAG(DAG &&other);
+
+    DAG &operator=(const DAG &other) = delete;
+
+    DAG &operator=(DAG &&other);
 
     Term *insert_term(std::string label, OpCode op_code, std::vector<Term *> operands);
 
@@ -32,7 +34,7 @@ namespace ir
 
     Term *find_term(const std::string &label) const;
 
-    void delete_term(Term *t);
+    void delete_term(Term *t, bool cascade = false);
 
     void replace_term_with(Term *t1, Term *t2)
     {
@@ -40,7 +42,7 @@ namespace ir
         return;
 
       t1->replace_with(t2);
-      valid_top_sort = false;
+      valid_top_sort_ = false;
     }
 
     std::vector<Term *> topological_sort() const;
@@ -51,35 +53,28 @@ namespace ir
 
     inline const std::vector<Term *> &get_top_sorted_terms()
     {
-      if (valid_top_sort)
+      if (valid_top_sort_)
         return sorted_terms_;
 
       sorted_terms_ = topological_sort();
-      valid_top_sort = true;
+      valid_top_sort_ = true;
       return sorted_terms_;
     }
 
-    inline const std::unordered_map<std::string, std::shared_ptr<Term>> &leaves() const { return leaves_; }
+    inline const Term::Set &leaves() const { return leaves_; }
 
-    inline const TermSet &outputs() const { return outputs_; }
+    inline const Term::Set &outputs() const { return outputs_; }
 
   private:
+    Term::Set leaves_{Term::less};
+
+    Term::Set outputs_{Term::less};
+
     std::vector<Term *> sorted_terms_; // nodes topologically sorted
 
-    bool valid_top_sort = false;
+    bool valid_top_sort_ = false;
 
-    TermUSet terms_{
-      0, [](Term *e) -> std::size_t { return std::hash<std::string>{}(e->label_); },
-      [](Term *lhs, Term *rhs) -> bool {
-        return *lhs == *rhs;
-      }};
-
-    TermSet outputs_{[](Term *lhs, Term *rhs) -> bool {
-      return *lhs < *rhs;
-    }};
-
-    // should be declared last for correct destruction
-    std::unordered_map<std::string, std::shared_ptr<Term>> leaves_;
+    Term::USet terms_{0, Term::hash, Term::equal};
   };
 } // namespace ir
 } // namespace fhecompiler
