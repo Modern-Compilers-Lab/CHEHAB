@@ -20,16 +20,16 @@ private:
   EncryptionWriter encryption_writer;
   EvaluationWriter evaluation_writer;
   ContextWriter context_writer;
+  std::unordered_map<ir::Term::Ptr, size_t> size_of;
+  std::unordered_map<ir::Term::Ptr, size_t> func_id_by_root;
+  std::unordered_map<ir::Term::Ptr, std::vector<std::string>> outputs;
+  std::unordered_map<ir::Term::Ptr, std::unordered_set<size_t>> scopes_by_node;
 
   std::unordered_map<std::string, std::string> label_in_destination_code; // we don't have to create a map but it is
                                                                           // just more elegant with the map
 
-  void translate_binary_operation(const Ptr &term_ptr, std::ofstream &os);
-  void translate_nary_operation(const Ptr &term_ptr, std::ofstream &os);
-  void translate_unary_operation(const Ptr &term_ptr, std::ofstream &os);
-
+  void translate_binary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os);
   void translate_nary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os);
-
   void translate_unary_operation(const ir::Term::Ptr &term_ptr, std::ostream &os);
 
   void translate_constant_table_entry(
@@ -37,11 +37,11 @@ private:
 
   void translate_term(const ir::Term::Ptr &term_ptr, std::ostream &os);
 
-  std::string get_identifier(const ir::Term::Ptr &term_ptr) const;
+  std::string get_identifier(const ir::Term::Ptr &term_ptr);
 
-  std::string get_tag(const ir::Term::Ptr &term_ptr) const;
+  std::string get_tag(const ir::Term::Ptr &term_ptr);
 
-  std::string get_identifier(const std::string &label) const;
+  // std::string get_identifier(const std::string &label) const;
 
   void convert_to_inplace(const ir::Term::Ptr &node_ptr);
 
@@ -84,15 +84,29 @@ public:
   */
   ir::OpCode deduce_opcode_to_generate(const ir::Term::Ptr &node) const;
 
-  void translate_program(std::ostream &os, const std::set<int> &rotations_keys_steps);
+  void translate_program(
+    std::ostream &source_os, std::ostream &header_os, const std::string &header_name, size_t threshold,
+    const std::set<int> &rotation_keys_steps);
 
+  void translate_program(std::ostream &os, size_t threshold);
   /*
     every change that needs to be done on IR node before code generation happens in fix_ir_instruction
   */
-  void fix_ir_instruction(const ir::Term::Ptr &node);
+  // void fix_ir_instruction(const ir::Term::Ptr &node);
 
-  void fix_ir_instructions_pass();
+  // void fix_ir_instructions_pass();
 
-  // std::string get_output_identifier(const std::string &output_label);
+  std::string get_output_identifier(const std::string &output_label);
+
+  std::string get_function_identifier(size_t func_id);
+
+  std::string get_static_object_identifier(const ir::Term::Ptr &node_ptr);
+
+  void write_as_a_static_object(const ir::Term::Ptr &node, std::ostream &os);
+
+  void generate_function_from_nodes(
+    std::ostream &os, const std::vector<ir::Term::Ptr> &nodes, bool void_func = false, const std::string &func_id = "");
+
+  void define_class_in_header(std::ostream &header_os);
 };
 } // namespace translator
