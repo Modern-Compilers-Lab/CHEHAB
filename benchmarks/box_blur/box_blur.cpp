@@ -31,9 +31,13 @@ int main(int argc, char **argv)
   if (argc > 2)
     height = stoi(argv[2]);
 
-  int trs_passes = 1;
+  size_t code_gen_threshold = 1000;
   if (argc > 3)
-    trs_passes = stoi(argv[3]);
+    code_gen_threshold = stol(argv[3]);
+
+  int trs_passes = 1;
+  if (argc > 4)
+    trs_passes = stoi(argv[4]);
 
   bool optimize = trs_passes > 0;
 
@@ -47,11 +51,14 @@ int main(int argc, char **argv)
   ofstream init_ir_os(func_name + "_init_ir.dot");
   Compiler::draw_ir(init_ir_os);
   const auto &rand_inputs = Compiler::get_example_input_values();
-  ofstream gen_code_os("he/gen_he_" + func_name + ".hpp");
+  ofstream gen_source_os("he/gen_he_" + func_name + ".cpp");
+  string header_name = "gen_he_" + func_name + ".hpp";
+  ofstream gen_header_os("he/" + header_name);
+
   if (optimize)
-    Compiler::compile(gen_code_os, trs_passes);
+    Compiler::compile(gen_source_os, gen_header_os, header_name, code_gen_threshold, trs_passes);
   else
-    Compiler::compile_noopt(gen_code_os);
+    Compiler::compile_noopt(gen_source_os, gen_header_os, header_name, code_gen_threshold);
   ofstream final_ir_os(func_name + "_final_ir.dot");
   Compiler::draw_ir(final_ir_os);
   auto outputs = Compiler::evaluate_on_clear(rand_inputs);

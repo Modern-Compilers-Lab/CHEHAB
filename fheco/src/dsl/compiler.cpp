@@ -48,7 +48,9 @@ void Compiler::set_active(const string &func_name)
   active_func_ = function_it->second.func;
 }
 
-void Compiler::FuncEntry::compile(ostream &os, int trs_passes, bool use_mod_switch, SecurityLevel sec_level)
+void Compiler::FuncEntry::compile(
+  ostream &source_os, ostream &header_os, const std::string &header_name, size_t code_gen_threshold, int trs_passes,
+  bool use_mod_switch, SecurityLevel sec_level)
 {
   fheco_passes::CSE cse_pass(func);
   fheco_trs::TRS trs(func);
@@ -70,10 +72,12 @@ void Compiler::FuncEntry::compile(ostream &os, int trs_passes, bool use_mod_swit
   param_selector::EncryptionParameters params = param_selector.select_params(uses_mod_switch);
 
   translator::Translator tr(func, sec_level, params, uses_mod_switch);
-  tr.translate_program(os, rotation_keys_steps);
+  tr.translate_program(source_os, header_os, header_name, code_gen_threshold, rotation_keys_steps);
 }
 
-void Compiler::FuncEntry::compile_noopt(ostream &os, SecurityLevel sec_level)
+void Compiler::FuncEntry::compile_noopt(
+  ostream &source_os, ostream &header_os, const std::string &header_name, size_t code_gen_threshold,
+  SecurityLevel sec_level)
 {
   fheco_passes::RotationKeySelctionPass rs_pass(func);
   set<int> rotation_keys_steps = rs_pass.decompose_rotations();
@@ -86,7 +90,7 @@ void Compiler::FuncEntry::compile_noopt(ostream &os, SecurityLevel sec_level)
   param_selector::EncryptionParameters params = param_selector.select_params(uses_mod_switch);
 
   translator::Translator tr(func, sec_level, params, uses_mod_switch);
-  tr.translate_program(os, rotation_keys_steps);
+  tr.translate_program(source_os, header_os, header_name, code_gen_threshold, rotation_keys_steps);
 }
 
 void Compiler::FuncEntry::init_input(

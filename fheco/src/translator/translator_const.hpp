@@ -110,10 +110,10 @@ INLINE const char *create_plain_modulus_intruction = "seal::PlainModulus::Batchi
 INLINE const char *set_coeff_modulus_instruction = "set_coeff_modulus";
 INLINE const char *create_coeff_modulus_instruction = "seal::CoeffModulus::Create";
 INLINE const char *set_poly_modulus_degree_instruction = "set_poly_modulus_degree";
-INLINE const char *encrypted_inputs_class_literal = "std::unordered_map<std::string, seal::Ciphertext>";
-INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::string, seal::Plaintext>";
-INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, seal::Plaintext>";
-INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, seal::Ciphertext>";
+INLINE const char *encrypted_inputs_class_literal = "std::map<std::string, seal::Ciphertext>";
+INLINE const char *encoded_inputs_class_literal = "std::map<std::string, seal::Plaintext>";
+INLINE const char *encoded_outputs_class_literal = "std::map<std::string, seal::Plaintext>";
+INLINE const char *encrypted_outputs_class_literal = "std::map<std::string, seal::Ciphertext>";
 INLINE const char *headers_include =
   "#include\"seal/seal.h\"\n#include<vector>\n#include<unordered_map>\n#include<cstdint>\n";
 INLINE const char *rotation_step_type_literal = "int32_t";

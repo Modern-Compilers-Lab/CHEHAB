@@ -34,31 +34,36 @@ public:
   }
 
   static inline void compile(
-    const std::string &func_name, std::ostream &os, int trs_passes = 1, bool use_mod_switch = true,
+    const std::string &func_name, std::ostream &source_os, std::ostream &header_os, const std::string &header_name,
+    std::size_t code_gen_threshold, int trs_passes = 1, bool use_mod_switch = true,
     SecurityLevel sec_level = SecurityLevel::tc128)
   {
     FuncEntry &func_entry = get_func_entry(func_name);
-    func_entry.compile(os, trs_passes, use_mod_switch, sec_level);
+    func_entry.compile(source_os, header_os, header_name, code_gen_threshold, trs_passes, use_mod_switch, sec_level);
   }
 
   static inline void compile(
-    std::ostream &os, int trs_passes = 1, bool use_mod_switch = true, SecurityLevel sec_level = SecurityLevel::tc128)
+    std::ostream &source_os, std::ostream &header_os, const std::string &header_name, std::size_t code_gen_threshold,
+    int trs_passes = 1, bool use_mod_switch = true, SecurityLevel sec_level = SecurityLevel::tc128)
   {
     FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
-    func_entry.compile(os, trs_passes, use_mod_switch, sec_level);
+    func_entry.compile(source_os, header_os, header_name, code_gen_threshold, trs_passes, use_mod_switch, sec_level);
   }
 
   static inline void compile_noopt(
-    const std::string &func_name, std::ostream &os, SecurityLevel sec_level = SecurityLevel::tc128)
+    const std::string &func_name, std::ostream &source_os, std::ostream &header_os, const std::string &header_name,
+    std::size_t code_gen_threshold, SecurityLevel sec_level = SecurityLevel::tc128)
   {
     FuncEntry &func_entry = get_func_entry(func_name);
-    func_entry.compile_noopt(os, sec_level);
+    func_entry.compile_noopt(source_os, header_os, header_name, code_gen_threshold, sec_level);
   }
 
-  static inline void compile_noopt(std::ostream &os, SecurityLevel sec_level = SecurityLevel::tc128)
+  static inline void compile_noopt(
+    std::ostream &source_os, std::ostream &header_os, const std::string &header_name, std::size_t code_gen_threshold,
+    SecurityLevel sec_level = SecurityLevel::tc128)
   {
     FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
-    func_entry.compile_noopt(os, sec_level);
+    func_entry.compile_noopt(source_os, header_os, header_name, code_gen_threshold, sec_level);
   }
 
   static inline void draw_ir(const std::string &func_name, std::ostream &os)
@@ -247,9 +252,13 @@ private:
 
     void print_inputs_outputs(std::ostream &os) const;
 
-    void compile(std::ostream &os, int trs_passes, bool use_mod_switch, SecurityLevel sec_level);
+    void compile(
+      std::ostream &source_os, std::ostream &header_os, const std::string &header_name, std::size_t code_gen_threshold,
+      int trs_passes, bool use_mod_switch, SecurityLevel sec_level);
 
-    void compile_noopt(std::ostream &os, SecurityLevel sec_level);
+    void compile_noopt(
+      std::ostream &source_os, std::ostream &header_os, const std::string &header_name, std::size_t code_gen_threshold,
+      SecurityLevel sec_level);
 
     // should be const
     inline void draw_ir(std::ostream &os) { utils::draw_ir(func.get(), os); }
