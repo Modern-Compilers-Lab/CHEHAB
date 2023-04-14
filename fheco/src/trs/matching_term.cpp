@@ -7,9 +7,9 @@ size_t MatchingTerm::term_id = 0;
 
 MatchingTerm::MatchingTerm(uint64_t _value) : term_type(fheco_trs::TermType::scalar), value(_value), id(term_id++) {}
 MatchingTerm::MatchingTerm(int64_t _value) : term_type(TermType::scalar), value(_value), id(term_id++) {}
-MatchingTerm::MatchingTerm(int _value) : term_type(TermType::scalar), value(_value), id(term_id++) {}
+MatchingTerm::MatchingTerm(int _value) : term_type(TermType::scalar), value(static_cast<int64_t>(_value)), id(term_id++) {}
 
-MatchingTerm::MatchingTerm(bool _value) : term_type(TermType::boolean), value(static_cast<int>(_value)), id(term_id++)
+MatchingTerm::MatchingTerm(bool _value) : term_type(TermType::boolean), value(static_cast<int64_t>(_value)), id(term_id++)
 {}
 
 MatchingTerm::MatchingTerm(FunctionId func_id) : term_type(fheco_trs::TermType::function), function_id(func_id) {}
