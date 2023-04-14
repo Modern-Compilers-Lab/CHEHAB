@@ -34,8 +34,6 @@ int main(int argc, char **argv)
   encrypted_args_map encrypted_inputs;
   encoded_args_map encoded_inputs;
   prepare_he_inputs(batch_encoder, encryptor, clear_inputs, encrypted_inputs, encoded_inputs);
-  encrypted_args_map encrypted_outputs;
-  encoded_args_map encoded_outputs;
 
   chrono::high_resolution_clock::time_point time_start, time_end;
   chrono::duration<double, milli> time_sum(0);
@@ -43,9 +41,8 @@ int main(int argc, char **argv)
   clock_t c_sum = 0;
   c_start = clock();
   time_start = chrono::high_resolution_clock::now();
-  cryptonets(
-    encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-    relin_keys, galois_keys);
+  Computation c(relin_keys, galois_keys, context, public_key);
+  c.cryptonets(encrypted_inputs, encoded_inputs);
   c_end = clock();
   time_end = chrono::high_resolution_clock::now();
   time_sum += time_end - time_start;
@@ -53,8 +50,8 @@ int main(int argc, char **argv)
 
   clear_args_info_map obtained_clear_outputs;
   get_clear_outputs(
-    batch_encoder, decryptor, encrypted_outputs, encoded_outputs, clear_outputs, obtained_clear_outputs);
-  print_encrypted_outputs_info(context, decryptor, encrypted_outputs);
+    batch_encoder, decryptor, c.encrypted_outputs, c.encoded_outputs, clear_outputs, obtained_clear_outputs);
+  print_encrypted_outputs_info(context, decryptor, c.encrypted_outputs);
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
@@ -64,9 +61,7 @@ int main(int argc, char **argv)
   c_start = clock();
   time_start = chrono::high_resolution_clock::now();
   for (int i = 0; i < repeat - 1; ++i)
-    cryptonets(
-      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-      relin_keys, galois_keys);
+    c.cryptonets(encrypted_inputs, encoded_inputs);
   c_end = clock();
   time_end = chrono::high_resolution_clock::now();
 
