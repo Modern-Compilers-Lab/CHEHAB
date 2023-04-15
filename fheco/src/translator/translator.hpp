@@ -113,6 +113,8 @@ public:
     const std::string &func_id = "");
 
   void define_class_in_header(std::ofstream &header_os);
+
+  void write_static_object_from_function_call(const ir::Program::Ptr &node, std::ofstream &os);
 };
 
 } // namespace translator

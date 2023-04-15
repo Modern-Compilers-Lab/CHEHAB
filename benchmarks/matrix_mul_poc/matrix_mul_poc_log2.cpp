@@ -142,7 +142,7 @@ int main()
           lines_flattened.push_back(A[i + k][j]);
         }
       }
-      A_encrypted.push_back(fhecompiler::Ciphertext::encrypt(lines_flattened));
+      A_encrypted.push_back(fhecompiler::Ciphertext::encrypt(fhecompiler::Plaintext(lines_flattened)));
     }
     //  encrypt by column for matrix B
     std::vector<fhecompiler::Plaintext> B_encoded;
@@ -160,7 +160,7 @@ int main()
           column_duplicated.push_back(v);
       }
       // fhecompiler::Ciphertext column_encrypted = fhecompiler::Ciphertext::encrypt(column_duplicated);
-      B_encoded.push_back(column_duplicated);
+      B_encoded.push_back(fhecompiler::Plaintext(column_duplicated));
     }
     // C contains result of multiplication
     std::vector<fhecompiler::Ciphertext> C_encrypted;

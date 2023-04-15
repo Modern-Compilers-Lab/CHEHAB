@@ -15,6 +15,10 @@ std::string Translator::get_identifier(const Ptr &term_ptr) const
   {
     ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(term_ptr->get_label()));
     ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
+
+    if (entry_value.get_tag().empty())
+      return term_ptr->get_label();
+
     return entry_value.get_tag();
   }
   else
@@ -27,6 +31,10 @@ std::string Translator::get_identifier(const std::string &label) const
   {
     ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(label));
     ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
+
+    if (entry_value.get_tag().empty())
+      return label;
+
     return entry_value.get_tag();
   }
   else
@@ -323,6 +331,7 @@ void Translator::translate_constant_table_entry(
 
 void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &os)
 {
+
   std::string other_args(""); // this depends on the operation
   auto it = get_other_args_by_opcode.find(term_ptr->get_opcode());
 
@@ -331,6 +340,15 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
 
   std::string op_identifier = get_identifier(label_in_destination_code[term_ptr->get_label()]);
   auto &operands = term_ptr->get_operands();
+
+  if ((scopes_by_node[operands[0]].size() > 2) && (func_id_by_root.find(operands[0]) != func_id_by_root.end()))
+  {
+    write_static_object_from_function_call(operands[0], os);
+  }
+  if ((scopes_by_node[operands[1]].size() > 2) && (func_id_by_root.find(operands[1]) != func_id_by_root.end()))
+  {
+    write_static_object_from_function_call(operands[1], os);
+  }
 
   std::string lhs_identifier;
   if (func_id_by_root.find(operands[0]) != func_id_by_root.end())
@@ -453,9 +471,10 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
     translate_constant_table_entry(constant_table_entry, term->get_term_type(), os);
   }
 
-  if (scopes_by_node[term].size() > 1 && func_id_by_root.find(term) == func_id_by_root.end())
+  if (scopes_by_node[term].size() > 1)
   {
-    write_as_a_static_object(term, os);
+    if (func_id_by_root.find(term) == func_id_by_root.end())
+      write_as_a_static_object(term, os);
   }
 
   if (outputs.find(term) != outputs.end())
@@ -959,12 +978,10 @@ void Translator::generate_function_from_nodes(
            {encoded_inputs_class_literal, inputs_class_identifier[ir::TermType::plaintext], AccessType::readAndModify}})
      << "{\n";
 
-  if (nodes.size() == 0)
-    translate_term(root, os);
-  else
+  for (auto &node : nodes)
   {
-    for (auto &node : nodes)
-      translate_term(node, os);
+    auto func_it = func_id_by_root.find(node);
+    translate_term(node, os);
   }
 
   if (void_func == false)
@@ -1041,6 +1058,29 @@ void Translator::define_class_in_header(std::ofstream &header_os)
   header_os << encrypted_outputs_class_literal << " " << static_ciphertexts_map_id << ";\n";
   // attribute 11
   header_os << encoded_outputs_class_literal << " " << static_plaintexts_map_id << ";\n";
+}
+
+void Translator::write_static_object_from_function_call(const ir::Program::Ptr &node, std::ofstream &os)
+{
+  auto func_it = func_id_by_root.find(node);
+
+  auto func_id = *func_it;
+
+  if (func_it == func_id_by_root.end())
+    throw std::logic_error("function node is expected in write_static_object_from_function_call");
+
+  func_id_by_root.erase(func_it);
+
+  if (node->get_term_type() == ir::TermType::ciphertext)
+  {
+    os << static_ciphertexts_map_id << "[\"" << node->get_label() << "\"]"
+       << " = " << get_function_identifier(func_id.second) << ";\n";
+  }
+  else if (node->get_term_type() == ir::TermType::plaintext)
+  {
+    os << static_plaintexts_map_id << "[\"" << node->get_label() << "\"]"
+       << " = " << get_function_identifier(func_id.second) << ";\n";
+  }
 }
 
 } // namespace translator

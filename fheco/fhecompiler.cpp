@@ -104,6 +104,7 @@ void compile(const std::string &output_filename)
   }
 
   // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
+
   {
     fheco_passes::RotationKeySelctionPass rs_pass(program);
     rs_pass.decompose_rotations();
@@ -119,8 +120,10 @@ void compile(const std::string &output_filename)
   {
     translator::Translator tr(program);
     {
+
       std::ofstream translation_source_os("computation.cpp");
       std::ofstream translation_header_os("computation.hpp");
+
       if (!translation_source_os || !translation_header_os)
         throw("couldn't open file for translation.\n");
 
