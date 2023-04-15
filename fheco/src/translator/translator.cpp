@@ -388,6 +388,15 @@ void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &o
   std::string op_identifier = get_identifier(label_in_destination_code[term_ptr->get_label()]);
   std::string rhs_identifier;
 
+  auto output_it = program->get_outputs_nodes().find(term_ptr->get_label());
+
+  if (
+    (scopes_by_node[term_ptr->get_operands()[0]].size() > 2) &&
+    (func_id_by_root.find(term_ptr->get_operands()[0]) != func_id_by_root.end()))
+  {
+    write_static_object_from_function_call(term_ptr, os);
+  }
+
   if (func_id_by_root.find(term_ptr->get_operands()[0]) != func_id_by_root.end())
     rhs_identifier = get_function_identifier(func_id_by_root[term_ptr->get_operands()[0]]);
   else if (scopes_by_node[term_ptr->get_operands()[0]].size() > 1)
@@ -437,6 +446,13 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
           encryption_writer.init(os);
         }
         */
+        if (
+          scopes_by_node[term->get_operands()[0]].size() > 2 &&
+          (func_id_by_root.find(term->get_operands()[0]) != func_id_by_root.end()))
+        {
+          write_static_object_from_function_call(term->get_operands()[0], os);
+        }
+
         std::string plaintext_id;
         if (func_id_by_root.find(term->get_operands()[0]) != func_id_by_root.end())
         {
@@ -492,8 +508,8 @@ void Translator::translate_program(std::ofstream &source_os, std::ofstream &head
   header_os << headers_include << "\n";
   source_os << source_headers_include << "\n";
 
-  context_writer.write_context(source_os);
-  header_os << context_function_signature << ";\n";
+  // context_writer.write_context(source_os);
+  // header_os << context_function_signature << ";\n";
 
   if (program->get_rotations_keys_steps().size())
     write_rotations_steps_getter(program->get_rotations_keys_steps(), source_os);
