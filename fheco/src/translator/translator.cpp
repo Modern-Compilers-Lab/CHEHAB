@@ -456,8 +456,8 @@ void Translator::translate_program(
 {
 
   header_os << headers_include << "\n";
+  source_os << "#include <iostream>\n";
   source_os << "#include\"" << header_name << "\"\n";
-
   context_writer.write_context(source_os);
   header_os << context_function_signature << ";\n";
 
@@ -945,6 +945,9 @@ void Translator::generate_function_from_nodes(
            {encoded_inputs_class_literal, inputs_class_identifier[ir::TermType::plaintext], AccessType::readAndModify}})
      << "{\n";
 
+  os << "std::cout << \"called "
+     << (func_id.empty() ? (method_signature_prefix + std::to_string(func_id_by_root[root])) : func_id) << "\\n\";\n";
+
   if (nodes.size() == 0)
     translate_term(root, os);
   else
@@ -953,6 +956,8 @@ void Translator::generate_function_from_nodes(
       translate_term(node, os);
   }
 
+  os << "std::cout << \"done "
+     << (func_id.empty() ? (method_signature_prefix + std::to_string(func_id_by_root[root])) : func_id) << "\\n\";\n";
   if (void_func == false)
   {
     os << "return " << ident << ";";

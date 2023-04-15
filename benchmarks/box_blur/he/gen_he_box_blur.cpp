@@ -1,3 +1,4 @@
+#include <iostream>
 #include"gen_he_box_blur.hpp"
 seal::SEALContext create_context(){
 seal::EncryptionParameters params(seal::scheme_type::bfv);
@@ -12,6 +13,7 @@ std::vector<int32_t> steps = {1,32,992,1023};
 return steps; 
 }
 void Computation::box_blur(std::map<std::string, seal::Ciphertext>& encrypted_inputs, std::map<std::string, seal::Plaintext>& encoded_inputs){
+std::cout << "called box_blur\n";
 seal::Ciphertext ciphertext0 = encrypted_inputs["img"];
 seal::Ciphertext ciphertext39;
 evaluator.rotate_rows(ciphertext0,1, galois_keys,ciphertext39);
@@ -30,4 +32,5 @@ evaluator.add(ciphertext6,ciphertext40,ciphertext15);
 seal::Ciphertext ciphertext16;
 evaluator.add(ciphertext15,ciphertext14,ciphertext16);
 encrypted_outputs.insert({"result",ciphertext16});
+std::cout << "done box_blur\n";
 }
