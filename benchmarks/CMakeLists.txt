@@ -5,7 +5,6 @@ project(fhecompiler_benchmarks VERSION 1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(./matrix_mul_poc)
-add_subdirectory(./cryptonets)
 
 add_executable(test1 test1.cpp)
 add_executable(dot_product dot_product.cpp)
