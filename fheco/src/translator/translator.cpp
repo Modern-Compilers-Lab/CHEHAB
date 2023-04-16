@@ -320,11 +320,11 @@ void Translator::translate_binary_operation(const ir::Term::Ptr &term_ptr, std::
   std::string op_identifier = label_in_destination_code[term_ptr->get_label()];
   auto &operands = term_ptr->get_operands();
 
-  if ((scopes_by_node[operands[0]].size() > 2) && (func_id_by_root.find(operands[0]) != func_id_by_root.end()))
+  if ((scopes_by_node[operands[0]].size() > 1) && (func_id_by_root.find(operands[0]) != func_id_by_root.end()))
   {
     write_static_object_from_function_call(operands[0], os);
   }
-  if ((scopes_by_node[operands[1]].size() > 2) && (func_id_by_root.find(operands[1]) != func_id_by_root.end()))
+  if ((scopes_by_node[operands[1]].size() > 1) && (func_id_by_root.find(operands[1]) != func_id_by_root.end()))
   {
     write_static_object_from_function_call(operands[1], os);
   }
@@ -372,10 +372,10 @@ void Translator::translate_unary_operation(const ir::Term::Ptr &term_ptr, std::o
   auto output_it = program->get_outputs_nodes().find(term_ptr->get_label());
 
   if (
-    (scopes_by_node[term_ptr->get_operands()[0]].size() > 2) &&
+    (scopes_by_node[term_ptr->get_operands()[0]].size() > 1) &&
     (func_id_by_root.find(term_ptr->get_operands()[0]) != func_id_by_root.end()))
   {
-    write_static_object_from_function_call(term_ptr, os);
+    write_static_object_from_function_call(term_ptr->get_operands()[0], os);
   }
 
   if (func_id_by_root.find(term_ptr->get_operands()[0]) != func_id_by_root.end())
@@ -423,7 +423,7 @@ void Translator::translate_term(const ir::Term::Ptr &term, std::ostream &os)
         }
         */
         if (
-          scopes_by_node[term->get_operands()[0]].size() > 2 &&
+          scopes_by_node[term->get_operands()[0]].size() > 1 &&
           (func_id_by_root.find(term->get_operands()[0]) != func_id_by_root.end()))
         {
           write_static_object_from_function_call(term->get_operands()[0], os);
