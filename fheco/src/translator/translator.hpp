@@ -108,5 +108,7 @@ public:
     std::ostream &os, const std::vector<ir::Term::Ptr> &nodes, bool void_func = false, const std::string &func_id = "");
 
   void define_class_in_header(std::ostream &header_os);
+
+  void write_static_object_from_function_call(const ir::Term::Ptr &node, std::ostream &os);
 };
 } // namespace translator

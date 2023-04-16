@@ -1,3 +1,4 @@
+#include "fhecompiler.hpp"
 #include "ml.hpp"
 #include <cstddef>
 #include <cstdint>
