@@ -1,48 +1,46 @@
 #pragma once
 
-#include "ir_const.hpp"
+#include "common.hpp"
 #include "term_type.hpp"
 #include <cstddef>
+#include <optional>
+#include <stdint.h>
 #include <string>
+#include <utility>
 
 namespace fhecompiler
 {
+namespace ir
+{
+  class Function;
+} // namespace ir
+
 class Ciphertext
 {
 public:
-  Ciphertext() : label_{term_type().auto_name_prefix() + std::to_string(id_++)} {}
+  Ciphertext() {}
 
-  explicit Ciphertext(std::string tag);
+  explicit Ciphertext(std::string label);
 
-  Ciphertext(std::string tag, long long slot_min_value, long long slot_max_value);
+  Ciphertext(std::string label, const ir::VectorValue &example_value);
 
-  Ciphertext(std::string tag, const ir::VectorValue &example_value);
-
-  Ciphertext(const Ciphertext &) = default;
-
-  Ciphertext &operator=(const Ciphertext &) = default;
-
-  Ciphertext(Ciphertext &&) = default;
-
-  Ciphertext &operator=(Ciphertext &&) = default;
+  Ciphertext(std::string label, std::int64_t example_value_slot_min, std::int64_t example_value_slot_max);
 
   static ir::TermType term_type() { return ir::TermType::ciphertext; }
 
-  const Ciphertext &tag(std::string tag) const;
+  const Ciphertext &set_output(std::string label) const;
 
-  const Ciphertext &set_output(std::string tag) const;
+  inline const size_t id() const { return id_; }
 
-  const std::string &label() const { return label_; }
-
-  inline const ir::VectorValue &example_value() const { return example_value_; }
+  inline const std::optional<ir::VectorValue> &example_value() const { return example_value_; }
 
 private:
-  inline ir::VectorValue &example_value() { return example_value_; }
+  inline void set_example_value(ir::VectorValue example_value) { example_value_ = std::move(example_value); }
 
-  static std::size_t id_;
+  std::size_t id_;
 
-  std::string label_;
+  std::optional<ir::VectorValue> example_value_;
 
-  ir::VectorValue example_value_;
+  friend class ir::Function;
 };
 } // namespace fhecompiler

@@ -2,8 +2,8 @@
 
 #include "draw_ir.hpp"
 // #include "evaluate_on_clear.hpp"
-#include "ir_const.hpp"
-#include "program.hpp"
+#include "common.hpp"
+#include "function.hpp"
 // #include "quantify_ir.hpp"
 #include <cstddef>
 #include <memory>
@@ -17,14 +17,15 @@ namespace fhecompiler
 class Compiler
 {
 public:
-  static ir::Program &create_func(
-    std::string name, std::size_t vector_size, int bit_width = 16, bool signedness = true, Scheme scheme = Scheme::bfv);
+  static ir::Function &create_func(
+    std::string name, std::size_t vector_size, int bit_width = 16, bool signedness = true,
+    ir::Scheme scheme = ir::Scheme::bfv);
 
   static void delete_func(const std::string &name);
 
   static void set_active_func(const std::string &name);
 
-  static inline ir::Program &get_active()
+  static inline ir::Function &active_func()
   {
     if (active_func_ == nullptr)
       throw std::logic_error("active_func is null");
@@ -43,7 +44,7 @@ public:
   // static inline void compile(
   //   std::ostream &os, int trs_passes = 1, bool use_mod_switch = true, SecurityLevel sec_level = SecurityLevel::tc128)
   // {
-  //   FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
+  //   FuncEntry &func_entry = get_func_entry(get_active()->get_Function_tag());
   //   func_entry.compile(os, trs_passes, use_mod_switch, sec_level);
   // }
 
@@ -56,7 +57,7 @@ public:
 
   // static inline void compile_noopt(std::ostream &os, SecurityLevel sec_level = SecurityLevel::tc128)
   // {
-  //   FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
+  //   FuncEntry &func_entry = get_func_entry(get_active()->get_Function_tag());
   //   func_entry.compile_noopt(os, sec_level);
   // }
 
@@ -68,7 +69,7 @@ public:
 
   static inline void draw_func_ir(std::ostream &os)
   {
-    FuncEntry &func_entry = get_func_entry(get_active().name());
+    FuncEntry &func_entry = get_func_entry(active_func().name());
     func_entry.draw_ir(os);
   }
 
@@ -81,7 +82,7 @@ public:
 
   // static inline utils::io_variables_values evaluate_on_clear(const utils::io_variables_values &inputs_values)
   // {
-  //   FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
+  //   FuncEntry &func_entry = get_func_entry(get_active()->get_Function_tag());
   //   return func_entry.evaluate_on_clear(inputs_values);
   // }
 
@@ -93,7 +94,7 @@ public:
 
   // static inline std::map<std::string, std::size_t> count_main_node_classes()
   // {
-  //   FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
+  //   FuncEntry &func_entry = get_func_entry(get_active()->get_Function_tag());
   //   return func_entry.count_main_node_classes();
   // }
 
@@ -101,7 +102,7 @@ public:
   //   const std::string &label, const std::string &tag, long long min_value, long long max_value,
   //   ir::VectorValue &destination)
   // {
-  //   FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
+  //   FuncEntry &func_entry = get_func_entry(get_active()->get_Function_tag());
   //   func_entry.init_input(label, tag, min_value, max_value, destination);
   // }
 
@@ -109,7 +110,7 @@ public:
   //   const std::string &label, const std::string &tag, const ir::VectorValue &example_value,
   //   ir::VectorValue &destination)
   // {
-  //   FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
+  //   FuncEntry &func_entry = get_func_entry(get_active()->get_Function_tag());
   //   func_entry.init_input(label, tag, example_value, destination);
   // }
 
@@ -174,7 +175,7 @@ public:
 
   // static inline void set_output(const std::string &label, const std::string &tag, const ir::VectorValue &value)
   // {
-  //   FuncEntry &func_entry = get_func_entry(get_active()->get_program_tag());
+  //   FuncEntry &func_entry = get_func_entry(get_active()->get_Function_tag());
   //   func_entry.set_output(label, tag, value);
   // }
 
@@ -185,7 +186,7 @@ public:
 
   // static inline const utils::io_variables_values &get_example_input_values()
   // {
-  //   return get_func_entry(active_func_->get_program_tag()).example_inputs_values;
+  //   return get_func_entry(active_func_->get_Function_tag()).example_inputs_values;
   // }
 
   // static inline const utils::io_variables_values &get_example_output_values(const std::string &func_name)
@@ -195,7 +196,7 @@ public:
 
   // static inline const utils::io_variables_values &get_example_output_values()
   // {
-  //   return get_func_entry(active_func_->get_program_tag()).example_outputs_values;
+  //   return get_func_entry(active_func_->get_Function_tag()).example_outputs_values;
   // }
 
   // static inline void print_inputs_outputs(
@@ -213,24 +214,24 @@ public:
   // static inline void print_inputs_outputs(
   //   const utils::io_variables_values &inputs, const utils::io_variables_values &outputs, std::ostream &os)
   // {
-  //   get_func_entry(active_func_->get_program_tag()).print_inputs_outputs(inputs, outputs, os);
+  //   get_func_entry(active_func_->get_Function_tag()).print_inputs_outputs(inputs, outputs, os);
   // }
 
   // static inline void print_inputs_outputs(std::ostream &os)
   // {
-  //   get_func_entry(active_func_->get_program_tag()).print_inputs_outputs(os);
+  //   get_func_entry(active_func_->get_Function_tag()).print_inputs_outputs(os);
   // }
 
 private:
   struct FuncEntry
   {
-    std::unique_ptr<ir::Program> func;
+    std::unique_ptr<ir::Function> func;
 
     // std::unordered_map<std::string, std::string> tags_labels;
     // utils::io_variables_values example_inputs_values;
     // utils::io_variables_values example_outputs_values;
 
-    // FuncEntry(const std::shared_ptr<ir::Program> &f) : func(f) {}
+    // FuncEntry(const std::shared_ptr<ir::Function> &f) : func(f) {}
 
     // void init_input(
     //   const std::string &label, const std::string &tag, long long min_value, long long max_value,
@@ -266,7 +267,7 @@ private:
     // }
   };
 
-  static inline ir::Program &get_func(const std::string &name)
+  static inline ir::Function &get_func(const std::string &name)
   {
     auto it = funcs_table_.find(name);
     if (it == funcs_table_.end())
@@ -284,7 +285,7 @@ private:
     return func_entry_it->second;
   }
 
-  static ir::Program *active_func_;
+  static ir::Function *active_func_;
   static std::unordered_map<std::string, FuncEntry> funcs_table_;
 };
 } // namespace fhecompiler

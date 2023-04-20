@@ -1,62 +1,51 @@
 #pragma once
 
-#include "ir_const.hpp"
+#include "common.hpp"
 #include "term_type.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace fhecompiler
 {
+namespace ir
+{
+  class Function;
+} // namespace ir
+
 class Plaintext
 {
 public:
-  Plaintext() : label_{term_type().auto_name_prefix() + std::to_string(id_++)} {}
+  Plaintext() {}
 
-  explicit Plaintext(std::string tag);
+  explicit Plaintext(std::string label);
 
-  Plaintext(std::string tag, long long slot_min_value, long long slot_max_value);
+  Plaintext(std::string label, const ir::VectorValue &example_value);
 
-  Plaintext(std::string tag, const ir::VectorValue &example_value);
+  Plaintext(std::string label, std::int64_t example_value_slot_min, std::int64_t example_value_slot_max);
 
-  Plaintext(const std::vector<std::int64_t> &data, std::string tag);
+  Plaintext(const std::vector<std::int64_t> &value);
 
-  Plaintext(const std::vector<std::int64_t> &data);
-
-  Plaintext(const std::vector<int> &data, std::string tag);
-
-  Plaintext(const std::vector<int> &data);
-
-  Plaintext(const std::vector<std::uint64_t> &data, std::string tag);
-
-  Plaintext(const std::vector<std::uint64_t> &data);
-
-  Plaintext(const Plaintext &) = default;
-
-  Plaintext &operator=(const Plaintext &) = default;
-
-  Plaintext &operator=(Plaintext &&) = default;
-
-  Plaintext(Plaintext &&pt_move) = default;
+  Plaintext(const std::vector<std::uint64_t> &value);
 
   static ir::TermType term_type() { return ir::TermType::plaintext; }
 
-  const Plaintext &tag(std::string tag) const;
+  const Plaintext &set_output(std::string label) const;
 
-  const Plaintext &set_output(std::string tag) const;
+  inline const size_t id() const { return id_; }
 
-  const std::string &label() const { return label_; }
-
-  inline const ir::VectorValue &example_value() const { return example_value_; }
+  inline const std::optional<ir::VectorValue> &example_value() const { return example_value_; }
 
 private:
-  inline ir::VectorValue &example_value() { return example_value_; }
+  inline void set_example_value(ir::VectorValue example_value) { example_value_ = std::move(example_value); }
 
-  static std::size_t id_;
+  std::size_t id_;
 
-  std::string label_;
+  std::optional<ir::VectorValue> example_value_;
 
-  ir::VectorValue example_value_;
+  friend class ir::Function;
 };
 } // namespace fhecompiler

@@ -1,5 +1,5 @@
 #include "dag.hpp"
-#include <iostream>
+#include <algorithm>
 #include <stack>
 #include <stdexcept>
 #include <utility>
@@ -12,20 +12,14 @@ namespace ir
 {
   DAG::~DAG()
   {
-    cout << "dest dag" << endl;
-    for (auto it = terms_.begin(); it != terms_.end();)
-    {
+    for (auto it = terms_.cbegin(); it != terms_.cend(); ++it)
       delete *it;
-      ++it;
-    }
   }
 
   DAG::DAG(DAG &&other)
-    : leaves_{std::move(other.leaves_)}, outputs_{std::move(other.outputs_)}, sorted_terms_{std::move(
-                                                                                other.sorted_terms_)},
-      valid_top_sort_{std::move(other.valid_top_sort_)}, terms_{std::move(other.terms_)}
+    : outputs_{move(other.outputs_)}, sorted_terms_{move(other.sorted_terms_)},
+      valid_top_sort_{move(other.valid_top_sort_)}, terms_{move(other.terms_)}
   {
-    other.leaves_.clear();
     other.outputs_.clear();
     other.sorted_terms_.clear();
     other.terms_.clear();
@@ -33,13 +27,11 @@ namespace ir
 
   DAG &DAG::operator=(DAG &&other)
   {
-    leaves_ = std::move(other.leaves_);
-    outputs_ = std::move(other.outputs_);
-    sorted_terms_ = std::move(other.sorted_terms_);
-    valid_top_sort_ = std::move(other.valid_top_sort_);
-    terms_ = std::move(other.terms_);
+    outputs_ = move(other.outputs_);
+    sorted_terms_ = move(other.sorted_terms_);
+    valid_top_sort_ = move(other.valid_top_sort_);
+    terms_ = move(other.terms_);
 
-    other.leaves_.clear();
     other.outputs_.clear();
     other.sorted_terms_.clear();
     other.terms_.clear();
@@ -47,110 +39,80 @@ namespace ir
     return *this;
   }
 
-  Term *DAG::insert_term(string label, OpCode op_code, vector<Term *> operands)
+  Term *DAG::insert_operation_term(OpCode op_code, vector<Term *> operands)
   {
-    if (auto term = find_term(label); term != nullptr)
-      return term;
-
-    Term *term = new Term(move(label), move(op_code), move(operands));
-    if (!term->is_operation())
-      leaves_.insert(term);
-    else
-    {
-      for (auto operand : term->operands_)
-        operand->parents_.insert(operand);
-    }
+    Term *term = new Term(move(op_code), move(operands));
+    for (auto operand : term->operands_)
+      operand->parents_.emplace(Term::ParentKey{&term->op_code_, &term->operands_}, term);
     terms_.insert(term);
     return term;
   }
 
-  Term *DAG::insert_leaf(std::string label, TermType type)
+  Term *DAG::insert_leaf(TermType type)
   {
-    Term *term = new Term(move(label), move(type));
-    leaves_.insert(term);
+    Term *term = new Term(move(type));
     terms_.insert(term);
     return term;
   }
 
-  Term *DAG::find_term(const string &label) const
+  Term *DAG::find_term(size_t id) const
   {
-    // temporary object used as a search key (only label matters)
-    Term t(label, TermType::ciphertext);
-    auto it = terms_.find(&t);
-    if (it != terms_.end())
+    Term t(id);
+    if (auto it = terms_.find(&t); it != terms_.end())
       return *it;
 
     return nullptr;
   }
 
-  void DAG::delete_term(Term *t, bool cascade)
+  Term *DAG::find_term(const OpCode &op_code, const std::vector<Term *> &operands) const
   {
-    if (t->parents_.size() != 0)
-      throw invalid_argument("cannot delete term having parents, this will invalidate the parents and the DAG");
+    if (auto it = operands[0]->parents_.find({&op_code, &operands}); it != operands[0]->parents_.end())
+      return it->second;
 
-    if (auto it = outputs_.find(t); it != outputs_.end())
+    else if (op_code.commutativity())
     {
-      outputs_.erase(it);
-      valid_top_sort_ = false;
-    }
-
-    if (!t->is_operation())
-      leaves_.erase(t);
-    else
-    {
-      for (auto operand : t->operands_)
+      auto permutation = operands;
+      sort(permutation.begin(), permutation.end(), CompareTermPtr{});
+      do
       {
-        operand->parents_.erase(t);
-        if (cascade && operand->parents_.size() == 0)
-          delete_term(operand, true);
-      }
+        auto it = operands[0]->parents_.find({&op_code, &permutation});
+        if (it != operands[0]->parents_.end())
+          return it->second;
+
+      } while (next_permutation(permutation.begin(), permutation.end(), CompareTermPtr{}));
     }
-    terms_.erase(t);
-    delete t;
+    return nullptr;
   }
 
-  vector<Term *> DAG::topological_sort() const
+  void DAG::prune_unreachable_terms()
   {
-    vector<Term *> sorted_nodes;
-    stack<pair<bool, Term *>> traversal_stack;
-    unordered_set<Term *> visited_nodes;
-    for (auto node : outputs_)
+    for (auto it = terms_.cbegin(); it != terms_.cend(); ++it)
     {
-      if (visited_nodes.find(node) == visited_nodes.end())
-        traversal_stack.push(make_pair(false, node));
-
-      while (!traversal_stack.empty())
-      {
-        auto top_node = traversal_stack.top();
-        traversal_stack.pop();
-        if (top_node.first)
-        {
-          sorted_nodes.push_back(top_node.second);
-          continue;
-        }
-        if (visited_nodes.find(top_node.second) != visited_nodes.end())
-          continue;
-
-        visited_nodes.insert(top_node.second);
-        traversal_stack.push(make_pair(true, top_node.second));
-        if (top_node.second->is_operation())
-        {
-          for (auto operand : top_node.second->operands())
-          {
-            if (visited_nodes.find(operand) == visited_nodes.end())
-              traversal_stack.push(make_pair(false, operand));
-          }
-        }
-      }
+      auto t = *it;
+      if (t->parents_.empty() && !is_output(t))
+        delete_non_output_source_cascade(t);
     }
-    return sorted_nodes;
+  }
+
+  void DAG::replace_term_with(Term *t1, Term *t2)
+  {
+    if (t1->parents_.empty() || *t1 == *t2)
+      return;
+
+    t1->replace_in_parents_with(t2);
+    valid_top_sort_ = false;
   }
 
   bool DAG::set_output(Term *t)
   {
-    if (outputs_.insert(t).second)
+    bool inserted = outputs_.insert(t).second;
+    if (inserted)
     {
-      valid_top_sort_ = false;
+      if (!t->is_operation() && valid_top_sort_)
+        sorted_terms_.push_back(t);
+      else
+        valid_top_sort_ = false;
+
       return true;
     }
     return false;
@@ -158,12 +120,74 @@ namespace ir
 
   bool DAG::unset_output(Term *t)
   {
-    if (outputs_.erase(t))
+    bool erased = outputs_.erase(t);
+    if (erased)
     {
-      valid_top_sort_ = false;
+      if (!t->is_operation() && valid_top_sort_)
+      {
+        for (auto it = sorted_terms_.cbegin(); it != sorted_terms_.cend();)
+        {
+          if (*t == **it)
+            it = sorted_terms_.erase(it);
+          else
+            ++it;
+        }
+      }
+      else
+        valid_top_sort_ = false;
+
       return true;
     }
     return false;
+  }
+
+  void DAG::delete_non_output_source_cascade(Term *t)
+  {
+    for (auto operand : t->operands_)
+    {
+      operand->parents_.erase(Term::ParentKey{&t->op_code_, &t->operands_});
+      if (operand->parents_.empty() && !is_output(operand))
+        delete_non_output_source_cascade(operand);
+    }
+    terms_.erase(t);
+    delete t;
+  }
+
+  void DAG::topological_sort()
+  {
+    sorted_terms_.clear();
+    stack<pair<bool, Term *>> traversal_stack;
+    unordered_set<Term *, HashTermPtr, EqualTermPtr> visited_nodes;
+    for (auto node : outputs_)
+    {
+      if (visited_nodes.find(node) == visited_nodes.end())
+        traversal_stack.push({false, node});
+
+      while (!traversal_stack.empty())
+      {
+        auto top_node = traversal_stack.top();
+        traversal_stack.pop();
+        if (top_node.first)
+        {
+          sorted_terms_.push_back(top_node.second);
+          continue;
+        }
+        if (visited_nodes.find(top_node.second) != visited_nodes.end())
+          continue;
+
+        visited_nodes.insert(top_node.second);
+        traversal_stack.push({true, top_node.second});
+        if (top_node.second->is_operation())
+        {
+          for (auto it = top_node.second->operands_.rbegin(); it != top_node.second->operands_.rend(); ++it)
+          {
+            if (visited_nodes.find(*it) == visited_nodes.end())
+              traversal_stack.push({false, *it});
+          }
+        }
+      }
+    }
+    valid_top_sort_ = true;
   }
 } // namespace ir
 } // namespace fhecompiler

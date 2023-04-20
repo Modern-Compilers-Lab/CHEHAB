@@ -16,8 +16,9 @@ set(FHECOMPILER_SOURCE_FILES
   ${SRC_IR}/term_type.cpp
   ${SRC_IR}/op_code.cpp
   ${SRC_IR}/dag.cpp
-  ${SRC_IR}/program.cpp
+  ${SRC_IR}/function.cpp
   ${SRC_IR}/term.cpp
+  ${SRC_IR}/common.cpp
   # ${SRC_IR}/ir_utils.cpp
   # ${SRC_PASSES}/cse_pass.cpp
   # ${SRC_PASSES}/relin_pass.cpp
@@ -51,11 +52,11 @@ target_include_directories(fhecompiler
   PUBLIC ${SRC_IR}
   PUBLIC ${SRC_DSL}
   PUBLIC ${SRC_PASSES}
-  PUBLIC ${SRC_PARAMS_SELECTOR}
-  PUBLIC ${SRC_TRANSLATOR}
-  PUBLIC ${SRC_UTILS}
-  PUBLIC ${SRC_TRS}
-  PUBLIC ${SRC_TRS}/reduction_order)
+  # PUBLIC ${SRC_PARAMS_SELECTOR}
+  # PUBLIC ${SRC_TRANSLATOR}
+  PUBLIC ${SRC_UTILS})
+  # PUBLIC ${SRC_TRS}
+  # PUBLIC ${SRC_TRS}/reduction_order)
 
 include(GNUInstallDirs)
 

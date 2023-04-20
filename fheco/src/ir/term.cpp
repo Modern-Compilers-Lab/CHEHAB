@@ -1,5 +1,5 @@
 #include "term.hpp"
-#include <cstddef>
+#include "common.hpp"
 #include <utility>
 
 using namespace std;
@@ -8,26 +8,49 @@ namespace fhecompiler
 {
 namespace ir
 {
-  Term::Term(string label, OpCode op_code, vector<Term *> operands)
-    : label_{move(label)}, op_code_{move(op_code)}, operands_{move(operands)}, type_{OpCode::deduce_result_type(
-                                                                                 op_code_, operands_)}
-  {}
+  size_t Term::count_ = 0UL;
 
-  void Term::replace_with(Term *t)
+  size_t Term::HashParentKey::operator()(const ParentKey &k) const
   {
-    for (auto it = parents_.begin(); it != parents_.end();)
+    size_t h = hash<OpCode>()(*k.op_code);
+    const auto &operands = *k.operands;
+    for (size_t i = 0; i < operands.size(); ++i)
+      hash_combine(h, *operands[i]);
+    return h;
+  }
+
+  bool Term::EqualParentKey::operator()(const ParentKey &lhs, const ParentKey &rhs) const
+  {
+    if (*lhs.op_code != *rhs.op_code)
+      return false;
+
+    const auto &lhs_operands = *lhs.operands;
+    const auto &rhs_operands = *rhs.operands;
+    if (lhs_operands.size() != rhs_operands.size())
+      return false;
+
+    for (size_t i = 0; i < lhs_operands.size(); ++i)
     {
-      auto parent = *it;
+      if (*lhs_operands[i] != *rhs_operands[i])
+        return false;
+    }
+
+    return true;
+  }
+
+  void Term::replace_in_parents_with(Term *t)
+  {
+    for (auto it = parents_.cbegin(); it != parents_.cend(); ++it)
+    {
+      auto entry = parents_.extract(it);
+      auto parent = entry.mapped();
       for (size_t i = 0; i < parent->operands_.size(); ++i)
       {
+        // parent multiplicity can be used to stop once replacement is done, not to traverse the whole operands vector
         if (*parent->operands_[i] == *this)
-        {
           parent->operands_[i] = t;
-          continue;
-        }
       }
-      t->parents_.insert(parent);
-      it = parents_.erase(it);
+      t->parents_.insert(move(entry));
     }
   }
 } // namespace ir

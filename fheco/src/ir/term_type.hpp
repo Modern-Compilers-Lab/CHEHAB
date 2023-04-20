@@ -15,28 +15,31 @@ namespace ir
     static const TermType plaintext;
     static const TermType scalar;
 
-    friend inline bool operator==(const TermType &lhs, const TermType &rhs) { return lhs.index_ == rhs.index_; }
-
-    friend inline bool operator<(const TermType &lhs, const TermType &rhs) { return lhs.index_ < rhs.index_; }
-
     inline explicit operator int() const { return index_; }
 
-    inline const std::string &auto_name_prefix() const { return auto_name_prefix_; }
+    inline int index() const { return index_; }
 
-    friend inline std::ostream &operator<<(std::ostream &os, const TermType &term_type)
-    {
-      return os << term_type.auto_name_prefix_;
-    }
+    inline const std::string &str_repr() const { return str_repr_; }
 
   private:
-    TermType(std::string auto_name_prefix) : index_{count_++}, auto_name_prefix_{std::move(auto_name_prefix)} {}
+    TermType(std::string str_repr_) : index_{count_++}, str_repr_{std::move(str_repr_)} {}
 
     static int count_;
 
     int index_;
 
-    std::string auto_name_prefix_;
+    std::string str_repr_;
   };
+
+  inline bool operator==(const TermType &lhs, const TermType &rhs)
+  {
+    return lhs.index() == rhs.index();
+  }
+
+  inline bool operator<(const TermType &lhs, const TermType &rhs)
+  {
+    return lhs.index() < rhs.index();
+  }
 
   inline bool operator!=(const TermType &lhs, const TermType &rhs)
   {
@@ -57,6 +60,11 @@ namespace ir
   {
     return !(lhs < rhs);
   }
+
+  inline std::ostream &operator<<(std::ostream &os, const TermType &term_type)
+  {
+    return os << term_type.str_repr();
+  }
 } // namespace ir
 } // namespace fhecompiler
 
@@ -65,6 +73,6 @@ namespace std
 template <>
 struct hash<fhecompiler::ir::TermType>
 {
-  size_t operator()(const fhecompiler::ir::TermType &e) const { return hash<int>()(static_cast<int>(e)); }
+  inline size_t operator()(const fhecompiler::ir::TermType &term_type) const { return hash<int>()(term_type.index()); }
 };
 } // namespace std

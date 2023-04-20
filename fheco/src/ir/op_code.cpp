@@ -1,4 +1,5 @@
 #include "op_code.hpp"
+#include "common.hpp"
 #include "term.hpp"
 #include <stdexcept>
 
@@ -25,10 +26,10 @@ namespace ir
 
   const TermType &OpCode::deduce_result_type(const OpCode &op_code, const vector<Term *> &operands)
   {
-    if (op_code.arity_ != operands.size())
+    if (op_code.arity() != operands.size())
       throw invalid_argument("invalid number of operands for op_code");
 
-    switch (op_code.arity_)
+    switch (op_code.arity())
     {
     case 0:
       throw invalid_argument("cannot deduce result type of operation with 0 operands (nop)");
@@ -53,15 +54,24 @@ namespace ir
     }
   }
 
+  // an alias of o.generators()[0] for the rotate operation
+  int OpCode::steps() const
+  {
+    if (index() != rotate(0).index())
+      throw std::invalid_argument("steps should be called only on rotate_* operations");
+
+    return generators_[0];
+  }
+
   bool operator==(const OpCode &lhs, const OpCode &rhs)
   {
-    if (lhs.index_ != rhs.index_)
+    if (lhs.index() != rhs.index())
       return false;
 
     // op_codes with same index (same operation class like rotate_*) must have the same number of generators
-    for (size_t i = 0; i < lhs.generators_.size(); ++i)
+    for (size_t i = 0; i < lhs.generators().size(); ++i)
     {
-      if (lhs.generators_[i] != rhs.generators_[i])
+      if (lhs.generators()[i] != rhs.generators()[i])
         return false;
     }
     return true;
@@ -69,19 +79,30 @@ namespace ir
 
   bool operator<(const OpCode &lhs, const OpCode &rhs)
   {
-    if (lhs.index_ == rhs.index_)
+    if (lhs.index() == rhs.index())
     {
       // op_codes with same index (same operation class like rotate_*) must have the same number of generators
-      for (size_t i = 0; i < lhs.generators_.size(); ++i)
+      for (size_t i = 0; i < lhs.generators().size(); ++i)
       {
-        if (lhs.generators_[i] < rhs.generators_[i])
+        if (lhs.generators()[i] < rhs.generators()[i])
           return true;
-        else if (lhs.generators_[i] > rhs.generators_[i])
+        else if (lhs.generators()[i] > rhs.generators()[i])
           return false;
       }
       return false;
     }
-    return lhs.index_ < rhs.index_;
+    return lhs.index() < rhs.index();
   }
 } // namespace ir
 } // namespace fhecompiler
+
+namespace std
+{
+size_t hash<fhecompiler::ir::OpCode>::operator()(const fhecompiler::ir::OpCode &op_code) const
+{
+  size_t h = hash<int>()(op_code.index());
+  for (auto g : op_code.generators())
+    fhecompiler::ir::hash_combine(h, g);
+  return h;
+}
+} // namespace std

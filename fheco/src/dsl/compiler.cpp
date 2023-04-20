@@ -9,18 +9,18 @@ using namespace std;
 
 namespace fhecompiler
 {
-ir::Program *Compiler::active_func_ = nullptr;
+ir::Function *Compiler::active_func_ = nullptr;
 unordered_map<string, Compiler::FuncEntry> Compiler::funcs_table_;
 
-ir::Program &Compiler::create_func(string name, size_t vector_size, int bit_width, bool signedness, Scheme scheme)
+ir::Function &Compiler::create_func(string name, size_t vector_size, int bit_width, bool signedness, ir::Scheme scheme)
 {
   if (auto it = funcs_table_.find(name); it != funcs_table_.end())
     throw invalid_argument("a function with this name already exists");
 
-  if (scheme == Scheme::none)
-    scheme = Scheme::bfv;
+  if (scheme == ir::Scheme::none)
+    scheme = ir::Scheme::bfv;
 
-  auto p = make_unique<ir::Program>(name, scheme, vector_size, bit_width, signedness);
+  auto p = make_unique<ir::Function>(name, scheme, vector_size, bit_width, signedness);
   active_func_ = p.get();
   FuncEntry entry{move(p)};
   funcs_table_.emplace(move(name), move(entry));
@@ -69,7 +69,7 @@ void Compiler::set_active_func(const string &name)
 //   param_selector::EncryptionParameters params = param_selector.select_params(uses_mod_switch);
 
 //   translator::Translator tr(func, sec_level, params, uses_mod_switch);
-//   tr.translate_program(os, rotation_keys_steps);
+//   tr.translate_Function(os, rotation_keys_steps);
 // }
 
 // void Compiler::FuncEntry::compile_noopt(ostream &os, SecurityLevel sec_level)
@@ -85,7 +85,7 @@ void Compiler::set_active_func(const string &name)
 //   param_selector::EncryptionParameters params = param_selector.select_params(uses_mod_switch);
 
 //   translator::Translator tr(func, sec_level, params, uses_mod_switch);
-//   tr.translate_program(os, rotation_keys_steps);
+//   tr.translate_Function(os, rotation_keys_steps);
 // }
 
 // void Compiler::FuncEntry::init_input(

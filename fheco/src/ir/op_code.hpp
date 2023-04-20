@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <functional>
 #include <ostream>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -31,11 +30,9 @@ namespace ir
 
     static const TermType &deduce_result_type(const OpCode &op_code, const std::vector<Term *> &operands);
 
-    friend bool operator==(const OpCode &lhs, const OpCode &rhs);
-
-    friend bool operator<(const OpCode &lhs, const OpCode &rhs);
-
     inline explicit operator int() const { return index_; }
+
+    inline int index() const { return index_; }
 
     inline const std::vector<int> &generators() const { return generators_; }
 
@@ -45,16 +42,8 @@ namespace ir
 
     inline const std::string &str_repr() const { return str_repr_; }
 
-    friend inline std::ostream &operator<<(std::ostream &os, const OpCode &op_code) { return os << op_code.str_repr_; }
-
     // an alias of o.generators()[0] for the rotate operation
-    inline int steps() const
-    {
-      if (index_ != rotate(0).index_)
-        throw std::invalid_argument("steps should be called only on rotate_* operations");
-
-      return generators_[0];
-    }
+    int steps() const;
 
   private:
     OpCode(int index, std::vector<int> generators, std::size_t arity, bool commutativity, std::string str_repr)
@@ -79,6 +68,10 @@ namespace ir
     std::string str_repr_;
   };
 
+  bool operator==(const OpCode &lhs, const OpCode &rhs);
+
+  bool operator<(const OpCode &lhs, const OpCode &rhs);
+
   inline bool operator!=(const OpCode &lhs, const OpCode &rhs)
   {
     return !(lhs == rhs);
@@ -98,6 +91,12 @@ namespace ir
   {
     return !(lhs < rhs);
   }
+
+  inline std::ostream &operator<<(std::ostream &os, const OpCode &op_code)
+  {
+    return os << op_code.str_repr();
+  }
+
 } // namespace ir
 } // namespace fhecompiler
 
@@ -106,6 +105,6 @@ namespace std
 template <>
 struct hash<fhecompiler::ir::OpCode>
 {
-  size_t operator()(const fhecompiler::ir::OpCode &e) const { return hash<int>()(static_cast<int>(e)); }
+  size_t operator()(const fhecompiler::ir::OpCode &op_code) const;
 };
 } // namespace std

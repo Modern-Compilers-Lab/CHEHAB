@@ -6,7 +6,6 @@
 
 namespace fhecompiler
 {
-
 // addition
 Ciphertext operator+(const Ciphertext &lhs, const Ciphertext &rhs);
 Ciphertext operator+(const Ciphertext &lhs, const Plaintext &rhs);
@@ -81,12 +80,14 @@ Ciphertext &operator>>=(Ciphertext &lhs, int steps);
 Plaintext &operator<<=(Plaintext &lhs, int steps);
 Plaintext &operator>>=(Plaintext &lhs, int steps);
 
-// square, expo, multiply many, add_many, reduce*
+// encryption
+Ciphertext encrypt(const Plaintext &arg);
+Ciphertext encrypt(const Scalar &arg);
 
-Ciphertext square(const Ciphertext &encrypted);
+// square, expo, multiply many, add_many, reduce*
+Ciphertext square(const Plaintext &encrypted);
 
 Ciphertext reduce_add(const Ciphertext &encrypted);
 
 Ciphertext add_many(const std::vector<Ciphertext> &encrypteds);
-
 } // namespace fhecompiler
