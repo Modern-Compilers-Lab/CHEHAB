@@ -1,0 +1,2 @@
+add_executable(check_rules check_rules.cpp)
+target_link_libraries(check_rules PRIVATE fhecompiler)

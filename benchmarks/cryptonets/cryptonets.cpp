@@ -8,7 +8,7 @@
 #include <vector>
 
 using namespace std;
-using namespace fhecompiler;
+using namespace fheco;
 
 void cryptonets(
   const vector<size_t> &x_shape, const vector<size_t> &w1_shape, const vector<size_t> &b1_shape,
@@ -16,10 +16,6 @@ void cryptonets(
   const vector<size_t> &b8_shape)
 {
   // declare inputs
-  int x_min_val = 0;
-  int x_max_val = 1;
-  int wb_min = -1;
-  int wb_max = 1;
   vector<vector<vector<Ciphertext>>> x;
   for (size_t i = 0; i < x_shape[0]; ++i)
   {
@@ -28,8 +24,7 @@ void cryptonets(
     {
       x[i].push_back(vector<Ciphertext>());
       for (size_t k = 0; k < x_shape[2]; ++k)
-        x[i][j].push_back(
-          Ciphertext("x[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "]", x_min_val, x_max_val));
+        x[i][j].push_back(Ciphertext("x[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "]"));
     }
   }
 
@@ -44,16 +39,15 @@ void cryptonets(
       {
         w1[i][j].push_back(vector<Plaintext>());
         for (size_t l = 0; l < w1_shape[3]; ++l)
-          w1[i][j][k].push_back(Plaintext(
-            "w1[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]", wb_min,
-            wb_max));
+          w1[i][j][k].push_back(
+            Plaintext("w1[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]"));
       }
     }
   }
 
   vector<Plaintext> b1;
   for (size_t i = 0; i < b1_shape[0]; ++i)
-    b1.push_back(Plaintext("b1[" + to_string(i) + "]", wb_min, wb_max));
+    b1.push_back(Plaintext("b1[" + to_string(i) + "]"));
 
   vector<vector<vector<vector<Plaintext>>>> w4;
   for (size_t i = 0; i < w4_shape[0]; ++i)
@@ -66,28 +60,27 @@ void cryptonets(
       {
         w4[i][j].push_back(vector<Plaintext>());
         for (size_t l = 0; l < w4_shape[3]; ++l)
-          w4[i][j][k].push_back(Plaintext(
-            "w4[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]", wb_min,
-            wb_max));
+          w4[i][j][k].push_back(
+            Plaintext("w4[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]"));
       }
     }
   }
 
   vector<Plaintext> b4;
   for (size_t i = 0; i < b4_shape[0]; ++i)
-    b4.push_back(Plaintext("b4[" + to_string(i) + "]", wb_min, wb_max));
+    b4.push_back(Plaintext("b4[" + to_string(i) + "]"));
 
   vector<vector<Plaintext>> w8;
   for (size_t i = 0; i < w8_shape[0]; ++i)
   {
     w8.push_back(vector<Plaintext>());
     for (size_t j = 0; j < w8_shape[1]; ++j)
-      w8[i].push_back(Plaintext("w8[" + to_string(i) + "][" + to_string(j) + "]", wb_min, wb_max));
+      w8[i].push_back(Plaintext("w8[" + to_string(i) + "][" + to_string(j) + "]"));
   }
 
   vector<Plaintext> b8;
   for (size_t i = 0; i < b8_shape[0]; ++i)
-    b8.push_back(Plaintext("b8[" + to_string(i) + "]", wb_min, wb_max));
+    b8.push_back(Plaintext("b8[" + to_string(i) + "]"));
 
   // show passed shapes
   cout << "x: ";
@@ -120,52 +113,27 @@ void cryptonets(
 
 int main(int argc, char **argv)
 {
-  try
-  {
-    size_t vector_size = 4;
-    if (argc > 1)
-      vector_size = stoll(argv[1]);
+  size_t vector_size = 4;
+  if (argc > 1)
+    vector_size = stoll(argv[1]);
 
-    int trs_passes = 1;
-    if (argc > 2)
-      trs_passes = stoi(argv[2]);
+  int trs_passes = 1;
+  if (argc > 2)
+    trs_passes = stoi(argv[2]);
 
-    bool optimize = trs_passes > 0;
+  bool optimize = trs_passes > 0;
 
-    cout << "vector_size: " << vector_size << ", "
-         << "trs_passes: " << trs_passes << '\n';
+  cout << "vector_size: " << vector_size << ", "
+       << "trs_passes: " << trs_passes << '\n';
 
-    string func_name = "cryptonets";
-    Compiler::create_func(func_name, vector_size, 30, true, Scheme::bfv);
+  string func_name = "cryptonets";
+  Compiler::create_func(func_name, vector_size, 30);
 
-    cryptonets(
-      vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
-      vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
+  cryptonets(
+    vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
+    vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
 
-    ofstream init_ir_os(func_name + "_init_ir.dot");
-    Compiler::draw_ir(init_ir_os);
-    const auto &rand_inputs = Compiler::get_example_input_values();
-    ofstream gen_code_os("he/gen_he_" + func_name + ".hpp");
-    if (optimize)
-      Compiler::compile(gen_code_os, trs_passes);
-    else
-      Compiler::compile_noopt(gen_code_os);
-    ofstream final_ir_os(func_name + "_final_ir.dot");
-    Compiler::draw_ir(final_ir_os);
-    auto outputs = Compiler::evaluate_on_clear(rand_inputs);
-    if (outputs != Compiler::get_example_output_values())
-      throw logic_error("compilation correctness-test failed");
-
-    ofstream rand_example_os(func_name + "_rand_example.txt");
-    Compiler::print_inputs_outputs(rand_example_os);
-  }
-  catch (const string &e)
-  {
-    cout << "Exception: " << e << '\n';
-  }
-  catch (const char *e)
-  {
-    cout << "Exception: " << e << '\n';
-  }
+  ofstream init_ir_os(func_name + "_init_ir.dot");
+  Compiler::draw_func_ir(init_ir_os);
   return 0;
 }

@@ -1,0 +1,21 @@
+ct_1, ct_2 are two ciphertexts. n, m are two integers that represents rotation steps
+
+
+(ct_1 << n) << m = ct_1 << n+m
+
+//easy to prove
+(ct_1 << n) + (ct_2 << n) = (ct_1 + ct_2) << n
+(ct_1 << n) * (ct_2 << n) = (ct_1 * ct_2) << n
+(ct_1 << n) - (ct_2 << n) = (ct_1 - ct_2) << n
+
+
+//not easy to prove
+(ct_1 << n) + (ct_2 << m) = ((ct_1 << n-m) + ct_2) << m , n >= m
+(ct_1 << n) - (ct_2 << m) = (ct_1 + (ct_2 << m-n)) << n , m > n
+
+(ct_1 << n) * (ct_2 << m) = ((ct_1 << n-m) * ct_2) << m , n >= m
+(ct_1 << n) * (ct_2 << m) = (ct_1 * (ct_2 << m-n)) << n , m > n
+
+(ct_1 << n) - (ct_2 << m) = ((ct_1 << n-m) - ct_2) << m , n >= m
+(ct_1 << n) - (ct_2 << m) = (ct_1 - (ct_2 << m-n)) << n , m > n
+

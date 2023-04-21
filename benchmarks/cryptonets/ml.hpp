@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fhecompiler.hpp"
+#include "fheco/fheco.hpp"
 #include <chrono>
 #include <cstddef>
 #include <iostream>
@@ -9,44 +9,41 @@
 #include <variant>
 #include <vector>
 
-std::vector<fhecompiler::Ciphertext> predict(
-  const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &x,
-  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Plaintext>>>> &w1,
-  const std::vector<fhecompiler::Plaintext> &b1,
-  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Plaintext>>>> &w4,
-  const std::vector<fhecompiler::Plaintext> &b4, const std::vector<std::vector<fhecompiler::Plaintext>> &w8,
-  const std::vector<fhecompiler::Plaintext> &b8);
+std::vector<fheco::Ciphertext> predict(
+  const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &x,
+  const std::vector<std::vector<std::vector<std::vector<fheco::Plaintext>>>> &w1,
+  const std::vector<fheco::Plaintext> &b1,
+  const std::vector<std::vector<std::vector<std::vector<fheco::Plaintext>>>> &w4,
+  const std::vector<fheco::Plaintext> &b4, const std::vector<std::vector<fheco::Plaintext>> &w8,
+  const std::vector<fheco::Plaintext> &b8);
 
-std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> conv_2d(
-  const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input,
-  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Plaintext>>>> &filters,
+std::vector<std::vector<std::vector<fheco::Ciphertext>>> conv_2d(
+  const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input,
+  const std::vector<std::vector<std::vector<std::vector<fheco::Plaintext>>>> &filters,
   const std::vector<std::size_t> &strides);
 
-std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> scaled_mean_pool_2d(
-  const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input, const std::vector<size_t> &kernel_size,
+std::vector<std::vector<std::vector<fheco::Ciphertext>>> scaled_mean_pool_2d(
+  const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input, const std::vector<size_t> &kernel_size,
   const std::vector<std::size_t> &strides);
 
-std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> pad_2d(
-  const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input,
-  const std::vector<std::size_t> &kernel_size, const std::vector<std::size_t> &strides);
+std::vector<std::vector<std::vector<fheco::Ciphertext>>> pad_2d(
+  const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input, const std::vector<std::size_t> &kernel_size,
+  const std::vector<std::size_t> &strides);
 
-std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> add(
-  const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input,
-  const std::vector<fhecompiler::Plaintext> &b);
+std::vector<std::vector<std::vector<fheco::Ciphertext>>> add(
+  const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input, const std::vector<fheco::Plaintext> &b);
 
-std::vector<fhecompiler::Ciphertext> add(
-  const std::vector<fhecompiler::Ciphertext> &input, const std::vector<fhecompiler::Plaintext> &b);
+std::vector<fheco::Ciphertext> add(const std::vector<fheco::Ciphertext> &input, const std::vector<fheco::Plaintext> &b);
 
-std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> square(
-  const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input);
+std::vector<std::vector<std::vector<fheco::Ciphertext>>> square(
+  const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input);
 
-std::vector<fhecompiler::Ciphertext> square(const std::vector<fhecompiler::Ciphertext> &input);
+std::vector<fheco::Ciphertext> square(const std::vector<fheco::Ciphertext> &input);
 
-std::vector<fhecompiler::Ciphertext> dot(
-  const std::vector<fhecompiler::Ciphertext> &input, const std::vector<std::vector<fhecompiler::Plaintext>> &w);
+std::vector<fheco::Ciphertext> dot(
+  const std::vector<fheco::Ciphertext> &input, const std::vector<std::vector<fheco::Plaintext>> &w);
 
-std::vector<fhecompiler::Ciphertext> flatten(
-  const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input);
+std::vector<fheco::Ciphertext> flatten(const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input);
 
 template <typename T>
 inline void print_vector(const std::vector<T> &v, std::ostream &os)
