@@ -5,13 +5,8 @@ using namespace std;
 
 namespace fheco
 {
-Scalar::Scalar(int64_t value)
+Scalar::Scalar(integer value)
 {
   Compiler::active_func().init_const(*this, value);
 }
-
-// Scalar::Scalar(uint64_t value)
-// {
-//   Compiler::active_func().init_const(*this, value);
-// }
 } // namespace fheco

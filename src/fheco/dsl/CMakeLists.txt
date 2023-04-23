@@ -9,6 +9,7 @@ set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
 install(
     FILES
         ${CMAKE_CURRENT_LIST_DIR}/ciphertext.hpp
+        ${CMAKE_CURRENT_LIST_DIR}/common.hpp
         ${CMAKE_CURRENT_LIST_DIR}/compiler.hpp
         ${CMAKE_CURRENT_LIST_DIR}/ops_overloads.hpp
         ${CMAKE_CURRENT_LIST_DIR}/plaintext.hpp

@@ -1,8 +1,7 @@
 #pragma once
 
-#include "fheco/ir/term_type.hpp"
+#include "fheco/ir/common.hpp"
 #include <cstddef>
-#include <functional>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -17,22 +16,34 @@ namespace ir
   class OpCode
   {
   public:
+    enum class Type
+    {
+      nop,
+      encrypt,
+      add,
+      sub,
+      negate,
+      rotate,
+      square,
+      mul,
+      mod_switch,
+      relin
+    };
+
     static const OpCode nop;
     static const OpCode encrypt;
     static const OpCode add;
     static const OpCode sub;
     static const OpCode negate;
-    static const std::function<OpCode(int)> rotate;
+    static OpCode rotate(int steps);
     static const OpCode square;
     static const OpCode mul;
     static const OpCode mod_switch;
     static const OpCode relin;
 
-    static const TermType &deduce_result_type(const OpCode &op_code, const std::vector<Term *> &operands);
+    static TermType deduce_result_type(const OpCode &op_code, const std::vector<Term *> &operands);
 
-    inline explicit operator int() const { return index_; }
-
-    inline int index() const { return index_; }
+    inline Type type() const { return type_; }
 
     inline const std::vector<int> &generators() const { return generators_; }
 
@@ -42,22 +53,16 @@ namespace ir
 
     inline const std::string &str_repr() const { return str_repr_; }
 
-    // an alias of o.generators()[0] for the rotate operation
+    // an alias of o.generators()[0] for rotate operation type
     int steps() const;
 
   private:
-    OpCode(int index, std::vector<int> generators, std::size_t arity, bool commutativity, std::string str_repr)
-      : index_{index}, generators_{std::move(generators)}, arity_{arity},
+    OpCode(Type type, std::vector<int> generators, std::size_t arity, bool commutativity, std::string str_repr)
+      : type_{type}, generators_{std::move(generators)}, arity_{arity},
         commutativity_{commutativity}, str_repr_{std::move(str_repr)}
     {}
 
-    OpCode(std::vector<int> generators, std::size_t arity, bool commutativity, std::string str_repr)
-      : OpCode(count_++, std::move(generators), arity, commutativity, std::move(str_repr))
-    {}
-
-    static int count_;
-
-    int index_;
+    Type type_;
 
     std::vector<int> generators_;
 

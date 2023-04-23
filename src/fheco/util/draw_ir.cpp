@@ -1,5 +1,6 @@
 #include "fheco/util/draw_ir.hpp"
-#include "fheco/ir/term_type.hpp"
+#include "fheco/util/common.hpp"
+#include <cstddef>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -14,9 +15,16 @@ namespace util
   void draw_ir(ir::Function &func, ostream &os)
   {
     auto make_node_label = [&func](const ir::Term *term) -> string {
+      // operation term
       if (term->is_operation())
-        return term->op_code().str_repr();
+      {
+        if (auto output_info = func.get_output_info(term->id()); output_info)
+          return output_info->label;
 
+        return term->op_code().str_repr();
+      }
+
+      // leaf term
       if (auto input_info = func.get_input_info(term->id()); input_info)
       {
         string label = input_info->label;
@@ -24,30 +32,22 @@ namespace util
           label += "/" + output_info->label;
         return label;
       }
-
-      if (auto const_value = func.get_const_value(term->id()); const_value)
+      else if (auto const_value = func.get_const_val(term->id()); const_value)
       {
         if (term->type() == ir::TermType::scalar)
         {
           return visit(
             ir::overloaded{
               [](const auto &other) -> string { throw logic_error("constant scalar term with vector value"); },
-              [](const ir::ScalarValue &scalar_value) -> string {
-                return visit(
-                  ir::overloaded{[](auto value) -> string {
-                    return to_string(value);
-                  }},
-                  scalar_value);
+              [](ScalarVal scalar_val) -> string {
+                return to_string(scalar_val);
               }},
             *const_value);
         }
         return "const_ptxt_" + to_string(term->id());
       }
-
-      if (auto output_info = func.get_output_info(term->id()); output_info)
-        return output_info->label;
-
-      throw logic_error("temp leaf term");
+      else
+        throw logic_error("temp leaf term");
     };
 
     auto make_term_attrs = [&func, &make_node_label](const ir::Term *term) -> string {
@@ -90,13 +90,15 @@ namespace util
       if (term->is_operation() == false)
         continue;
 
-      for (auto operand : term->operands())
+      const auto &operands = term->operands();
+
+      for (auto operand : operands)
         os << term->id() << " -> " << operand->id() << '\n';
 
       // impose operands order
-      for (auto it = term->operands().begin(); it != term->operands().end() - 1; ++it)
-        os << (*it)->id() << " -> ";
-      os << term->operands().back()->id() << " [style=invis]\n";
+      for (size_t i = 0; i < operands.size() - 1; ++i)
+        os << operands[i]->id() << " -> ";
+      os << operands.back()->id() << " [style=invis]\n";
     }
 
     string key = R"(subgraph cluster_key {

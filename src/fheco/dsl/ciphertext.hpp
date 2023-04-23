@@ -1,12 +1,11 @@
 #pragma once
 
+#include "fheco/dsl/common.hpp"
 #include "fheco/ir/common.hpp"
-#include "fheco/ir/term_type.hpp"
 #include <cstddef>
 #include <optional>
 #include <stdint.h>
 #include <string>
-#include <utility>
 
 namespace fheco
 {
@@ -22,9 +21,9 @@ public:
 
   explicit Ciphertext(std::string label);
 
-  Ciphertext(std::string label, const ir::VectorValue &example_value);
+  Ciphertext(std::string label, PackedVal example_val);
 
-  Ciphertext(std::string label, std::int64_t example_value_slot_min, std::int64_t example_value_slot_max);
+  Ciphertext(std::string label, integer example_val_slot_min, integer example_val_slot_max);
 
   static ir::TermType term_type() { return ir::TermType::ciphertext; }
 
@@ -32,14 +31,12 @@ public:
 
   inline const size_t id() const { return id_; }
 
-  inline const std::optional<ir::VectorValue> &example_value() const { return example_value_; }
+  inline const std::optional<PackedVal> &example_val() const { return example_val_; }
 
 private:
-  inline void set_example_value(ir::VectorValue example_value) { example_value_ = std::move(example_value); }
-
   std::size_t id_;
 
-  std::optional<ir::VectorValue> example_value_;
+  std::optional<PackedVal> example_val_;
 
   friend class ir::Function;
 };

@@ -1,19 +1,17 @@
 #pragma once
 
+#include "fheco/dsl/common.hpp"
 #include <cstddef>
-#include <cstdint>
+#include <optional>
+#include <string>
+#include <unordered_map>
 #include <variant>
-#include <vector>
 
 namespace fheco
 {
 namespace ir
 {
-  using VectorValue = std::variant<std::vector<std::uint64_t>, std::vector<std::int64_t>>;
-
-  using ScalarValue = std::variant<std::uint64_t, std::int64_t>;
-
-  using ConstantValue = std::variant<VectorValue, ScalarValue>;
+  using ConstVal = std::variant<PackedVal, ScalarVal>;
 
   // overload pattern
   template <class... Ts>
@@ -31,13 +29,21 @@ namespace ir
     seed ^= std::hash<T>{}(val) + 0x9e3779b97f4a7c15ULL + (seed << 12) + (seed >> 4);
   }
 
-  struct ConstantValueHash
+  struct ConstValHash
   {
-    size_t vector_size_;
+    size_t slot_count_;
 
-    ConstantValueHash(size_t vector_size) : vector_size_{vector_size} {}
+    ConstValHash(size_t slot_count) : slot_count_{slot_count} {}
 
-    std::size_t operator()(const ConstantValue &v) const;
+    std::size_t operator()(const ConstVal &value_var) const;
+  };
+
+  // order of definition is important for type deduction (OpCode::deduce_result_type)
+  enum class TermType
+  {
+    ciphertext,
+    plaintext,
+    scalar
   };
 
   enum class TermQualif
@@ -49,24 +55,23 @@ namespace ir
     out
   };
 
-  enum class Scheme
+  struct ParamTermInfo
   {
-    none,
-    bfv
+    std::string label;
+    std::optional<PackedVal> example_val;
   };
 
-  enum class Backend
+  inline bool operator==(const ParamTermInfo &lhs, const ParamTermInfo &rhs)
   {
-    none,
-    seal
-  };
+    return lhs.label == rhs.label && lhs.example_val == rhs.example_val;
+  }
 
-  enum class SecurityLevel
+  inline bool operator!=(const ParamTermInfo &lhs, const ParamTermInfo &rhs)
   {
-    none,
-    tc128,
-    tc192,
-    tc256
-  };
+    return !(lhs == rhs);
+  }
+
+  using IOTermsInfo = std::unordered_map<std::size_t, ParamTermInfo>;
+  using TermsValues = std::unordered_map<std::size_t, ConstVal>;
 } // namespace ir
 } // namespace fheco

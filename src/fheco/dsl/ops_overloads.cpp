@@ -336,9 +336,8 @@ Scalar operator-(const Scalar &arg)
 // rotation
 Ciphertext rotate(const Ciphertext &arg, int steps)
 {
-  size_t vector_size = Compiler::active_func().vector_size();
-  // this should work since vector_size is a power of 2
-  steps %= vector_size;
+  // this should work since slot_count is a power of 2
+  steps = static_cast<int>(steps % Compiler::active_func().slot_count());
   Ciphertext destination{};
   Compiler::active_func().operate_unary(ir::OpCode::rotate(steps), arg, destination);
   return destination;
@@ -346,9 +345,8 @@ Ciphertext rotate(const Ciphertext &arg, int steps)
 
 Plaintext rotate(const Plaintext &arg, int steps)
 {
-  size_t vector_size = Compiler::active_func().vector_size();
-  // this should work since vector_size is a power of 2
-  steps %= vector_size;
+  // this should work since slot_count is a power of 2
+  steps = static_cast<int>(steps % Compiler::active_func().slot_count());
   Plaintext destination{};
   Compiler::active_func().operate_unary(ir::OpCode::rotate(steps), arg, destination);
   return destination;
@@ -423,7 +421,7 @@ Ciphertext square(const Ciphertext &encrypted)
 Ciphertext reduce_add(const Ciphertext &encrypted)
 {
   Ciphertext result = encrypted;
-  size_t steps = Compiler::active_func().vector_size() >> 1;
+  size_t steps = Compiler::active_func().slot_count() >> 1;
   while (steps > 0)
   {
     result += result << steps;

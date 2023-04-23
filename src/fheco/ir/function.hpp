@@ -1,12 +1,11 @@
 #pragma once
 
-// #include "clear_data_evaluator.hpp"
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/dag.hpp"
 #include "fheco/ir/op_code.hpp"
+#include "fheco/util/clear_data_evaluator.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -17,35 +16,35 @@ namespace ir
   class Function
   {
   public:
-    struct ParamsInfo
-    {
-      std::string label;
-      std::optional<VectorValue> example_value;
-    };
+    Function(
+      std::string name, Scheme scheme, std::size_t slot_count, integer modulus, bool signedness,
+      bool delayed_reduction = false);
 
-    Function(std::string name, Scheme scheme, std::size_t vector_size, int bit_width, bool signedness);
+    Function(std::string name, Scheme scheme, std::size_t slot_count, int bit_width, bool signedness);
 
     template <typename T>
     void init_input(T &input, std::string label);
 
     template <typename T>
-    void init_input(T &input, std::string label, const VectorValue &example_value);
+    void init_input(T &input, std::string label, PackedVal example_val);
 
     template <typename T>
-    void init_input(
-      T &input, std::string label, std::int64_t example_value_slot_min, std::int64_t example_value_slot_max);
+    void init_input(T &input, std::string label, integer example_val_slot_min, integer example_val_slot_max);
 
-    template <typename T>
-    void init_const(T &constant, const ConstantValue &value);
+    template <typename T, typename TVal>
+    void init_const(T &constant, TVal val);
 
-    template <typename TArg1, typename TArg2, typename TDestination>
-    void operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &arg2, TDestination &destination);
+    template <typename TArg, typename TDest>
+    void operate_unary(OpCode op_code, const TArg &arg, TDest &dest);
 
-    template <typename TArg, typename TDestination>
-    void operate_unary(OpCode op_code, const TArg &arg, TDestination &destination);
+    template <typename TArg1, typename TArg2, typename TDest>
+    void operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &arg2, TDest &dest);
 
     template <typename T>
     void set_output(const T &out, std::string label);
+
+    template <typename T>
+    void set_output(const T &out, std::string label, PackedVal example_val);
 
     inline const std::vector<const Term *> &get_top_sorted_terms() { return data_flow_.get_top_sorted_terms(); }
 
@@ -57,7 +56,7 @@ namespace ir
 
     inline bool is_output_term(std::size_t id) const { return outputs_info_.find(id) != outputs_info_.end(); }
 
-    inline const ParamsInfo *get_input_info(std::size_t id) const
+    inline const ParamTermInfo *get_input_info(std::size_t id) const
     {
       if (auto it = inputs_info_.find(id); it != inputs_info_.end())
         return &it->second;
@@ -65,7 +64,7 @@ namespace ir
       return nullptr;
     }
 
-    inline const ConstantValue *get_const_value(std::size_t id) const
+    inline const ConstVal *get_const_val(std::size_t id) const
     {
       if (auto it = constants_values_.find(id); it != constants_values_.end())
         return &it->second;
@@ -73,7 +72,7 @@ namespace ir
       return nullptr;
     }
 
-    inline const ParamsInfo *get_output_info(std::size_t id) const
+    inline const ParamTermInfo *get_output_info(std::size_t id) const
     {
       if (auto it = outputs_info_.find(id); it != outputs_info_.end())
         return &it->second;
@@ -83,30 +82,46 @@ namespace ir
 
     inline const std::string &name() const { return name_; }
 
-    inline std::size_t vector_size() const { return vector_size_; }
+    inline Scheme scheme() const { return scheme_; }
+
+    inline std::size_t slot_count() const { return slot_count_; }
+
+    inline integer modulus() const { return modulus_; }
+
+    inline bool signedness() const { return signedness_; }
+
+    inline const DAG &data_flow() const { return data_flow_; }
+
+    inline const IOTermsInfo &inputs_info() const { return inputs_info_; }
+
+    inline const TermsValues &constants_values() const { return constants_values_; }
+
+    inline const IOTermsInfo &outputs_info() const { return outputs_info_; }
+
+    inline const util::ClearDataEvaluator &clear_data_evaluator() const { return clear_data_evaluator_; }
 
   private:
     std::string name_;
 
     Scheme scheme_;
 
-    std::size_t vector_size_;
+    std::size_t slot_count_;
 
-    int bit_width_;
+    integer modulus_;
 
     bool signedness_;
 
     DAG data_flow_;
 
-    std::unordered_map<std::size_t, ParamsInfo> inputs_info_;
+    IOTermsInfo inputs_info_;
 
-    std::unordered_map<std::size_t, ConstantValue> constants_values_;
+    TermsValues constants_values_;
 
-    std::unordered_map<ConstantValue, std::size_t, ConstantValueHash> values_to_constants_;
+    std::unordered_map<ConstVal, std::size_t, ConstValHash> values_to_constants_;
 
-    std::unordered_map<std::size_t, ParamsInfo> outputs_info_;
+    IOTermsInfo outputs_info_;
 
-    // utils::ClearDataEvaluator clear_data_evaluator_;
+    util::ClearDataEvaluator clear_data_evaluator_;
   };
 } // namespace ir
 } // namespace fheco

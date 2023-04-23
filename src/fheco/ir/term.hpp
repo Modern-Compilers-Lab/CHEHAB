@@ -1,7 +1,7 @@
 #pragma once
 
+#include "fheco/ir/common.hpp"
 #include "fheco/ir/op_code.hpp"
-#include "fheco/ir/term_type.hpp"
 #include <cstddef>
 #include <unordered_map>
 #include <utility>
@@ -27,7 +27,7 @@ namespace ir
 
     inline const std::vector<Term *> &operands() const { return operands_; }
 
-    inline const TermType &type() const { return type_; }
+    inline TermType type() const { return type_; }
 
     inline bool is_operation() const { return op_code_ != OpCode::nop; }
 

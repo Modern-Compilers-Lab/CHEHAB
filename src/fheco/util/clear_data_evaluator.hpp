@@ -1,100 +1,75 @@
 #pragma once
 
+#include "fheco/dsl/common.hpp"
+#include "fheco/ir/op_code.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
-namespace fhecompiler
+namespace fheco
 {
 namespace util
 {
+  // "modular SIMD arithmetic" like
   class ClearDataEvaluator
   {
   public:
-    ClearDataEvaluator(std::size_t vector_size, int bit_width, bool signedness) : vector_size_{vector_size}
-    {
-      static_assert(sizeof(std::int64_t) * 8 > 60, "computation max modulus assumed to fit in int64_t");
-      if (signedness)
-        // 2^(bit_width-1) - 1
-        max_value_ = (2 << (bit_width - 2)) - 1;
-      else
-        // 2^bit_width - 1
-        max_value_ = (2 << (bit_width - 1)) - 1;
-    }
+    ClearDataEvaluator(std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
+      : slot_count_{slot_count}, modulus_{modulus}, signedness_{signedness}, delayed_reduction_{delayed_reduction}
+    {}
 
-    template <typename T>
-    std::vector<T> make_element(const std::vector<T> &vector_value) const;
+    void adjust_packed_val(PackedVal &packed_val) const;
 
-    template <typename T>
-    std::vector<T> make_element(T scalar_value) const;
+    void adjust_scalar_val(ScalarVal &scalar_val) const;
 
-    template <typename T>
-    void validate(const std::vector<T> &arg) const;
+    PackedVal make_random_packed_val(integer slot_min, integer slot_max) const;
 
-    template <typename T>
-    void validate(T arg) const;
+    PackedVal make_packed_val(ScalarVal scalar_val) const;
 
-    template <typename T1, typename T2>
-    std::vector<T1> add(const std::vector<T1> &arg1, const std::vector<T2> &arg2) const;
+    template <typename TArg, typename TDestination>
+    void operate_unary(const ir::OpCode &op_code, const TArg &arg, TDestination &dest) const;
 
-    template <typename T1, typename T2>
-    std::vector<T1> add(const std::vector<T1> &arg1, T2 arg2) const;
+    template <typename TArg1, typename TArg2, typename TDestination>
+    void operate_binary(const ir::OpCode &op_code, const TArg1 &arg1, const TArg2 &arg2, TDestination &dest) const;
 
-    template <typename T1, typename T2>
-    std::vector<T1> add(T1 arg1, const std::vector<T2> &arg2) const;
+    inline std::size_t slot_count() const { return slot_count_; }
 
-    template <typename T1, typename T2>
-    T1 add(T1 arg1, T2 arg2) const;
+    inline integer modulus() const { return modulus_; }
 
-    template <typename T1, typename T2>
-    std::vector<T1> sub(const std::vector<T1> &arg1, const std::vector<T2> &arg2) const;
+    inline bool signedness() const { return signedness_; }
 
-    template <typename T1, typename T2>
-    std::vector<T1> sub(const std::vector<T1> &arg1, T2 arg2) const;
-
-    template <typename T1, typename T2>
-    std::vector<T1> sub(T1 arg1, const std::vector<T2> &arg2) const;
-
-    template <typename T1, typename T2>
-    T1 sub(T1 arg1, T2 arg2) const;
-
-    template <typename T>
-    std::vector<T> negate(const std::vector<T> &arg) const;
-
-    template <typename T>
-    T negate(T arg) const;
-
-    template <typename T1, typename T2>
-    std::vector<T1> mul(const std::vector<T1> &arg1, const std::vector<T2> &arg2) const;
-
-    template <typename T1, typename T2>
-    std::vector<T1> mul(const std::vector<T1> &arg1, T2 arg2) const;
-
-    template <typename T1, typename T2>
-    std::vector<T1> mul(T1 arg1, const std::vector<T2> &arg2) const;
-
-    template <typename T1, typename T2>
-    T1 mul(T1 arg1, T2 arg2) const;
-
-    template <typename T>
-    std::vector<T> rotate(const std::vector<T> &arg, int steps) const;
+    inline bool delayed_reduction() const { return delayed_reduction_; }
 
   private:
-    std::size_t vector_size_;
-    std::int64_t max_value_;
+    void reduce(PackedVal &packed_val) const;
+
+    void reduce(ScalarVal &scalar_val) const;
+
+    void add(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const;
+    void add(const PackedVal &arg1, ScalarVal arg2, PackedVal &dest) const;
+    void add(ScalarVal arg1, const PackedVal &arg2, PackedVal &dest) const;
+    void add(ScalarVal arg1, ScalarVal arg2, ScalarVal &dest) const;
+
+    void sub(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const;
+    void sub(const PackedVal &arg1, ScalarVal arg2, PackedVal &dest) const;
+    void sub(ScalarVal arg1, const PackedVal &arg2, PackedVal &dest) const;
+    void sub(ScalarVal arg1, ScalarVal arg2, ScalarVal &dest) const;
+
+    void negate(const PackedVal &arg, PackedVal &dest) const;
+    void negate(ScalarVal arg, ScalarVal &dest) const;
+
+    void rotate(const PackedVal &arg, int steps, PackedVal &dest) const;
+    inline void rotate(ScalarVal arg, int steps, ScalarVal &dest) const {}
+
+    void mul(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const;
+    void mul(const PackedVal &arg1, ScalarVal arg2, PackedVal &dest) const;
+    void mul(ScalarVal arg1, const PackedVal &arg2, PackedVal &dest) const;
+    void mul(ScalarVal arg1, ScalarVal arg2, ScalarVal &dest) const;
+
+    std::size_t slot_count_;
+    integer modulus_;
+    bool signedness_;
+    bool delayed_reduction_;
   };
 } // namespace util
-} // namespace fhecompiler
-
-namespace std
-{
-inline bool operator==(const std::vector<std::uint64_t> &lhs, const std::vector<std::int64_t> &rhs)
-{
-  return false;
-}
-
-inline bool operator==(const std::vector<std::int64_t> &lhs, const std::vector<std::uint64_t> &rhs)
-{
-  return rhs == lhs;
-}
-} // namespace std
+} // namespace fheco

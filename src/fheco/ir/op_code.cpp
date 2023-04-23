@@ -9,22 +9,21 @@ namespace fheco
 {
 namespace ir
 {
-  int OpCode::count_ = 0;
+  const OpCode OpCode::nop = OpCode(OpCode::Type::nop, {}, 0, false, "");
+  const OpCode OpCode::encrypt = OpCode(OpCode::Type::encrypt, {}, 1, false, "encrypt");
+  const OpCode OpCode::add = OpCode(OpCode::Type::add, {}, 2, true, "+");
+  const OpCode OpCode::sub = OpCode(OpCode::Type::sub, {}, 2, false, "-");
+  const OpCode OpCode::negate = OpCode(OpCode::Type::negate, {}, 1, false, "negate");
+  OpCode OpCode::rotate(int steps)
+  {
+    return OpCode(OpCode::Type::rotate, {steps}, 1, false, "rotate_" + to_string(steps));
+  }
+  const OpCode OpCode::square = OpCode(OpCode::Type::square, {}, 1, false, "square");
+  const OpCode OpCode::mul = OpCode(OpCode::Type::mul, {}, 2, true, "mul");
+  const OpCode OpCode::mod_switch = OpCode(OpCode::Type::mod_switch, {}, 1, false, "mod_switch");
+  const OpCode OpCode::relin = OpCode(OpCode::Type::relin, {}, 1, false, "relin");
 
-  const OpCode OpCode::nop = OpCode({}, 0, false, "");
-  const OpCode OpCode::encrypt = OpCode({}, 1, false, "encrypt");
-  const OpCode OpCode::add = OpCode({}, 2, true, "+");
-  const OpCode OpCode::sub = OpCode({}, 2, false, "-");
-  const OpCode OpCode::negate = OpCode({}, 1, false, "negate");
-  const function<OpCode(int)> OpCode::rotate = [index = count_](int steps) -> OpCode {
-    return OpCode(index, {steps}, 1, false, "rotate_" + to_string(steps));
-  };
-  const OpCode OpCode::square = OpCode({}, 1, false, "square");
-  const OpCode OpCode::mul = OpCode({}, 2, true, "mul");
-  const OpCode OpCode::mod_switch = OpCode({}, 1, false, "mod_switch");
-  const OpCode OpCode::relin = OpCode({}, 1, false, "relin");
-
-  const TermType &OpCode::deduce_result_type(const OpCode &op_code, const vector<Term *> &operands)
+  TermType OpCode::deduce_result_type(const OpCode &op_code, const vector<Term *> &operands)
   {
     if (op_code.arity() != operands.size())
       throw invalid_argument("invalid number of operands for op_code");
@@ -57,7 +56,7 @@ namespace ir
   // an alias of o.generators()[0] for the rotate operation
   int OpCode::steps() const
   {
-    if (index() != rotate(0).index())
+    if (type_ != Type::rotate)
       throw std::invalid_argument("steps should be called only on rotate_* operations");
 
     return generators_[0];
@@ -65,10 +64,10 @@ namespace ir
 
   bool operator==(const OpCode &lhs, const OpCode &rhs)
   {
-    if (lhs.index() != rhs.index())
+    if (lhs.type() != rhs.type())
       return false;
 
-    // op_codes with same index (same operation class like rotate_*) must have the same number of generators
+    // op_codes with same id (same operation type like rotate_*) must have the same number of generators
     for (size_t i = 0; i < lhs.generators().size(); ++i)
     {
       if (lhs.generators()[i] != rhs.generators()[i])
@@ -79,9 +78,9 @@ namespace ir
 
   bool operator<(const OpCode &lhs, const OpCode &rhs)
   {
-    if (lhs.index() == rhs.index())
+    if (lhs.type() == rhs.type())
     {
-      // op_codes with same index (same operation class like rotate_*) must have the same number of generators
+      // op_codes with same id (same operation type like rotate_*) must have the same number of generators
       for (size_t i = 0; i < lhs.generators().size(); ++i)
       {
         if (lhs.generators()[i] < rhs.generators()[i])
@@ -91,7 +90,7 @@ namespace ir
       }
       return false;
     }
-    return lhs.index() < rhs.index();
+    return lhs.type() < rhs.type();
   }
 } // namespace ir
 } // namespace fheco
@@ -100,7 +99,7 @@ namespace std
 {
 size_t hash<fheco::ir::OpCode>::operator()(const fheco::ir::OpCode &op_code) const
 {
-  size_t h = hash<int>()(op_code.index());
+  size_t h = hash<fheco::ir::OpCode::Type>()(op_code.type());
   for (auto g : op_code.generators())
     fheco::ir::hash_combine(h, g);
   return h;
