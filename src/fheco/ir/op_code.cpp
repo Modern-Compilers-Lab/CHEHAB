@@ -53,6 +53,56 @@ namespace ir
     }
   }
 
+  OpCode OpCode::sample_op_code_from_type(OpCode::Type type)
+  {
+    switch (type)
+    {
+    case OpCode::Type::nop:
+      return OpCode::nop;
+      break;
+
+    case OpCode::Type::encrypt:
+      return OpCode::encrypt;
+      break;
+
+    case OpCode::Type::add:
+      return OpCode::add;
+      break;
+
+    case OpCode::Type::sub:
+      return OpCode::sub;
+      break;
+
+    case OpCode::Type::negate:
+      return OpCode::negate;
+      break;
+
+    case OpCode::Type::rotate:
+      return OpCode::rotate(0);
+      break;
+
+    case OpCode::Type::square:
+      return OpCode::square;
+      break;
+
+    case OpCode::Type::mul:
+      return OpCode::mul;
+      break;
+
+    case OpCode::Type::mod_switch:
+      return OpCode::mod_switch;
+      break;
+
+    case OpCode::Type::relin:
+      return OpCode::relin;
+      break;
+
+    default:
+      throw invalid_argument("invalid op_code type");
+      break;
+    }
+  }
+
   // an alias of o.generators()[0] for the rotate operation
   int OpCode::steps() const
   {

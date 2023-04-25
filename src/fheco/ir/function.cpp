@@ -27,7 +27,7 @@ namespace ir
   Function::Function(string name, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
     : name_{move(name)}, shape_{slot_count}, need_cyclic_rotations_{false},
       clear_data_evaluator_{slot_count, modulus, signedness, delayed_reduction}, data_flow_{}, inputs_info_{},
-      constants_values_{}, values_to_constants_{0, ConstValHash{slot_count}}, outputs_info_{}
+      constants_values_{}, values_to_constants_{0, HashConstVal{slot_count}}, outputs_info_{}
   {
     if (slot_count == 0 || (slot_count & (slot_count - 1)) != 0)
       throw invalid_argument("slot_count must be a power of two");
@@ -36,7 +36,7 @@ namespace ir
   Function::Function(string name, vector<size_t> shape, integer modulus, bool signedness, bool delayed_reduction)
     : name_{move(name)}, shape_{move(shape)}, need_cyclic_rotations_{false},
       clear_data_evaluator_{compute_slot_count(shape_), modulus, signedness, delayed_reduction}, data_flow_{},
-      inputs_info_{}, constants_values_{}, values_to_constants_{0, ConstValHash{clear_data_evaluator_.slot_count()}},
+      inputs_info_{}, constants_values_{}, values_to_constants_{0, HashConstVal{clear_data_evaluator_.slot_count()}},
       outputs_info_{}
   {
     size_t slot_count = clear_data_evaluator_.slot_count();

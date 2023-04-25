@@ -1,4 +1,5 @@
 #include "fheco/ir/common.hpp"
+#include <stdexcept>
 
 using namespace std;
 
@@ -6,22 +7,43 @@ namespace fheco
 {
 namespace ir
 {
-  size_t ConstValHash::operator()(const ConstVal &value_var) const
+  size_t HashConstVal::operator()(const ConstVal &value_var) const
   {
     size_t size = slot_count_;
-    size_t h = 0;
-    visit(
+    return visit(
       ir::overloaded{
-        [size, &h](const PackedVal &packed_val) {
+        [size](const PackedVal &packed_val) {
+          size_t h = 0;
           for (auto it = packed_val.cbegin(); it != packed_val.cend(); ++it)
             hash_combine(h, *it);
+          return h;
         },
-        [size, &h](ScalarVal scalar_val) {
-          for (size_t i = 0; i < size; ++i)
-            hash_combine(h, scalar_val);
+        [size](ScalarVal scalar_val) {
+          return hash<integer>{}(scalar_val);
         }},
       value_var);
-    return h;
+  }
+
+  string term_type_str_repr(TermType term_type)
+  {
+    switch (term_type)
+    {
+    case TermType::ciphertext:
+      return "ctxt";
+      break;
+
+    case TermType::plaintext:
+      return "ptxt";
+      break;
+
+    case TermType::scalar:
+      return "scalar";
+      break;
+
+    default:
+      throw invalid_argument("invalid term_type");
+      break;
+    }
   }
 } // namespace ir
 } // namespace fheco

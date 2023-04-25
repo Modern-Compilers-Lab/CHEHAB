@@ -140,9 +140,6 @@ int main(int argc, char **argv)
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
     vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
 
-  ofstream init_ir_os(func_name + "_init_ir.dot");
-  util::draw_ir(Compiler::active_func(), init_ir_os);
-
   const auto &rand_inputs = Compiler::active_func().inputs_info();
   auto outputs = util::evaluate_on_clear(Compiler::active_func(), rand_inputs);
   if (outputs != Compiler::active_func().outputs_info())
@@ -150,5 +147,11 @@ int main(int argc, char **argv)
 
   ofstream rand_example_os(func_name + "_rand_example.txt");
   util::print_io_terms_values(Compiler::active_func(), rand_example_os);
+
+  auto op_types_count = util::count_op_types(Compiler::active_func());
+  cout << util::group_main_op_types_count(op_types_count);
+
+  ofstream init_ir_os(func_name + "_init_ir.dot");
+  util::draw_ir(Compiler::active_func(), init_ir_os);
   return 0;
 }

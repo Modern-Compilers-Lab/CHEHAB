@@ -32,11 +32,11 @@ namespace ir
     seed ^= std::hash<T>{}(val) + 0x9e3779b97f4a7c15ULL + (seed << 12) + (seed >> 4);
   }
 
-  struct ConstValHash
+  struct HashConstVal
   {
     size_t slot_count_;
 
-    ConstValHash(size_t slot_count) : slot_count_{slot_count} {}
+    HashConstVal(size_t slot_count) : slot_count_{slot_count} {}
 
     std::size_t operator()(const ConstVal &value_var) const;
   };
@@ -48,6 +48,8 @@ namespace ir
     plaintext,
     scalar
   };
+
+  std::string term_type_str_repr(TermType);
 
   enum class TermQualif
   {

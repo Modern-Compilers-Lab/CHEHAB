@@ -123,7 +123,7 @@ namespace ir
 
     TermsValues constants_values_;
 
-    std::unordered_map<ConstVal, std::size_t, ConstValHash> values_to_constants_;
+    std::unordered_map<ConstVal, std::size_t, HashConstVal> values_to_constants_;
 
     IOTermsInfo outputs_info_;
   };

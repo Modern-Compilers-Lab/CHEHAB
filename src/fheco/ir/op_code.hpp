@@ -43,6 +43,8 @@ namespace ir
 
     static TermType deduce_result_type(const OpCode &op_code, const std::vector<Term *> &operands);
 
+    static OpCode sample_op_code_from_type(OpCode::Type type);
+
     inline Type type() const { return type_; }
 
     inline const std::vector<int> &generators() const { return generators_; }
