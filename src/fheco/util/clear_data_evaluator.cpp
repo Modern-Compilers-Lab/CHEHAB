@@ -19,11 +19,10 @@ namespace util
     reduce(scalar_val);
   }
 
-  PackedVal ClearDataEvaluator::make_random_packed_val(integer slot_min, integer slot_max) const
+  PackedVal ClearDataEvaluator::make_rand_packed_val(integer slot_min, integer slot_max) const
   {
     PackedVal packed_val(slot_count_);
     init_random(packed_val, slot_min, slot_max);
-    reduce(packed_val);
     return packed_val;
   }
 
@@ -31,6 +30,16 @@ namespace util
   {
     adjust_scalar_val(scalar_val);
     return PackedVal(slot_count_, scalar_val);
+  }
+
+  bool ClearDataEvaluator::can_convert_to_scalar(const PackedVal &packed_val) const
+  {
+    for (size_t i = 0; i < packed_val.size() - 1; ++i)
+    {
+      if (packed_val[i] != packed_val[i + 1])
+        return false;
+    }
+    return true;
   }
 
   template <typename TArg, typename TDestination>

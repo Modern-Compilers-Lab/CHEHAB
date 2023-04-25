@@ -2,6 +2,7 @@
 #include "fheco/dsl/ciphertext.hpp"
 #include "fheco/dsl/plaintext.hpp"
 #include "fheco/dsl/scalar.hpp"
+#include "fheco/util/common.hpp"
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -14,27 +15,40 @@ namespace fheco
 {
 namespace ir
 {
-  Function::Function(
-    string name, Scheme scheme, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
-    : name_{move(name)}, scheme_{scheme}, slot_count_{slot_count}, modulus_{modulus}, signedness_{signedness},
-      data_flow_{}, inputs_info_{}, constants_values_{}, values_to_constants_{0, ConstValHash{slot_count_}},
-      outputs_info_{}, clear_data_evaluator_{slot_count_, modulus_, signedness_, delayed_reduction}
+  size_t Function::compute_slot_count(const vector<size_t> &shape)
   {
-    // if (bit_width < 11 || bit_width > 60)
-    //   throw invalid_argument("bit_width must be in [11, 60]");
+    size_t slot_count = 1;
+    for (auto it = shape.cbegin(); it != shape.cend(); ++it)
+      slot_count = util::mul_safe(slot_count, *it);
 
-    if (slot_count == 0 || (slot_count & (slot_count - 1)) != 0)
-      throw invalid_argument("vector_size must be a power of two");
+    return slot_count;
   }
 
-  Function::Function(string name, Scheme scheme, size_t slot_count, int bit_width, bool signedness)
-    : Function(move(name), scheme, slot_count, (2 << (bit_width - 1)) - 1, signedness, true)
-  {}
+  Function::Function(string name, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
+    : name_{move(name)}, shape_{slot_count}, need_cyclic_rotations_{false},
+      clear_data_evaluator_{slot_count, modulus, signedness, delayed_reduction}, data_flow_{}, inputs_info_{},
+      constants_values_{}, values_to_constants_{0, ConstValHash{slot_count}}, outputs_info_{}
+  {
+    if (slot_count == 0 || (slot_count & (slot_count - 1)) != 0)
+      throw invalid_argument("slot_count must be a power of two");
+  }
+
+  Function::Function(string name, vector<size_t> shape, integer modulus, bool signedness, bool delayed_reduction)
+    : name_{move(name)}, shape_{move(shape)}, need_cyclic_rotations_{false},
+      clear_data_evaluator_{compute_slot_count(shape_), modulus, signedness, delayed_reduction}, data_flow_{},
+      inputs_info_{}, constants_values_{}, values_to_constants_{0, ConstValHash{clear_data_evaluator_.slot_count()}},
+      outputs_info_{}
+  {
+    size_t slot_count = clear_data_evaluator_.slot_count();
+    if (slot_count == 0 || (slot_count & (slot_count - 1)) != 0)
+      throw invalid_argument("each shape element must be a power of two");
+  }
 
   template <typename T>
   void Function::init_input(T &input, string label)
   {
     input.id_ = data_flow_.insert_leaf(input.term_type())->id();
+    input.dim_ = shape_.size();
     inputs_info_.emplace(input.id(), ParamTermInfo{move(label), nullopt});
   }
 
@@ -42,6 +56,7 @@ namespace ir
   void Function::init_input(T &input, string label, PackedVal example_val)
   {
     input.id_ = data_flow_.insert_leaf(input.term_type())->id();
+    input.dim_ = shape_.size();
     clear_data_evaluator_.adjust_packed_val(example_val);
     input.example_val_ = example_val;
     inputs_info_.emplace(input.id_, ParamTermInfo{move(label), move(example_val)});
@@ -50,19 +65,22 @@ namespace ir
   template <typename T>
   void Function::init_input(T &input, string label, integer example_val_slot_min, integer example_val_slot_max)
   {
-    input.id_ = data_flow_.insert_leaf(input.term_type())->id();
-    auto example_val = clear_data_evaluator_.make_random_packed_val(example_val_slot_min, example_val_slot_max);
-    input.example_val_ = example_val;
-    inputs_info_.emplace(input.id_, ParamTermInfo{move(label), move(example_val)});
+    auto example_val = clear_data_evaluator_.make_rand_packed_val(example_val_slot_min, example_val_slot_max);
+    init_input(input, move(label), move(example_val));
   }
 
   template <typename T, typename TVal>
   void Function::init_const(T &constant, TVal val)
   {
     if constexpr (is_same<T, Ciphertext>::value || is_same<T, Plaintext>::value)
+    {
+      constant.dim_ = shape_.size();
       clear_data_evaluator_.adjust_packed_val(val);
+    }
     else if constexpr (is_same<T, Scalar>::value)
       clear_data_evaluator_.adjust_scalar_val(val);
+    else
+      static_assert(always_false_v<T>, "invalid template instantiation");
 
     constant.example_val_ = val;
     ConstVal const_var = move(val);
@@ -87,6 +105,9 @@ namespace ir
     {
       if constexpr (is_same<TArg, Scalar>::value && is_same<TDest, Ciphertext>::value)
       {
+        if (op_code.type() != OpCode::Type::encrypt)
+          throw logic_error("expected encrypt Scalar");
+
         dest.example_val_ = clear_data_evaluator_.make_packed_val(*arg.example_val());
       }
       else if constexpr (is_same<TDest, Ciphertext>::value || is_same<TDest, Plaintext>::value)
@@ -101,7 +122,16 @@ namespace ir
         clear_data_evaluator_.operate_unary(op_code, *arg.example_val(), dest_example_val);
         dest.example_val_ = move(dest_example_val);
       }
+      else
+        static_assert(always_false_v<TDest>, "invalid template instantiation");
     }
+
+    if constexpr (is_same<TArg, Scalar>::value && is_same<TDest, Ciphertext>::value)
+      dest.dim_ = shape_.size();
+    else if constexpr (is_same<TDest, Ciphertext>::value || is_same<TDest, Plaintext>::value)
+      dest.dim_ = arg.dim_;
+    else
+      static_assert(is_same<TDest, Scalar>::value, "invalid template instantiation");
 
     vector<Term *> operands{arg_term};
     if (auto parent = data_flow_.find_term(op_code, operands); parent)
@@ -132,7 +162,23 @@ namespace ir
         clear_data_evaluator_.operate_binary(op_code, *arg1.example_val(), *arg2.example_val(), dest_example_val);
         dest.example_val_ = move(dest_example_val);
       }
+      else
+        static_assert(always_false_v<TDest>, "invalid template instantiation");
     }
+
+    if constexpr (is_same<TArg1, Ciphertext>::value || is_same<TArg1, Plaintext>::value)
+    {
+      if constexpr (is_same<TArg2, Ciphertext>::value || is_same<TArg2, Plaintext>::value)
+      {
+        if (arg1.dim_ != arg2.dim_)
+          throw invalid_argument("operating with incompatible dimensions");
+      }
+      dest.dim_ = arg1.dim_;
+    }
+    else if constexpr (is_same<TArg2, Ciphertext>::value || is_same<TArg2, Plaintext>::value)
+      dest.dim_ = arg2.dim_;
+    else
+      static_assert(is_same<TDest, Scalar>::value, "invalid template instantiation");
 
     vector<Term *> operands{arg1_term, arg2_term};
     if (auto parent = data_flow_.find_term(op_code, operands); parent)
@@ -144,15 +190,25 @@ namespace ir
   template <typename T>
   void Function::set_output(const T &output, string label)
   {
-    data_flow_.set_output(data_flow_.find_term(output.id()));
-    outputs_info_.emplace(output.id(), ParamTermInfo{move(label), nullopt});
+    if (auto term = data_flow_.find_term(output.id()); term)
+    {
+      data_flow_.set_output(term);
+      outputs_info_.emplace(output.id(), ParamTermInfo{move(label), nullopt});
+    }
+    else
+      throw invalid_argument("output not defined");
   }
 
   template <typename T>
   void Function::set_output(const T &output, string label, PackedVal example_val)
   {
-    data_flow_.set_output(data_flow_.find_term(output.id()));
-    outputs_info_.emplace(output.id(), ParamTermInfo{move(label), move(example_val)});
+    if (auto term = data_flow_.find_term(output.id()); term)
+    {
+      data_flow_.set_output(term);
+      outputs_info_.emplace(output.id(), ParamTermInfo{move(label), move(example_val)});
+    }
+    else
+      throw invalid_argument("output not defined");
   }
 
   TermQualif Function::get_term_qualif(size_t id) const
@@ -174,7 +230,6 @@ namespace ir
     return TermQualif::temp;
   }
 
-  // explicit template instantiation just to improve compile time
   // init_input
   template void Function::init_input(Ciphertext &, string);
   template void Function::init_input(Plaintext &, string);

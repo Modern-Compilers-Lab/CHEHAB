@@ -11,12 +11,27 @@ namespace fheco
 class Compiler
 {
 public:
-  static ir::Function &create_func(
-    std::string name, std::size_t slot_count, integer modulus, bool signedness = false, bool delayed_reduction = false,
-    Scheme scheme = Scheme::bfv);
+  static inline void create_func(
+    std::string name, std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction = false)
+  {
+    add_func(ir::Function(move(name), slot_count, modulus, signedness, delayed_reduction));
+  }
 
-  static ir::Function &create_func(
-    std::string name, std::size_t slot_count, int bit_width, bool signedness = false, Scheme scheme = Scheme::bfv);
+  static inline void create_func(std::string name, std::size_t slot_count, int bit_width, bool signedness)
+  {
+    add_func(ir::Function(move(name), slot_count, bit_width, signedness));
+  }
+
+  static inline void create_func(
+    std::string name, std::vector<std::size_t> shape, integer modulus, bool signedness, bool delayed_reduction = false)
+  {
+    add_func(ir::Function(move(name), move(shape), modulus, signedness, delayed_reduction));
+  }
+
+  static inline void create_func(std::string name, std::vector<std::size_t> shape, int bit_width, bool signedness)
+  {
+    add_func(ir::Function(move(name), move(shape), bit_width, signedness));
+  }
 
   static void delete_func(const std::string &name);
 
@@ -69,6 +84,8 @@ public:
   // }
 
 private:
+  static void add_func(ir::Function func);
+
   static ir::Function *active_func_;
 
   static std::unordered_map<std::string, ir::Function> funcs_table_;

@@ -8,7 +8,7 @@ namespace fheco
 {
 namespace ir
 {
-  size_t Term::count_ = 0UL;
+  size_t Term::count_ = 0;
 
   size_t Term::HashParentKey::operator()(const ParentKey &k) const
   {

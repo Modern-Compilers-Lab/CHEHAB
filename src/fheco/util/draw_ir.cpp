@@ -19,7 +19,7 @@ namespace util
       if (term->is_operation())
       {
         if (auto output_info = func.get_output_info(term->id()); output_info)
-          return output_info->label;
+          return term->op_code().str_repr() + " (" + output_info->label + ")";
 
         return term->op_code().str_repr();
       }
@@ -87,7 +87,7 @@ namespace util
     for (auto term : func.get_top_sorted_terms())
     {
       os << term->id() << " [" << make_term_attrs(term) << "]\n";
-      if (term->is_operation() == false)
+      if (!term->is_operation())
         continue;
 
       const auto &operands = term->operands();
@@ -96,9 +96,12 @@ namespace util
         os << term->id() << " -> " << operand->id() << '\n';
 
       // impose operands order
-      for (size_t i = 0; i < operands.size() - 1; ++i)
-        os << operands[i]->id() << " -> ";
-      os << operands.back()->id() << " [style=invis]\n";
+      if (operands.size() > 1)
+      {
+        for (size_t i = 0; i < operands.size() - 1; ++i)
+          os << operands[i]->id() << " -> ";
+        os << operands.back()->id() << " [style=invis]\n";
+      }
     }
 
     string key = R"(subgraph cluster_key {

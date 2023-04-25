@@ -3,6 +3,7 @@
 #include "fheco/dsl/ciphertext.hpp"
 #include "fheco/dsl/plaintext.hpp"
 #include "fheco/dsl/scalar.hpp"
+#include <cstdint>
 
 namespace fheco
 {
@@ -64,30 +65,55 @@ Plaintext &operator*=(Plaintext &lhs, const Scalar &rhs);
 Scalar &operator*=(Scalar &lhs, const Scalar &rhs);
 
 // negation
-Ciphertext operator-(const Ciphertext &lhs);
-Plaintext operator-(const Plaintext &lhs);
-Scalar operator-(const Scalar &lhs);
+Ciphertext operator-(const Ciphertext &arg);
+Plaintext operator-(const Plaintext &arg);
+Scalar operator-(const Scalar &arg);
 
 // rotation
-Ciphertext operator<<(const Ciphertext &lhs, int steps);
-Ciphertext operator>>(const Ciphertext &lhs, int steps);
-Plaintext operator<<(const Plaintext &lhs, int steps);
-Plaintext operator>>(const Plaintext &lhs, int steps);
+Ciphertext operator<<(const Ciphertext &arg, int steps);
+Ciphertext operator>>(const Ciphertext &arg, int steps);
+Plaintext operator<<(const Plaintext &arg, int steps);
+Plaintext operator>>(const Plaintext &arg, int steps);
 
 // rotation assignement
-Ciphertext &operator<<=(Ciphertext &lhs, int steps);
-Ciphertext &operator>>=(Ciphertext &lhs, int steps);
-Plaintext &operator<<=(Plaintext &lhs, int steps);
-Plaintext &operator>>=(Plaintext &lhs, int steps);
+Ciphertext &operator<<=(Ciphertext &arg, int steps);
+Ciphertext &operator>>=(Ciphertext &arg, int steps);
+Plaintext &operator<<=(Plaintext &arg, int steps);
+Plaintext &operator>>=(Plaintext &arg, int steps);
 
 // encryption
 Ciphertext encrypt(const Plaintext &arg);
 Ciphertext encrypt(const Scalar &arg);
 
-// square, expo, multiply many, add_many, reduce*
-Ciphertext square(const Plaintext &encrypted);
+// subscript read
+Ciphertext emulate_subscripted_read(const Ciphertext &arg);
+Plaintext emulate_subscripted_read(const Plaintext &arg);
 
-Ciphertext reduce_add(const Ciphertext &encrypted);
+// subscript write
+void emulate_subscripted_write(Ciphertext &lhs, const Ciphertext &rhs);
+void emulate_subscripted_write(Plaintext &lhs, const Plaintext &rhs);
 
-Ciphertext add_many(const std::vector<Ciphertext> &encrypteds);
+// square
+Ciphertext square(const Ciphertext &arg);
+Plaintext square(const Plaintext &arg);
+
+// add_many
+Ciphertext add_many(const std::vector<Ciphertext> &args);
+Plaintext add_many(const std::vector<Plaintext> &args);
+
+// mul_many
+Ciphertext mul_many(const std::vector<Ciphertext> &args);
+Plaintext mul_many(const std::vector<Plaintext> &args);
+
+// exponentiate
+Ciphertext exponentiate(const Ciphertext &arg, std::uint64_t exponent);
+Plaintext exponentiate(const Plaintext &arg, std::uint64_t exponent);
+
+// reduce_add
+Ciphertext reduce_add(const Ciphertext &arg);
+Plaintext reduce_add(const Plaintext &arg);
+
+// reduce_mul
+Ciphertext reduce_mul(const Ciphertext &arg);
+Plaintext reduce_mul(const Plaintext &arg);
 } // namespace fheco

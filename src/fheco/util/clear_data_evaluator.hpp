@@ -22,9 +22,11 @@ namespace util
 
     void adjust_scalar_val(ScalarVal &scalar_val) const;
 
-    PackedVal make_random_packed_val(integer slot_min, integer slot_max) const;
+    PackedVal make_rand_packed_val(integer slot_min, integer slot_max) const;
 
     PackedVal make_packed_val(ScalarVal scalar_val) const;
+
+    bool can_convert_to_scalar(const PackedVal &packed_val) const;
 
     template <typename TArg, typename TDestination>
     void operate_unary(const ir::OpCode &op_code, const TArg &arg, TDestination &dest) const;

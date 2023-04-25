@@ -9,7 +9,7 @@ namespace fheco
 {
 namespace ir
 {
-  const OpCode OpCode::nop = OpCode(OpCode::Type::nop, {}, 0, false, "");
+  const OpCode OpCode::nop = OpCode(OpCode::Type::nop, {}, 0, false, "_");
   const OpCode OpCode::encrypt = OpCode(OpCode::Type::encrypt, {}, 1, false, "encrypt");
   const OpCode OpCode::add = OpCode(OpCode::Type::add, {}, 2, true, "+");
   const OpCode OpCode::sub = OpCode(OpCode::Type::sub, {}, 2, false, "-");
@@ -19,7 +19,7 @@ namespace ir
     return OpCode(OpCode::Type::rotate, {steps}, 1, false, "rotate_" + to_string(steps));
   }
   const OpCode OpCode::square = OpCode(OpCode::Type::square, {}, 1, false, "square");
-  const OpCode OpCode::mul = OpCode(OpCode::Type::mul, {}, 2, true, "mul");
+  const OpCode OpCode::mul = OpCode(OpCode::Type::mul, {}, 2, true, "*");
   const OpCode OpCode::mod_switch = OpCode(OpCode::Type::mod_switch, {}, 1, false, "mod_switch");
   const OpCode OpCode::relin = OpCode(OpCode::Type::relin, {}, 1, false, "relin");
 

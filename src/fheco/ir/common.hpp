@@ -22,6 +22,9 @@ namespace ir
   template <class... Ts>
   overloaded(Ts...) -> overloaded<Ts...>;
 
+  template <class>
+  inline constexpr bool always_false_v = false;
+
   // https://github.com/HowardHinnant/hash_append/issues/7#issuecomment-629414712
   template <typename T>
   inline void hash_combine(std::size_t &seed, const T &val)

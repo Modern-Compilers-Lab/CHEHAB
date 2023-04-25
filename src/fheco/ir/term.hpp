@@ -15,11 +15,11 @@ namespace ir
   {
   public:
     Term(OpCode op_code, std::vector<Term *> operands)
-      : id_{count_++}, op_code_{std::move(op_code)}, operands_{std::move(operands)},
+      : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)},
         type_{OpCode::deduce_result_type(op_code_, operands_)}, parents_{}
     {}
 
-    Term(TermType type) : id_{count_++}, op_code_{OpCode::nop}, operands_{}, type_{std::move(type)}, parents_{} {}
+    Term(TermType type) : id_{++count_}, op_code_{OpCode::nop}, operands_{}, type_{type}, parents_{} {}
 
     inline std::size_t id() const { return id_; }
 
@@ -32,9 +32,6 @@ namespace ir
     inline bool is_operation() const { return op_code_ != OpCode::nop; }
 
   private:
-    // to construct temp object used as search keys for sets
-    Term(std::size_t id) : id_{id}, op_code_{OpCode::nop}, operands_{}, type_{TermType::ciphertext}, parents_{} {}
-
     struct ParentKey
     {
       const OpCode *op_code;
@@ -50,6 +47,9 @@ namespace ir
     {
       bool operator()(const ParentKey &lhs, const ParentKey &rhs) const;
     };
+
+    // to construct temp object used as search keys for sets
+    Term(std::size_t id) : id_{id}, op_code_{OpCode::nop}, operands_{}, type_{TermType::ciphertext}, parents_{} {}
 
     static std::size_t count_;
 

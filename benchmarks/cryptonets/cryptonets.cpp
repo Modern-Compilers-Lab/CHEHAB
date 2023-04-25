@@ -134,9 +134,7 @@ int main(int argc, char **argv)
        << "trs_passes: " << trs_passes << '\n';
 
   string func_name = "cryptonets";
-  Compiler::create_func(func_name, vector_size, 20, true, Scheme::bfv);
-
-  cout << Compiler::active_func().modulus() << endl;
+  Compiler::create_func(func_name, vector_size, 20, true);
 
   cryptonets(
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},

@@ -15,7 +15,7 @@ namespace ir
   class DAG
   {
   public:
-    DAG() = default;
+    DAG() : outputs_{}, sorted_terms_{}, valid_top_sort_{true}, terms_{} {}
 
     ~DAG();
 
@@ -78,7 +78,7 @@ namespace ir
 
     std::vector<const Term *> sorted_terms_;
 
-    bool valid_top_sort_ = false;
+    bool valid_top_sort_;
 
     std::unordered_set<Term *, HashTermPtr, EqualTermPtr> terms_;
   };

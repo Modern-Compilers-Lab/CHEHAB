@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace fheco
 {
@@ -17,10 +18,19 @@ namespace ir
   {
   public:
     Function(
-      std::string name, Scheme scheme, std::size_t slot_count, integer modulus, bool signedness,
+      std::string name, std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction = false);
+
+    Function(std::string name, std::size_t slot_count, int bit_width, bool signedness)
+      : Function(std::move(name), slot_count, (2 << (bit_width - 1)) - 1, signedness, true)
+    {}
+
+    Function(
+      std::string name, std::vector<std::size_t> shape, integer modulus, bool signedness,
       bool delayed_reduction = false);
 
-    Function(std::string name, Scheme scheme, std::size_t slot_count, int bit_width, bool signedness);
+    Function(std::string name, std::vector<std::size_t> shape, int bit_width, bool signedness)
+      : Function(std::move(name), std::move(shape), (2 << (bit_width - 1)) - 1, signedness, true)
+    {}
 
     template <typename T>
     void init_input(T &input, std::string label);
@@ -39,6 +49,8 @@ namespace ir
 
     template <typename TArg1, typename TArg2, typename TDest>
     void operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &arg2, TDest &dest);
+
+    inline bool is_valid_term_id(std::size_t id) const { return data_flow_.find_term(id); }
 
     template <typename T>
     void set_output(const T &out, std::string label);
@@ -82,13 +94,7 @@ namespace ir
 
     inline const std::string &name() const { return name_; }
 
-    inline Scheme scheme() const { return scheme_; }
-
-    inline std::size_t slot_count() const { return slot_count_; }
-
-    inline integer modulus() const { return modulus_; }
-
-    inline bool signedness() const { return signedness_; }
+    inline const std::vector<std::size_t> &shape() const { return shape_; }
 
     inline const DAG &data_flow() const { return data_flow_; }
 
@@ -101,15 +107,15 @@ namespace ir
     inline const util::ClearDataEvaluator &clear_data_evaluator() const { return clear_data_evaluator_; }
 
   private:
+    static std::size_t compute_slot_count(const std::vector<std::size_t> &shape);
+
     std::string name_;
 
-    Scheme scheme_;
+    std::vector<std::size_t> shape_;
 
-    std::size_t slot_count_;
+    bool need_cyclic_rotations_;
 
-    integer modulus_;
-
-    bool signedness_;
+    util::ClearDataEvaluator clear_data_evaluator_;
 
     DAG data_flow_;
 
@@ -120,8 +126,6 @@ namespace ir
     std::unordered_map<ConstVal, std::size_t, ConstValHash> values_to_constants_;
 
     IOTermsInfo outputs_info_;
-
-    util::ClearDataEvaluator clear_data_evaluator_;
   };
 } // namespace ir
 } // namespace fheco

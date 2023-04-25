@@ -2,6 +2,7 @@
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/ir/op_code.hpp"
 #include <cstddef>
+#include <tuple>
 #include <vector>
 
 using namespace std;
@@ -11,65 +12,89 @@ namespace fheco
 // addition
 Ciphertext operator+(const Ciphertext &lhs, const Ciphertext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator+(const Ciphertext &lhs, const Plaintext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator+(const Ciphertext &lhs, const Scalar &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator+(const Plaintext &lhs, const Ciphertext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, dest);
+  return dest;
 }
 
 Plaintext operator+(const Plaintext &lhs, const Plaintext &rhs)
 {
-  Plaintext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Plaintext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, dest);
+  return dest;
 }
 
 Plaintext operator+(const Plaintext &lhs, const Scalar &rhs)
 {
-  Plaintext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Plaintext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator+(const Scalar &lhs, const Ciphertext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, destination);
-  return destination;
+  if (rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, dest);
+  return dest;
 }
 
 Plaintext operator+(const Scalar &lhs, const Plaintext &rhs)
 {
-  Plaintext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, destination);
-  return destination;
+  if (rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Plaintext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, dest);
+  return dest;
 }
 
 Scalar operator+(const Scalar &lhs, const Scalar &rhs)
 {
-  Scalar destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, destination);
-  return destination;
+  Scalar dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::add, lhs, rhs, dest);
+  return dest;
 }
 
 // addition assignement
@@ -112,65 +137,89 @@ Scalar &operator+=(Scalar &lhs, const Scalar &rhs)
 // subtraction
 Ciphertext operator-(const Ciphertext &lhs, const Ciphertext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator-(const Ciphertext &lhs, const Plaintext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator-(const Ciphertext &lhs, const Scalar &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator-(const Plaintext &lhs, const Ciphertext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, dest);
+  return dest;
 }
 
 Plaintext operator-(const Plaintext &lhs, const Plaintext &rhs)
 {
-  Plaintext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Plaintext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, dest);
+  return dest;
 }
 
 Plaintext operator-(const Plaintext &lhs, const Scalar &rhs)
 {
-  Plaintext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Plaintext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator-(const Scalar &lhs, const Ciphertext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
-  return destination;
+  if (rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, dest);
+  return dest;
 }
 
 Plaintext operator-(const Scalar &lhs, const Plaintext &rhs)
 {
-  Plaintext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
-  return destination;
+  if (rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Plaintext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, dest);
+  return dest;
 }
 
 Scalar operator-(const Scalar &lhs, const Scalar &rhs)
 {
-  Scalar destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, destination);
-  return destination;
+  Scalar dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::sub, lhs, rhs, dest);
+  return dest;
 }
 
 // subtraction assignement
@@ -213,65 +262,89 @@ Scalar &operator-=(Scalar &lhs, const Scalar &rhs)
 // multiplication
 Ciphertext operator*(const Ciphertext &lhs, const Ciphertext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator*(const Ciphertext &lhs, const Plaintext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator*(const Ciphertext &lhs, const Scalar &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator*(const Plaintext &lhs, const Ciphertext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, dest);
+  return dest;
 }
 
 Plaintext operator*(const Plaintext &lhs, const Plaintext &rhs)
 {
-  Plaintext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Plaintext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, dest);
+  return dest;
 }
 
 Plaintext operator*(const Plaintext &lhs, const Scalar &rhs)
 {
-  Plaintext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
-  return destination;
+  if (lhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Plaintext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, dest);
+  return dest;
 }
 
 Ciphertext operator*(const Scalar &lhs, const Ciphertext &rhs)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
-  return destination;
+  if (rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, dest);
+  return dest;
 }
 
 Plaintext operator*(const Scalar &lhs, const Plaintext &rhs)
 {
-  Plaintext destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
-  return destination;
+  if (rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Plaintext dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, dest);
+  return dest;
 }
 
 Scalar operator*(const Scalar &lhs, const Scalar &rhs)
 {
-  Scalar destination{};
-  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, destination);
-  return destination;
+  Scalar dest{};
+  Compiler::active_func().operate_binary(ir::OpCode::mul, lhs, rhs, dest);
+  return dest;
 }
 
 // multiplication assignement
@@ -314,114 +387,328 @@ Scalar &operator*=(Scalar &lhs, const Scalar &rhs)
 // negation
 Ciphertext operator-(const Ciphertext &arg)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_unary(ir::OpCode::negate, arg, destination);
-  return destination;
+  if (arg.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_unary(ir::OpCode::negate, arg, dest);
+  return dest;
 }
 
 Plaintext operator-(const Plaintext &arg)
 {
-  Plaintext destination{};
-  Compiler::active_func().operate_unary(ir::OpCode::negate, arg, destination);
-  return destination;
+  if (arg.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Plaintext dest{};
+  Compiler::active_func().operate_unary(ir::OpCode::negate, arg, dest);
+  return dest;
 }
 
 Scalar operator-(const Scalar &arg)
 {
-  Scalar destination{};
-  Compiler::active_func().operate_unary(ir::OpCode::negate, arg, destination);
-  return destination;
+  Scalar dest{};
+  Compiler::active_func().operate_unary(ir::OpCode::negate, arg, dest);
+  return dest;
 }
 
 // rotation
 Ciphertext rotate(const Ciphertext &arg, int steps)
 {
+  if (arg.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
   // this should work since slot_count is a power of 2
-  steps = static_cast<int>(steps % Compiler::active_func().slot_count());
-  Ciphertext destination{};
-  Compiler::active_func().operate_unary(ir::OpCode::rotate(steps), arg, destination);
-  return destination;
+  steps = static_cast<int>(steps % Compiler::active_func().clear_data_evaluator().slot_count());
+  Ciphertext dest{};
+  Compiler::active_func().operate_unary(ir::OpCode::rotate(steps), arg, dest);
+  return dest;
 }
 
 Plaintext rotate(const Plaintext &arg, int steps)
 {
+  if (arg.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
   // this should work since slot_count is a power of 2
-  steps = static_cast<int>(steps % Compiler::active_func().slot_count());
-  Plaintext destination{};
-  Compiler::active_func().operate_unary(ir::OpCode::rotate(steps), arg, destination);
-  return destination;
+  steps = static_cast<int>(steps % Compiler::active_func().clear_data_evaluator().slot_count());
+  Plaintext dest{};
+  Compiler::active_func().operate_unary(ir::OpCode::rotate(steps), arg, dest);
+  return dest;
 }
 
-Ciphertext operator<<(const Ciphertext &lhs, int steps)
+Ciphertext operator<<(const Ciphertext &arg, int steps)
 {
-  return rotate(lhs, steps);
+  return rotate(arg, steps);
 }
 
-Ciphertext operator>>(const Ciphertext &lhs, int steps)
+Ciphertext operator>>(const Ciphertext &arg, int steps)
 {
-  return rotate(lhs, -steps);
+  return rotate(arg, -steps);
 }
 
-Plaintext operator<<(const Plaintext &lhs, int steps)
+Plaintext operator<<(const Plaintext &arg, int steps)
 {
-  return rotate(lhs, steps);
+  return rotate(arg, steps);
 }
 
-Plaintext operator>>(const Plaintext &lhs, int steps)
+Plaintext operator>>(const Plaintext &arg, int steps)
 {
-  return rotate(lhs, -steps);
+  return rotate(arg, -steps);
 }
 
 // rotation assignement
-Ciphertext &operator<<=(Ciphertext &lhs, int steps)
+Ciphertext &operator<<=(Ciphertext &arg, int steps)
 {
-  lhs = lhs << steps;
-  return lhs;
+  arg = arg << steps;
+  return arg;
 }
 
-Ciphertext &operator>>=(Ciphertext &lhs, int steps)
+Ciphertext &operator>>=(Ciphertext &arg, int steps)
 {
-  lhs = lhs >> steps;
-  return lhs;
+  arg = arg >> steps;
+  return arg;
 }
 
-Plaintext &operator<<=(Plaintext &lhs, int steps)
+Plaintext &operator<<=(Plaintext &arg, int steps)
 {
-  lhs = lhs << steps;
-  return lhs;
+  arg = arg << steps;
+  return arg;
 }
 
-Plaintext &operator>>=(Plaintext &lhs, int steps)
+Plaintext &operator>>=(Plaintext &arg, int steps)
 {
-  lhs = lhs >> steps;
-  return lhs;
+  arg = arg >> steps;
+  return arg;
 }
 
 // encryption
 Ciphertext encrypt(const Plaintext &arg)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_unary(ir::OpCode::encrypt, arg, destination);
-  return destination;
+  if (arg.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  Ciphertext dest{};
+  Compiler::active_func().operate_unary(ir::OpCode::encrypt, arg, dest);
+  return dest;
 }
 
 Ciphertext encrypt(const Scalar &arg)
 {
-  Ciphertext destination{};
-  Compiler::active_func().operate_unary(ir::OpCode::encrypt, arg, destination);
-  return destination;
+  Ciphertext dest{};
+  Compiler::active_func().operate_unary(ir::OpCode::encrypt, arg, dest);
+  return dest;
 }
 
-// square, expo, multiply many, add_many, reduce*
-Ciphertext square(const Ciphertext &encrypted)
+// subscript helper
+pair<int, int> compute_subscripted_range(const Ciphertext &arg)
 {
-  return encrypted * encrypted;
+  if (arg.idx().empty())
+    throw invalid_argument("subscripted with empty index");
+
+  int dim = arg.dim();
+  const auto &shape = Compiler::active_func().shape();
+  size_t start = 0;
+  for (auto axis_idx : arg.idx())
+  {
+    size_t lower_dims_slot_count = 1;
+    for (size_t i = shape.size() - dim + 1; i < shape.size(); ++i)
+      lower_dims_slot_count *= shape[i];
+    start += axis_idx * lower_dims_slot_count;
+    --dim;
+  }
+  size_t end = start + ((dim > 0) ? shape[shape.size() - dim] : 1);
+  return {start, end};
 }
 
-Ciphertext reduce_add(const Ciphertext &encrypted)
+pair<int, int> compute_subscripted_range(const Plaintext &arg)
 {
-  Ciphertext result = encrypted;
-  size_t steps = Compiler::active_func().slot_count() >> 1;
+  if (arg.idx().empty())
+    throw invalid_argument("subscripted with empty index");
+
+  int dim = arg.dim();
+  const auto &shape = Compiler::active_func().shape();
+  size_t start = 0;
+  for (auto axis_idx : arg.idx())
+  {
+    size_t lower_dims_slot_count = 1;
+    for (size_t i = shape.size() - dim + 1; i < shape.size(); ++i)
+      lower_dims_slot_count *= shape[i];
+    start += axis_idx * lower_dims_slot_count;
+    --dim;
+  }
+  size_t end = start + ((dim > 0) ? shape[shape.size() - dim] : 1);
+  return {start, end};
+}
+
+// subscripted_read
+Ciphertext emulate_subscripted_read(const Ciphertext &arg)
+{
+  auto [start, end] = compute_subscripted_range(arg);
+  PackedVal mask(Compiler::active_func().clear_data_evaluator().slot_count(), 0);
+
+  for (size_t i = start; i < end; ++i)
+    mask[i] = 1;
+  Ciphertext resolved = arg;
+  resolved.idx_.clear();
+  Plaintext plain_mask(mask);
+  plain_mask.dim_ = arg.dim();
+  Ciphertext result = (resolved * plain_mask) << start;
+  result.dim_ -= arg.idx_.size();
+  return result;
+}
+
+Plaintext emulate_subscripted_read(const Plaintext &arg)
+{
+  auto [start, end] = compute_subscripted_range(arg);
+  PackedVal mask(Compiler::active_func().clear_data_evaluator().slot_count(), 0);
+  for (size_t i = start; i < end; ++i)
+    mask[i] = 1;
+  Plaintext resolved = arg;
+  resolved.idx_.clear();
+  Plaintext plain_mask(mask);
+  plain_mask.dim_ = arg.dim();
+  Plaintext result = (resolved * plain_mask) << start;
+  result.dim_ -= arg.idx_.size();
+  return result;
+}
+
+void emulate_subscripted_write(Ciphertext &lhs, const Ciphertext &rhs)
+{
+  if (rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  auto [start, end] = compute_subscripted_range(lhs);
+  size_t actual_dim = lhs.dim_;
+  lhs.dim_ -= lhs.idx_.size();
+  lhs.idx_.clear();
+  if (Compiler::active_func().is_valid_term_id(lhs.id()))
+  {
+    PackedVal mask(Compiler::active_func().clear_data_evaluator().slot_count(), 1);
+    for (size_t i = start; i < end; ++i)
+      mask[i] = 0;
+    Plaintext plain_mask(mask);
+    plain_mask.dim_ = lhs.dim();
+    lhs = lhs * plain_mask + (rhs >> start);
+    lhs.dim_ = actual_dim;
+  }
+  else
+  {
+    lhs = rhs >> start;
+    lhs.dim_ = actual_dim;
+  }
+}
+
+void emulate_subscripted_write(Plaintext &lhs, const Plaintext &rhs)
+{
+  if (rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+
+  auto [start, end] = compute_subscripted_range(lhs);
+  size_t actual_dim = lhs.dim_;
+  lhs.dim_ -= lhs.idx_.size();
+  lhs.idx_.clear();
+  if (Compiler::active_func().is_valid_term_id(lhs.id()))
+  {
+    PackedVal mask(Compiler::active_func().clear_data_evaluator().slot_count(), 1);
+    for (size_t i = start; i < end; ++i)
+      mask[i] = 0;
+    Plaintext plain_mask(mask);
+    plain_mask.dim_ = lhs.dim();
+    lhs = lhs * plain_mask + (rhs >> start);
+    lhs.dim_ = actual_dim;
+  }
+  else
+  {
+    lhs = rhs >> start;
+    lhs.dim_ = actual_dim;
+  }
+}
+
+// square
+Ciphertext square(const Ciphertext &arg)
+{
+  Ciphertext dest{};
+  Compiler::active_func().operate_unary(ir::OpCode::square, arg, dest);
+  return dest;
+}
+
+Plaintext square(const Plaintext &arg)
+{
+  return arg * arg;
+}
+
+// add_many
+Ciphertext add_many(const vector<Ciphertext> &args)
+{
+  if (args.empty())
+    return encrypt(Scalar(0));
+
+  vector<Ciphertext> sum_vec;
+  for (size_t i = 0; i < args.size() - 1; i += 2)
+    sum_vec.push_back(args[i] + args[i + 1]);
+
+  if (args.size() & 1)
+    sum_vec.push_back(args.back());
+
+  for (size_t i = 0; i < sum_vec.size() - 1; i += 2)
+    sum_vec.push_back(sum_vec[i] + sum_vec[i + 1]);
+
+  return sum_vec.back();
+}
+
+Plaintext add_many(const vector<Plaintext> &args)
+{
+  Plaintext result(PackedVal{0});
+  for (size_t i = 0; i < args.size(); ++i)
+    result += args[i];
+  return result;
+}
+
+// mul_many
+Ciphertext mul_many(const vector<Ciphertext> &args)
+{
+  if (args.empty())
+    return encrypt(Scalar(0));
+
+  vector<Ciphertext> sum_vec;
+  for (size_t i = 0; i < args.size() - 1; i += 2)
+    sum_vec.push_back(args[i] * args[i + 1]);
+
+  if (args.size() & 1)
+    sum_vec.push_back(args.back());
+
+  for (size_t i = 0; i < sum_vec.size() - 1; i += 2)
+    sum_vec.push_back(sum_vec[i] * sum_vec[i + 1]);
+
+  return sum_vec.back();
+}
+
+Plaintext mul_many(const vector<Plaintext> &args)
+{
+  Plaintext result(1);
+  for (size_t i = 0; i < args.size(); ++i)
+    result *= args[i];
+  return result;
+}
+
+// exponentiate
+Ciphertext exponentiate(const Ciphertext &arg, std::uint64_t exponent)
+{
+  vector<Ciphertext> args(static_cast<size_t>(exponent), arg);
+  return mul_many(args);
+}
+Plaintext exponentiate(const Plaintext &arg, std::uint64_t exponent)
+{
+  vector<Plaintext> args(static_cast<size_t>(exponent), arg);
+  return mul_many(args);
+}
+
+// reduce_add
+Ciphertext reduce_add(const Ciphertext &arg)
+{
+  Ciphertext result = arg;
+  size_t steps = Compiler::active_func().clear_data_evaluator().slot_count() >> 1;
   while (steps > 0)
   {
     result += result << steps;
@@ -430,18 +717,32 @@ Ciphertext reduce_add(const Ciphertext &encrypted)
   return result;
 }
 
-Ciphertext add_many(const vector<Ciphertext> &encrypteds)
+Plaintext reduce_add(const Plaintext &arg)
 {
-  vector<Ciphertext> sum_vec;
-  for (size_t i = 0; i < encrypteds.size() - 1; i += 2)
-    sum_vec.push_back(encrypteds[i] + encrypteds[i + 1]);
+  Plaintext result(0);
+  for (size_t i = 0; i < Compiler::active_func().clear_data_evaluator().slot_count(); ++i)
+    result += arg << i;
+  return result;
+}
 
-  if (encrypteds.size() & 1)
-    sum_vec.push_back(encrypteds.back());
+// reduce_mul
+Ciphertext reduce_mul(const Ciphertext &arg)
+{
+  Ciphertext result = arg;
+  size_t steps = Compiler::active_func().clear_data_evaluator().slot_count() >> 1;
+  while (steps > 0)
+  {
+    result *= result << steps;
+    steps >>= 1;
+  }
+  return result;
+}
 
-  for (size_t i = 0; i < sum_vec.size() - 1; i += 2)
-    sum_vec.push_back(sum_vec[i] + sum_vec[i + 1]);
-
-  return sum_vec.back();
+Plaintext reduce_mul(const Plaintext &arg)
+{
+  Plaintext result(1);
+  for (size_t i = 0; i < Compiler::active_func().clear_data_evaluator().slot_count(); ++i)
+    result *= arg << i;
+  return result;
 }
 } // namespace fheco
