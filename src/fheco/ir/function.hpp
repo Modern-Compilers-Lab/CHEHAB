@@ -117,15 +117,15 @@ namespace ir
 
     util::ClearDataEvaluator clear_data_evaluator_;
 
-    DAG data_flow_;
+    DAG data_flow_{};
 
-    IOTermsInfo inputs_info_;
+    IOTermsInfo inputs_info_{};
 
-    TermsValues constants_values_;
+    TermsValues constants_values_{};
 
     std::unordered_map<ConstVal, std::size_t, HashConstVal> values_to_constants_;
 
-    IOTermsInfo outputs_info_;
+    IOTermsInfo outputs_info_{};
   };
 } // namespace ir
 } // namespace fheco

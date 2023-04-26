@@ -3,6 +3,7 @@
 #include "fheco/dsl/plaintext.hpp"
 #include "fheco/dsl/scalar.hpp"
 #include "fheco/util/common.hpp"
+#include <algorithm>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -26,8 +27,8 @@ namespace ir
 
   Function::Function(string name, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
     : name_{move(name)}, shape_{slot_count}, need_cyclic_rotations_{false},
-      clear_data_evaluator_{slot_count, modulus, signedness, delayed_reduction}, data_flow_{}, inputs_info_{},
-      constants_values_{}, values_to_constants_{0, HashConstVal{slot_count}}, outputs_info_{}
+      clear_data_evaluator_{slot_count, modulus, signedness, delayed_reduction}, values_to_constants_{
+                                                                                   0, HashConstVal{slot_count}}
   {
     if (slot_count == 0 || (slot_count & (slot_count - 1)) != 0)
       throw invalid_argument("slot_count must be a power of two");
@@ -35,9 +36,8 @@ namespace ir
 
   Function::Function(string name, vector<size_t> shape, integer modulus, bool signedness, bool delayed_reduction)
     : name_{move(name)}, shape_{move(shape)}, need_cyclic_rotations_{false},
-      clear_data_evaluator_{compute_slot_count(shape_), modulus, signedness, delayed_reduction}, data_flow_{},
-      inputs_info_{}, constants_values_{}, values_to_constants_{0, HashConstVal{clear_data_evaluator_.slot_count()}},
-      outputs_info_{}
+      clear_data_evaluator_{compute_slot_count(shape_), modulus, signedness, delayed_reduction},
+      values_to_constants_{0, HashConstVal{clear_data_evaluator_.slot_count()}}
   {
     size_t slot_count = clear_data_evaluator_.slot_count();
     if (slot_count == 0 || (slot_count & (slot_count - 1)) != 0)
@@ -181,6 +181,9 @@ namespace ir
       static_assert(is_same<TDest, Scalar>::value, "invalid template instantiation");
 
     vector<Term *> operands{arg1_term, arg2_term};
+    if (op_code.commutativity())
+      sort(operands.begin(), operands.end(), DAG::CompareTermPtr{});
+
     if (auto parent = data_flow_.find_term(op_code, operands); parent)
       dest.id_ = parent->id();
     else

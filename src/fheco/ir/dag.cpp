@@ -1,5 +1,4 @@
 #include "fheco/ir/dag.hpp"
-#include <algorithm>
 #include <stack>
 #include <stdexcept>
 #include <utility>
@@ -69,18 +68,6 @@ namespace ir
     if (auto it = operands[0]->parents_.find({&op_code, &operands}); it != operands[0]->parents_.end())
       return it->second;
 
-    else if (op_code.commutativity())
-    {
-      auto permutation = operands;
-      sort(permutation.begin(), permutation.end(), CompareTermPtr{});
-      do
-      {
-        auto it = operands[0]->parents_.find({&op_code, &permutation});
-        if (it != operands[0]->parents_.end())
-          return it->second;
-
-      } while (next_permutation(permutation.begin(), permutation.end(), CompareTermPtr{}));
-    }
     return nullptr;
   }
 
@@ -177,13 +164,10 @@ namespace ir
 
         visited_nodes.insert(top_node.second);
         traversal_stack.push({true, top_node.second});
-        if (top_node.second->is_operation())
+        for (auto it = top_node.second->operands_.rbegin(); it != top_node.second->operands_.rend(); ++it)
         {
-          for (auto it = top_node.second->operands_.rbegin(); it != top_node.second->operands_.rend(); ++it)
-          {
-            if (visited_nodes.find(*it) == visited_nodes.end())
-              traversal_stack.push({false, *it});
-          }
+          if (visited_nodes.find(*it) == visited_nodes.end())
+            traversal_stack.push({false, *it});
         }
       }
     }

@@ -15,6 +15,21 @@ namespace ir
   class DAG
   {
   public:
+    struct HashTermPtr
+    {
+      inline std::size_t operator()(const Term *p) const { return std::hash<Term>()(*p); }
+    };
+
+    struct EqualTermPtr
+    {
+      inline bool operator()(const Term *lhs, const Term *rhs) const { return *lhs == *rhs; }
+    };
+
+    struct CompareTermPtr
+    {
+      inline bool operator()(const Term *lhs, const Term *rhs) const { return *lhs < *rhs; }
+    };
+
     DAG() : outputs_{}, sorted_terms_{}, valid_top_sort_{true}, terms_{} {}
 
     ~DAG();
@@ -53,21 +68,6 @@ namespace ir
     }
 
   private:
-    struct HashTermPtr
-    {
-      inline std::size_t operator()(const Term *p) const { return std::hash<Term>()(*p); }
-    };
-
-    struct EqualTermPtr
-    {
-      inline bool operator()(const Term *lhs, const Term *rhs) const { return *lhs == *rhs; }
-    };
-
-    struct CompareTermPtr
-    {
-      inline bool operator()(const Term *lhs, const Term *rhs) const { return *lhs < *rhs; }
-    };
-
     inline bool is_output(Term *t) const { return outputs_.find(t) != outputs_.end(); }
 
     void delete_non_output_source_cascade(Term *t);
