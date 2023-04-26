@@ -1,6 +1,7 @@
 #include "fheco/ir/op_code.hpp"
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/term.hpp"
+#include <algorithm>
 #include <stdexcept>
 
 using namespace std;
@@ -28,29 +29,41 @@ namespace ir
     if (op_code.arity() != operands.size())
       throw invalid_argument("invalid number of operands for op_code");
 
-    switch (op_code.arity())
-    {
-    case 0:
+    if (op_code.arity() == 0)
       throw invalid_argument("cannot deduce result type of operation with 0 operands (nop)");
-      break;
 
-    case 1:
-      return operands[0]->type();
-      break;
+    // non arithmetic operations
+    if (op_code.type() == OpCode::Type::encrypt)
+    {
+      if (operands[0]->type() != TermType::plaintext && operands[0]->type() != TermType::scalar)
+        throw invalid_argument("encrypt arg must be plain or scalar");
 
-    case 2:
-      if (operands[0]->type() < operands[1]->type())
-        return operands[0]->type();
-      else if (operands[0]->type() > operands[1]->type())
-        return operands[1]->type();
-      else
-        return operands[0]->type();
-      break;
-
-    default:
-      throw invalid_argument("unhandled class of operation with arity");
-      break;
+      return TermType::ciphertext;
     }
+
+    if (op_code.type() == OpCode::Type::mod_switch)
+    {
+      if (operands[0]->type() != TermType::ciphertext)
+        throw invalid_argument("mod_switch arg must be cipher");
+
+      return TermType::ciphertext;
+    }
+
+    if (op_code.type() == OpCode::Type::relin)
+    {
+      if (operands[0]->type() != TermType::ciphertext)
+        throw invalid_argument("relin arg must be cipher");
+
+      return TermType::ciphertext;
+    }
+
+    // arithmetic operations
+
+    auto term_with_min_type_it =
+      min_element(operands.begin(), operands.end(), [](const Term *lhs, const Term *rhs) -> bool {
+        return lhs->type() < rhs->type();
+      });
+    return (*term_with_min_type_it)->type();
   }
 
   OpCode OpCode::sample_op_code_from_type(OpCode::Type type)
