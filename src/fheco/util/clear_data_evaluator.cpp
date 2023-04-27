@@ -1,6 +1,7 @@
 #include "fheco/util/clear_data_evaluator.hpp"
 #include "fheco/util/common.hpp"
 #include <iostream>
+#include <type_traits>
 
 using namespace std;
 
@@ -52,7 +53,8 @@ namespace util
       break;
 
     case ir::OpCode::Type::rotate:
-      rotate(arg, op_code.steps(), dest);
+      if constexpr (is_same<TArg, PackedVal>::value)
+        rotate(arg, op_code.steps(), dest);
       break;
 
     default:

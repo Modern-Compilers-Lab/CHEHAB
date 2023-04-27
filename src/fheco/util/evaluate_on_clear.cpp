@@ -122,7 +122,7 @@ namespace util
             cerr << "missing arg when computing term (arg1 id=" << arg1_id << ")\n";
         }
         else
-          throw logic_error("handled n-ary operation (n not 1 nor 2)");
+          throw logic_error("unhandled n-ary operation (n not 1 nor 2)");
 
         if (auto output_info = func.get_output_info(term->id()); output_info)
         {

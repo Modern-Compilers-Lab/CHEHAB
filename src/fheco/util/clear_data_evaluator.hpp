@@ -61,7 +61,6 @@ namespace util
     void negate(ScalarVal arg, ScalarVal &dest) const;
 
     void rotate(const PackedVal &arg, int steps, PackedVal &dest) const;
-    inline void rotate(ScalarVal arg, int steps, ScalarVal &dest) const {}
 
     void mul(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const;
     void mul(const PackedVal &arg1, ScalarVal arg2, PackedVal &dest) const;

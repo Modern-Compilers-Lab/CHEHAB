@@ -107,9 +107,9 @@ namespace util
 
 namespace std
 {
-std::ostream &operator<<(std::ostream &os, const fheco::ir::IOTermsInfo &io_terms_values);
+ostream &operator<<(ostream &os, const fheco::ir::IOTermsInfo &io_terms_values);
 
-std::ostream &operator<<(std::ostream &os, const fheco::ir::TermsValues &terms_values);
+ostream &operator<<(ostream &os, const fheco::ir::TermsValues &terms_values);
 
 ostream &operator<<(ostream &os, const fheco::PackedVal &packed_val);
 } // namespace std

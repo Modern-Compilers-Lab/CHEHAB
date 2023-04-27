@@ -153,10 +153,10 @@ namespace ir
       temp,
       perm
     };
-    unordered_map<Term *, Mark> terms_marks;
+    unordered_map<const Term *, Mark> terms_marks;
     struct Call
     {
-      Term *term_;
+      const Term *term_;
       bool childs_processed_;
     };
     stack<Call> call_stack;
@@ -190,7 +190,7 @@ namespace ir
           continue;
         }
 
-        for (auto it = top_term->operands_.rbegin(); it != top_term->operands_.rend(); ++it)
+        for (auto it = top_term->operands_.crbegin(); it != top_term->operands_.crend(); ++it)
           call_stack.push(Call{*it, false});
       }
     }

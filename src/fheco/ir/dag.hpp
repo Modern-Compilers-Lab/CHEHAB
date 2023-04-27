@@ -72,7 +72,7 @@ namespace ir
     const TermPtrSet &output_terms() const { return outputs_; }
 
   private:
-    inline bool is_output(Term *term) const { return outputs_.find(t) != outputs_.end(); }
+    inline bool is_output(Term *term) const { return outputs_.find(term) != outputs_.end(); }
 
     void delete_non_output_source_cascade(Term *term);
 
