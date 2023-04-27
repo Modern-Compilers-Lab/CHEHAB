@@ -8,103 +8,101 @@
 
 using namespace std;
 
-namespace fheco
+namespace fheco::util
 {
-namespace util
+void draw_ir(ir::Function &func, ostream &os)
 {
-  void draw_ir(ir::Function &func, ostream &os)
-  {
-    auto make_node_label = [&func](const ir::Term *term) -> string {
-      // operation term
-      if (term->is_operation())
-      {
-        if (auto output_info = func.get_output_info(term->id()); output_info)
-          return term->op_code().str_repr() + " (" + output_info->label + ")";
-
-        return term->op_code().str_repr();
-      }
-
-      // leaf term
-      if (auto input_info = func.get_input_info(term->id()); input_info)
-      {
-        string label = input_info->label;
-        if (auto output_info = func.get_output_info(term->id()); output_info)
-          label += "/" + output_info->label;
-        return label;
-      }
-      else if (auto const_value = func.get_const_val(term->id()); const_value)
-      {
-        if (term->type() == ir::TermType::scalar)
-        {
-          return visit(
-            ir::overloaded{
-              [](const auto &other) -> string { throw logic_error("constant scalar term with vector value"); },
-              [](ScalarVal scalar_val) -> string {
-                return to_string(scalar_val);
-              }},
-            *const_value);
-        }
-        return "const_ptxt_" + to_string(term->id());
-      }
-      else
-        throw logic_error("temp leaf term");
-    };
-
-    auto make_term_attrs = [&func, &make_node_label](const ir::Term *term) -> string {
-      unordered_map<ir::TermType, string> type_to_attrs = {
-        {ir::TermType::ciphertext, "style=solid"},
-        {ir::TermType::plaintext, "style=dashed"},
-        {ir::TermType::scalar, "style=dotted"}};
-
-      unordered_map<ir::TermQualif, string> qualifs_to_attrs = {
-        {ir::TermQualif::temp, "color=black fontcolor=black"},
-        {ir::TermQualif::in, "color=red fontcolor=red"},
-        {ir::TermQualif::in_out, "color=red fontcolor=blue"},
-        {ir::TermQualif::const_, "color=darkgreen fontcolor=darkgreen"},
-        {ir::TermQualif::out, "color=blue fontcolor=blue"}};
-
-      auto type_attrs_it = type_to_attrs.find(term->type());
-      if (type_attrs_it == type_to_attrs.end())
-        throw logic_error("formatting for term type not found");
-
-      auto qualif_attrs = qualifs_to_attrs.find(func.get_term_qualif(term->id()));
-      if (qualif_attrs == qualifs_to_attrs.end())
-        throw logic_error("formatting for term qualifiers not found");
-
-      string attrs = "label=\"" + make_node_label(term) + "\"";
-      if (type_attrs_it->second.size())
-        attrs += " " + type_attrs_it->second;
-
-      if (qualif_attrs->second.size())
-        attrs += " " + qualif_attrs->second;
-      return attrs;
-    };
-
-    os << "digraph \"" << func.name() << "\" {\n";
-    os << "node [shape=circle width=1 margin=0]\n";
-    os << "edge [dir=back]\n";
-
-    for (auto term : func.get_top_sorted_terms())
+  auto make_node_label = [&func](const ir::Term *term) -> string {
+    // operation term
+    if (term->is_operation())
     {
-      os << term->id() << " [" << make_term_attrs(term) << "]\n";
-      if (!term->is_operation())
-        continue;
+      if (auto output_info = func.get_output_info(term->id()); output_info)
+        return term->op_code().str_repr() + " (" + output_info->label + ")";
 
-      const auto &operands = term->operands();
-
-      for (auto operand : operands)
-        os << term->id() << " -> " << operand->id() << '\n';
-
-      // impose operands order
-      if (operands.size() > 1)
-      {
-        for (size_t i = 0; i < operands.size() - 1; ++i)
-          os << operands[i]->id() << " -> ";
-        os << operands.back()->id() << " [style=invis]\n";
-      }
+      return term->op_code().str_repr();
     }
 
-    string key = R"(subgraph cluster_key {
+    // leaf term
+    if (auto input_info = func.get_input_info(term->id()); input_info)
+    {
+      string label = input_info->label;
+      if (auto output_info = func.get_output_info(term->id()); output_info)
+        label += "/" + output_info->label;
+      return label;
+    }
+    else if (auto const_value = func.get_const_val(term->id()); const_value)
+    {
+      if (term->type() == ir::TermType::scalar)
+      {
+        return visit(
+          ir::overloaded{
+            [](const auto &other) -> string { throw logic_error("constant scalar term with vector value"); },
+            [](ScalarVal scalar_val) -> string {
+              return to_string(scalar_val);
+            }},
+          *const_value);
+      }
+      return "const_ptxt_" + to_string(term->id());
+    }
+    else
+      throw logic_error("temp leaf term");
+  };
+
+  auto make_term_attrs = [&func, &make_node_label](const ir::Term *term) -> string {
+    unordered_map<ir::TermType, string> type_to_attrs = {
+      {ir::TermType::ciphertext, "style=solid"},
+      {ir::TermType::plaintext, "style=dashed"},
+      {ir::TermType::scalar, "style=dotted"}};
+
+    unordered_map<ir::TermQualif, string> qualifs_to_attrs = {
+      {ir::TermQualif::temp, "color=black fontcolor=black"},
+      {ir::TermQualif::in, "color=red fontcolor=red"},
+      {ir::TermQualif::in_out, "color=red fontcolor=blue"},
+      {ir::TermQualif::const_, "color=darkgreen fontcolor=darkgreen"},
+      {ir::TermQualif::out, "color=blue fontcolor=blue"}};
+
+    auto type_attrs_it = type_to_attrs.find(term->type());
+    if (type_attrs_it == type_to_attrs.end())
+      throw logic_error("formatting for term type not found");
+
+    auto qualif_attrs = qualifs_to_attrs.find(func.get_term_qualif(term->id()));
+    if (qualif_attrs == qualifs_to_attrs.end())
+      throw logic_error("formatting for term qualifiers not found");
+
+    string attrs = "label=\"" + make_node_label(term) + "\"";
+    if (type_attrs_it->second.size())
+      attrs += " " + type_attrs_it->second;
+
+    if (qualif_attrs->second.size())
+      attrs += " " + qualif_attrs->second;
+    return attrs;
+  };
+
+  os << "digraph \"" << func.name() << "\" {\n";
+  os << "node [shape=circle width=1 margin=0]\n";
+  os << "edge [dir=back]\n";
+
+  for (auto term : func.get_top_sorted_terms())
+  {
+    os << term->id() << " [" << make_term_attrs(term) << "]\n";
+    if (!term->is_operation())
+      continue;
+
+    const auto &operands = term->operands();
+
+    for (auto operand : operands)
+      os << term->id() << " -> " << operand->id() << '\n';
+
+    // impose operands order
+    if (operands.size() > 1)
+    {
+      for (size_t i = 0; i < operands.size() - 1; ++i)
+        os << operands[i]->id() << " -> ";
+      os << operands.back()->id() << " [style=invis]\n";
+    }
+  }
+
+  string key = R"(subgraph cluster_key {
     graph[label="Key"]
     node [width=0.5]
     edge [dir=forward style=invis]
@@ -134,8 +132,7 @@ namespace util
     const_plain -> const_scalar
     tmp_plain -> tmp_scalar
 })";
-    os << key << '\n';
-    os << "}\n";
-  }
-} // namespace util
-} // namespace fheco
+  os << key << '\n';
+  os << "}\n";
+}
+} // namespace fheco::util

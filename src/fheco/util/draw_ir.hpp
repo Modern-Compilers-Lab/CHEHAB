@@ -3,10 +3,7 @@
 #include "fheco/ir/function.hpp"
 #include <ostream>
 
-namespace fheco
+namespace fheco::util
 {
-namespace util
-{
-  void draw_ir(ir::Function &func, std::ostream &os);
-} // namespace util
-} // namespace fheco
+void draw_ir(ir::Function &func, std::ostream &os);
+} // namespace fheco::util
