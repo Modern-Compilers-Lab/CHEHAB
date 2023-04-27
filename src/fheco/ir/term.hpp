@@ -31,6 +31,10 @@ namespace ir
 
     inline bool is_operation() const { return op_code_ != OpCode::nop; }
 
+    inline bool is_leaf() const { return operands_.size() == 0; }
+
+    inline bool is_source() const { return parents_.size() == 0; }
+
   private:
     struct ParentKey
     {
@@ -53,7 +57,7 @@ namespace ir
 
     static std::size_t count_;
 
-    void replace_in_parents_with(Term *t);
+    void replace_in_parents_with(Term *term);
 
     std::size_t id_;
 
@@ -106,6 +110,6 @@ namespace std
 template <>
 struct hash<fheco::ir::Term>
 {
-  inline size_t operator()(const fheco::ir::Term &term) const { return hash<std::size_t>()(term.id()); }
+  inline size_t operator()(const fheco::ir::Term &term) const { return hash<size_t>()(term.id()); }
 };
 } // namespace std

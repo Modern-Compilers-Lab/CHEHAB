@@ -76,69 +76,72 @@ namespace ir
   {
     for (auto it = terms_.cbegin(); it != terms_.cend(); ++it)
     {
-      auto t = *it;
-      if (t->parents_.empty() && !is_output(t))
-        delete_non_output_source_cascade(t);
+      auto term = *it;
+      if (term->parents_.empty() && !is_output(term))
+        delete_non_output_source_cascade(term);
     }
   }
 
-  void DAG::replace_term_with(Term *t1, Term *t2)
+  void DAG::replace_term_with(Term *term1, Term *term2)
   {
-    if (t1->parents_.empty() || *t1 == *t2)
+    if (term1->parents_.empty() || *term1 == *term2)
       return;
 
-    t1->replace_in_parents_with(t2);
+    term1->replace_in_parents_with(term2);
     valid_top_sort_ = false;
   }
 
-  bool DAG::set_output(Term *t)
+  void DAG::set_output(Term *term)
   {
-    bool inserted = outputs_.insert(t).second;
-    if (inserted)
+    if (outputs_.insert(term).second)
     {
-      if (!t->is_operation() && valid_top_sort_)
-        sorted_terms_.push_back(t);
+      if (valid_top_sort_ && term->is_leaf())
+      {
+        for (auto sorted_term : sorted_terms_)
+        {
+          if (*term == *sorted_term)
+            return;
+        }
+        sorted_terms_.push_back(term);
+      }
       else
         valid_top_sort_ = false;
-
-      return true;
     }
-    return false;
   }
 
-  bool DAG::unset_output(Term *t)
+  void DAG::unset_output(Term *term)
   {
-    bool erased = outputs_.erase(t);
-    if (erased)
+    if (outputs_.erase(term))
     {
-      if (!t->is_operation() && valid_top_sort_)
+      if (valid_top_sort_ && term->is_leaf())
       {
         for (auto it = sorted_terms_.cbegin(); it != sorted_terms_.cend();)
         {
-          if (*t == **it)
+          auto sorted_term = *it;
+          if (*term == *sorted_term)
+          {
             it = sorted_terms_.erase(it);
+            return;
+          }
           else
             ++it;
         }
       }
       else
         valid_top_sort_ = false;
-
-      return true;
     }
-    return false;
   }
 
-  void DAG::delete_non_output_source_cascade(Term *t)
+  void DAG::delete_non_output_source_cascade(Term *term)
   {
-    for (auto operand : t->operands_)
+    for (auto operand : term->operands_)
     {
-      operand->parents_.erase(Term::ParentKey{&t->op_code_, &t->operands_});
+      operand->parents_.erase(Term::ParentKey{&term->op_code_, &term->operands_});
       if (operand->parents_.empty() && !is_output(operand))
         delete_non_output_source_cascade(operand);
     }
-    terms_.erase(t);
-    delete t;
+    terms_.erase(term);
+    delete term;
   }
 
   // iterative version of https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search

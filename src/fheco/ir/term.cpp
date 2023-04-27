@@ -38,7 +38,7 @@ namespace ir
     return true;
   }
 
-  void Term::replace_in_parents_with(Term *t)
+  void Term::replace_in_parents_with(Term *term)
   {
     for (auto it = parents_.cbegin(); it != parents_.cend(); ++it)
     {
@@ -48,9 +48,9 @@ namespace ir
       {
         // parent multiplicity can be used to stop once replacement is done, not to traverse the whole operands vector
         if (*parent->operands_[i] == *this)
-          parent->operands_[i] = t;
+          parent->operands_[i] = term;
       }
-      t->parents_.insert(move(entry));
+      term->parents_.insert(move(entry));
     }
   }
 } // namespace ir

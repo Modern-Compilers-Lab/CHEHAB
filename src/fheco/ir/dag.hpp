@@ -30,6 +30,8 @@ namespace ir
       inline bool operator()(const Term *lhs, const Term *rhs) const { return *lhs < *rhs; }
     };
 
+    using TermPtrSet = std::unordered_set<Term *, HashTermPtr, EqualTermPtr>;
+
     DAG() : outputs_{}, sorted_terms_{}, valid_top_sort_{true}, terms_{} {}
 
     ~DAG();
@@ -52,11 +54,11 @@ namespace ir
 
     void prune_unreachable_terms();
 
-    void replace_term_with(Term *t1, Term *t2);
+    void replace_term_with(Term *term1, Term *term2);
 
-    bool set_output(Term *t);
+    void set_output(Term *term);
 
-    bool unset_output(Term *t);
+    void unset_output(Term *term);
 
     inline const std::vector<const Term *> &get_top_sorted_terms()
     {
@@ -67,20 +69,22 @@ namespace ir
       return sorted_terms_;
     }
 
-  private:
-    inline bool is_output(Term *t) const { return outputs_.find(t) != outputs_.end(); }
+    const TermPtrSet &output_terms() const { return outputs_; }
 
-    void delete_non_output_source_cascade(Term *t);
+  private:
+    inline bool is_output(Term *term) const { return outputs_.find(t) != outputs_.end(); }
+
+    void delete_non_output_source_cascade(Term *term);
 
     void topological_sort();
 
-    std::unordered_set<Term *, HashTermPtr, EqualTermPtr> outputs_;
+    TermPtrSet outputs_;
 
     std::vector<const Term *> sorted_terms_;
 
     bool valid_top_sort_;
 
-    std::unordered_set<Term *, HashTermPtr, EqualTermPtr> terms_;
+    TermPtrSet terms_;
   };
 } // namespace ir
 } // namespace fheco
