@@ -1,6 +1,7 @@
 #include "fheco/ir/dag.hpp"
 #include <stack>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 
 using namespace std;
@@ -140,35 +141,54 @@ namespace ir
     delete t;
   }
 
+  // iterative version of https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search
   void DAG::topological_sort()
   {
     sorted_terms_.clear();
-    stack<pair<bool, Term *>> traversal_stack;
-    unordered_set<Term *, HashTermPtr, EqualTermPtr> visited_nodes;
-    for (auto node : outputs_)
+    enum class Mark
     {
-      if (visited_nodes.find(node) == visited_nodes.end())
-        traversal_stack.push({false, node});
+      temp,
+      perm
+    };
+    unordered_map<Term *, Mark> terms_marks;
+    struct Call
+    {
+      Term *term_;
+      bool childs_processed_;
+    };
+    stack<Call> call_stack;
+    for (auto term : outputs_)
+    {
+      if (terms_marks.find(term) == terms_marks.end())
+        call_stack.push(Call{term, false});
 
-      while (!traversal_stack.empty())
+      while (!call_stack.empty())
       {
-        auto top_node = traversal_stack.top();
-        traversal_stack.pop();
-        if (top_node.first)
+        auto top_call = call_stack.top();
+        call_stack.pop();
+        auto top_term = top_call.term_;
+        if (!top_call.childs_processed_)
         {
-          sorted_terms_.push_back(top_node.second);
-          continue;
-        }
-        if (visited_nodes.find(top_node.second) != visited_nodes.end())
-          continue;
+          if (auto it = terms_marks.find(top_term); it != terms_marks.end())
+          {
+            if (it->second == Mark::perm)
+              continue;
 
-        visited_nodes.insert(top_node.second);
-        traversal_stack.push({true, top_node.second});
-        for (auto it = top_node.second->operands_.rbegin(); it != top_node.second->operands_.rend(); ++it)
-        {
-          if (visited_nodes.find(*it) == visited_nodes.end())
-            traversal_stack.push({false, *it});
+            if (it->second == Mark::temp)
+              throw logic_error("cycle detected");
+          }
+          terms_marks.emplace(top_term, Mark::temp);
+          call_stack.push(Call{top_term, true});
         }
+        else
+        {
+          terms_marks[top_term] = Mark::perm;
+          sorted_terms_.push_back(top_term);
+          continue;
+        }
+
+        for (auto it = top_term->operands_.rbegin(); it != top_term->operands_.rend(); ++it)
+          call_stack.push(Call{*it, false});
       }
     }
     valid_top_sort_ = true;
