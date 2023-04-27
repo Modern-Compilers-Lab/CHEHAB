@@ -2,9 +2,11 @@
 
 #include "fheco/ir/function.hpp"
 #include <cstddef>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace fheco
 {
@@ -14,45 +16,44 @@ public:
   static inline void create_func(
     std::string name, std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction = false)
   {
-    add_func(ir::Function(move(name), slot_count, modulus, signedness, delayed_reduction));
+    add_func(std::make_shared<ir::Function>(std::move(name), slot_count, modulus, signedness, delayed_reduction));
   }
 
   static inline void create_func(std::string name, std::size_t slot_count, int bit_width, bool signedness)
   {
-    add_func(ir::Function(move(name), slot_count, bit_width, signedness));
+    add_func(std::make_shared<ir::Function>(std::move(name), slot_count, bit_width, signedness));
   }
 
   static inline void create_func(
     std::string name, std::vector<std::size_t> shape, integer modulus, bool signedness, bool delayed_reduction = false)
   {
-    add_func(ir::Function(move(name), move(shape), modulus, signedness, delayed_reduction));
+    add_func(std::make_shared<ir::Function>(std::move(name), std::move(shape), modulus, signedness, delayed_reduction));
   }
 
   static inline void create_func(std::string name, std::vector<std::size_t> shape, int bit_width, bool signedness)
   {
-    add_func(ir::Function(move(name), move(shape), bit_width, signedness));
+    add_func(std::make_shared<ir::Function>(std::move(name), std::move(shape), bit_width, signedness));
   }
 
-  static void delete_func(const std::string &name);
-
-  static inline ir::Function &get_func(const std::string &name)
+  static inline const std::shared_ptr<ir::Function> &active_func()
   {
-    auto it = funcs_table_.find(name);
-    if (it == funcs_table_.end())
-      throw std::invalid_argument("no function with this name was found");
+    if (active_func_it_ == funcs_table_.cend())
+      throw std::logic_error("active_func is null");
 
-    return it->second;
+    return active_func_it_->second;
   }
 
   static void set_active_func(const std::string &name);
 
-  static inline ir::Function &active_func()
-  {
-    if (active_func_ == nullptr)
-      throw std::logic_error("active_func is null");
+  static const std::shared_ptr<ir::Function> &get_func(const std::string &name);
 
-    return *active_func_;
-  }
+  static void delete_func(const std::string &name);
+
+  static bool cse_enabled() { return cse_enabled_; }
+
+  static inline void enable_cse() { cse_enabled_ = true; }
+
+  static inline void disable_cse() { cse_enabled_ = false; }
 
   // static inline void compile(
   //   const std::string &func_name, std::ostream &os, int trs_passes = 1, bool use_mod_switch = true,
@@ -84,10 +85,14 @@ public:
   // }
 
 private:
-  static void add_func(ir::Function func);
+  using FuncsTable = std::unordered_map<std::string, std::shared_ptr<ir::Function>>;
 
-  static ir::Function *active_func_;
+  static void add_func(std::shared_ptr<ir::Function> func);
 
-  static std::unordered_map<std::string, ir::Function> funcs_table_;
+  static FuncsTable funcs_table_;
+
+  static FuncsTable::const_iterator active_func_it_;
+
+  static bool cse_enabled_;
 };
 } // namespace fheco

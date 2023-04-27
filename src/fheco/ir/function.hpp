@@ -98,6 +98,8 @@ namespace ir
 
     inline const DAG &data_flow() const { return data_flow_; }
 
+    inline const DAG::TermPtrSet &output_terms() const { return data_flow_.output_terms(); }
+
     inline const IOTermsInfo &inputs_info() const { return inputs_info_; }
 
     inline const TermsValues &constants_values() const { return constants_values_; }

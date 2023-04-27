@@ -133,6 +133,7 @@ int main(int argc, char **argv)
   cout << "vector_size: " << vector_size << ", "
        << "trs_passes: " << trs_passes << '\n';
 
+  // cse
   string func_name = "cryptonets";
   Compiler::create_func(func_name, vector_size, 20, true);
 
@@ -140,18 +141,35 @@ int main(int argc, char **argv)
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
     vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
 
-  const auto &rand_inputs = Compiler::active_func().inputs_info();
-  auto outputs = util::evaluate_on_clear(Compiler::active_func(), rand_inputs);
-  if (outputs != Compiler::active_func().outputs_info())
+  const auto &rand_inputs = Compiler::active_func()->inputs_info();
+  auto outputs = util::evaluate_on_clear(*Compiler::active_func(), rand_inputs);
+  if (outputs != Compiler::active_func()->outputs_info())
     throw logic_error("compilation correctness-test failed");
 
   ofstream rand_example_os(func_name + "_rand_example.txt");
-  util::print_io_terms_values(Compiler::active_func(), rand_example_os);
+  util::print_io_terms_values(*Compiler::active_func(), rand_example_os);
 
-  auto op_types_count = util::count_op_types(Compiler::active_func());
-  cout << util::group_main_op_types_count(op_types_count);
+  util::Quantifier quantifier(Compiler::active_func());
+  quantifier.run_analysis();
 
   ofstream init_ir_os(func_name + "_init_ir.dot");
-  util::draw_ir(Compiler::active_func(), init_ir_os);
+  util::draw_ir(*Compiler::active_func(), init_ir_os);
+
+  // no cse
+  func_name = "cryptonets_no_cse";
+  Compiler::create_func(func_name, vector_size, 20, true);
+  Compiler::disable_cse();
+  cryptonets(
+    vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
+    vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
+
+  const auto &rand_inputs_no_cse = Compiler::active_func()->inputs_info();
+  outputs = util::evaluate_on_clear(*Compiler::active_func(), rand_inputs_no_cse);
+  if (outputs != Compiler::active_func()->outputs_info())
+    throw logic_error("compilation correctness-test failed");
+
+  util::Quantifier quantifier_no_cse(Compiler::active_func());
+  quantifier_no_cse.run_analysis();
+  (quantifier - quantifier_no_cse).print_info(cout);
   return 0;
 }

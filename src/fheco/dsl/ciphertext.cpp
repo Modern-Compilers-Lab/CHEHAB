@@ -11,17 +11,17 @@ namespace fheco
 {
 Ciphertext::Ciphertext(string label) : Ciphertext{}
 {
-  Compiler::active_func().init_input(*this, move(label));
+  Compiler::active_func()->init_input(*this, move(label));
 }
 
 Ciphertext::Ciphertext(string label, PackedVal example_val) : Ciphertext{}
 {
-  Compiler::active_func().init_input(*this, move(label), move(example_val));
+  Compiler::active_func()->init_input(*this, move(label), move(example_val));
 }
 
 Ciphertext::Ciphertext(string label, integer example_val_slot_min, integer example_val_slot_max) : Ciphertext{}
 {
-  Compiler::active_func().init_input(*this, move(label), example_val_slot_min, example_val_slot_max);
+  Compiler::active_func()->init_input(*this, move(label), example_val_slot_min, example_val_slot_max);
 }
 
 Ciphertext &Ciphertext::operator=(const Ciphertext &other)
@@ -56,7 +56,7 @@ const Ciphertext Ciphertext::operator[](size_t idx) const
   if (actual_dim < 1)
     throw invalid_argument("subscript on dimension 0");
 
-  const auto &shape = Compiler::active_func().shape();
+  const auto &shape = Compiler::active_func()->shape();
   if (idx < 0 || idx > shape[shape.size() - actual_dim] - 1)
     throw invalid_argument("invalid index");
 
@@ -68,15 +68,15 @@ const Ciphertext Ciphertext::operator[](size_t idx) const
 Ciphertext &Ciphertext::operator[](size_t idx)
 {
   size_t actual_dim = dim_ - idx_.size();
-  if (Compiler::active_func().is_valid_term_id(id_))
+  if (Compiler::active_func()->is_valid_term_id(id_))
   {
     if (actual_dim < 1)
       throw invalid_argument("subscript on dimension 0");
   }
   else
-    dim_ = Compiler::active_func().shape().size();
+    dim_ = Compiler::active_func()->shape().size();
 
-  const auto &shape = Compiler::active_func().shape();
+  const auto &shape = Compiler::active_func()->shape();
   if (idx < 0 || idx > shape[shape.size() - actual_dim] - 1)
     throw invalid_argument("invalid index");
 
@@ -87,9 +87,9 @@ Ciphertext &Ciphertext::operator[](size_t idx)
 const Ciphertext &Ciphertext::set_output(string label) const
 {
   if (example_val_)
-    Compiler::active_func().set_output(*this, move(label), *example_val_);
+    Compiler::active_func()->set_output(*this, move(label), *example_val_);
   else
-    Compiler::active_func().set_output(*this, move(label));
+    Compiler::active_func()->set_output(*this, move(label));
   return *this;
 }
 } // namespace fheco

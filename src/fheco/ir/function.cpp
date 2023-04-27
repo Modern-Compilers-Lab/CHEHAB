@@ -1,5 +1,6 @@
 #include "fheco/ir/function.hpp"
 #include "fheco/dsl/ciphertext.hpp"
+#include "fheco/dsl/compiler.hpp"
 #include "fheco/dsl/plaintext.hpp"
 #include "fheco/dsl/scalar.hpp"
 #include "fheco/util/common.hpp"
@@ -84,14 +85,18 @@ namespace ir
 
     constant.example_val_ = val;
     ConstVal const_var = move(val);
-    if (auto it = values_to_constants_.find(const_var); it != values_to_constants_.end())
-      constant.id_ = it->second;
-    else
+    if (Compiler::cse_enabled())
     {
-      constant.id_ = data_flow_.insert_leaf(constant.term_type())->id();
-      constants_values_.emplace(constant.id(), const_var);
-      values_to_constants_.emplace(move(const_var), constant.id());
+      auto it = values_to_constants_.find(const_var);
+      if (it != values_to_constants_.end())
+      {
+        constant.id_ = it->second;
+        return;
+      }
     }
+    constant.id_ = data_flow_.insert_leaf(constant.term_type())->id();
+    constants_values_.emplace(constant.id(), const_var);
+    values_to_constants_.emplace(move(const_var), constant.id());
   }
 
   template <typename TArg, typename TDest>
@@ -134,10 +139,17 @@ namespace ir
       static_assert(is_same<TDest, Scalar>::value, "invalid template instantiation");
 
     vector<Term *> operands{arg_term};
-    if (auto parent = data_flow_.find_term(op_code, operands); parent)
-      dest.id_ = parent->id();
-    else
-      dest.id_ = data_flow_.insert_operation_term(move(op_code), move(operands))->id();
+
+    if (Compiler::cse_enabled())
+    {
+      auto parent = data_flow_.find_term(op_code, operands);
+      if (parent)
+      {
+        dest.id_ = parent->id();
+        return;
+      }
+    }
+    dest.id_ = data_flow_.insert_operation_term(move(op_code), move(operands))->id();
   }
 
   template <typename TArg1, typename TArg2, typename TDest>
@@ -184,10 +196,16 @@ namespace ir
     if (op_code.commutativity())
       sort(operands.begin(), operands.end(), DAG::CompareTermPtr{});
 
-    if (auto parent = data_flow_.find_term(op_code, operands); parent)
-      dest.id_ = parent->id();
-    else
-      dest.id_ = data_flow_.insert_operation_term(move(op_code), move(operands))->id();
+    if (Compiler::cse_enabled())
+    {
+      auto parent = data_flow_.find_term(op_code, operands);
+      if (parent)
+      {
+        dest.id_ = parent->id();
+        return;
+      }
+    }
+    dest.id_ = data_flow_.insert_operation_term(move(op_code), move(operands))->id();
   }
 
   template <typename T>
