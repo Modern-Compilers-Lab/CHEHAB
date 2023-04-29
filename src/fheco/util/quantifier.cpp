@@ -16,7 +16,7 @@ void print_line_sep(ostream &os)
 
 namespace fheco::util
 {
-void Quantifier::update_analysis()
+void Quantifier::run_analysis()
 {
   compute_he_depth_info();
   count_terms_classes();
@@ -482,7 +482,7 @@ ostream &operator<<(ostream &os, const fheco::util::Quantifier::CAOpCount &ca_op
 ostream &operator<<(ostream &os, const fheco::util::Quantifier::TermDepthInfo &terms_depth_info)
 {
   for (const auto &e : terms_depth_info)
-    os << e.first << ": (" << e.second.xdepth_ << ", " << e.second.depth_ << ")\n";
+    os << '$' << e.first << ": (" << e.second.xdepth_ << ", " << e.second.depth_ << ")\n";
   return os;
 }
 } // namespace std

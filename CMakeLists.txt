@@ -4,6 +4,10 @@ project(FHECo VERSION 1.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    option(FHECO_DEBUG "FHECO_DEBUG" ON)
+endif()
+
 set(FHECO_INCLUDES_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR}/FHECO)
 set(FHECO_SOURCE_FILES "")
 add_subdirectory(src/fheco)

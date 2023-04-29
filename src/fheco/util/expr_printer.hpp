@@ -13,6 +13,7 @@ class ExprPrinter
 public:
   enum class Mode
   {
+    none,
     prefix,
     infix,
     infix_explicit_parenthesis,
@@ -21,12 +22,9 @@ public:
 
   using TermsStrExpr = std::unordered_map<std::size_t, std::string>;
 
-  ExprPrinter(std::shared_ptr<ir::Function> func, Mode mode = Mode::infix) : func_{move(func)}, mode_{mode}
-  {
-    update_terms_str_expr(mode);
-  }
+  ExprPrinter(std::shared_ptr<ir::Function> func) : func_{move(func)} {}
 
-  void update_terms_str_expr(Mode mode);
+  void compute_terms_str_expr(Mode mode);
 
   std::string expand_term(std::size_t id, Mode mode, int depth) const;
 
@@ -37,6 +35,8 @@ public:
   const std::shared_ptr<ir::Function> func() const { return func_; }
 
   const TermsStrExpr &terms_str_expr() const { return terms_str_expr_; }
+
+  Mode mode() const { return mode_; }
 
 private:
   // for infix representation to reduce unnecessary parenthesis
@@ -50,7 +50,7 @@ private:
 
   TermsStrExpr terms_str_expr_{};
 
-  Mode mode_;
+  Mode mode_ = Mode::none;
 };
 } // namespace fheco::util
 

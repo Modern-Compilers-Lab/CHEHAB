@@ -66,9 +66,9 @@ public:
 
   using TermDepthInfo = std::unordered_map<std::size_t, DepthInfo>;
 
-  Quantifier(std::shared_ptr<ir::Function> func) : func_{std::move(func)} { update_analysis(); }
+  Quantifier(std::shared_ptr<ir::Function> func) : func_{std::move(func)} {}
 
-  void update_analysis();
+  void run_analysis();
 
   void compute_he_depth_info();
 

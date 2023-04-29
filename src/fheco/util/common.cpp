@@ -88,7 +88,7 @@ void print_io_terms_values(const ir::IOTermsInfo &io_terms_values, size_t lead_t
 {
   for (const auto &term : io_terms_values)
   {
-    os << term.first << " " << term.second.label_;
+    os << '$' << term.first << " " << term.second.label_;
     if (term.second.example_val_)
     {
       os << " ";
@@ -102,7 +102,7 @@ void print_terms_values(const ir::TermsValues &terms_values, size_t lead_trail_s
 {
   for (const auto &term : terms_values)
   {
-    os << term.first << " ";
+    os << '$' << term.first << " ";
     visit(
       ir::overloaded{
         [lead_trail_size, &os](const PackedVal &val) { print_packed_val(val, lead_trail_size, os); },
@@ -139,7 +139,7 @@ ostream &operator<<(ostream &os, const fheco::ir::IOTermsInfo &io_terms_values)
 {
   for (const auto &term : io_terms_values)
   {
-    os << term.first << " " << term.second.label_;
+    os << '$' << term.first << " " << term.second.label_;
     if (term.second.example_val_)
       os << " " << *term.second.example_val_;
     os << '\n';
@@ -151,7 +151,7 @@ ostream &operator<<(ostream &os, const fheco::ir::TermsValues &terms_values)
 {
   for (const auto &term : terms_values)
   {
-    os << term.first << " ";
+    os << '$' << term.first << " ";
     visit(
       fheco::ir::overloaded{
         [&os](const fheco::PackedVal &val) { os << val; },

@@ -13,7 +13,7 @@ const unordered_map<ir::OpCode::Type, int> ExprPrinter::ops_precedence_ = {
   {ir::OpCode::Type::negate, 1},  {ir::OpCode::Type::mul, 2},        {ir::OpCode::Type::square, 2},
   {ir::OpCode::Type::add, 3},     {ir::OpCode::Type::sub, 3},        {ir::OpCode::Type::rotate, 4}};
 
-void ExprPrinter::update_terms_str_expr(Mode mode)
+void ExprPrinter::compute_terms_str_expr(Mode mode)
 {
   terms_str_expr_.clear();
   mode_ = mode;
@@ -227,7 +227,7 @@ namespace std
 ostream &operator<<(ostream &os, const fheco::util::ExprPrinter::TermsStrExpr &terms_str_expr)
 {
   for (const auto &e : terms_str_expr)
-    os << e.first << ": " << e.second << '\n';
+    os << '$' << e.first << ": " << e.second << '\n';
   return os;
 }
 } // namespace std
