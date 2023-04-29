@@ -29,10 +29,10 @@ void print_io_terms_values(const ir::Function &func, ostream &os)
       throw invalid_argument("no input with id was found");
 
     auto in_term = func.data_flow().find_term(in.first);
-    os << in.second.label << " " << (in_term->type() == ir::TermType::ciphertext) << " "
+    os << in.second.label_ << " " << (in_term->type() == ir::TermType::ciphertext) << " "
        << (func.clear_data_evaluator().signedness() || func.clear_data_evaluator().delayed_reduction());
-    if (in.second.example_val)
-      os << " " << *in.second.example_val;
+    if (in.second.example_val_)
+      os << " " << *in.second.example_val_;
     os << '\n';
   }
   for (const auto &out : func.outputs_info())
@@ -41,10 +41,10 @@ void print_io_terms_values(const ir::Function &func, ostream &os)
       throw invalid_argument("no output with id was found");
 
     auto out_term = func.data_flow().find_term(out.first);
-    os << out.second.label << " " << (out_term->type() == ir::TermType::ciphertext) << " "
+    os << out.second.label_ << " " << (out_term->type() == ir::TermType::ciphertext) << " "
        << (func.clear_data_evaluator().signedness() || func.clear_data_evaluator().delayed_reduction());
-    if (out.second.example_val)
-      os << " " << *out.second.example_val;
+    if (out.second.example_val_)
+      os << " " << *out.second.example_val_;
     os << '\n';
   }
   os.flags(f);
@@ -63,10 +63,10 @@ void print_io_terms_values(
     if (!in_term)
       throw invalid_argument("term with id not found");
 
-    os << in.second.label << " " << (in_term->type() == ir::TermType::ciphertext) << " "
+    os << in.second.label_ << " " << (in_term->type() == ir::TermType::ciphertext) << " "
        << (func.clear_data_evaluator().signedness() || func.clear_data_evaluator().delayed_reduction());
-    if (in.second.example_val)
-      os << " " << *in.second.example_val;
+    if (in.second.example_val_)
+      os << " " << *in.second.example_val_;
     os << '\n';
   }
   for (const auto &out : outputs)
@@ -75,10 +75,10 @@ void print_io_terms_values(
     if (!out_term)
       throw invalid_argument("term with id not found");
 
-    os << out.second.label << " " << (out_term->type() == ir::TermType::ciphertext) << " "
+    os << out.second.label_ << " " << (out_term->type() == ir::TermType::ciphertext) << " "
        << (func.clear_data_evaluator().signedness() || func.clear_data_evaluator().delayed_reduction());
-    if (out.second.example_val)
-      os << " " << *out.second.example_val;
+    if (out.second.example_val_)
+      os << " " << *out.second.example_val_;
     os << '\n';
   }
   os.flags(f);
@@ -88,11 +88,11 @@ void print_io_terms_values(const ir::IOTermsInfo &io_terms_values, size_t lead_t
 {
   for (const auto &term : io_terms_values)
   {
-    os << term.first << " " << term.second.label;
-    if (term.second.example_val)
+    os << term.first << " " << term.second.label_;
+    if (term.second.example_val_)
     {
       os << " ";
-      print_packed_val(*term.second.example_val, lead_trail_size, os);
+      print_packed_val(*term.second.example_val_, lead_trail_size, os);
     }
     os << '\n';
   }
@@ -139,9 +139,9 @@ ostream &operator<<(ostream &os, const fheco::ir::IOTermsInfo &io_terms_values)
 {
   for (const auto &term : io_terms_values)
   {
-    os << term.first << " " << term.second.label;
-    if (term.second.example_val)
-      os << " " << *term.second.example_val;
+    os << term.first << " " << term.second.label_;
+    if (term.second.example_val_)
+      os << " " << *term.second.example_val_;
     os << '\n';
   }
   return os;

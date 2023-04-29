@@ -17,7 +17,7 @@ void draw_ir(ir::Function &func, ostream &os)
     if (term->is_operation())
     {
       if (auto output_info = func.get_output_info(term->id()); output_info)
-        return term->op_code().str_repr() + " (" + output_info->label + ")";
+        return term->op_code().str_repr() + " (" + output_info->label_ + ")";
 
       return term->op_code().str_repr();
     }
@@ -25,12 +25,12 @@ void draw_ir(ir::Function &func, ostream &os)
     // leaf term
     if (auto input_info = func.get_input_info(term->id()); input_info)
     {
-      string label = input_info->label;
+      string label = input_info->label_;
       if (auto output_info = func.get_output_info(term->id()); output_info)
-        label += "/" + output_info->label;
+        label += "/" + output_info->label_;
       return label;
     }
-    else if (auto const_value = func.get_const_val(term->id()); const_value)
+    else if (auto const_val = func.get_const_val(term->id()); const_val)
     {
       if (term->type() == ir::TermType::scalar)
       {
@@ -40,9 +40,9 @@ void draw_ir(ir::Function &func, ostream &os)
             [](ScalarVal scalar_val) -> string {
               return to_string(scalar_val);
             }},
-          *const_value);
+          *const_val);
       }
-      return "const_ptxt_" + to_string(term->id());
+      return "const_" + to_string(term->id());
     }
     else
       throw logic_error("temp leaf term");

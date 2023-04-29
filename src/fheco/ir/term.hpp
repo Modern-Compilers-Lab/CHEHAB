@@ -50,7 +50,7 @@ private:
     bool operator()(const ParentKey &lhs, const ParentKey &rhs) const;
   };
 
-  // to construct temp object used as search keys for sets
+  // to construct temp object used as search keys
   Term(std::size_t id) : id_{id}, op_code_{OpCode::nop}, operands_{}, type_{TermType::ciphertext}, parents_{} {}
 
   static std::size_t count_;

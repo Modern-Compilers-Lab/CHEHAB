@@ -60,13 +60,13 @@ enum class TermQualif
 
 struct ParamTermInfo
 {
-  std::string label;
-  std::optional<PackedVal> example_val;
+  std::string label_;
+  std::optional<PackedVal> example_val_;
 };
 
 inline bool operator==(const ParamTermInfo &lhs, const ParamTermInfo &rhs)
 {
-  return lhs.label == rhs.label && lhs.example_val == rhs.example_val;
+  return lhs.label_ == rhs.label_ && lhs.example_val_ == rhs.example_val_;
 }
 
 inline bool operator!=(const ParamTermInfo &lhs, const ParamTermInfo &rhs)

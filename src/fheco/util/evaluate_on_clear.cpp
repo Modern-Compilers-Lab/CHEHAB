@@ -19,20 +19,20 @@ ir::IOTermsInfo evaluate_on_clear(ir::Function &func, const ir::IOTermsInfo &in_
     {
       if (auto input_info = func.get_input_info(term->id()); input_info)
       {
-        if (auto in_val_it = in_terms.find(term->id()); in_val_it != in_terms.end() && in_val_it->second.example_val)
+        if (auto in_val_it = in_terms.find(term->id()); in_val_it != in_terms.end() && in_val_it->second.example_val_)
         {
-          PackedVal in_val = *in_val_it->second.example_val;
+          PackedVal in_val = *in_val_it->second.example_val_;
           evaluator.adjust_packed_val(in_val);
           if (auto output_info = func.get_output_info(term->id()); output_info)
           {
             temps_values.emplace(term->id(), in_val);
-            outputs_values.emplace(term->id(), ir::ParamTermInfo{output_info->label, move(in_val)});
+            outputs_values.emplace(term->id(), ir::ParamTermInfo{output_info->label_, move(in_val)});
           }
           else
             temps_values.emplace(term->id(), move(in_val));
         }
         else
-          cerr << "value not provided for input (id=" << term->id() << ", label=" << input_info->label << ")\n";
+          cerr << "value not provided for input (id=" << term->id() << ", label=" << input_info->label_ << ")\n";
       }
       else if (auto const_value = func.get_const_val(term->id()); const_value)
         temps_values.emplace(term->id(), *const_value);
@@ -135,7 +135,7 @@ ir::IOTermsInfo evaluate_on_clear(ir::Function &func, const ir::IOTermsInfo &in_
                 return packed_val;
               }},
             term_val_it->second);
-          outputs_values.emplace(term->id(), ir::ParamTermInfo{output_info->label, move(out_val)});
+          outputs_values.emplace(term->id(), ir::ParamTermInfo{output_info->label_, move(out_val)});
         }
         else
           cerr << "could not compute output term (output id=" << term->id() << ")\n";

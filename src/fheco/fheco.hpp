@@ -9,4 +9,5 @@
 #include "fheco/util/common.hpp"
 #include "fheco/util/draw_ir.hpp"
 #include "fheco/util/evaluate_on_clear.hpp"
+#include "fheco/util/expr_printer.hpp"
 #include "fheco/util/quantifier.hpp"

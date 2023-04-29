@@ -49,6 +49,8 @@ public:
 
   inline bool is_valid_term_id(std::size_t id) const { return data_flow_.find_term(id); }
 
+  const Term *find_term(std::size_t id) const;
+
   template <typename T>
   void set_output(const T &out, std::string label);
 

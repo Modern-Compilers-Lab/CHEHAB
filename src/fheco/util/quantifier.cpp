@@ -1,5 +1,6 @@
 #include "fheco/util/quantifier.hpp"
 #include "fheco/ir/common.hpp"
+#include "fheco/ir/term.hpp"
 #include <stack>
 #include <stdexcept>
 #include <string>
@@ -15,7 +16,7 @@ void print_line_sep(ostream &os)
 
 namespace fheco::util
 {
-void Quantifier::run_analysis()
+void Quantifier::update_analysis()
 {
   compute_he_depth_info();
   count_terms_classes();
@@ -35,11 +36,11 @@ void Quantifier::compute_he_depth_info()
     {
       auto [top_term, top_ctxt_info] = dfs.top();
       dfs.pop();
-      if (top_term->is_leaf())
+      if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
       {
-        int new_xdepth = max(ctxt_leaves_depth_info_[top_term].xdepth_, top_ctxt_info.xdepth_);
-        int new_depth = max(ctxt_leaves_depth_info_[top_term].depth_, top_ctxt_info.depth_);
-        ctxt_leaves_depth_info_[top_term] = DepthInfo{new_xdepth, new_depth};
+        int new_xdepth = max(ctxt_leaves_depth_info_[top_term->id()].xdepth_, top_ctxt_info.xdepth_);
+        int new_depth = max(ctxt_leaves_depth_info_[top_term->id()].depth_, top_ctxt_info.depth_);
+        ctxt_leaves_depth_info_[top_term->id()] = DepthInfo{new_xdepth, new_depth};
         continue;
       }
       int operands_xdepth = top_ctxt_info.xdepth_;
@@ -52,30 +53,32 @@ void Quantifier::compute_he_depth_info()
           dfs.push({operand, DepthInfo{operands_xdepth, operands_depth}});
       }
     }
-    int first_leaf_xdepth = ctxt_leaves_depth_info_.begin()->second.xdepth_;
-    int first_leaf_depth = ctxt_leaves_depth_info_.begin()->second.depth_;
-    he_depth_summary_.min_xdepth_ = first_leaf_xdepth;
-    he_depth_summary_.min_depth_ = first_leaf_depth;
-    he_depth_summary_.avg_xdepth_ = 0;
-    he_depth_summary_.avg_xdepth_ = 0;
-    he_depth_summary_.max_xdepth_ = first_leaf_xdepth;
-    he_depth_summary_.max_depth_ = first_leaf_xdepth;
-    for (const auto &e : ctxt_leaves_depth_info_)
-    {
-      if (e.second.xdepth_ < he_depth_summary_.min_xdepth_)
-        he_depth_summary_.min_xdepth_ = e.second.xdepth_;
-      if (e.second.depth_ < he_depth_summary_.min_depth_)
-        he_depth_summary_.min_depth_ = e.second.depth_;
-
-      he_depth_summary_.avg_xdepth_ += e.second.xdepth_;
-      he_depth_summary_.avg_depth_ += e.second.depth_;
-
-      if (e.second.xdepth_ > he_depth_summary_.max_xdepth_)
-        he_depth_summary_.max_xdepth_ = e.second.xdepth_;
-      if (e.second.depth_ > he_depth_summary_.max_depth_)
-        he_depth_summary_.max_depth_ = e.second.depth_;
-    }
   }
+  int first_leaf_xdepth = ctxt_leaves_depth_info_.begin()->second.xdepth_;
+  int first_leaf_depth = ctxt_leaves_depth_info_.begin()->second.depth_;
+  he_depth_summary_.min_xdepth_ = first_leaf_xdepth;
+  he_depth_summary_.min_depth_ = first_leaf_depth;
+  he_depth_summary_.avg_xdepth_ = 0;
+  he_depth_summary_.avg_depth_ = 0;
+  he_depth_summary_.max_xdepth_ = first_leaf_xdepth;
+  he_depth_summary_.max_depth_ = first_leaf_xdepth;
+  for (const auto &e : ctxt_leaves_depth_info_)
+  {
+    if (e.second.xdepth_ < he_depth_summary_.min_xdepth_)
+      he_depth_summary_.min_xdepth_ = e.second.xdepth_;
+    if (e.second.depth_ < he_depth_summary_.min_depth_)
+      he_depth_summary_.min_depth_ = e.second.depth_;
+
+    he_depth_summary_.avg_xdepth_ += e.second.xdepth_;
+    he_depth_summary_.avg_depth_ += e.second.depth_;
+
+    if (e.second.xdepth_ > he_depth_summary_.max_xdepth_)
+      he_depth_summary_.max_xdepth_ = e.second.xdepth_;
+    if (e.second.depth_ > he_depth_summary_.max_depth_)
+      he_depth_summary_.max_depth_ = e.second.depth_;
+  }
+  he_depth_summary_.avg_xdepth_ /= ctxt_leaves_depth_info_.size();
+  he_depth_summary_.avg_depth_ /= ctxt_leaves_depth_info_.size();
 }
 
 void Quantifier::count_terms_classes()
@@ -479,7 +482,7 @@ ostream &operator<<(ostream &os, const fheco::util::Quantifier::CAOpCount &ca_op
 ostream &operator<<(ostream &os, const fheco::util::Quantifier::TermDepthInfo &terms_depth_info)
 {
   for (const auto &e : terms_depth_info)
-    os << e.first->id() << ": (" << e.second.xdepth_ << ", " << e.second.depth_ << ")\n";
+    os << e.first << ": (" << e.second.xdepth_ << ", " << e.second.depth_ << ")\n";
   return os;
 }
 } // namespace std

@@ -192,11 +192,11 @@ void Function::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &ar
     static_assert(is_same<TDest, Scalar>::value, "invalid template instantiation");
 
   vector<Term *> operands{arg1_term, arg2_term};
-  if (op_code.commutativity())
-    sort(operands.begin(), operands.end(), DAG::CompareTermPtr{});
 
   if (Compiler::cse_enabled())
   {
+    if (op_code.commutativity())
+      sort(operands.begin(), operands.end(), DAG::CompareTermPtr{});
     auto parent = data_flow_.find_term(op_code, operands);
     if (parent)
     {
@@ -205,6 +205,14 @@ void Function::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &ar
     }
   }
   dest.id_ = data_flow_.insert_operation_term(move(op_code), move(operands))->id();
+}
+
+const Term *Function::find_term(size_t id) const
+{
+  if (auto term = data_flow_.find_term(id); term)
+    return term;
+
+  throw invalid_argument("term with id not found");
 }
 
 template <typename T>
