@@ -7,18 +7,18 @@
 using namespace std;
 
 namespace fheco::ir
-
 {
 DAG::~DAG()
 {
-  for (auto it = terms_.cbegin(); it != terms_.cend(); ++it)
-    delete *it;
+  for (auto term : terms_)
+    delete term;
 }
 
 DAG::DAG(DAG &&other)
-  : outputs_{move(other.outputs_)}, sorted_terms_{move(other.sorted_terms_)},
-    valid_top_sort_{move(other.valid_top_sort_)}, terms_{move(other.terms_)}
+  : op_terms_{move(other.op_terms_)}, outputs_{move(other.outputs_)}, sorted_terms_{move(other.sorted_terms_)},
+    valid_top_sort_{other.valid_top_sort_}, terms_{other.terms_}
 {
+  other.op_terms_.clear();
   other.outputs_.clear();
   other.sorted_terms_.clear();
   other.terms_.clear();
@@ -26,11 +26,13 @@ DAG::DAG(DAG &&other)
 
 DAG &DAG::operator=(DAG &&other)
 {
+  op_terms_ = move(other.op_terms_);
   outputs_ = move(other.outputs_);
   sorted_terms_ = move(other.sorted_terms_);
-  valid_top_sort_ = move(other.valid_top_sort_);
+  valid_top_sort_ = other.valid_top_sort_;
   terms_ = move(other.terms_);
 
+  other.op_terms_.clear();
   other.outputs_.clear();
   other.sorted_terms_.clear();
   other.terms_.clear();
@@ -38,11 +40,40 @@ DAG &DAG::operator=(DAG &&other)
   return *this;
 }
 
-Term *DAG::insert_operation_term(OpCode op_code, vector<Term *> operands)
+size_t DAG::HashOpTermKey::operator()(const OpTermKey &k) const
+{
+  size_t h = hash<OpCode>()(*k.op_code_);
+  const auto &operands = *k.operands_;
+  for (auto operand : operands)
+    hash_combine(h, operand);
+  return h;
+}
+
+bool DAG::EqualOpTermKey::operator()(const OpTermKey &lhs, const OpTermKey &rhs) const
+{
+  if (*lhs.op_code_ != *rhs.op_code_)
+    return false;
+
+  const auto &lhs_operands = *lhs.operands_;
+  const auto &rhs_operands = *rhs.operands_;
+  if (lhs_operands.size() != rhs_operands.size())
+    return false;
+
+  for (size_t i = 0; i < lhs_operands.size(); ++i)
+  {
+    if (*lhs_operands[i] != *rhs_operands[i])
+      return false;
+  }
+
+  return true;
+}
+
+Term *DAG::insert_op_term(OpCode op_code, vector<Term *> operands)
 {
   Term *term = new Term(move(op_code), move(operands));
   for (auto operand : term->operands_)
-    operand->parents_.emplace(Term::ParentKey{&term->op_code_, &term->operands_}, term);
+    operand->parents_.insert(term);
+  op_terms_.emplace(OpTermKey{&term->op_code(), &term->operands()}, term);
   terms_.insert(term);
   return term;
 }
@@ -63,30 +94,56 @@ Term *DAG::find_term(size_t id) const
   return nullptr;
 }
 
-Term *DAG::find_term(const OpCode &op_code, const std::vector<Term *> &operands) const
+Term *DAG::find_op_term(const OpCode &op_code, const vector<Term *> &operands) const
 {
-  if (auto it = operands[0]->parents_.find({&op_code, &operands}); it != operands[0]->parents_.end())
+  if (auto it = op_terms_.find({&op_code, &operands}); it != op_terms_.end())
     return it->second;
 
   return nullptr;
 }
 
-void DAG::prune_unreachable_terms()
+void DAG::prune_unreachabe_terms()
 {
-  for (auto it = terms_.cbegin(); it != terms_.cend(); ++it)
+  for (auto term : terms_)
   {
-    auto term = *it;
-    if (term->parents_.empty() && !is_output(term))
+    if (term->is_source() && !is_output(term))
       delete_non_output_source_cascade(term);
   }
 }
 
+void DAG::delete_non_output_source_cascade(Term *term)
+{
+  for (auto operand : term->operands())
+  {
+    operand->parents_.erase(term);
+    if (operand->is_source() && !is_output(operand))
+      delete_non_output_source_cascade(operand);
+  }
+  if (term->is_operation())
+    op_terms_.erase(OpTermKey{&term->op_code(), &term->operands()});
+  terms_.erase(term);
+  delete term;
+}
+
 void DAG::replace_term_with(Term *term1, Term *term2)
 {
-  if (term1->parents_.empty() || *term1 == *term2)
+  if (term1->is_source() || *term1 == *term2)
     return;
 
-  term1->replace_in_parents_with(term2);
+  for (auto parent_it = term1->parents_.cbegin(); parent_it != term1->parents_.cend();)
+  {
+    auto parent = *parent_it;
+    for (auto operand_it = parent->operands_.begin(); operand_it != parent->operands_.end(); ++operand_it)
+    {
+      // parent multiplicity can be used to stop once replacement is done, not to traverse the whole operands
+      // vector
+      auto operand = *operand_it;
+      if (*operand == *term1)
+        *operand_it = term2;
+    }
+    term2->parents_.insert(parent);
+    parent_it = term1->parents_.erase(parent_it);
+  }
   valid_top_sort_ = false;
 }
 
@@ -129,18 +186,6 @@ void DAG::unset_output(Term *term)
     else
       valid_top_sort_ = false;
   }
-}
-
-void DAG::delete_non_output_source_cascade(Term *term)
-{
-  for (auto operand : term->operands_)
-  {
-    operand->parents_.erase(Term::ParentKey{&term->op_code_, &term->operands_});
-    if (operand->parents_.empty() && !is_output(operand))
-      delete_non_output_source_cascade(operand);
-  }
-  terms_.erase(term);
-  delete term;
 }
 
 // iterative version of https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search

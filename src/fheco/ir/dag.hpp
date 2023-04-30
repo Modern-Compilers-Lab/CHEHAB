@@ -4,7 +4,7 @@
 #include "fheco/ir/op_code.hpp"
 #include "fheco/ir/term.hpp"
 #include <cstddef>
-#include <unordered_set>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -14,24 +14,7 @@ namespace fheco::ir
 class DAG
 {
 public:
-  struct HashTermPtr
-  {
-    inline std::size_t operator()(const Term *p) const { return std::hash<Term>()(*p); }
-  };
-
-  struct EqualTermPtr
-  {
-    inline bool operator()(const Term *lhs, const Term *rhs) const { return *lhs == *rhs; }
-  };
-
-  struct CompareTermPtr
-  {
-    inline bool operator()(const Term *lhs, const Term *rhs) const { return *lhs < *rhs; }
-  };
-
-  using TermPtrSet = std::unordered_set<Term *, HashTermPtr, EqualTermPtr>;
-
-  DAG() : outputs_{}, sorted_terms_{}, valid_top_sort_{true}, terms_{} {}
+  DAG() {}
 
   ~DAG();
 
@@ -43,15 +26,15 @@ public:
 
   DAG &operator=(DAG &&other);
 
-  Term *insert_operation_term(OpCode op_code, std::vector<Term *> operands);
+  Term *insert_op_term(OpCode op_code, std::vector<Term *> operands);
 
   Term *insert_leaf(TermType type);
 
   Term *find_term(std::size_t id) const;
 
-  Term *find_term(const OpCode &op_code, const std::vector<Term *> &operands) const;
+  Term *find_op_term(const OpCode &op_code, const std::vector<Term *> &operands) const;
 
-  void prune_unreachable_terms();
+  void prune_unreachabe_terms();
 
   void replace_term_with(Term *term1, Term *term2);
 
@@ -68,21 +51,39 @@ public:
     return sorted_terms_;
   }
 
-  const TermPtrSet &output_terms() const { return outputs_; }
+  const Term::PtrSet &output_terms() const { return outputs_; }
 
 private:
+  struct OpTermKey
+  {
+    const OpCode *op_code_;
+    const std::vector<Term *> *operands_;
+  };
+
+  struct HashOpTermKey
+  {
+    std::size_t operator()(const OpTermKey &k) const;
+  };
+
+  struct EqualOpTermKey
+  {
+    bool operator()(const OpTermKey &lhs, const OpTermKey &rhs) const;
+  };
+
   inline bool is_output(Term *term) const { return outputs_.find(term) != outputs_.end(); }
 
   void delete_non_output_source_cascade(Term *term);
 
   void topological_sort();
 
-  TermPtrSet outputs_;
+  std::unordered_map<OpTermKey, Term *, HashOpTermKey, EqualOpTermKey> op_terms_{};
 
-  std::vector<const Term *> sorted_terms_;
+  Term::PtrSet outputs_{};
 
-  bool valid_top_sort_;
+  std::vector<const Term *> sorted_terms_{};
 
-  TermPtrSet terms_;
+  bool valid_top_sort_ = true;
+
+  Term::PtrSet terms_{};
 };
 } // namespace fheco::ir

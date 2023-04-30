@@ -67,29 +67,11 @@ public:
 
   inline bool is_output_term(std::size_t id) const { return outputs_info_.find(id) != outputs_info_.end(); }
 
-  inline const ParamTermInfo *get_input_info(std::size_t id) const
-  {
-    if (auto it = inputs_info_.find(id); it != inputs_info_.end())
-      return &it->second;
+  const ParamTermInfo *get_input_info(std::size_t id) const;
 
-    return nullptr;
-  }
+  const ConstVal *get_const_val(std::size_t id) const;
 
-  inline const ConstVal *get_const_val(std::size_t id) const
-  {
-    if (auto it = constants_values_.find(id); it != constants_values_.end())
-      return &it->second;
-
-    return nullptr;
-  }
-
-  inline const ParamTermInfo *get_output_info(std::size_t id) const
-  {
-    if (auto it = outputs_info_.find(id); it != outputs_info_.end())
-      return &it->second;
-
-    return nullptr;
-  }
+  const ParamTermInfo *get_output_info(std::size_t id) const;
 
   inline const std::string &name() const { return name_; }
 
@@ -97,7 +79,7 @@ public:
 
   inline const DAG &data_flow() const { return data_flow_; }
 
-  inline const DAG::TermPtrSet &output_terms() const { return data_flow_.output_terms(); }
+  inline const Term::PtrSet &output_terms() const { return data_flow_.output_terms(); }
 
   inline const IOTermsInfo &inputs_info() const { return inputs_info_; }
 

@@ -141,14 +141,13 @@ void Function::operate_unary(OpCode op_code, const TArg &arg, TDest &dest)
 
   if (Compiler::cse_enabled())
   {
-    auto parent = data_flow_.find_term(op_code, operands);
-    if (parent)
+    if (auto parent = data_flow_.find_op_term(op_code, operands); parent)
     {
       dest.id_ = parent->id();
       return;
     }
   }
-  dest.id_ = data_flow_.insert_operation_term(move(op_code), move(operands))->id();
+  dest.id_ = data_flow_.insert_op_term(move(op_code), move(operands))->id();
 }
 
 template <typename TArg1, typename TArg2, typename TDest>
@@ -196,15 +195,15 @@ void Function::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &ar
   if (Compiler::cse_enabled())
   {
     if (op_code.commutativity())
-      sort(operands.begin(), operands.end(), DAG::CompareTermPtr{});
-    auto parent = data_flow_.find_term(op_code, operands);
-    if (parent)
+      sort(operands.begin(), operands.end(), Term::ComparePtr{});
+
+    if (auto parent = data_flow_.find_op_term(op_code, operands); parent)
     {
       dest.id_ = parent->id();
       return;
     }
   }
-  dest.id_ = data_flow_.insert_operation_term(move(op_code), move(operands))->id();
+  dest.id_ = data_flow_.insert_op_term(move(op_code), move(operands))->id();
 }
 
 const Term *Function::find_term(size_t id) const
@@ -237,6 +236,30 @@ void Function::set_output(const T &output, string label, PackedVal example_val)
   }
   else
     throw invalid_argument("output not defined");
+}
+
+const ParamTermInfo *Function::get_input_info(std::size_t id) const
+{
+  if (auto it = inputs_info_.find(id); it != inputs_info_.end())
+    return &it->second;
+
+  return nullptr;
+}
+
+const ConstVal *Function::get_const_val(std::size_t id) const
+{
+  if (auto it = constants_values_.find(id); it != constants_values_.end())
+    return &it->second;
+
+  return nullptr;
+}
+
+const ParamTermInfo *Function::get_output_info(std::size_t id) const
+{
+  if (auto it = outputs_info_.find(id); it != outputs_info_.end())
+    return &it->second;
+
+  return nullptr;
 }
 
 TermQualif Function::get_term_qualif(size_t id) const

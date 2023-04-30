@@ -3,7 +3,7 @@
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/op_code.hpp"
 #include <cstddef>
-#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -12,12 +12,29 @@ namespace fheco::ir
 class Term
 {
 public:
+  struct HashPtr
+  {
+    std::size_t operator()(const Term *p) const;
+  };
+
+  struct EqualPtr
+  {
+    bool operator()(const Term *lhs, const Term *rhs) const;
+  };
+
+  struct ComparePtr
+  {
+    bool operator()(const Term *lhs, const Term *rhs) const;
+  };
+
+  using PtrSet = std::unordered_set<Term *, HashPtr, EqualPtr>;
+
   Term(OpCode op_code, std::vector<Term *> operands)
-    : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)},
-      type_{OpCode::deduce_result_type(op_code_, operands_)}, parents_{}
+    : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)}, type_{OpCode::deduce_result_type(
+                                                                                     op_code_, operands_)}
   {}
 
-  Term(TermType type) : id_{++count_}, op_code_{OpCode::nop}, operands_{}, type_{type}, parents_{} {}
+  Term(TermType type) : id_{++count_}, op_code_{OpCode::nop}, operands_{}, type_{type} {}
 
   inline std::size_t id() const { return id_; }
 
@@ -27,35 +44,19 @@ public:
 
   inline TermType type() const { return type_; }
 
+  inline const PtrSet &parents() const { return parents_; }
+
   inline bool is_operation() const { return op_code_ != OpCode::nop; }
 
-  inline bool is_leaf() const { return operands_.size() == 0; }
+  inline bool is_leaf() const { return operands_.empty(); }
 
-  inline bool is_source() const { return parents_.size() == 0; }
+  inline bool is_source() const { return parents_.empty(); }
 
 private:
-  struct ParentKey
-  {
-    const OpCode *op_code;
-    const std::vector<Term *> *operands;
-  };
-
-  struct HashParentKey
-  {
-    std::size_t operator()(const ParentKey &k) const;
-  };
-
-  struct EqualParentKey
-  {
-    bool operator()(const ParentKey &lhs, const ParentKey &rhs) const;
-  };
-
   // to construct temp object used as search keys
-  Term(std::size_t id) : id_{id}, op_code_{OpCode::nop}, operands_{}, type_{TermType::ciphertext}, parents_{} {}
+  Term(std::size_t id) : id_{id}, op_code_{OpCode::nop}, operands_{}, type_{TermType::ciphertext} {}
 
   static std::size_t count_;
-
-  void replace_in_parents_with(Term *term);
 
   std::size_t id_;
 
@@ -65,8 +66,8 @@ private:
 
   TermType type_;
 
-  // it seems we don't need explicit parent multiplicity per entry value
-  std::unordered_map<ParentKey, Term *, HashParentKey, EqualParentKey> parents_;
+  // it seems we don't need parent multiplicity
+  PtrSet parents_{};
 
   friend class DAG;
 };
