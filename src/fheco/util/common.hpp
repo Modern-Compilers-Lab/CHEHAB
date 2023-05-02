@@ -3,6 +3,7 @@
 #include "fheco/dsl/common.hpp"
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/function.hpp"
+#include <bitset>
 #include <cstddef>
 #include <limits>
 #include <ostream>
@@ -99,6 +100,16 @@ inline constexpr T mul_safe(T arg1, T arg2)
       throw std::logic_error("signed underflow");
   }
   return static_cast<T>(arg1 * arg2);
+}
+
+template <typename T, typename = std::enable_if_t<std::is_unsigned<T>::value>>
+inline std::size_t popcount(T x)
+{
+  static_assert(std::numeric_limits<T>::radix == 2, "non-binary type");
+
+  constexpr int bitwidth = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
+  std::bitset<bitwidth> bs(x);
+  return bs.count();
 }
 } // namespace fheco::util
 

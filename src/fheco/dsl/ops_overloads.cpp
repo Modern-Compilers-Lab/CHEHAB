@@ -504,40 +504,38 @@ Ciphertext encrypt(const Scalar &arg)
 pair<int, int> compute_subscripted_range(const Ciphertext &arg)
 {
   if (arg.idx().empty())
-    throw invalid_argument("subscripted with empty index");
+    throw invalid_argument("subscripted has an empty index");
 
-  int dim = arg.dim();
-  const auto &shape = Compiler::active_func()->shape();
+  int dim = arg.shape().size();
   size_t start = 0;
   for (auto axis_idx : arg.idx())
   {
     size_t lower_dims_slot_count = 1;
-    for (size_t i = shape.size() - dim + 1; i < shape.size(); ++i)
-      lower_dims_slot_count *= shape[i];
+    for (size_t i = arg.shape().size() - dim + 1; i < arg.shape().size(); ++i)
+      lower_dims_slot_count *= arg.shape()[i];
     start += axis_idx * lower_dims_slot_count;
     --dim;
   }
-  size_t end = start + ((dim > 0) ? shape[shape.size() - dim] : 1);
+  size_t end = start + ((dim > 0) ? arg.shape()[arg.shape().size() - dim] : 1);
   return {start, end};
 }
 
 pair<int, int> compute_subscripted_range(const Plaintext &arg)
 {
   if (arg.idx().empty())
-    throw invalid_argument("subscripted with empty index");
+    throw invalid_argument("subscripted has an empty index");
 
-  int dim = arg.dim();
-  const auto &shape = Compiler::active_func()->shape();
+  int dim = arg.shape().size();
   size_t start = 0;
   for (auto axis_idx : arg.idx())
   {
     size_t lower_dims_slot_count = 1;
-    for (size_t i = shape.size() - dim + 1; i < shape.size(); ++i)
-      lower_dims_slot_count *= shape[i];
+    for (size_t i = arg.shape().size() - dim + 1; i < arg.shape().size(); ++i)
+      lower_dims_slot_count *= arg.shape()[i];
     start += axis_idx * lower_dims_slot_count;
     --dim;
   }
-  size_t end = start + ((dim > 0) ? shape[shape.size() - dim] : 1);
+  size_t end = start + ((dim > 0) ? arg.shape()[arg.shape().size() - dim] : 1);
   return {start, end};
 }
 
@@ -552,9 +550,9 @@ Ciphertext emulate_subscripted_read(const Ciphertext &arg)
   Ciphertext resolved = arg;
   resolved.idx_.clear();
   Plaintext plain_mask(mask);
-  plain_mask.dim_ = arg.dim();
+  plain_mask.shape_ = arg.shape();
   Ciphertext result = (resolved * plain_mask) << start;
-  result.dim_ -= arg.idx_.size();
+  result.shape_.erase(result.shape_.begin(), result.shape_.begin() + arg.idx_.size());
   return result;
 }
 
@@ -562,14 +560,15 @@ Plaintext emulate_subscripted_read(const Plaintext &arg)
 {
   auto [start, end] = compute_subscripted_range(arg);
   PackedVal mask(Compiler::active_func()->clear_data_evaluator().slot_count(), 0);
+
   for (size_t i = start; i < end; ++i)
     mask[i] = 1;
   Plaintext resolved = arg;
   resolved.idx_.clear();
   Plaintext plain_mask(mask);
-  plain_mask.dim_ = arg.dim();
+  plain_mask.shape_ = arg.shape();
   Plaintext result = (resolved * plain_mask) << start;
-  result.dim_ -= arg.idx_.size();
+  result.shape_.erase(result.shape_.begin(), result.shape_.begin() + arg.idx_.size());
   return result;
 }
 
@@ -579,8 +578,8 @@ void emulate_subscripted_write(Ciphertext &lhs, const Ciphertext &rhs)
     throw invalid_argument("subscript read must be performed on const variables");
 
   auto [start, end] = compute_subscripted_range(lhs);
-  size_t actual_dim = lhs.dim_;
-  lhs.dim_ -= lhs.idx_.size();
+  vector<size_t> actual_shape = lhs.shape();
+  lhs.shape_.erase(lhs.shape_.begin(), lhs.shape_.begin() + lhs.idx_.size());
   lhs.idx_.clear();
   if (Compiler::active_func()->is_valid_term_id(lhs.id()))
   {
@@ -588,14 +587,14 @@ void emulate_subscripted_write(Ciphertext &lhs, const Ciphertext &rhs)
     for (size_t i = start; i < end; ++i)
       mask[i] = 0;
     Plaintext plain_mask(mask);
-    plain_mask.dim_ = lhs.dim();
+    plain_mask.shape_ = lhs.shape();
     lhs = lhs * plain_mask + (rhs >> start);
-    lhs.dim_ = actual_dim;
+    lhs.shape_ = actual_shape;
   }
   else
   {
     lhs = rhs >> start;
-    lhs.dim_ = actual_dim;
+    lhs.shape_ = actual_shape;
   }
 }
 
@@ -605,8 +604,8 @@ void emulate_subscripted_write(Plaintext &lhs, const Plaintext &rhs)
     throw invalid_argument("subscript read must be performed on const variables");
 
   auto [start, end] = compute_subscripted_range(lhs);
-  size_t actual_dim = lhs.dim_;
-  lhs.dim_ -= lhs.idx_.size();
+  vector<size_t> actual_shape = lhs.shape();
+  lhs.shape_.erase(lhs.shape_.begin(), lhs.shape_.begin() + lhs.idx_.size());
   lhs.idx_.clear();
   if (Compiler::active_func()->is_valid_term_id(lhs.id()))
   {
@@ -614,14 +613,14 @@ void emulate_subscripted_write(Plaintext &lhs, const Plaintext &rhs)
     for (size_t i = start; i < end; ++i)
       mask[i] = 0;
     Plaintext plain_mask(mask);
-    plain_mask.dim_ = lhs.dim();
+    plain_mask.shape_ = lhs.shape();
     lhs = lhs * plain_mask + (rhs >> start);
-    lhs.dim_ = actual_dim;
+    lhs.shape_ = actual_shape;
   }
   else
   {
     lhs = rhs >> start;
-    lhs.dim_ = actual_dim;
+    lhs.shape_ = actual_shape;
   }
 }
 

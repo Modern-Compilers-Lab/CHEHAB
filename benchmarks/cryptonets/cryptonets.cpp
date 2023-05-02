@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 {
   size_t vector_size = 4;
   if (argc > 1)
-    vector_size = stoll(argv[1]);
+    vector_size = stoul(argv[1]);
 
   int trs_passes = 1;
   if (argc > 2)

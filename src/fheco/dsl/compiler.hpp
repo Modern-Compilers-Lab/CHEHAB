@@ -24,17 +24,6 @@ public:
     add_func(std::make_shared<ir::Function>(std::move(name), slot_count, bit_width, signedness));
   }
 
-  static inline void create_func(
-    std::string name, std::vector<std::size_t> shape, integer modulus, bool signedness, bool delayed_reduction = false)
-  {
-    add_func(std::make_shared<ir::Function>(std::move(name), std::move(shape), modulus, signedness, delayed_reduction));
-  }
-
-  static inline void create_func(std::string name, std::vector<std::size_t> shape, int bit_width, bool signedness)
-  {
-    add_func(std::make_shared<ir::Function>(std::move(name), std::move(shape), bit_width, signedness));
-  }
-
   static inline const std::shared_ptr<ir::Function> &active_func()
   {
     if (active_func_it_ == funcs_table_.cend())

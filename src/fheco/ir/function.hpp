@@ -18,16 +18,9 @@ class Function
 public:
   Function(std::string name, std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction = false);
 
-  Function(std::string name, std::size_t slot_count, int bit_width, bool signedness)
-    : Function(std::move(name), slot_count, (2 << (bit_width - 1)) - 1, signedness, true)
-  {}
+  Function(std::string name, std::size_t slot_count, int bit_width, bool signedness);
 
-  Function(
-    std::string name, std::vector<std::size_t> shape, integer modulus, bool signedness, bool delayed_reduction = false);
-
-  Function(std::string name, std::vector<std::size_t> shape, int bit_width, bool signedness)
-    : Function(std::move(name), std::move(shape), (2 << (bit_width - 1)) - 1, signedness, true)
-  {}
+  static bool is_valid_slot_count(std::size_t slot_count);
 
   template <typename T>
   void init_input(T &input, std::string label);
@@ -75,7 +68,7 @@ public:
 
   inline const std::string &name() const { return name_; }
 
-  inline const std::vector<std::size_t> &shape() const { return shape_; }
+  inline const std::size_t &slot_count() const { return slot_count_; }
 
   inline const DAG &data_flow() const { return data_flow_; }
 
@@ -90,11 +83,9 @@ public:
   inline const util::ClearDataEvaluator &clear_data_evaluator() const { return clear_data_evaluator_; }
 
 private:
-  static std::size_t compute_slot_count(const std::vector<std::size_t> &shape);
-
   std::string name_;
 
-  std::vector<std::size_t> shape_;
+  std::size_t slot_count_;
 
   bool need_cyclic_rotations_;
 

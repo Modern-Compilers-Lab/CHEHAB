@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -30,4 +31,6 @@ enum class SecurityLevel
   tc192,
   tc256
 };
+
+void validate_shape(const std::vector<std::size_t> &shape);
 } // namespace fheco

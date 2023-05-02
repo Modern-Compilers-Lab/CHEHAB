@@ -15,8 +15,7 @@ namespace ir
 class Scalar
 {
 public:
-  // terms ids start from 1
-  Scalar() : id_{0}, example_val_{} {}
+  Scalar() {}
 
   Scalar(integer value);
 
@@ -27,9 +26,10 @@ public:
   inline const std::optional<ScalarVal> &example_val() const { return example_val_; }
 
 private:
-  std::size_t id_;
+  // terms ids start from 1
+  std::size_t id_ = 0;
 
-  std::optional<ScalarVal> example_val_;
+  std::optional<ScalarVal> example_val_{};
 
   friend class ir::Function;
 };

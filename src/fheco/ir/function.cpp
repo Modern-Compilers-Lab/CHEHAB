@@ -16,39 +16,28 @@ using namespace std;
 namespace fheco::ir
 
 {
-size_t Function::compute_slot_count(const vector<size_t> &shape)
-{
-  size_t slot_count = 1;
-  for (auto it = shape.cbegin(); it != shape.cend(); ++it)
-    slot_count = util::mul_safe(slot_count, *it);
-
-  return slot_count;
-}
-
 Function::Function(string name, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
-  : name_{move(name)}, shape_{slot_count}, need_cyclic_rotations_{false},
-    clear_data_evaluator_{slot_count, modulus, signedness, delayed_reduction}, values_to_constants_{
-                                                                                 0, HashConstVal{slot_count}}
+  : name_{move(name)}, slot_count_{slot_count}, need_cyclic_rotations_{false},
+    clear_data_evaluator_{slot_count_, modulus, signedness, delayed_reduction}, values_to_constants_{
+                                                                                  0, HashConstVal{slot_count_}}
 {
-  if (slot_count == 0 || (slot_count & (slot_count - 1)) != 0)
+  if (!is_valid_slot_count(slot_count_))
     throw invalid_argument("slot_count must be a power of two");
 }
 
-Function::Function(string name, vector<size_t> shape, integer modulus, bool signedness, bool delayed_reduction)
-  : name_{move(name)}, shape_{move(shape)}, need_cyclic_rotations_{false},
-    clear_data_evaluator_{compute_slot_count(shape_), modulus, signedness, delayed_reduction},
-    values_to_constants_{0, HashConstVal{clear_data_evaluator_.slot_count()}}
+Function::Function(string name, size_t slot_count, int bit_width, bool signedness)
+  : Function(move(name), slot_count, (2 << (bit_width - 1)) - 1, signedness, true)
+{}
+
+bool Function::is_valid_slot_count(size_t slot_count)
 {
-  size_t slot_count = clear_data_evaluator_.slot_count();
-  if (slot_count == 0 || (slot_count & (slot_count - 1)) != 0)
-    throw invalid_argument("each shape element must be a power of two");
+  return slot_count != 0 && (slot_count & (slot_count - 1)) == 0;
 }
 
 template <typename T>
 void Function::init_input(T &input, string label)
 {
   input.id_ = data_flow_.insert_leaf(input.term_type())->id();
-  input.dim_ = shape_.size();
   inputs_info_.emplace(input.id(), ParamTermInfo{move(label), nullopt});
 }
 
@@ -56,7 +45,6 @@ template <typename T>
 void Function::init_input(T &input, string label, PackedVal example_val)
 {
   input.id_ = data_flow_.insert_leaf(input.term_type())->id();
-  input.dim_ = shape_.size();
   clear_data_evaluator_.adjust_packed_val(example_val);
   input.example_val_ = example_val;
   inputs_info_.emplace(input.id_, ParamTermInfo{move(label), move(example_val)});
@@ -73,10 +61,7 @@ template <typename T, typename TVal>
 void Function::init_const(T &constant, TVal val)
 {
   if constexpr (is_same<T, Ciphertext>::value || is_same<T, Plaintext>::value)
-  {
-    constant.dim_ = shape_.size();
     clear_data_evaluator_.adjust_packed_val(val);
-  }
   else if constexpr (is_same<T, Scalar>::value)
     clear_data_evaluator_.adjust_scalar_val(val);
   else
@@ -114,6 +99,13 @@ void Function::operate_unary(OpCode op_code, const TArg &arg, TDest &dest)
 
       dest.example_val_ = clear_data_evaluator_.make_packed_val(*arg.example_val());
     }
+    else if constexpr (is_same<TArg, Plaintext>::value && is_same<TDest, Ciphertext>::value)
+    {
+      if (op_code.type() != OpCode::Type::encrypt)
+        throw logic_error("expected encrypt plaintext");
+
+      dest.example_val_ = *arg.example_val();
+    }
     else if constexpr (is_same<TDest, Ciphertext>::value || is_same<TDest, Plaintext>::value)
     {
       PackedVal dest_example_val;
@@ -131,9 +123,9 @@ void Function::operate_unary(OpCode op_code, const TArg &arg, TDest &dest)
   }
 
   if constexpr (is_same<TArg, Scalar>::value && is_same<TDest, Ciphertext>::value)
-    dest.dim_ = shape_.size();
+    dest.shape_ = {slot_count_};
   else if constexpr (is_same<TDest, Ciphertext>::value || is_same<TDest, Plaintext>::value)
-    dest.dim_ = arg.dim_;
+    dest.shape_ = arg.shape_;
   else
     static_assert(is_same<TDest, Scalar>::value, "invalid template instantiation");
 
@@ -180,13 +172,13 @@ void Function::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &ar
   {
     if constexpr (is_same<TArg2, Ciphertext>::value || is_same<TArg2, Plaintext>::value)
     {
-      if (arg1.dim_ != arg2.dim_)
-        throw invalid_argument("operating with incompatible dimensions");
+      if (arg1.shape_ != arg2.shape_)
+        throw invalid_argument("operating with incompatible shapes");
     }
-    dest.dim_ = arg1.dim_;
+    dest.shape_ = arg1.shape_;
   }
   else if constexpr (is_same<TArg2, Ciphertext>::value || is_same<TArg2, Plaintext>::value)
-    dest.dim_ = arg2.dim_;
+    dest.shape_ = arg2.shape_;
   else
     static_assert(is_same<TDest, Scalar>::value, "invalid template instantiation");
 
@@ -238,7 +230,7 @@ void Function::set_output(const T &output, string label, PackedVal example_val)
     throw invalid_argument("output not defined");
 }
 
-const ParamTermInfo *Function::get_input_info(std::size_t id) const
+const ParamTermInfo *Function::get_input_info(size_t id) const
 {
   if (auto it = inputs_info_.find(id); it != inputs_info_.end())
     return &it->second;
@@ -246,7 +238,7 @@ const ParamTermInfo *Function::get_input_info(std::size_t id) const
   return nullptr;
 }
 
-const ConstVal *Function::get_const_val(std::size_t id) const
+const ConstVal *Function::get_const_val(size_t id) const
 {
   if (auto it = constants_values_.find(id); it != constants_values_.end())
     return &it->second;
@@ -254,7 +246,7 @@ const ConstVal *Function::get_const_val(std::size_t id) const
   return nullptr;
 }
 
-const ParamTermInfo *Function::get_output_info(std::size_t id) const
+const ParamTermInfo *Function::get_output_info(size_t id) const
 {
   if (auto it = outputs_info_.find(id); it != outputs_info_.end())
     return &it->second;
