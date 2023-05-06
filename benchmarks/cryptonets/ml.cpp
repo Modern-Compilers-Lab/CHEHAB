@@ -63,8 +63,7 @@ vector<vector<vector<Ciphertext>>> conv_2d(
   size_t n_cols_output = input[0].size() / strides[1] + (input[0].size() % strides[1] > 0 ? 1 : 0);
   size_t n_channels_output = filters[0][0][0].size();
   vector<vector<vector<Ciphertext>>> output(
-    n_rows_output,
-    vector<vector<Ciphertext>>(n_cols_output, vector<Ciphertext>(n_channels_output, encrypt(Scalar(0)))));
+    n_rows_output, vector<vector<Ciphertext>>(n_cols_output, vector<Ciphertext>(n_channels_output, encrypt(0))));
   size_t row_offset = 0;
   for (size_t i_output = 0; i_output < n_rows_output; ++i_output)
   {
@@ -94,8 +93,7 @@ vector<vector<vector<Ciphertext>>> scaled_mean_pool_2d(
   size_t n_cols_output = input[0].size() / strides[1] + (input[0].size() % strides[1] > 0 ? 1 : 0);
   size_t n_channels_output = input[0][0].size();
   vector<vector<vector<Ciphertext>>> output(
-    n_rows_output,
-    vector<vector<Ciphertext>>(n_cols_output, vector<Ciphertext>(n_channels_output, encrypt(Scalar(0)))));
+    n_rows_output, vector<vector<Ciphertext>>(n_cols_output, vector<Ciphertext>(n_channels_output, encrypt(0))));
   size_t row_offset = 0;
   for (size_t i_output = 0; i_output < n_rows_output; ++i_output)
   {
@@ -140,7 +138,7 @@ vector<vector<vector<Ciphertext>>> pad_2d(
 
   vector<vector<vector<Ciphertext>>> output(
     n_rows_input + pad_rows,
-    vector<vector<Ciphertext>>(n_cols_input + pad_cols, vector<Ciphertext>(n_channels, encrypt(Scalar(0)))));
+    vector<vector<Ciphertext>>(n_cols_input + pad_cols, vector<Ciphertext>(n_channels, encrypt(0))));
   for (int i = 0; i < n_rows_input; ++i)
   {
     for (size_t j = 0; j < n_cols_input; ++j)
@@ -201,7 +199,7 @@ vector<Ciphertext> dot(const vector<Ciphertext> &input, const vector<vector<Plai
   if (input.size() != w.size())
     throw invalid_argument("incompatible sizes");
 
-  vector<Ciphertext> output(w[0].size(), encrypt(Scalar(0)));
+  vector<Ciphertext> output(w[0].size(), encrypt(0));
   for (size_t i = 0; i < w[0].size(); ++i)
     for (size_t j = 0; j < input.size(); ++j)
       output[i] += input[j] * w[j][i];

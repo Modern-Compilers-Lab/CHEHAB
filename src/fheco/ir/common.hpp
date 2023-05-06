@@ -5,20 +5,9 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include <variant>
 
 namespace fheco::ir
 {
-using ConstVal = std::variant<PackedVal, ScalarVal>;
-
-// overload pattern
-template <class... Ts>
-struct overloaded : Ts...
-{
-  using Ts::operator()...;
-};
-template <class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
 
 template <class>
 inline constexpr bool always_false_v = false;
@@ -30,21 +19,16 @@ inline void hash_combine(std::size_t &seed, const T &val)
   seed ^= std::hash<T>{}(val) + 0x9e3779b97f4a7c15ULL + (seed << 12) + (seed >> 4);
 }
 
-struct HashConstVal
+struct HashPackedVal
 {
-  size_t slot_count_;
-
-  HashConstVal(size_t slot_count) : slot_count_{slot_count} {}
-
-  std::size_t operator()(const ConstVal &value_var) const;
+  std::size_t operator()(const PackedVal &packed_val) const;
 };
 
 // order of definition is important for type deduction (OpCode::deduce_result_type)
 enum class TermType
 {
   ciphertext,
-  plaintext,
-  scalar
+  plaintext
 };
 
 std::string term_type_str_repr(TermType);
@@ -75,5 +59,5 @@ inline bool operator!=(const ParamTermInfo &lhs, const ParamTermInfo &rhs)
 }
 
 using IOTermsInfo = std::unordered_map<std::size_t, ParamTermInfo>;
-using TermsValues = std::unordered_map<std::size_t, ConstVal>;
+using TermsValues = std::unordered_map<std::size_t, PackedVal>;
 } // namespace fheco::ir

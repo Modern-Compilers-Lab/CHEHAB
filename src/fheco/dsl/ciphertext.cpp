@@ -33,11 +33,6 @@ Ciphertext::Ciphertext(const Plaintext &plain)
   *this = encrypt(plain);
 }
 
-Ciphertext::Ciphertext(const Scalar &scalar)
-{
-  *this = encrypt(scalar);
-}
-
 Ciphertext &Ciphertext::operator=(const Ciphertext &other)
 {
   if (idx_.size())

@@ -1,7 +1,6 @@
 #include "fheco/util/expr_printer.hpp"
 #include "fheco/ir/common.hpp"
 #include <utility>
-#include <variant>
 
 using namespace std;
 
@@ -189,18 +188,7 @@ string ExprPrinter::leaf_str_expr(const ir::Term *term) const
   if (auto input_info = func_->get_input_info(term->id()); input_info)
     return input_info->label_;
   else if (auto const_val = func_->get_const_val(term->id()); const_val)
-  {
-    if (term->type() == ir::TermType::scalar)
-      return visit(
-        ir::overloaded{
-          [](const auto &other) -> string { throw logic_error("constant scalar term with vector value"); },
-          [](ScalarVal scalar_val) -> string {
-            return to_string(scalar_val);
-          }},
-        *const_val);
-    else
-      return "const_" + to_string(term->id());
-  }
+    return "const_" + to_string(term->id());
   else
     throw logic_error("temp leaf term");
 }

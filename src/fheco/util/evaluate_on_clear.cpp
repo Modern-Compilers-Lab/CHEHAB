@@ -49,42 +49,15 @@ ir::IOTermsInfo evaluate_on_clear(ir::Function &func, const ir::IOTermsInfo &in_
           switch (term->op_code().type())
           {
           case ir::OpCode::Type::encrypt:
-            visit(
-              ir::overloaded{
-                [&temps_values, &term](const PackedVal &arg_val) { temps_values.emplace(term->id(), arg_val); },
-                [&temps_values, &term, &evaluator](ScalarVal arg_val) {
-                  temps_values.emplace(term->id(), evaluator.make_packed_val(arg_val));
-                }},
-              arg_val_it->second);
-            break;
-
           case ir::OpCode::Type::mod_switch:
           case ir::OpCode::Type::relin:
-            visit(
-              ir::overloaded{
-                [](const auto &v) {
-                  throw logic_error("mod_switch and relin operates only on ciphertext terms (PackedVal)");
-                },
-                [&temps_values, &term](const PackedVal &arg_val) {
-                  temps_values.emplace(term->id(), arg_val);
-                }},
-              arg_val_it->second);
+            temps_values.emplace(term->id(), arg_val_it->second);
             break;
 
           default:
-            visit(
-              ir::overloaded{
-                [&temps_values, &term, &evaluator](const PackedVal &arg_val) {
-                  PackedVal dest_val;
-                  evaluator.operate_unary(term->op_code(), arg_val, dest_val);
-                  temps_values.emplace(term->id(), dest_val);
-                },
-                [&temps_values, &term, &evaluator](ScalarVal arg_val) {
-                  ScalarVal dest_val;
-                  evaluator.operate_unary(term->op_code(), arg_val, dest_val);
-                  temps_values.emplace(term->id(), dest_val);
-                }},
-              arg_val_it->second);
+            PackedVal dest_val;
+            evaluator.operate_unary(term->op_code(), arg_val_it->second, dest_val);
+            temps_values.emplace(term->id(), dest_val);
             break;
           }
         }
@@ -99,19 +72,9 @@ ir::IOTermsInfo evaluate_on_clear(ir::Function &func, const ir::IOTermsInfo &in_
           auto arg2_id = term->operands()[1]->id();
           if (auto arg2_val_it = temps_values.find(arg2_id); arg2_val_it != temps_values.end())
           {
-            visit(
-              ir::overloaded{
-                [&temps_values, &term, &evaluator](const auto &arg1_val, const auto &arg2_val) {
-                  PackedVal dest_val;
-                  evaluator.operate_binary(term->op_code(), arg1_val, arg2_val, dest_val);
-                  temps_values.emplace(term->id(), dest_val);
-                },
-                [&temps_values, &term, &evaluator](ScalarVal arg1_val, ScalarVal arg2_val) {
-                  ScalarVal dest_val;
-                  evaluator.operate_binary(term->op_code(), arg1_val, arg2_val, dest_val);
-                  temps_values.emplace(term->id(), dest_val);
-                }},
-              arg1_val_it->second, arg2_val_it->second);
+            PackedVal dest_val;
+            evaluator.operate_binary(term->op_code(), arg1_val_it->second, arg2_val_it->second, dest_val);
+            temps_values.emplace(term->id(), dest_val);
           }
           else
             cerr << "missing arg when computing term (arg2 id=" << arg2_id << ")\n";
@@ -125,18 +88,7 @@ ir::IOTermsInfo evaluate_on_clear(ir::Function &func, const ir::IOTermsInfo &in_
       if (auto output_info = func.get_output_info(term->id()); output_info)
       {
         if (auto term_val_it = temps_values.find(term->id()); term_val_it != temps_values.end())
-        {
-          PackedVal out_val = visit(
-            ir::overloaded{
-              [](const auto &val) -> PackedVal {
-                throw logic_error("an output term evaluated to other than PackedVal (ScalarVal)");
-              },
-              [](const PackedVal &packed_val) -> PackedVal {
-                return packed_val;
-              }},
-            term_val_it->second);
-          outputs_values.emplace(term->id(), ir::ParamTermInfo{output_info->label_, move(out_val)});
-        }
+          outputs_values.emplace(term->id(), ir::ParamTermInfo{output_info->label_, term_val_it->second});
         else
           cerr << "could not compute output term (output id=" << term->id() << ")\n";
       }

@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <variant>
 
 using namespace std;
 
@@ -31,28 +30,14 @@ void draw_ir(ir::Function &func, ostream &os)
       return label;
     }
     else if (auto const_val = func.get_const_val(term->id()); const_val)
-    {
-      if (term->type() == ir::TermType::scalar)
-      {
-        return visit(
-          ir::overloaded{
-            [](const auto &other) -> string { throw logic_error("constant scalar term with vector value"); },
-            [](ScalarVal scalar_val) -> string {
-              return to_string(scalar_val);
-            }},
-          *const_val);
-      }
       return "const_" + to_string(term->id());
-    }
     else
       throw logic_error("temp leaf term");
   };
 
   auto make_term_attrs = [&func, &make_node_label](const ir::Term *term) -> string {
     unordered_map<ir::TermType, string> type_to_attrs = {
-      {ir::TermType::ciphertext, "style=solid"},
-      {ir::TermType::plaintext, "style=dashed"},
-      {ir::TermType::scalar, "style=dotted"}};
+      {ir::TermType::ciphertext, "style=solid"}, {ir::TermType::plaintext, "style=dashed"}};
 
     unordered_map<ir::TermQualif, string> qualifs_to_attrs = {
       {ir::TermQualif::temp, "color=black fontcolor=black"},

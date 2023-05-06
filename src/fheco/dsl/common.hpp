@@ -10,8 +10,6 @@ using integer = std::int64_t;
 
 using PackedVal = std::vector<integer>;
 
-using ScalarVal = integer;
-
 enum class Scheme
 {
   none,

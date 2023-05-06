@@ -1,6 +1,5 @@
 #include "fheco/util/common.hpp"
 #include <stdexcept>
-#include <variant>
 
 using namespace std;
 
@@ -103,13 +102,7 @@ void print_terms_values(const ir::TermsValues &terms_values, size_t lead_trail_s
   for (const auto &term : terms_values)
   {
     os << '$' << term.first << " ";
-    visit(
-      ir::overloaded{
-        [lead_trail_size, &os](const PackedVal &val) { print_packed_val(val, lead_trail_size, os); },
-        [&os](ScalarVal val) {
-          os << val;
-        }},
-      term.second);
+    print_packed_val(term.second, lead_trail_size, os);
     os << '\n';
   }
 }
@@ -152,13 +145,7 @@ ostream &operator<<(ostream &os, const fheco::ir::TermsValues &terms_values)
   for (const auto &term : terms_values)
   {
     os << '$' << term.first << " ";
-    visit(
-      fheco::ir::overloaded{
-        [&os](const fheco::PackedVal &val) { os << val; },
-        [&os](fheco::ScalarVal val) {
-          os << val;
-        }},
-      term.second);
+    os << term.second;
     os << '\n';
   }
   return os;

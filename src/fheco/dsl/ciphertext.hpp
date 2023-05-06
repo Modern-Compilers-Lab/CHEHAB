@@ -3,7 +3,6 @@
 #include "fheco/dsl/common.hpp"
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/dsl/plaintext.hpp"
-#include "fheco/dsl/scalar.hpp"
 #include "fheco/ir/common.hpp"
 #include <cstddef>
 #include <optional>
@@ -31,9 +30,7 @@ public:
     std::string label, integer example_val_slot_min, integer example_val_slot_max,
     std::vector<std::size_t> shape = {Compiler::active_func()->slot_count()});
 
-  Ciphertext(const Plaintext &plain);
-
-  Ciphertext(const Scalar &scalar);
+  explicit Ciphertext(const Plaintext &plain);
 
   ~Ciphertext() = default;
 

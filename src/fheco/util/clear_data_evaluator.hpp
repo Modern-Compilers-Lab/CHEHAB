@@ -18,11 +18,7 @@ public:
 
   void adjust_packed_val(PackedVal &packed_val) const;
 
-  void adjust_scalar_val(ScalarVal &scalar_val) const;
-
   PackedVal make_rand_packed_val(integer slot_min, integer slot_max) const;
-
-  PackedVal make_packed_val(ScalarVal scalar_val) const;
 
   bool can_convert_to_scalar(const PackedVal &packed_val) const;
 
@@ -43,27 +39,15 @@ public:
 private:
   void reduce(PackedVal &packed_val) const;
 
-  void reduce(ScalarVal &scalar_val) const;
-
   void add(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const;
-  void add(const PackedVal &arg1, ScalarVal arg2, PackedVal &dest) const;
-  void add(ScalarVal arg1, const PackedVal &arg2, PackedVal &dest) const;
-  void add(ScalarVal arg1, ScalarVal arg2, ScalarVal &dest) const;
 
   void sub(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const;
-  void sub(const PackedVal &arg1, ScalarVal arg2, PackedVal &dest) const;
-  void sub(ScalarVal arg1, const PackedVal &arg2, PackedVal &dest) const;
-  void sub(ScalarVal arg1, ScalarVal arg2, ScalarVal &dest) const;
 
   void negate(const PackedVal &arg, PackedVal &dest) const;
-  void negate(ScalarVal arg, ScalarVal &dest) const;
 
   void rotate(const PackedVal &arg, int steps, PackedVal &dest) const;
 
   void mul(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const;
-  void mul(const PackedVal &arg1, ScalarVal arg2, PackedVal &dest) const;
-  void mul(ScalarVal arg1, const PackedVal &arg2, PackedVal &dest) const;
-  void mul(ScalarVal arg1, ScalarVal arg2, ScalarVal &dest) const;
 
   std::size_t slot_count_;
   integer modulus_;

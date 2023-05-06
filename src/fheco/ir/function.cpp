@@ -2,13 +2,11 @@
 #include "fheco/dsl/ciphertext.hpp"
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/dsl/plaintext.hpp"
-#include "fheco/dsl/scalar.hpp"
 #include "fheco/util/common.hpp"
 #include <algorithm>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
-#include <variant>
 #include <vector>
 
 using namespace std;
@@ -18,8 +16,7 @@ namespace fheco::ir
 {
 Function::Function(string name, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
   : name_{move(name)}, slot_count_{slot_count}, need_cyclic_rotations_{false},
-    clear_data_evaluator_{slot_count_, modulus, signedness, delayed_reduction}, values_to_constants_{
-                                                                                  0, HashConstVal{slot_count_}}
+    clear_data_evaluator_{slot_count_, modulus, signedness, delayed_reduction}
 {
   if (!is_valid_slot_count(slot_count_))
     throw invalid_argument("slot_count must be a power of two");
@@ -57,21 +54,14 @@ void Function::init_input(T &input, string label, integer example_val_slot_min, 
   init_input(input, move(label), move(example_val));
 }
 
-template <typename T, typename TVal>
-void Function::init_const(T &constant, TVal val)
+template <typename T>
+void Function::init_const(T &constant, PackedVal packed_val)
 {
-  if constexpr (is_same<T, Ciphertext>::value || is_same<T, Plaintext>::value)
-    clear_data_evaluator_.adjust_packed_val(val);
-  else if constexpr (is_same<T, Scalar>::value)
-    clear_data_evaluator_.adjust_scalar_val(val);
-  else
-    static_assert(always_false_v<T>, "invalid template instantiation");
-
-  constant.example_val_ = val;
-  ConstVal const_var = move(val);
+  clear_data_evaluator_.adjust_packed_val(packed_val);
+  constant.example_val_ = packed_val;
   if (Compiler::cse_enabled())
   {
-    auto it = values_to_constants_.find(const_var);
+    auto it = values_to_constants_.find(packed_val);
     if (it != values_to_constants_.end())
     {
       constant.id_ = it->second;
@@ -79,8 +69,8 @@ void Function::init_const(T &constant, TVal val)
     }
   }
   constant.id_ = data_flow_.insert_leaf(constant.term_type())->id();
-  constants_values_.emplace(constant.id(), const_var);
-  values_to_constants_.emplace(move(const_var), constant.id());
+  constants_values_.emplace(constant.id(), packed_val);
+  values_to_constants_.emplace(move(packed_val), constant.id());
 }
 
 template <typename TArg, typename TDest>
@@ -92,45 +82,24 @@ void Function::operate_unary(OpCode op_code, const TArg &arg, TDest &dest)
 
   if (arg.example_val())
   {
-    if constexpr (is_same<TArg, Scalar>::value && is_same<TDest, Ciphertext>::value)
-    {
-      if (op_code.type() != OpCode::Type::encrypt)
-        throw logic_error("expected encrypt Scalar");
-
-      dest.example_val_ = clear_data_evaluator_.make_packed_val(*arg.example_val());
-    }
-    else if constexpr (is_same<TArg, Plaintext>::value && is_same<TDest, Ciphertext>::value)
+    if constexpr (is_same<TArg, Plaintext>::value && is_same<TDest, Ciphertext>::value)
     {
       if (op_code.type() != OpCode::Type::encrypt)
         throw logic_error("expected encrypt plaintext");
 
       dest.example_val_ = *arg.example_val();
     }
-    else if constexpr (is_same<TDest, Ciphertext>::value || is_same<TDest, Plaintext>::value)
+    else
     {
       PackedVal dest_example_val;
       clear_data_evaluator_.operate_unary(op_code, *arg.example_val(), dest_example_val);
       dest.example_val_ = move(dest_example_val);
     }
-    else if constexpr (is_same<TDest, Scalar>::value)
-    {
-      ScalarVal dest_example_val;
-      clear_data_evaluator_.operate_unary(op_code, *arg.example_val(), dest_example_val);
-      dest.example_val_ = move(dest_example_val);
-    }
-    else
-      static_assert(always_false_v<TDest>, "invalid template instantiation");
   }
 
-  if constexpr (is_same<TArg, Scalar>::value && is_same<TDest, Ciphertext>::value)
-    dest.shape_ = {slot_count_};
-  else if constexpr (is_same<TDest, Ciphertext>::value || is_same<TDest, Plaintext>::value)
-    dest.shape_ = arg.shape_;
-  else
-    static_assert(is_same<TDest, Scalar>::value, "invalid template instantiation");
+  dest.shape_ = arg.shape_;
 
   vector<Term *> operands{arg_term};
-
   if (Compiler::cse_enabled())
   {
     if (auto parent = data_flow_.find_op_term(op_code, operands); parent)
@@ -152,38 +121,17 @@ void Function::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &ar
 
   if (arg1.example_val() && arg2.example_val())
   {
-    if constexpr (is_same<TDest, Ciphertext>::value || is_same<TDest, Plaintext>::value)
-    {
-      PackedVal dest_example_val;
-      clear_data_evaluator_.operate_binary(op_code, *arg1.example_val(), *arg2.example_val(), dest_example_val);
-      dest.example_val_ = move(dest_example_val);
-    }
-    else if constexpr (is_same<TDest, Scalar>::value)
-    {
-      ScalarVal dest_example_val;
-      clear_data_evaluator_.operate_binary(op_code, *arg1.example_val(), *arg2.example_val(), dest_example_val);
-      dest.example_val_ = move(dest_example_val);
-    }
-    else
-      static_assert(always_false_v<TDest>, "invalid template instantiation");
+    PackedVal dest_example_val;
+    clear_data_evaluator_.operate_binary(op_code, *arg1.example_val(), *arg2.example_val(), dest_example_val);
+    dest.example_val_ = move(dest_example_val);
   }
 
-  if constexpr (is_same<TArg1, Ciphertext>::value || is_same<TArg1, Plaintext>::value)
-  {
-    if constexpr (is_same<TArg2, Ciphertext>::value || is_same<TArg2, Plaintext>::value)
-    {
-      if (arg1.shape_ != arg2.shape_)
-        throw invalid_argument("operating with incompatible shapes");
-    }
-    dest.shape_ = arg1.shape_;
-  }
-  else if constexpr (is_same<TArg2, Ciphertext>::value || is_same<TArg2, Plaintext>::value)
-    dest.shape_ = arg2.shape_;
-  else
-    static_assert(is_same<TDest, Scalar>::value, "invalid template instantiation");
+  if (arg1.shape_ != arg2.shape_)
+    throw invalid_argument("operating with incompatible shapes");
+
+  dest.shape_ = arg1.shape_;
 
   vector<Term *> operands{arg1_term, arg2_term};
-
   if (Compiler::cse_enabled())
   {
     if (op_code.commutativity())
@@ -238,7 +186,7 @@ const ParamTermInfo *Function::get_input_info(size_t id) const
   return nullptr;
 }
 
-const ConstVal *Function::get_const_val(size_t id) const
+const PackedVal *Function::get_const_val(size_t id) const
 {
   if (auto it = constants_values_.find(id); it != constants_values_.end())
     return &it->second;
@@ -283,7 +231,6 @@ template void Function::init_input(Plaintext &, string, integer, integer);
 // init_const
 template void Function::init_const(Ciphertext &, PackedVal);
 template void Function::init_const(Plaintext &, PackedVal);
-template void Function::init_const(Scalar &, ScalarVal);
 // set_output
 template void Function::set_output(const Ciphertext &, string);
 template void Function::set_output(const Plaintext &, string);
@@ -293,16 +240,9 @@ template void Function::set_output(const Plaintext &, string, PackedVal);
 template void Function::operate_unary(OpCode, const Ciphertext &, Ciphertext &);
 template void Function::operate_unary(OpCode, const Plaintext &, Ciphertext &);
 template void Function::operate_unary(OpCode, const Plaintext &, Plaintext &);
-template void Function::operate_unary(OpCode, const Scalar &, Ciphertext &);
-template void Function::operate_unary(OpCode, const Scalar &, Scalar &);
 // operate_binary
 template void Function::operate_binary(OpCode, const Ciphertext &, const Ciphertext &, Ciphertext &);
 template void Function::operate_binary(OpCode, const Ciphertext &, const Plaintext &, Ciphertext &);
-template void Function::operate_binary(OpCode, const Ciphertext &, const Scalar &, Ciphertext &);
 template void Function::operate_binary(OpCode, const Plaintext &, const Ciphertext &, Ciphertext &);
 template void Function::operate_binary(OpCode, const Plaintext &, const Plaintext &, Plaintext &);
-template void Function::operate_binary(OpCode, const Plaintext &, const Scalar &, Plaintext &);
-template void Function::operate_binary(OpCode, const Scalar &, const Ciphertext &, Ciphertext &);
-template void Function::operate_binary(OpCode, const Scalar &, const Plaintext &, Plaintext &);
-template void Function::operate_binary(OpCode, const Scalar &, const Scalar &, Scalar &);
 } // namespace fheco::ir

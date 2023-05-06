@@ -34,8 +34,8 @@ TermType OpCode::deduce_result_type(const OpCode &op_code, const vector<Term *> 
   // non arithmetic operations
   if (op_code.type() == OpCode::Type::encrypt)
   {
-    if (operands[0]->type() != TermType::plaintext && operands[0]->type() != TermType::scalar)
-      throw invalid_argument("encrypt arg must be plain or scalar");
+    if (operands[0]->type() != TermType::plaintext)
+      throw invalid_argument("encrypt arg must be plaintext");
 
     return TermType::ciphertext;
   }
@@ -43,7 +43,7 @@ TermType OpCode::deduce_result_type(const OpCode &op_code, const vector<Term *> 
   if (op_code.type() == OpCode::Type::mod_switch)
   {
     if (operands[0]->type() != TermType::ciphertext)
-      throw invalid_argument("mod_switch arg must be cipher");
+      throw invalid_argument("mod_switch arg must be ciphertext");
 
     return TermType::ciphertext;
   }

@@ -31,8 +31,8 @@ public:
   template <typename T>
   void init_input(T &input, std::string label, integer example_val_slot_min, integer example_val_slot_max);
 
-  template <typename T, typename TVal>
-  void init_const(T &constant, TVal val);
+  template <typename T>
+  void init_const(T &constant, PackedVal packed_val);
 
   template <typename TArg, typename TDest>
   void operate_unary(OpCode op_code, const TArg &arg, TDest &dest);
@@ -62,7 +62,7 @@ public:
 
   const ParamTermInfo *get_input_info(std::size_t id) const;
 
-  const ConstVal *get_const_val(std::size_t id) const;
+  const PackedVal *get_const_val(std::size_t id) const;
 
   const ParamTermInfo *get_output_info(std::size_t id) const;
 
@@ -97,7 +97,7 @@ private:
 
   TermsValues constants_values_{};
 
-  std::unordered_map<ConstVal, std::size_t, HashConstVal> values_to_constants_;
+  std::unordered_map<PackedVal, std::size_t, HashPackedVal> values_to_constants_{};
 
   IOTermsInfo outputs_info_{};
 };
