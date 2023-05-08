@@ -20,8 +20,6 @@ public:
 
   PackedVal make_rand_packed_val(integer slot_min, integer slot_max) const;
 
-  bool can_convert_to_scalar(const PackedVal &packed_val) const;
-
   template <typename TArg, typename TDestination>
   void operate_unary(const ir::OpCode &op_code, const TArg &arg, TDestination &dest) const;
 

@@ -16,6 +16,7 @@ Plaintext operator+(const Plaintext &lhs, const Plaintext &rhs);
 Ciphertext &operator+=(Ciphertext &lhs, const Ciphertext &rhs);
 Ciphertext &operator+=(Ciphertext &lhs, const Plaintext &rhs);
 Plaintext &operator+=(Plaintext &lhs, const Plaintext &rhs);
+
 // subtraction
 Ciphertext operator-(const Ciphertext &lhs, const Ciphertext &rhs);
 Ciphertext operator-(const Ciphertext &lhs, const Plaintext &rhs);

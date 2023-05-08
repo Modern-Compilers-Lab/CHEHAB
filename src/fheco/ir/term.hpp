@@ -22,16 +22,11 @@ public:
     bool operator()(const Term *lhs, const Term *rhs) const;
   };
 
-  struct ComparePtr
-  {
-    bool operator()(const Term *lhs, const Term *rhs) const;
-  };
-
   using PtrSet = std::unordered_set<Term *, HashPtr, EqualPtr>;
 
   Term(OpCode op_code, std::vector<Term *> operands)
-    : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)}, type_{OpCode::deduce_result_type(
-                                                                                     op_code_, operands_)}
+    : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)},
+      type_{OpCode::deduce_result_type(op_code_, operands_)}
   {}
 
   Term(TermType type) : id_{++count_}, op_code_{OpCode::nop}, operands_{}, type_{type} {}
@@ -54,7 +49,7 @@ public:
 
 private:
   // to construct temp object used as search keys
-  Term(std::size_t id) : id_{id}, op_code_{OpCode::nop}, operands_{}, type_{TermType::ciphertext} {}
+  Term(std::size_t id) : id_{id}, op_code_{OpCode::nop}, operands_{}, type_{TermType::cipher} {}
 
   static std::size_t count_;
 

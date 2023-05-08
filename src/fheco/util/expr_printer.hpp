@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fheco/ir/function.hpp"
+#include "fheco/ir/func.hpp"
 #include <memory>
 #include <ostream>
 #include <string>
@@ -22,7 +22,7 @@ public:
 
   using TermsStrExpr = std::unordered_map<std::size_t, std::string>;
 
-  ExprPrinter(std::shared_ptr<ir::Function> func) : func_{move(func)} {}
+  ExprPrinter(std::shared_ptr<ir::Func> func) : func_{move(func)} {}
 
   void compute_terms_str_expr(Mode mode);
 
@@ -32,7 +32,7 @@ public:
 
   void print_terms_str_expr(std::ostream &os) const;
 
-  const std::shared_ptr<ir::Function> func() const { return func_; }
+  const std::shared_ptr<ir::Func> func() const { return func_; }
 
   const TermsStrExpr &terms_str_expr() const { return terms_str_expr_; }
 
@@ -46,7 +46,7 @@ private:
 
   std::string leaf_str_expr(const ir::Term *term) const;
 
-  std::shared_ptr<ir::Function> func_;
+  std::shared_ptr<ir::Func> func_;
 
   TermsStrExpr terms_str_expr_{};
 

@@ -9,7 +9,7 @@ using namespace std;
 
 namespace fheco::util
 {
-void draw_ir(ir::Function &func, ostream &os)
+void draw_ir(ir::Func &func, ostream &os)
 {
   auto make_node_label = [&func](const ir::Term *term) -> string {
     // operation term
@@ -37,7 +37,7 @@ void draw_ir(ir::Function &func, ostream &os)
 
   auto make_term_attrs = [&func, &make_node_label](const ir::Term *term) -> string {
     unordered_map<ir::TermType, string> type_to_attrs = {
-      {ir::TermType::ciphertext, "style=solid"}, {ir::TermType::plaintext, "style=dashed"}};
+      {ir::TermType::cipher, "style=solid"}, {ir::TermType::plain, "style=dashed"}};
 
     unordered_map<ir::TermQualif, string> qualifs_to_attrs = {
       {ir::TermQualif::temp, "color=black fontcolor=black"},

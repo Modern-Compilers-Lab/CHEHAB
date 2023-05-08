@@ -8,7 +8,6 @@
 
 namespace fheco::ir
 {
-
 template <class>
 inline constexpr bool always_false_v = false;
 
@@ -27,8 +26,8 @@ struct HashPackedVal
 // order of definition is important for type deduction (OpCode::deduce_result_type)
 enum class TermType
 {
-  ciphertext,
-  plaintext
+  cipher,
+  plain
 };
 
 std::string term_type_str_repr(TermType);

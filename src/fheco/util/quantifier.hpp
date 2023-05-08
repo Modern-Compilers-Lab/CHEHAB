@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fheco/ir/common.hpp"
-#include "fheco/ir/function.hpp"
+#include "fheco/ir/func.hpp"
 #include "fheco/ir/op_code.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -66,7 +66,7 @@ public:
 
   using TermDepthInfo = std::unordered_map<std::size_t, DepthInfo>;
 
-  Quantifier(std::shared_ptr<ir::Function> func) : func_{std::move(func)} {}
+  Quantifier(std::shared_ptr<ir::Func> func) : func_{std::move(func)} {}
 
   void run_analysis();
 
@@ -84,7 +84,7 @@ public:
 
   void print_terms_classes_info(std::ostream &os) const;
 
-  inline const std::shared_ptr<ir::Function> func() const { return func_; }
+  inline const std::shared_ptr<ir::Func> func() const { return func_; }
 
   inline const DepthSummary &he_depth_summary() const { return he_depth_summary_; }
 
@@ -121,7 +121,7 @@ public:
   inline const CAOpCount &he_add_sub_negate_count() const { return he_add_sub_negate_count_; }
 
 private:
-  std::shared_ptr<ir::Function> func_;
+  std::shared_ptr<ir::Func> func_;
 
   DepthSummary he_depth_summary_{};
 

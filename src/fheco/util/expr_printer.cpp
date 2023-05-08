@@ -32,9 +32,9 @@ void ExprPrinter::compute_terms_str_expr(Mode mode)
           if (term->op_code().type() == ir::OpCode::Type::rotate)
           {
             if (arg->is_operation())
-              terms_str_expr_[term->id()] = "(" + arg_expr + ") << " + to_string(term->op_code().steps());
+              terms_str_expr_[term->id()] = "(" + arg_expr + ") " + term->op_code().str_repr();
             else
-              terms_str_expr_[term->id()] = arg_expr + " << " + to_string(term->op_code().steps());
+              terms_str_expr_[term->id()] = arg_expr + " " + term->op_code().str_repr();
           }
           else
           {
@@ -125,9 +125,9 @@ string ExprPrinter::expand_term(size_t id, Mode mode, int depth, TermsStrExpr &d
         if (term->op_code().type() == ir::OpCode::Type::rotate)
         {
           if (arg->is_operation() && depth > 1)
-            result = "(" + expand_term(arg->id(), mode, depth - 1, dp) + ") << " + to_string(term->op_code().steps());
+            result = "(" + expand_term(arg->id(), mode, depth - 1, dp) + ") " + term->op_code().str_repr();
           else
-            result = expand_term(arg->id(), mode, depth - 1, dp) + " << " + to_string(term->op_code().steps());
+            result = expand_term(arg->id(), mode, depth - 1, dp) + " " + term->op_code().str_repr();
         }
         else
         {

@@ -9,7 +9,6 @@
 #include <vector>
 
 namespace fheco::ir
-
 {
 class DAG
 {

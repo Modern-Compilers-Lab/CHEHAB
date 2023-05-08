@@ -8,7 +8,6 @@
 #include <vector>
 
 namespace fheco::ir
-
 {
 class Term;
 
@@ -42,8 +41,6 @@ public:
 
   static TermType deduce_result_type(const OpCode &op_code, const std::vector<Term *> &operands);
 
-  static OpCode sample_op_code_from_type(OpCode::Type type);
-
   inline Type type() const { return type_; }
 
   inline const std::vector<int> &generators() const { return generators_; }
@@ -59,8 +56,8 @@ public:
 
 private:
   OpCode(Type type, std::vector<int> generators, std::size_t arity, bool commutativity, std::string str_repr)
-    : type_{type}, generators_{std::move(generators)}, arity_{arity},
-      commutativity_{commutativity}, str_repr_{std::move(str_repr)}
+    : type_{type}, generators_{std::move(generators)}, arity_{arity}, commutativity_{commutativity},
+      str_repr_{std::move(str_repr)}
   {}
 
   Type type_;
@@ -102,7 +99,6 @@ inline std::ostream &operator<<(std::ostream &os, const OpCode &op_code)
 {
   return os << op_code.str_repr();
 }
-
 } // namespace fheco::ir
 
 namespace std

@@ -20,16 +20,6 @@ PackedVal ClearDataEvaluator::make_rand_packed_val(integer slot_min, integer slo
   return packed_val;
 }
 
-bool ClearDataEvaluator::can_convert_to_scalar(const PackedVal &packed_val) const
-{
-  for (size_t i = 0; i < packed_val.size() - 1; ++i)
-  {
-    if (packed_val[i] != packed_val[i + 1])
-      return false;
-  }
-  return true;
-}
-
 template <typename TArg, typename TDestination>
 void ClearDataEvaluator::operate_unary(const ir::OpCode &op_code, const TArg &arg, TDestination &dest) const
 {

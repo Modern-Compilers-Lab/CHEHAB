@@ -8,7 +8,7 @@ using namespace std;
 
 namespace fheco::util
 {
-ir::IOTermsInfo evaluate_on_clear(ir::Function &func, const ir::IOTermsInfo &in_terms)
+ir::IOTermsInfo evaluate_on_clear(ir::Func &func, const ir::IOTermsInfo &in_terms)
 {
   const auto &evaluator = func.clear_data_evaluator();
   ir::TermsValues temps_values;

@@ -1,27 +1,33 @@
 #include "fheco/ir/op_code.hpp"
-#include "fheco/ir/common.hpp"
 #include "fheco/ir/term.hpp"
-#include <algorithm>
 #include <stdexcept>
 
 using namespace std;
 
 namespace fheco::ir
-
 {
-const OpCode OpCode::nop = OpCode(OpCode::Type::nop, {}, 0, false, "_");
-const OpCode OpCode::encrypt = OpCode(OpCode::Type::encrypt, {}, 1, false, "encrypt");
-const OpCode OpCode::add = OpCode(OpCode::Type::add, {}, 2, true, "+");
-const OpCode OpCode::sub = OpCode(OpCode::Type::sub, {}, 2, false, "-");
-const OpCode OpCode::negate = OpCode(OpCode::Type::negate, {}, 1, false, "negate");
+const OpCode OpCode::nop = OpCode(Type::nop, {}, 0, false, "_");
+
+const OpCode OpCode::encrypt = OpCode(Type::encrypt, {}, 1, false, "encrypt");
+
+const OpCode OpCode::add = OpCode(Type::add, {}, 2, true, "+");
+
+const OpCode OpCode::sub = OpCode(Type::sub, {}, 2, false, "-");
+
+const OpCode OpCode::negate = OpCode(Type::negate, {}, 1, false, "negate");
+
 OpCode OpCode::rotate(int steps)
 {
-  return OpCode(OpCode::Type::rotate, {steps}, 1, false, "rotate_" + to_string(steps));
+  return OpCode(Type::rotate, {steps}, 1, false, "<< " + to_string(steps));
 }
-const OpCode OpCode::square = OpCode(OpCode::Type::square, {}, 1, false, "square");
-const OpCode OpCode::mul = OpCode(OpCode::Type::mul, {}, 2, true, "*");
-const OpCode OpCode::mod_switch = OpCode(OpCode::Type::mod_switch, {}, 1, false, "mod_switch");
-const OpCode OpCode::relin = OpCode(OpCode::Type::relin, {}, 1, false, "relin");
+
+const OpCode OpCode::square = OpCode(Type::square, {}, 1, false, "square");
+
+const OpCode OpCode::mul = OpCode(Type::mul, {}, 2, true, "*");
+
+const OpCode OpCode::mod_switch = OpCode(Type::mod_switch, {}, 1, false, "mod_switch");
+
+const OpCode OpCode::relin = OpCode(Type::relin, {}, 1, false, "relin");
 
 TermType OpCode::deduce_result_type(const OpCode &op_code, const vector<Term *> &operands)
 {
@@ -32,86 +38,41 @@ TermType OpCode::deduce_result_type(const OpCode &op_code, const vector<Term *> 
     throw invalid_argument("cannot deduce result type of operation with 0 operands (nop)");
 
   // non arithmetic operations
-  if (op_code.type() == OpCode::Type::encrypt)
+  if (op_code.type() == Type::encrypt)
   {
-    if (operands[0]->type() != TermType::plaintext)
+    if (operands[0]->type() != TermType::plain)
       throw invalid_argument("encrypt arg must be plaintext");
 
-    return TermType::ciphertext;
+    return TermType::cipher;
   }
 
-  if (op_code.type() == OpCode::Type::mod_switch)
+  if (op_code.type() == Type::mod_switch)
   {
-    if (operands[0]->type() != TermType::ciphertext)
+    if (operands[0]->type() != TermType::cipher)
       throw invalid_argument("mod_switch arg must be ciphertext");
 
-    return TermType::ciphertext;
+    return TermType::cipher;
   }
 
-  if (op_code.type() == OpCode::Type::relin)
+  if (op_code.type() == Type::relin)
   {
-    if (operands[0]->type() != TermType::ciphertext)
+    if (operands[0]->type() != TermType::cipher)
       throw invalid_argument("relin arg must be cipher");
 
-    return TermType::ciphertext;
+    return TermType::cipher;
   }
 
   // arithmetic operations
-
-  auto term_with_min_type_it =
-    min_element(operands.begin(), operands.end(), [](const Term *lhs, const Term *rhs) -> bool {
-      return lhs->type() < rhs->type();
-    });
-  return (*term_with_min_type_it)->type();
-}
-
-OpCode OpCode::sample_op_code_from_type(OpCode::Type type)
-{
-  switch (type)
+  switch (op_code.arity())
   {
-  case OpCode::Type::nop:
-    return OpCode::nop;
-    break;
+  case 1:
+    return operands[0]->type();
 
-  case OpCode::Type::encrypt:
-    return OpCode::encrypt;
-    break;
-
-  case OpCode::Type::add:
-    return OpCode::add;
-    break;
-
-  case OpCode::Type::sub:
-    return OpCode::sub;
-    break;
-
-  case OpCode::Type::negate:
-    return OpCode::negate;
-    break;
-
-  case OpCode::Type::rotate:
-    return OpCode::rotate(0);
-    break;
-
-  case OpCode::Type::square:
-    return OpCode::square;
-    break;
-
-  case OpCode::Type::mul:
-    return OpCode::mul;
-    break;
-
-  case OpCode::Type::mod_switch:
-    return OpCode::mod_switch;
-    break;
-
-  case OpCode::Type::relin:
-    return OpCode::relin;
-    break;
+  case 2:
+    return min(operands[0]->type(), operands[1]->type());
 
   default:
-    throw invalid_argument("invalid op_code type");
-    break;
+    throw invalid_argument("unhandled class of operations with arity > 2");
   }
 }
 
@@ -119,7 +80,7 @@ OpCode OpCode::sample_op_code_from_type(OpCode::Type type)
 int OpCode::steps() const
 {
   if (type_ != Type::rotate)
-    throw std::invalid_argument("steps should be called only on rotate_* operations");
+    throw invalid_argument("steps should be called only on rotate_* operations");
 
   return generators_[0];
 }

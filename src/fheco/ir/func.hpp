@@ -11,14 +11,13 @@
 #include <vector>
 
 namespace fheco::ir
-
 {
-class Function
+class Func
 {
 public:
-  Function(std::string name, std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction = false);
+  Func(std::string name, std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction = false);
 
-  Function(std::string name, std::size_t slot_count, int bit_width, bool signedness);
+  Func(std::string name, std::size_t slot_count, int bit_width, bool signedness);
 
   static bool is_valid_slot_count(std::size_t slot_count);
 

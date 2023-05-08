@@ -46,7 +46,7 @@ public:
 
   Ciphertext &operator[](std::size_t idx);
 
-  static ir::TermType term_type() { return ir::TermType::ciphertext; }
+  static ir::TermType term_type() { return ir::TermType::cipher; }
 
   const Ciphertext &set_output(std::string label) const;
 
@@ -70,7 +70,7 @@ private:
 
   std::optional<PackedVal> example_val_{};
 
-  friend class ir::Function;
+  friend class ir::Func;
   friend Ciphertext emulate_subscripted_read(const Ciphertext &arg);
   friend void emulate_subscripted_write(Ciphertext &lhs, const Ciphertext &rhs);
 };

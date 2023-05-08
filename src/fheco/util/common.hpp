@@ -2,7 +2,7 @@
 
 #include "fheco/dsl/common.hpp"
 #include "fheco/ir/common.hpp"
-#include "fheco/ir/function.hpp"
+#include "fheco/ir/func.hpp"
 #include <bitset>
 #include <cstddef>
 #include <limits>
@@ -16,10 +16,10 @@ namespace fheco::util
 {
 void init_random(PackedVal &packed_val, integer slot_min, integer slot_max);
 
-void print_io_terms_values(const ir::Function &func, std::ostream &os);
+void print_io_terms_values(const ir::Func &func, std::ostream &os);
 
 void print_io_terms_values(
-  const ir::Function &func, const ir::IOTermsInfo &inputs, const ir::IOTermsInfo &outputs, std::ostream &os);
+  const ir::Func &func, const ir::IOTermsInfo &inputs, const ir::IOTermsInfo &outputs, std::ostream &os);
 
 void print_io_terms_values(const ir::IOTermsInfo &io_terms_values, std::size_t lead_trail_size, std::ostream &os);
 

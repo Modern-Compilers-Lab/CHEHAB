@@ -1,9 +1,8 @@
-#include "fheco/ir/function.hpp"
+#include "fheco/ir/func.hpp"
 #include "fheco/dsl/ciphertext.hpp"
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/dsl/plaintext.hpp"
 #include "fheco/util/common.hpp"
-#include <algorithm>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -12,9 +11,8 @@
 using namespace std;
 
 namespace fheco::ir
-
 {
-Function::Function(string name, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
+Func::Func(string name, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
   : name_{move(name)}, slot_count_{slot_count}, need_cyclic_rotations_{false},
     clear_data_evaluator_{slot_count_, modulus, signedness, delayed_reduction}
 {
@@ -22,24 +20,24 @@ Function::Function(string name, size_t slot_count, integer modulus, bool signedn
     throw invalid_argument("slot_count must be a power of two");
 }
 
-Function::Function(string name, size_t slot_count, int bit_width, bool signedness)
-  : Function(move(name), slot_count, (2 << (bit_width - 1)) - 1, signedness, true)
+Func::Func(string name, size_t slot_count, int bit_width, bool signedness)
+  : Func(move(name), slot_count, (2 << (bit_width - 1)) - 1, signedness, true)
 {}
 
-bool Function::is_valid_slot_count(size_t slot_count)
+bool Func::is_valid_slot_count(size_t slot_count)
 {
   return slot_count != 0 && (slot_count & (slot_count - 1)) == 0;
 }
 
 template <typename T>
-void Function::init_input(T &input, string label)
+void Func::init_input(T &input, string label)
 {
   input.id_ = data_flow_.insert_leaf(input.term_type())->id();
   inputs_info_.emplace(input.id(), ParamTermInfo{move(label), nullopt});
 }
 
 template <typename T>
-void Function::init_input(T &input, string label, PackedVal example_val)
+void Func::init_input(T &input, string label, PackedVal example_val)
 {
   input.id_ = data_flow_.insert_leaf(input.term_type())->id();
   clear_data_evaluator_.adjust_packed_val(example_val);
@@ -48,14 +46,14 @@ void Function::init_input(T &input, string label, PackedVal example_val)
 }
 
 template <typename T>
-void Function::init_input(T &input, string label, integer example_val_slot_min, integer example_val_slot_max)
+void Func::init_input(T &input, string label, integer example_val_slot_min, integer example_val_slot_max)
 {
   auto example_val = clear_data_evaluator_.make_rand_packed_val(example_val_slot_min, example_val_slot_max);
   init_input(input, move(label), move(example_val));
 }
 
 template <typename T>
-void Function::init_const(T &constant, PackedVal packed_val)
+void Func::init_const(T &constant, PackedVal packed_val)
 {
   clear_data_evaluator_.adjust_packed_val(packed_val);
   constant.example_val_ = packed_val;
@@ -74,7 +72,7 @@ void Function::init_const(T &constant, PackedVal packed_val)
 }
 
 template <typename TArg, typename TDest>
-void Function::operate_unary(OpCode op_code, const TArg &arg, TDest &dest)
+void Func::operate_unary(OpCode op_code, const TArg &arg, TDest &dest)
 {
   auto arg_term = data_flow_.find_term(arg.id());
   if (!arg_term)
@@ -112,7 +110,7 @@ void Function::operate_unary(OpCode op_code, const TArg &arg, TDest &dest)
 }
 
 template <typename TArg1, typename TArg2, typename TDest>
-void Function::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &arg2, TDest &dest)
+void Func::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &arg2, TDest &dest)
 {
   auto arg1_term = data_flow_.find_term(arg1.id());
   auto arg2_term = data_flow_.find_term(arg2.id());
@@ -135,7 +133,10 @@ void Function::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &ar
   if (Compiler::cse_enabled())
   {
     if (op_code.commutativity())
-      sort(operands.begin(), operands.end(), Term::ComparePtr{});
+    {
+      if (*operands[0] > *operands[1])
+        swap(operands[0], operands[1]);
+    }
 
     if (auto parent = data_flow_.find_op_term(op_code, operands); parent)
     {
@@ -146,7 +147,7 @@ void Function::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &ar
   dest.id_ = data_flow_.insert_op_term(move(op_code), move(operands))->id();
 }
 
-const Term *Function::find_term(size_t id) const
+const Term *Func::find_term(size_t id) const
 {
   if (auto term = data_flow_.find_term(id); term)
     return term;
@@ -155,7 +156,7 @@ const Term *Function::find_term(size_t id) const
 }
 
 template <typename T>
-void Function::set_output(const T &output, string label)
+void Func::set_output(const T &output, string label)
 {
   if (auto term = data_flow_.find_term(output.id()); term)
   {
@@ -167,7 +168,7 @@ void Function::set_output(const T &output, string label)
 }
 
 template <typename T>
-void Function::set_output(const T &output, string label, PackedVal example_val)
+void Func::set_output(const T &output, string label, PackedVal example_val)
 {
   if (auto term = data_flow_.find_term(output.id()); term)
   {
@@ -178,7 +179,7 @@ void Function::set_output(const T &output, string label, PackedVal example_val)
     throw invalid_argument("output not defined");
 }
 
-const ParamTermInfo *Function::get_input_info(size_t id) const
+const ParamTermInfo *Func::get_input_info(size_t id) const
 {
   if (auto it = inputs_info_.find(id); it != inputs_info_.end())
     return &it->second;
@@ -186,7 +187,7 @@ const ParamTermInfo *Function::get_input_info(size_t id) const
   return nullptr;
 }
 
-const PackedVal *Function::get_const_val(size_t id) const
+const PackedVal *Func::get_const_val(size_t id) const
 {
   if (auto it = constants_values_.find(id); it != constants_values_.end())
     return &it->second;
@@ -194,7 +195,7 @@ const PackedVal *Function::get_const_val(size_t id) const
   return nullptr;
 }
 
-const ParamTermInfo *Function::get_output_info(size_t id) const
+const ParamTermInfo *Func::get_output_info(size_t id) const
 {
   if (auto it = outputs_info_.find(id); it != outputs_info_.end())
     return &it->second;
@@ -202,7 +203,7 @@ const ParamTermInfo *Function::get_output_info(size_t id) const
   return nullptr;
 }
 
-TermQualif Function::get_term_qualif(size_t id) const
+TermQualif Func::get_term_qualif(size_t id) const
 {
   if (is_input_term(id))
   {
@@ -222,27 +223,27 @@ TermQualif Function::get_term_qualif(size_t id) const
 }
 
 // init_input
-template void Function::init_input(Ciphertext &, string);
-template void Function::init_input(Plaintext &, string);
-template void Function::init_input(Ciphertext &, string, PackedVal);
-template void Function::init_input(Plaintext &, string, PackedVal);
-template void Function::init_input(Ciphertext &, string, integer, integer);
-template void Function::init_input(Plaintext &, string, integer, integer);
+template void Func::init_input(Ciphertext &, string);
+template void Func::init_input(Plaintext &, string);
+template void Func::init_input(Ciphertext &, string, PackedVal);
+template void Func::init_input(Plaintext &, string, PackedVal);
+template void Func::init_input(Ciphertext &, string, integer, integer);
+template void Func::init_input(Plaintext &, string, integer, integer);
 // init_const
-template void Function::init_const(Ciphertext &, PackedVal);
-template void Function::init_const(Plaintext &, PackedVal);
+template void Func::init_const(Ciphertext &, PackedVal);
+template void Func::init_const(Plaintext &, PackedVal);
 // set_output
-template void Function::set_output(const Ciphertext &, string);
-template void Function::set_output(const Plaintext &, string);
-template void Function::set_output(const Ciphertext &, string, PackedVal);
-template void Function::set_output(const Plaintext &, string, PackedVal);
+template void Func::set_output(const Ciphertext &, string);
+template void Func::set_output(const Plaintext &, string);
+template void Func::set_output(const Ciphertext &, string, PackedVal);
+template void Func::set_output(const Plaintext &, string, PackedVal);
 // operate_unary
-template void Function::operate_unary(OpCode, const Ciphertext &, Ciphertext &);
-template void Function::operate_unary(OpCode, const Plaintext &, Ciphertext &);
-template void Function::operate_unary(OpCode, const Plaintext &, Plaintext &);
+template void Func::operate_unary(OpCode, const Ciphertext &, Ciphertext &);
+template void Func::operate_unary(OpCode, const Plaintext &, Ciphertext &);
+template void Func::operate_unary(OpCode, const Plaintext &, Plaintext &);
 // operate_binary
-template void Function::operate_binary(OpCode, const Ciphertext &, const Ciphertext &, Ciphertext &);
-template void Function::operate_binary(OpCode, const Ciphertext &, const Plaintext &, Ciphertext &);
-template void Function::operate_binary(OpCode, const Plaintext &, const Ciphertext &, Ciphertext &);
-template void Function::operate_binary(OpCode, const Plaintext &, const Plaintext &, Plaintext &);
+template void Func::operate_binary(OpCode, const Ciphertext &, const Ciphertext &, Ciphertext &);
+template void Func::operate_binary(OpCode, const Ciphertext &, const Plaintext &, Ciphertext &);
+template void Func::operate_binary(OpCode, const Plaintext &, const Ciphertext &, Ciphertext &);
+template void Func::operate_binary(OpCode, const Plaintext &, const Plaintext &, Plaintext &);
 } // namespace fheco::ir

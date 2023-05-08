@@ -17,17 +17,14 @@ string term_type_str_repr(TermType term_type)
 {
   switch (term_type)
   {
-  case TermType::ciphertext:
+  case TermType::cipher:
     return "ctxt";
-    break;
 
-  case TermType::plaintext:
+  case TermType::plain:
     return "ptxt";
-    break;
 
   default:
     throw invalid_argument("invalid term_type");
-    break;
   }
 }
 } // namespace fheco::ir

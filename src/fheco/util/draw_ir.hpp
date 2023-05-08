@@ -1,9 +1,9 @@
 #pragma once
 
-#include "fheco/ir/function.hpp"
+#include "fheco/ir/func.hpp"
 #include <ostream>
 
 namespace fheco::util
 {
-void draw_ir(ir::Function &func, std::ostream &os);
+void draw_ir(ir::Func &func, std::ostream &os);
 } // namespace fheco::util

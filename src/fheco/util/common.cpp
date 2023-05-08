@@ -15,7 +15,7 @@ void init_random(PackedVal &packed_val, integer slot_min, integer slot_max)
     *it = uni(rng);
 }
 
-void print_io_terms_values(const ir::Function &func, ostream &os)
+void print_io_terms_values(const ir::Func &func, ostream &os)
 {
   ios_base::fmtflags f(os.flags());
   os << boolalpha;
@@ -28,7 +28,7 @@ void print_io_terms_values(const ir::Function &func, ostream &os)
       throw invalid_argument("no input with id was found");
 
     auto in_term = func.data_flow().find_term(in.first);
-    os << in.second.label_ << " " << (in_term->type() == ir::TermType::ciphertext) << " "
+    os << in.second.label_ << " " << (in_term->type() == ir::TermType::cipher) << " "
        << (func.clear_data_evaluator().signedness() || func.clear_data_evaluator().delayed_reduction());
     if (in.second.example_val_)
       os << " " << *in.second.example_val_;
@@ -40,7 +40,7 @@ void print_io_terms_values(const ir::Function &func, ostream &os)
       throw invalid_argument("no output with id was found");
 
     auto out_term = func.data_flow().find_term(out.first);
-    os << out.second.label_ << " " << (out_term->type() == ir::TermType::ciphertext) << " "
+    os << out.second.label_ << " " << (out_term->type() == ir::TermType::cipher) << " "
        << (func.clear_data_evaluator().signedness() || func.clear_data_evaluator().delayed_reduction());
     if (out.second.example_val_)
       os << " " << *out.second.example_val_;
@@ -50,7 +50,7 @@ void print_io_terms_values(const ir::Function &func, ostream &os)
 }
 
 void print_io_terms_values(
-  const ir::Function &func, const ir::IOTermsInfo &inputs, const ir::IOTermsInfo &outputs, ostream &os)
+  const ir::Func &func, const ir::IOTermsInfo &inputs, const ir::IOTermsInfo &outputs, ostream &os)
 {
   ios_base::fmtflags f(os.flags());
   os << boolalpha;
@@ -62,7 +62,7 @@ void print_io_terms_values(
     if (!in_term)
       throw invalid_argument("term with id not found");
 
-    os << in.second.label_ << " " << (in_term->type() == ir::TermType::ciphertext) << " "
+    os << in.second.label_ << " " << (in_term->type() == ir::TermType::cipher) << " "
        << (func.clear_data_evaluator().signedness() || func.clear_data_evaluator().delayed_reduction());
     if (in.second.example_val_)
       os << " " << *in.second.example_val_;
@@ -74,7 +74,7 @@ void print_io_terms_values(
     if (!out_term)
       throw invalid_argument("term with id not found");
 
-    os << out.second.label_ << " " << (out_term->type() == ir::TermType::ciphertext) << " "
+    os << out.second.label_ << " " << (out_term->type() == ir::TermType::cipher) << " "
        << (func.clear_data_evaluator().signedness() || func.clear_data_evaluator().delayed_reduction());
     if (out.second.example_val_)
       os << " " << *out.second.example_val_;

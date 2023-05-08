@@ -7,7 +7,6 @@ using namespace std;
 
 namespace fheco
 {
-
 Plaintext::Plaintext(vector<size_t> shape) : shape_{move(shape)}
 {
   validate_shape(shape_);
