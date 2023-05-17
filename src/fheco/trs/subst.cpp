@@ -30,15 +30,15 @@ ir::Term *Subst::get(const TermMatcher &term_matcher) const
   if (auto it = terms_matching_.find(term_matcher); it != terms_matching_.end())
     return it->second;
 
-  return nullptr;
+  throw invalid_argument("substitution for term_matcher not provided");
 }
 
-optional<int> Subst::get(const OpGenMatcher &op_gen_matcher) const
+int Subst::get(const OpGenMatcher &op_gen_matcher) const
 {
   if (auto it = op_gen_matching_.find(op_gen_matcher); it != op_gen_matching_.end())
     return it->second;
 
-  return nullopt;
+  throw invalid_argument("substitution for op_gen_matcher not provided");
 }
 
 ostream &operator<<(ostream &os, const Subst &subst)

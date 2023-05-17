@@ -1,7 +1,6 @@
 #include "fheco/trs/trs.hpp"
 #include "fheco/trs/common.hpp"
 #include "fheco/trs/fold_op_gen_matcher.hpp"
-#include "fheco/trs/ops_overloads.hpp"
 #include "fheco/trs/term_matcher.hpp"
 #include <cstddef>
 #include <functional>
@@ -16,93 +15,50 @@ using namespace std;
 
 namespace fheco::trs
 {
-TRS::TRS(shared_ptr<ir::Func> func) : func_{move(func)}
-{
-  TermMatcher x{TermMatcherType::cipher, "x"};
-  TermMatcher y{TermMatcherType::cipher, "y"};
-  TermMatcher z{TermMatcherType::cipher, "z"};
-
-  OpGenMatcher n{"n"};
-  OpGenMatcher m{"m"};
-
-  mul_rules_ = {};
-  rotate_rules_ = {};
-  add_rules_ = {{"fact_cipher", x * y + x * z, x * (y + z)}};
-  sub_rules_ = {};
-  misc_rules_ = {};
-}
-
 void TRS::run()
 {
-  unordered_set<size_t> constructed_ids;
   for (auto term : func_->get_top_sorted_terms())
-  {
-    if (term->is_leaf())
-      continue;
-
-    if (constructed_ids.find(term->id()) != constructed_ids.end())
-      continue;
-
-    while (true)
-    {
-      for (const auto &rule : pick_rules(term->op_code()))
-      {
-        clog << "trying rule '" << rule.label() << "' on term $" << term->id() << " -> ";
-        Subst subst;
-        int64_t rel_cost = 0;
-        bool matched = match(rule.lhs(), term, subst, rel_cost);
-        if (!matched)
-        {
-          clog << "could not find a substitution\n";
-          continue;
-        }
-        if (!rule.check_condition(subst))
-        {
-          clog << "condition not met\n";
-          continue;
-        }
-        auto equiv_term = construct_term(rule.get_rhs(subst), subst, rel_cost);
-        clog << "matched, rel_cost=" << rel_cost << " -> ";
-        if (rel_cost <= 0)
-        {
-          clog << "replace term $" << term->id() << " with term $" << equiv_term->id() << '\n';
-          func_->replace_term_with(term, equiv_term);
-          constructed_ids.insert(equiv_term->id());
-          term = equiv_term;
-          break;
-        }
-        else if (func_->data_flow().can_delete(equiv_term))
-        {
-          clog << "delete constructed equiv_term $" << equiv_term->id() << " -> ";
-          func_->delete_term_cascade(equiv_term);
-        }
-      }
-      break;
-    }
-  }
+    rewrite_term(term);
 }
 
-const vector<Rule> &TRS::pick_rules(const ir::OpCode &op_code) const
+void TRS::rewrite_term(ir::Term *term)
 {
-  switch (op_code.type())
+  if (term->is_leaf())
+    return;
+
+  for (const auto &rule : ruleset_.pick_rules(term->op_code()))
   {
-  case ir::OpCode::Type::nop:
-    throw invalid_argument("cannot pick rules for nop");
+    clog << "trying rule '" << rule.label() << "' on term $" << term->id() << " -> ";
+    Subst subst;
+    int64_t rel_cost = 0;
+    bool matched = match(rule.lhs(), term, subst, rel_cost);
+    if (!matched)
+    {
+      clog << "could not find a substitution\n";
+      continue;
+    }
+    if (!rule.check_condition(subst))
+    {
+      clog << "condition not met\n";
+      continue;
+    }
+    vector<ir::Term *> created_terms;
+    auto equiv_term = construct_term(rule.get_rhs(subst), subst, rel_cost, created_terms);
+    clog << "matched, rel_cost=" << rel_cost << " -> ";
+    if (rel_cost <= 0)
+    {
+      clog << "replace term $" << term->id() << " with term $" << equiv_term->id() << '\n';
+      func_->replace_term_with(term, equiv_term);
 
-  case ir::OpCode::Type::add:
-    return add_rules();
-
-  case ir::OpCode::Type::sub:
-    return sub_rules();
-
-  case ir::OpCode::Type::rotate:
-    return rotate_rules();
-
-  case ir::OpCode::Type::mul:
-    return mul_rules();
-
-  default:
-    return misc_rules();
+      for (auto created_term : created_terms)
+        rewrite_term(created_term);
+      break;
+    }
+    else if (func_->data_flow().can_delete(equiv_term))
+    {
+      clog << "delete constructed equiv_term $" << equiv_term->id() << " -> ";
+      func_->delete_term_cascade(equiv_term);
+    }
   }
 }
 
@@ -115,7 +71,7 @@ bool TRS::match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, i
   };
   stack<Call> call_stack;
 
-  unordered_set<ir::Term *> visited_terms;
+  unordered_set<ir::Term *, ir::Term::HashPtr, ir::Term::EqualPtr> visited_terms;
   vector<ir::Term *> sorted_terms;
   stack<reference_wrapper<const TermMatcher>> term_matchers;
 
@@ -234,7 +190,8 @@ bool TRS::match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, i
   return true;
 }
 
-ir::Term *TRS::construct_term(const TermMatcher &matcher, const Subst &subst, int64_t &rel_cost)
+ir::Term *TRS::construct_term(
+  const TermMatcher &matcher, const Subst &subst, int64_t &rel_cost, vector<ir::Term *> &created_terms)
 {
   struct Call
   {
@@ -269,12 +226,7 @@ ir::Term *TRS::construct_term(const TermMatcher &matcher, const Subst &subst, in
     if (top_call.children_processed_)
     {
       if (top_matcher.is_variable())
-      {
-        if (auto term = subst.get(top_matcher); term)
-          matching.emplace(top_matcher, term);
-        else
-          throw invalid_argument("substitution for term_matcher variable not provided");
-      }
+        matching.emplace(top_matcher, subst.get(top_matcher));
       else
       {
         if (top_matcher.val())
@@ -298,7 +250,10 @@ ir::Term *TRS::construct_term(const TermMatcher &matcher, const Subst &subst, in
           auto term = func_->insert_op(convert_op_code(op_code, move(generators_vals)), terms_operands, inserted);
           matching.emplace(top_matcher, term);
           if (inserted)
+          {
+            created_terms.push_back(term);
             rel_cost += evaluate_term(term);
+          }
         }
       }
       continue;

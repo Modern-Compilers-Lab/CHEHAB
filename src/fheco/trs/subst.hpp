@@ -4,7 +4,6 @@
 #include "fheco/ir/term.hpp"
 #include "fheco/trs/op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
-#include <optional>
 #include <ostream>
 #include <unordered_map>
 
@@ -21,7 +20,7 @@ public:
 
   ir::Term *get(const TermMatcher &term_matcher) const;
 
-  std::optional<int> get(const OpGenMatcher &op_gen_matcher) const;
+  int get(const OpGenMatcher &op_gen_matcher) const;
 
   inline const std::unordered_map<TermMatcher, ir::Term *> &terms_matching() const { return terms_matching_; }
 

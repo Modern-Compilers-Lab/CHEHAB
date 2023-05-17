@@ -167,8 +167,45 @@ void Expr::unset_output(Term *term)
 
 unordered_set<size_t> Expr::prune_unreachabe_terms()
 {
+
+  struct Call
+  {
+    Term *term_;
+    bool children_processed_;
+  };
+  stack<Call> call_stack;
+
+  unordered_set<Term *, Term::HashPtr, Term::EqualPtr> visited_terms;
+  vector<Term *> all_terms_sorted;
+
+  for (auto term : terms_)
+  {
+    if (visited_terms.find(term) == visited_terms.end())
+      call_stack.push(Call{term, false});
+
+    while (!call_stack.empty())
+    {
+      auto top_call = call_stack.top();
+      call_stack.pop();
+      auto top_term = top_call.term_;
+      if (top_call.children_processed_)
+      {
+        visited_terms.insert(top_term);
+        all_terms_sorted.push_back(top_term);
+        continue;
+      }
+
+      if (auto it = visited_terms.find(top_term); it != visited_terms.end())
+        continue;
+
+      call_stack.push(Call{top_term, true});
+      for (auto operand : top_term->operands())
+        call_stack.push(Call{operand, false});
+    }
+  }
+
   unordered_set<size_t> deleted_leaves;
-  for (auto it = terms_.cbegin(); it != terms_.cend();)
+  for (auto it = all_terms_sorted.crbegin(); it != all_terms_sorted.crend(); ++it)
   {
     auto term = *it;
     if (can_delete(term))
@@ -181,11 +218,9 @@ unordered_set<size_t> Expr::prune_unreachabe_terms()
           operand->parents_.erase(term);
         op_terms_.erase(OpTermKey{&term->op_code(), &term->operands()});
       }
-      it = terms_.erase(it);
+      terms_.erase(term);
       delete term;
     }
-    else
-      ++it;
   }
   return deleted_leaves;
 }
@@ -250,19 +285,19 @@ void Expr::topological_sort()
 {
   sorted_terms_.clear();
 
-  enum class Mark
-  {
-    temp,
-    perm
-  };
-  unordered_map<Term *, Mark> terms_marks;
-
   struct Call
   {
     Term *term_;
     bool children_processed_;
   };
   stack<Call> call_stack;
+
+  enum class Mark
+  {
+    temp,
+    perm
+  };
+  unordered_map<Term *, Mark> terms_marks;
 
   for (auto term : outputs_)
   {

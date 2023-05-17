@@ -42,12 +42,7 @@ int fold_op_gen_matcher(const OpGenMatcher &matcher, const Subst &subst)
     if (top_call.children_processed_)
     {
       if (top_matcher.is_variable())
-      {
-        if (auto val = subst.get(top_matcher); val)
-          matchers_values.emplace(top_matcher, *val);
-        else
-          throw invalid_argument("substitution for op_gen_matcher variable not provided");
-      }
+        matchers_values.emplace(top_matcher, subst.get(top_matcher));
       else
       {
         if (top_matcher.val())
@@ -123,6 +118,10 @@ void operate_binary(const OpGenOpCode &op_code, int arg1, int arg2, int &dest)
 
   case OpGenOpCode::Type::sub:
     dest = arg1 - arg2;
+    break;
+
+  case OpGenOpCode::Type::mod:
+    dest = arg1 % arg2;
     break;
 
   default:

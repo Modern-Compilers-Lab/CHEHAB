@@ -14,13 +14,15 @@ public:
   static const OpGenOpCode add;
   static const OpGenOpCode sub;
   static const OpGenOpCode negate;
+  static const OpGenOpCode mod;
 
   enum class Type
   {
     nop,
     add,
     sub,
-    negate
+    negate,
+    mod
   };
 
   inline Type type() const { return type_; }

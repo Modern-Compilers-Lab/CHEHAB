@@ -11,4 +11,6 @@ const OpGenOpCode OpGenOpCode::add{Type::add, 2, "+"};
 const OpGenOpCode OpGenOpCode::sub{Type::sub, 2, "-"};
 
 const OpGenOpCode OpGenOpCode::negate{Type::negate, 1, "negate"};
+
+const OpGenOpCode OpGenOpCode::mod{Type::mod, 2, "%"};
 } // namespace fheco::trs

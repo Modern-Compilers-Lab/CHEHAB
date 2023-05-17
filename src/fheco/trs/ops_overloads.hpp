@@ -34,4 +34,7 @@ TermMatcher encrypt(TermMatcher arg);
 
 // square
 TermMatcher square(TermMatcher arg);
+
+// mod
+OpGenMatcher operator%(OpGenMatcher lhs, OpGenMatcher rhs);
 } // namespace fheco::trs

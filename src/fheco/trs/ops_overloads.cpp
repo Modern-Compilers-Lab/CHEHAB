@@ -68,4 +68,10 @@ TermMatcher square(TermMatcher arg)
 {
   return TermMatcher{TermOpCode::square, vector<TermMatcher>{move(arg)}};
 }
+
+// mod
+OpGenMatcher operator%(OpGenMatcher lhs, OpGenMatcher rhs)
+{
+  return OpGenMatcher{OpGenOpCode::mod, vector<OpGenMatcher>{move(lhs), move(rhs)}};
+}
 } // namespace fheco::trs
