@@ -51,26 +51,31 @@ void TRS::run()
         Subst subst;
         int64_t rel_cost = 0;
         bool matched = match(rule.lhs(), term, subst, rel_cost);
-        if (matched)
+        if (!matched)
         {
-          auto equiv_term = construct_term(rule.rhs(), subst, rel_cost);
-          clog << "matched, rel_cost=" << rel_cost << " -> ";
-          if (rel_cost <= 0)
-          {
-            clog << "replace term $" << term->id() << " with term $" << equiv_term->id() << '\n';
-            func_->replace_term_with(term, equiv_term);
-            constructed_ids.insert(equiv_term->id());
-            term = equiv_term;
-            break;
-          }
-          else if (func_->data_flow().can_delete(equiv_term))
-          {
-            clog << "delete constructed equiv_term $" << equiv_term->id() << " -> ";
-            func_->delete_term_cascade(equiv_term);
-          }
-        }
-        else
           clog << "could not find a substitution\n";
+          continue;
+        }
+        if (!rule.check_condition(subst))
+        {
+          clog << "condition not met\n";
+          continue;
+        }
+        auto equiv_term = construct_term(rule.rhs(), subst, rel_cost);
+        clog << "matched, rel_cost=" << rel_cost << " -> ";
+        if (rel_cost <= 0)
+        {
+          clog << "replace term $" << term->id() << " with term $" << equiv_term->id() << '\n';
+          func_->replace_term_with(term, equiv_term);
+          constructed_ids.insert(equiv_term->id());
+          term = equiv_term;
+          break;
+        }
+        else if (func_->data_flow().can_delete(equiv_term))
+        {
+          clog << "delete constructed equiv_term $" << equiv_term->id() << " -> ";
+          func_->delete_term_cascade(equiv_term);
+        }
       }
       break;
     }
