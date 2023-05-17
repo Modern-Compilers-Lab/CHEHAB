@@ -1,8 +1,12 @@
 #pragma once
 
-#include "fheco/ir/func.hpp"
 #include <memory>
 #include <ostream>
+
+namespace fheco::ir
+{
+class Func;
+} // namespace fheco::ir
 
 namespace fheco::util
 {

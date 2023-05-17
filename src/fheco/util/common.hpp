@@ -2,7 +2,6 @@
 
 #include "fheco/dsl/common.hpp"
 #include "fheco/ir/common.hpp"
-#include "fheco/ir/func.hpp"
 #include <bitset>
 #include <cstddef>
 #include <limits>
@@ -12,6 +11,11 @@
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
+
+namespace fheco::ir
+{
+class Func;
+} // namespace fheco::ir
 
 namespace fheco::util
 {

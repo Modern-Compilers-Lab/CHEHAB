@@ -1,5 +1,6 @@
 #include "fheco/trs/common.hpp"
 #include "fheco/ir/common.hpp"
+#include "fheco/ir/term.hpp"
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -8,7 +9,6 @@ using namespace std;
 
 namespace fheco::trs
 {
-
 ir::OpCode convert_op_code(const TermOpCode &op_code, vector<int> generators_vals)
 {
   string str_repr = op_code.str_repr();

@@ -1,11 +1,14 @@
 #pragma once
 
-#include "fheco/ir/func.hpp"
-#include "fheco/ir/term.hpp"
 #include "fheco/trs/op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
 #include <ostream>
 #include <unordered_map>
+
+namespace fheco::ir
+{
+class Term;
+} // namespace fheco::ir
 
 namespace fheco::trs
 {

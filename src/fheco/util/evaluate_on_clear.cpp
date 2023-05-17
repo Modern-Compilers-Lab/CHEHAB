@@ -1,4 +1,5 @@
 #include "fheco/util/evaluate_on_clear.hpp"
+#include "fheco/ir/func.hpp"
 #include "fheco/util/common.hpp"
 #include <iostream>
 #include <stdexcept>

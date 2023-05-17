@@ -1,4 +1,5 @@
 #include "fheco/trs/subst.hpp"
+#include "fheco/ir/term.hpp"
 #include <stdexcept>
 #include <utility>
 

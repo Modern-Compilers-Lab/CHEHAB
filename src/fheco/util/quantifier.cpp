@@ -1,5 +1,6 @@
 #include "fheco/util/quantifier.hpp"
 #include "fheco/ir/common.hpp"
+#include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
 #include <stack>
 #include <stdexcept>

@@ -2,11 +2,15 @@
 
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/op_code.hpp"
-#include "fheco/ir/term.hpp"
 #include "fheco/trs/term_op_code.hpp"
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
+
+namespace fheco::ir
+{
+class Term;
+} // namespace fheco::ir
 
 namespace fheco::trs
 {

@@ -3,7 +3,6 @@
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/expr.hpp"
 #include "fheco/ir/op_code.hpp"
-#include "fheco/ir/term.hpp"
 #include "fheco/util/clear_data_evaluator.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -13,6 +12,8 @@
 
 namespace fheco::ir
 {
+class Term;
+
 class Func
 {
 public:

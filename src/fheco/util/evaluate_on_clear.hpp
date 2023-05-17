@@ -1,10 +1,14 @@
 #pragma once
 
 #include "fheco/ir/common.hpp"
-#include "fheco/ir/func.hpp"
 #include <cstddef>
 #include <memory>
 #include <unordered_map>
+
+namespace fheco::ir
+{
+class Func;
+} // namespace fheco::ir
 
 namespace fheco::util
 {

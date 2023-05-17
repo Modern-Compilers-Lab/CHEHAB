@@ -1,7 +1,6 @@
 #pragma once
 
 #include "fheco/ir/common.hpp"
-#include "fheco/ir/func.hpp"
 #include "fheco/ir/op_code.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -9,6 +8,11 @@
 #include <ostream>
 #include <unordered_map>
 #include <utility>
+
+namespace fheco::ir
+{
+class Func;
+} // namespace fheco::ir
 
 namespace fheco::util
 {

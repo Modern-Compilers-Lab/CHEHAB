@@ -1,10 +1,17 @@
 #pragma once
 
-#include "fheco/ir/func.hpp"
+#include "fheco/ir/op_code.hpp"
 #include <memory>
 #include <ostream>
 #include <string>
 #include <unordered_map>
+
+namespace fheco::ir
+{
+class Func;
+
+class Term;
+} // namespace fheco::ir
 
 namespace fheco::util
 {

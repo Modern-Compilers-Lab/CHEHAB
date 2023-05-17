@@ -1,6 +1,5 @@
 #pragma once
 
-#include "fheco/ir/term.hpp"
 #include "fheco/trs/rule.hpp"
 #include "fheco/trs/ruleset.hpp"
 #include "fheco/trs/subst.hpp"
@@ -12,6 +11,8 @@
 namespace fheco::ir
 {
 class Func;
+
+class Term;
 } // namespace fheco::ir
 
 namespace fheco::trs

@@ -1,5 +1,6 @@
 #include "fheco/trs/ruleset.hpp"
 #include "fheco/dsl/common.hpp"
+#include "fheco/ir/func.hpp"
 #include "fheco/trs/ops_overloads.hpp"
 #include "fheco/trs/term_matcher.hpp"
 

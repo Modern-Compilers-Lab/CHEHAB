@@ -1,4 +1,6 @@
 #include "fheco/util/draw_ir.hpp"
+#include "fheco/ir/func.hpp"
+#include "fheco/ir/term.hpp"
 #include "fheco/util/common.hpp"
 #include <cstddef>
 #include <stdexcept>

@@ -6,9 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
-#include <vector>
 
 using namespace std;
 
@@ -154,7 +152,7 @@ Term *Func::insert_const(PackedVal packed_val)
   return const_term;
 }
 
-Term *Func::insert_op(OpCode op_code, std::vector<Term *> operands, bool &inserted)
+Term *Func::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
 {
   inserted = false;
   if (Compiler::const_folding_enabled())

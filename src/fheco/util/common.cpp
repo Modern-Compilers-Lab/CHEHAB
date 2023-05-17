@@ -1,4 +1,5 @@
 #include "fheco/util/common.hpp"
+#include "fheco/ir/func.hpp"
 #include <stdexcept>
 
 using namespace std;
