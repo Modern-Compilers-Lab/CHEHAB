@@ -24,6 +24,14 @@ public:
     add_func(std::make_shared<ir::Func>(std::move(name), slot_count, bit_width, signedness));
   }
 
+  static void compile(
+    std::shared_ptr<ir::Func> func, bool use_mod_switch = true, SecurityLevel sec_level = SecurityLevel::tc128);
+
+  static inline void compile(bool use_mod_switch = true, SecurityLevel sec_level = SecurityLevel::tc128)
+  {
+    compile(active_func(), use_mod_switch, sec_level);
+  }
+
   static inline const std::shared_ptr<ir::Func> &active_func()
   {
     if (active_func_it_ == funcs_table_.cend())
@@ -40,38 +48,15 @@ public:
 
   static bool cse_enabled() { return cse_enabled_; }
 
+  static bool const_folding_enabled() { return const_folding_enabled_; }
+
   static inline void enable_cse() { cse_enabled_ = true; }
 
   static inline void disable_cse() { cse_enabled_ = false; }
 
-  // static inline void compile(
-  //   const std::string &func_name, std::ostream &os, int trs_passes = 1, bool use_mod_switch = true,
-  //   SecurityLevel sec_level = SecurityLevel::tc128)
-  // {
-  //   FuncEntry &func_entry = get_func_entry(func_name);
-  //   func_entry.compile(os, trs_passes, use_mod_switch, sec_level);
-  // }
+  static inline void enable_const_folding() { const_folding_enabled_ = true; }
 
-  // static inline void compile(
-  //   std::ostream &os, int trs_passes = 1, bool use_mod_switch = true, SecurityLevel sec_level =
-  //   SecurityLevel::tc128)
-  // {
-  //   FuncEntry &func_entry = get_func_entry(get_active()->get_Function_tag());
-  //   func_entry.compile(os, trs_passes, use_mod_switch, sec_level);
-  // }
-
-  // static inline void compile_noopt(
-  //   const std::string &func_name, std::ostream &os, SecurityLevel sec_level = SecurityLevel::tc128)
-  // {
-  //   FuncEntry &func_entry = get_func_entry(func_name);
-  //   func_entry.compile_noopt(os, sec_level);
-  // }
-
-  // static inline void compile_noopt(std::ostream &os, SecurityLevel sec_level = SecurityLevel::tc128)
-  // {
-  //   FuncEntry &func_entry = get_func_entry(get_active()->get_Function_tag());
-  //   func_entry.compile_noopt(os, sec_level);
-  // }
+  static inline void disable_const_folding() { const_folding_enabled_ = false; }
 
 private:
   using FuncsTable = std::unordered_map<std::string, std::shared_ptr<ir::Func>>;
@@ -83,5 +68,7 @@ private:
   static FuncsTable::const_iterator active_func_it_;
 
   static bool cse_enabled_;
+
+  static bool const_folding_enabled_;
 };
 } // namespace fheco

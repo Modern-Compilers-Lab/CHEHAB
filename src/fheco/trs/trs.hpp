@@ -1,27 +1,51 @@
 #pragma once
 
-#include "program.hpp"
-#include "rewrite_rule.hpp"
-#include "term.hpp"
+#include "fheco/ir/func.hpp"
+#include "fheco/ir/op_code.hpp"
+#include "fheco/ir/term.hpp"
+#include "fheco/trs/rule.hpp"
+#include "fheco/trs/subst.hpp"
+#include <cstdint>
 #include <memory>
+#include <utility>
+#include <vector>
 
-namespace fheco_trs
+namespace fheco::trs
 {
 class TRS
 {
-private:
-  std::shared_ptr<ir::Program> program;
-  static core::FunctionTable functions_table;
-
-  void apply_rule_on_ir_node(const std::shared_ptr<ir::Term> &ir_node, const RewriteRule &rule, bool &is_rule_applied);
-
-  void apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const std::vector<RewriteRule> &rules);
-
 public:
-  TRS(const std::shared_ptr<ir::Program> &prgm) : program(prgm) {}
-
-  void apply_rewrite_rules_on_program(const std::vector<RewriteRule> &ruleset);
+  TRS(std::shared_ptr<ir::Func> func);
 
   void run();
+
+  const std::vector<Rule> &pick_rules(const ir::OpCode &op_code) const;
+
+  inline const std::vector<Rule> &add_rules() const { return add_rules_; }
+
+  inline const std::vector<Rule> &sub_rules() const { return sub_rules_; }
+
+  inline const std::vector<Rule> &rotate_rules() const { return rotate_rules_; }
+
+  inline const std::vector<Rule> &mul_rules() const { return mul_rules_; }
+
+  inline const std::vector<Rule> &misc_rules() const { return misc_rules_; }
+
+private:
+  bool match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, std::int64_t &rel_cost) const;
+
+  ir::Term *construct_term(const TermMatcher &term_matcher, const Subst &subst, std::int64_t &rel_cost);
+
+  std::shared_ptr<ir::Func> func_;
+
+  std::vector<Rule> add_rules_;
+
+  std::vector<Rule> sub_rules_;
+
+  std::vector<Rule> rotate_rules_;
+
+  std::vector<Rule> mul_rules_;
+
+  std::vector<Rule> misc_rules_;
 };
-} // namespace fheco_trs
+} // namespace fheco::trs
