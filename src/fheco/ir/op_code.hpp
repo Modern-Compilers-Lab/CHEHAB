@@ -9,8 +9,6 @@
 
 namespace fheco::ir
 {
-class Term;
-
 class OpCode
 {
 public:
@@ -39,7 +37,10 @@ public:
   static const OpCode mod_switch;
   static const OpCode relin;
 
-  static TermType deduce_result_type(const OpCode &op_code, const std::vector<Term *> &operands);
+  OpCode(Type type, std::vector<int> generators, std::size_t arity, bool commutativity, std::string str_repr)
+    : type_{type}, generators_{std::move(generators)}, arity_{arity}, commutativity_{commutativity},
+      str_repr_{std::move(str_repr)}
+  {}
 
   inline Type type() const { return type_; }
 
@@ -55,11 +56,6 @@ public:
   int steps() const;
 
 private:
-  OpCode(Type type, std::vector<int> generators, std::size_t arity, bool commutativity, std::string str_repr)
-    : type_{type}, generators_{std::move(generators)}, arity_{arity}, commutativity_{commutativity},
-      str_repr_{std::move(str_repr)}
-  {}
-
   Type type_;
 
   std::vector<int> generators_;

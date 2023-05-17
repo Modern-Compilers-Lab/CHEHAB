@@ -35,7 +35,7 @@ Plaintext::Plaintext(PackedVal packed_val, vector<size_t> shape) : Plaintext(mov
 
 Plaintext::Plaintext(integer scalar_val) : Plaintext(vector<size_t>{})
 {
-  PackedVal packed_val(Compiler::active_func()->clear_data_evaluator().slot_count(), scalar_val);
+  PackedVal packed_val(Compiler::active_func()->slot_count(), scalar_val);
   Compiler::active_func()->init_const(*this, move(packed_val));
 }
 

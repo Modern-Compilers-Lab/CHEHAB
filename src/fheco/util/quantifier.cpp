@@ -27,10 +27,10 @@ void Quantifier::compute_he_depth_info()
   ctxt_leaves_depth_info_.clear();
 
   stack<pair<const ir::Term *, DepthInfo>> dfs;
-  for (auto term : func_->output_terms())
+  for (auto output_term : func_->data_flow().outputs())
   {
-    if (term->type() == ir::TermType::cipher && term->is_source())
-      dfs.push({term, DepthInfo{0, 0}});
+    if (output_term->type() == ir::TermType::cipher && output_term->is_source())
+      dfs.push({output_term, DepthInfo{0, 0}});
 
     while (!dfs.empty())
     {
@@ -38,9 +38,10 @@ void Quantifier::compute_he_depth_info()
       dfs.pop();
       if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
       {
-        int new_xdepth = max(ctxt_leaves_depth_info_[top_term->id()].xdepth_, top_ctxt_info.xdepth_);
-        int new_depth = max(ctxt_leaves_depth_info_[top_term->id()].depth_, top_ctxt_info.depth_);
-        ctxt_leaves_depth_info_[top_term->id()] = DepthInfo{new_xdepth, new_depth};
+        auto [it, inserted] = ctxt_leaves_depth_info_.emplace(top_term->id(), DepthInfo{0, 0});
+        int new_xdepth = max(it->second.xdepth_, top_ctxt_info.xdepth_);
+        int new_depth = max(it->second.depth_, top_ctxt_info.depth_);
+        it->second = DepthInfo{new_xdepth, new_depth};
         continue;
       }
       int operands_xdepth = top_ctxt_info.xdepth_;
@@ -175,7 +176,7 @@ void Quantifier::count_terms_classes()
         {
           const auto &arg_info = ctxts_info.find(term->operands()[0]->id())->second;
           ctxts_info.emplace(term->id(), CtxtInfo{arg_info.opposed_level_, arg_info.size_});
-          rotation_keys_steps.emplace(term->op_code().steps());
+          rotation_keys_steps.insert(term->op_code().steps());
           ++captured_terms_count_;
           auto [it, inserted] = he_rotate_count_.emplace(CAOpInfo{arg_info.opposed_level_, arg_info.size_}, 1);
           if (!inserted)

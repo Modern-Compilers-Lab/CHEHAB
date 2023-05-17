@@ -1,4 +1,4 @@
-#include "fheco/ir/dag.hpp"
+#include "fheco/ir/expr.hpp"
 #include <stack>
 #include <stdexcept>
 #include <tuple>
@@ -8,13 +8,13 @@ using namespace std;
 
 namespace fheco::ir
 {
-DAG::~DAG()
+Expr::~Expr()
 {
   for (auto term : terms_)
     delete term;
 }
 
-DAG::DAG(DAG &&other)
+Expr::Expr(Expr &&other)
   : op_terms_{move(other.op_terms_)}, outputs_{move(other.outputs_)}, sorted_terms_{move(other.sorted_terms_)},
     valid_top_sort_{other.valid_top_sort_}, terms_{other.terms_}
 {
@@ -24,7 +24,7 @@ DAG::DAG(DAG &&other)
   other.terms_.clear();
 }
 
-DAG &DAG::operator=(DAG &&other)
+Expr &Expr::operator=(Expr &&other)
 {
   op_terms_ = move(other.op_terms_);
   outputs_ = move(other.outputs_);
@@ -40,7 +40,7 @@ DAG &DAG::operator=(DAG &&other)
   return *this;
 }
 
-size_t DAG::HashOpTermKey::operator()(const OpTermKey &k) const
+size_t Expr::HashOpTermKey::operator()(const OpTermKey &k) const
 {
   size_t h = hash<OpCode>()(*k.op_code_);
   const auto &operands = *k.operands_;
@@ -49,7 +49,7 @@ size_t DAG::HashOpTermKey::operator()(const OpTermKey &k) const
   return h;
 }
 
-bool DAG::EqualOpTermKey::operator()(const OpTermKey &lhs, const OpTermKey &rhs) const
+bool Expr::EqualOpTermKey::operator()(const OpTermKey &lhs, const OpTermKey &rhs) const
 {
   if (*lhs.op_code_ != *rhs.op_code_)
     return false;
@@ -68,24 +68,24 @@ bool DAG::EqualOpTermKey::operator()(const OpTermKey &lhs, const OpTermKey &rhs)
   return true;
 }
 
-Term *DAG::insert_op_term(OpCode op_code, vector<Term *> operands)
+Term *Expr::insert_op(OpCode op_code, vector<Term *> operands)
 {
   Term *term = new Term(move(op_code), move(operands));
-  for (auto operand : term->operands_)
+  for (auto operand : term->operands())
     operand->parents_.insert(term);
   op_terms_.emplace(OpTermKey{&term->op_code(), &term->operands()}, term);
   terms_.insert(term);
   return term;
 }
 
-Term *DAG::insert_leaf(TermType type)
+Term *Expr::insert_leaf(TermType type)
 {
   Term *term = new Term(move(type));
   terms_.insert(term);
   return term;
 }
 
-Term *DAG::find_term(size_t id) const
+Term *Expr::find_term(size_t id) const
 {
   Term t(id);
   if (auto it = terms_.find(&t); it != terms_.end())
@@ -94,7 +94,7 @@ Term *DAG::find_term(size_t id) const
   return nullptr;
 }
 
-Term *DAG::find_op_term(const OpCode &op_code, const vector<Term *> &operands) const
+Term *Expr::find_op(const OpCode &op_code, const vector<Term *> &operands) const
 {
   if (auto it = op_terms_.find({&op_code, &operands}); it != op_terms_.end())
     return it->second;
@@ -102,32 +102,9 @@ Term *DAG::find_op_term(const OpCode &op_code, const vector<Term *> &operands) c
   return nullptr;
 }
 
-void DAG::prune_unreachabe_terms()
+void Expr::replace(Term *term1, Term *term2)
 {
-  for (auto term : terms_)
-  {
-    if (term->is_source() && !is_output(term))
-      delete_non_output_source_cascade(term);
-  }
-}
-
-void DAG::delete_non_output_source_cascade(Term *term)
-{
-  for (auto operand : term->operands())
-  {
-    operand->parents_.erase(term);
-    if (operand->is_source() && !is_output(operand))
-      delete_non_output_source_cascade(operand);
-  }
-  if (term->is_operation())
-    op_terms_.erase(OpTermKey{&term->op_code(), &term->operands()});
-  terms_.erase(term);
-  delete term;
-}
-
-void DAG::replace_term_with(Term *term1, Term *term2)
-{
-  if (term1->is_source() || *term1 == *term2)
+  if (*term1 == *term2)
     return;
 
   for (auto parent_it = term1->parents_.cbegin(); parent_it != term1->parents_.cend();)
@@ -147,7 +124,7 @@ void DAG::replace_term_with(Term *term1, Term *term2)
   valid_top_sort_ = false;
 }
 
-void DAG::set_output(Term *term)
+void Expr::set_output(Term *term)
 {
   if (outputs_.insert(term).second)
   {
@@ -165,7 +142,7 @@ void DAG::set_output(Term *term)
   }
 }
 
-void DAG::unset_output(Term *term)
+void Expr::unset_output(Term *term)
 {
   if (outputs_.erase(term))
   {
@@ -188,22 +165,105 @@ void DAG::unset_output(Term *term)
   }
 }
 
+unordered_set<size_t> Expr::prune_unreachabe_terms()
+{
+  unordered_set<size_t> deleted_leaves;
+  for (auto it = terms_.cbegin(); it != terms_.cend();)
+  {
+    auto term = *it;
+    if (can_delete(term))
+    {
+      if (term->is_leaf())
+        deleted_leaves.insert(term->id());
+      else
+      {
+        for (auto operand : term->operands())
+          operand->parents_.erase(term);
+        op_terms_.erase(OpTermKey{&term->op_code(), &term->operands()});
+      }
+      it = terms_.erase(it);
+      delete term;
+    }
+    else
+      ++it;
+  }
+  return deleted_leaves;
+}
+
+unordered_set<size_t> Expr::delete_term_cascade(Term *term)
+{
+  if (!can_delete(term))
+    throw invalid_argument("cannot delete term (must be source and not output)");
+
+  struct Call
+  {
+    Term *term_;
+    bool children_processed_;
+  };
+  stack<Call> call_stack;
+
+  unordered_set<size_t> deleted_leaves;
+  call_stack.push(Call{term, false});
+  while (!call_stack.empty())
+  {
+    auto top_call = call_stack.top();
+    call_stack.pop();
+    auto top_term = top_call.term_;
+
+    if (top_call.children_processed_)
+    {
+      if (top_term->is_leaf())
+        deleted_leaves.insert(top_term->id());
+      else
+        op_terms_.erase(OpTermKey{&top_term->op_code(), &top_term->operands()});
+      terms_.erase(top_term);
+      delete top_term;
+      continue;
+    }
+
+    call_stack.push(Call{top_term, true});
+    unordered_set<size_t> operands_ids;
+    for (auto operand : top_term->operands())
+    {
+      operand->parents_.erase(top_term);
+      if (can_delete(operand) && operands_ids.find(operand->id()) == operands_ids.end())
+      {
+        call_stack.push(Call{operand, false});
+        operands_ids.insert(operand->id());
+      }
+    }
+  }
+  return deleted_leaves;
+}
+
+const vector<Term *> &Expr::get_top_sorted_terms()
+{
+  if (valid_top_sort_)
+    return sorted_terms_;
+
+  topological_sort();
+  return sorted_terms_;
+}
+
 // iterative version of https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search
-void DAG::topological_sort()
+void Expr::topological_sort()
 {
   sorted_terms_.clear();
+
   enum class Mark
   {
     temp,
     perm
   };
-  unordered_map<const Term *, Mark> terms_marks;
+  unordered_map<Term *, Mark> terms_marks;
+
   struct Call
   {
-    const Term *term_;
-    bool childs_processed_;
+    Term *term_;
+    bool children_processed_;
   };
   stack<Call> call_stack;
+
   for (auto term : outputs_)
   {
     if (terms_marks.find(term) == terms_marks.end())
@@ -214,27 +274,25 @@ void DAG::topological_sort()
       auto top_call = call_stack.top();
       call_stack.pop();
       auto top_term = top_call.term_;
-      if (!top_call.childs_processed_)
-      {
-        if (auto it = terms_marks.find(top_term); it != terms_marks.end())
-        {
-          if (it->second == Mark::perm)
-            continue;
-
-          if (it->second == Mark::temp)
-            throw logic_error("cycle detected");
-        }
-        terms_marks.emplace(top_term, Mark::temp);
-        call_stack.push(Call{top_term, true});
-      }
-      else
+      if (top_call.children_processed_)
       {
         terms_marks[top_term] = Mark::perm;
         sorted_terms_.push_back(top_term);
         continue;
       }
 
-      for (auto it = top_term->operands_.crbegin(); it != top_term->operands_.crend(); ++it)
+      if (auto it = terms_marks.find(top_term); it != terms_marks.end())
+      {
+        if (it->second == Mark::perm)
+          continue;
+
+        if (it->second == Mark::temp)
+          throw logic_error("cycle detected");
+      }
+
+      terms_marks.emplace(top_term, Mark::temp);
+      call_stack.push(Call{top_term, true});
+      for (auto it = top_term->operands().crbegin(); it != top_term->operands().crend(); ++it)
         call_stack.push(Call{*it, false});
     }
   }

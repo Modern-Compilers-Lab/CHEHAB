@@ -22,14 +22,14 @@ public:
     bool operator()(const Term *lhs, const Term *rhs) const;
   };
 
+  struct ComparePtr
+  {
+    bool operator()(const Term *lhs, const Term *rhs) const;
+  };
+
   using PtrSet = std::unordered_set<Term *, HashPtr, EqualPtr>;
 
-  Term(OpCode op_code, std::vector<Term *> operands)
-    : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)},
-      type_{OpCode::deduce_result_type(op_code_, operands_)}
-  {}
-
-  Term(TermType type) : id_{++count_}, op_code_{OpCode::nop}, operands_{}, type_{type} {}
+  static TermType deduce_result_type(const OpCode &op_code, const std::vector<Term *> &operands);
 
   inline std::size_t id() const { return id_; }
 
@@ -41,13 +41,20 @@ public:
 
   inline const PtrSet &parents() const { return parents_; }
 
-  inline bool is_operation() const { return op_code_ != OpCode::nop; }
+  inline bool is_operation() const { return op_code_.type() != OpCode::Type::nop; }
 
   inline bool is_leaf() const { return operands_.empty(); }
 
   inline bool is_source() const { return parents_.empty(); }
 
 private:
+  Term(OpCode op_code, std::vector<Term *> operands)
+    : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)},
+      type_{deduce_result_type(op_code_, operands_)}
+  {}
+
+  Term(TermType type) : id_{++count_}, op_code_{OpCode::nop}, operands_{}, type_{type} {}
+
   // to construct temp object used as search keys
   Term(std::size_t id) : id_{id}, op_code_{OpCode::nop}, operands_{}, type_{TermType::cipher} {}
 
@@ -64,7 +71,7 @@ private:
   // it seems we don't need parent multiplicity
   PtrSet parents_{};
 
-  friend class DAG;
+  friend class Expr;
 };
 
 inline bool operator==(const Term &lhs, const Term &rhs)

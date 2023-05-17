@@ -34,11 +34,12 @@ std::string term_type_str_repr(TermType);
 
 enum class TermQualif
 {
-  temp,
   in,
   in_out,
   const_,
-  out
+  const_out,
+  op,
+  op_out
 };
 
 struct ParamTermInfo

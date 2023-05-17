@@ -20,11 +20,11 @@ public:
 
   PackedVal make_rand_packed_val(integer slot_min, integer slot_max) const;
 
-  template <typename TArg, typename TDestination>
-  void operate_unary(const ir::OpCode &op_code, const TArg &arg, TDestination &dest) const;
+  void operate(const ir::OpCode &op_code, const std::vector<PackedVal> &args, PackedVal &dest) const;
 
-  template <typename TArg1, typename TArg2, typename TDestination>
-  void operate_binary(const ir::OpCode &op_code, const TArg1 &arg1, const TArg2 &arg2, TDestination &dest) const;
+  void operate_unary(const ir::OpCode &op_code, const PackedVal &arg, PackedVal &dest) const;
+
+  void operate_binary(const ir::OpCode &op_code, const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const;
 
   inline std::size_t slot_count() const { return slot_count_; }
 

@@ -1,6 +1,6 @@
 set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/common.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/dag.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/expr.cpp
     ${CMAKE_CURRENT_LIST_DIR}/func.cpp
     ${CMAKE_CURRENT_LIST_DIR}/op_code.cpp
     ${CMAKE_CURRENT_LIST_DIR}/term.cpp
@@ -9,7 +9,7 @@ set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
 install(
     FILES
         ${CMAKE_CURRENT_LIST_DIR}/common.hpp
-        ${CMAKE_CURRENT_LIST_DIR}/dag.hpp
+        ${CMAKE_CURRENT_LIST_DIR}/expr.hpp
         ${CMAKE_CURRENT_LIST_DIR}/func.hpp
         ${CMAKE_CURRENT_LIST_DIR}/op_code.hpp
         ${CMAKE_CURRENT_LIST_DIR}/term.hpp

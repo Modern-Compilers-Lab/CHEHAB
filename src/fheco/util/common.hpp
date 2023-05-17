@@ -6,6 +6,7 @@
 #include <bitset>
 #include <cstddef>
 #include <limits>
+#include <memory>
 #include <ostream>
 #include <random>
 #include <stdexcept>
@@ -16,10 +17,11 @@ namespace fheco::util
 {
 void init_random(PackedVal &packed_val, integer slot_min, integer slot_max);
 
-void print_io_terms_values(const ir::Func &func, std::ostream &os);
+void print_io_terms_values(const std::shared_ptr<ir::Func> &func, std::ostream &os);
 
 void print_io_terms_values(
-  const ir::Func &func, const ir::IOTermsInfo &inputs, const ir::IOTermsInfo &outputs, std::ostream &os);
+  const std::shared_ptr<ir::Func> &func, const ir::IOTermsInfo &inputs, const ir::IOTermsInfo &outputs,
+  std::ostream &os);
 
 void print_io_terms_values(const ir::IOTermsInfo &io_terms_values, std::size_t lead_trail_size, std::ostream &os);
 

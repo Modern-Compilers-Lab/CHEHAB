@@ -1,7 +1,6 @@
 #include "fheco/util/clear_data_evaluator.hpp"
 #include "fheco/util/common.hpp"
 #include <iostream>
-#include <type_traits>
 
 using namespace std;
 
@@ -20,8 +19,27 @@ PackedVal ClearDataEvaluator::make_rand_packed_val(integer slot_min, integer slo
   return packed_val;
 }
 
-template <typename TArg, typename TDestination>
-void ClearDataEvaluator::operate_unary(const ir::OpCode &op_code, const TArg &arg, TDestination &dest) const
+void ClearDataEvaluator::operate(const ir::OpCode &op_code, const std::vector<PackedVal> &args, PackedVal &dest) const
+{
+  if (op_code.arity() != args.size())
+    throw invalid_argument("invalid number of args");
+
+  switch (op_code.arity())
+  {
+  case 1:
+    operate_unary(op_code, args[0], dest);
+    break;
+
+  case 2:
+    operate_binary(op_code, args[0], args[1], dest);
+    break;
+
+  default:
+    throw logic_error("unhandled clear data evaluation for operations with arity > 2");
+  }
+}
+
+void ClearDataEvaluator::operate_unary(const ir::OpCode &op_code, const PackedVal &arg, PackedVal &dest) const
 {
   switch (op_code.type())
   {
@@ -30,8 +48,7 @@ void ClearDataEvaluator::operate_unary(const ir::OpCode &op_code, const TArg &ar
     break;
 
   case ir::OpCode::Type::rotate:
-    if constexpr (is_same<TArg, PackedVal>::value)
-      rotate(arg, op_code.steps(), dest);
+    rotate(arg, op_code.steps(), dest);
     break;
 
   default:
@@ -39,9 +56,8 @@ void ClearDataEvaluator::operate_unary(const ir::OpCode &op_code, const TArg &ar
   }
 }
 
-template <typename TArg1, typename TArg2, typename TDestination>
 void ClearDataEvaluator::operate_binary(
-  const ir::OpCode &op_code, const TArg1 &arg1, const TArg2 &arg2, TDestination &dest) const
+  const ir::OpCode &op_code, const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const
 {
   switch (op_code.type())
   {
@@ -156,11 +172,4 @@ void ClearDataEvaluator::mul(const PackedVal &arg1, const PackedVal &arg2, Packe
 
   reduce(dest);
 }
-
-// explicit template instantiation just to improve compile time
-// operate_unary
-template void ClearDataEvaluator::operate_unary(const ir::OpCode &, const PackedVal &, PackedVal &) const;
-// operate_binary
-template void ClearDataEvaluator::operate_binary(
-  const ir::OpCode &, const PackedVal &, const PackedVal &, PackedVal &) const;
 } // namespace fheco::util

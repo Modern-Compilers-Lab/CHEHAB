@@ -1,5 +1,6 @@
 #include "fheco/util/expr_printer.hpp"
 #include "fheco/ir/common.hpp"
+#include <stdexcept>
 #include <utility>
 
 using namespace std;
@@ -19,7 +20,7 @@ void ExprPrinter::compute_terms_str_expr(Mode mode)
   for (auto term : func_->get_top_sorted_terms())
   {
     if (term->is_leaf())
-      terms_str_expr_[term->id()] = leaf_str_expr(term);
+      terms_str_expr_.emplace(term->id(), leaf_str_expr(term));
     else
     {
       if (mode_ == Mode::infix || mode_ == Mode::infix_explicit_parenthesis)
@@ -32,18 +33,18 @@ void ExprPrinter::compute_terms_str_expr(Mode mode)
           if (term->op_code().type() == ir::OpCode::Type::rotate)
           {
             if (arg->is_operation())
-              terms_str_expr_[term->id()] = "(" + arg_expr + ") " + term->op_code().str_repr();
+              terms_str_expr_.emplace(term->id(), "(" + arg_expr + ") " + term->op_code().str_repr());
             else
-              terms_str_expr_[term->id()] = arg_expr + " " + term->op_code().str_repr();
+              terms_str_expr_.emplace(term->id(), arg_expr + " " + term->op_code().str_repr());
           }
           else
           {
             if (
               arg->is_operation() &&
               (expl_parenth || ops_precedence_.at(term->op_code().type()) < ops_precedence_.at(arg->op_code().type())))
-              terms_str_expr_[term->id()] = term->op_code().str_repr() + "(" + arg_expr + ")";
+              terms_str_expr_.emplace(term->id(), term->op_code().str_repr() + "(" + arg_expr + ")");
             else
-              terms_str_expr_[term->id()] = term->op_code().str_repr() + " " + arg_expr;
+              terms_str_expr_.emplace(term->id(), term->op_code().str_repr() + " " + arg_expr);
           }
         }
         else if (term->op_code().arity() == 2)
@@ -52,38 +53,42 @@ void ExprPrinter::compute_terms_str_expr(Mode mode)
           const auto rhs = term->operands()[1];
           const auto &lhs_expr = terms_str_expr_.at(lhs->id());
           const auto &rhs_expr = terms_str_expr_.at(rhs->id());
-          terms_str_expr_[term->id()] = "";
+          string tmp_str_expr = "";
           if (
             lhs->is_operation() &&
             (expl_parenth || ops_precedence_.at(term->op_code().type()) < ops_precedence_.at(lhs->op_code().type())))
-            terms_str_expr_[term->id()] += "(" + lhs_expr + ")";
+            tmp_str_expr += "(" + lhs_expr + ")";
           else
-            terms_str_expr_[term->id()] += lhs_expr;
+            tmp_str_expr += lhs_expr;
 
-          terms_str_expr_[term->id()] += " " + term->op_code().str_repr() + " ";
+          tmp_str_expr += " " + term->op_code().str_repr() + " ";
 
           if (
             rhs->is_operation() &&
             (expl_parenth || ops_precedence_.at(term->op_code().type()) < ops_precedence_.at(rhs->op_code().type())))
-            terms_str_expr_[term->id()] += "(" + rhs_expr + ")";
+            tmp_str_expr += "(" + rhs_expr + ")";
           else
-            terms_str_expr_[term->id()] += rhs_expr;
+            tmp_str_expr += rhs_expr;
+
+          terms_str_expr_.emplace(term->id(), move(tmp_str_expr));
         }
         else
           throw invalid_argument("infix with non binary unary operation");
       }
       else if (mode == Mode::prefix)
       {
-        terms_str_expr_[term->id()] = term->op_code().str_repr();
+        string tmp_str_expr = term->op_code().str_repr();
         for (const auto operand : term->operands())
-          terms_str_expr_[term->id()] += " " + terms_str_expr_.at(operand->id());
+          tmp_str_expr += " " + terms_str_expr_.at(operand->id());
+        terms_str_expr_.emplace(term->id(), move(tmp_str_expr));
       }
       else if (mode == Mode::posfix)
       {
-        terms_str_expr_[term->id()] = "";
+        string tmp_str_expr = "";
         for (const auto operand : term->operands())
-          terms_str_expr_[term->id()] += terms_str_expr_.at(operand->id()) + " ";
-        terms_str_expr_[term->id()] += term->op_code().str_repr();
+          tmp_str_expr += terms_str_expr_.at(operand->id()) + " ";
+        tmp_str_expr += term->op_code().str_repr();
+        terms_str_expr_.emplace(term->id(), move(tmp_str_expr));
       }
       else
         throw invalid_argument("invalid mode");
@@ -99,7 +104,10 @@ string ExprPrinter::expand_term(size_t id, Mode mode, int depth) const
 
 string ExprPrinter::expand_term(size_t id, Mode mode, int depth, TermsStrExpr &dp) const
 {
-  auto term = func_->find_term(id);
+  auto term = func_->data_flow().find_term(id);
+  if (!term)
+    throw invalid_argument("term with id not found");
+
   if (depth <= 0)
   {
     if (term->is_leaf())
@@ -188,9 +196,9 @@ string ExprPrinter::leaf_str_expr(const ir::Term *term) const
   if (auto input_info = func_->get_input_info(term->id()); input_info)
     return input_info->label_;
   else if (auto const_val = func_->get_const_val(term->id()); const_val)
-    return "const_" + to_string(term->id());
+    return "const_$" + to_string(term->id());
   else
-    throw logic_error("temp leaf term");
+    throw logic_error("invalid leaf term, non-input and non-const");
 }
 
 void ExprPrinter::print_outputs_str_expr(ostream &os) const

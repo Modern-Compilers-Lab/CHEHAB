@@ -8,22 +8,22 @@ using namespace std;
 
 namespace fheco::util
 {
-ir::IOTermsInfo evaluate_on_clear(ir::Func &func, const ir::IOTermsInfo &in_terms)
+ir::IOTermsInfo evaluate_on_clear(const shared_ptr<ir::Func> &func, const ir::IOTermsInfo &in_terms)
 {
-  const auto &evaluator = func.clear_data_evaluator();
+  const auto &evaluator = func->clear_data_evaluator();
   ir::TermsValues temps_values;
   ir::IOTermsInfo outputs_values;
-  for (auto term : func.get_top_sorted_terms())
+  for (auto term : func->get_top_sorted_terms())
   {
-    if (!term->is_operation())
+    if (term->is_leaf())
     {
-      if (auto input_info = func.get_input_info(term->id()); input_info)
+      if (auto input_info = func->get_input_info(term->id()); input_info)
       {
         if (auto in_val_it = in_terms.find(term->id()); in_val_it != in_terms.end() && in_val_it->second.example_val_)
         {
           PackedVal in_val = *in_val_it->second.example_val_;
           evaluator.adjust_packed_val(in_val);
-          if (auto output_info = func.get_output_info(term->id()); output_info)
+          if (auto output_info = func->get_output_info(term->id()); output_info)
           {
             temps_values.emplace(term->id(), in_val);
             outputs_values.emplace(term->id(), ir::ParamTermInfo{output_info->label_, move(in_val)});
@@ -34,10 +34,10 @@ ir::IOTermsInfo evaluate_on_clear(ir::Func &func, const ir::IOTermsInfo &in_term
         else
           cerr << "value not provided for input (id=" << term->id() << ", label=" << input_info->label_ << ")\n";
       }
-      else if (auto const_value = func.get_const_val(term->id()); const_value)
+      else if (auto const_value = func->get_const_val(term->id()); const_value)
         temps_values.emplace(term->id(), *const_value);
       else
-        throw logic_error("temp leaf term");
+        throw logic_error("invalid leaf term, non-input and non-const");
     }
     else
     {
@@ -83,9 +83,9 @@ ir::IOTermsInfo evaluate_on_clear(ir::Func &func, const ir::IOTermsInfo &in_term
           cerr << "missing arg when computing term (arg1 id=" << arg1_id << ")\n";
       }
       else
-        throw logic_error("unhandled n-ary operation (n not 1 nor 2)");
+        throw logic_error("unhandled clear data evaluation for operations with arity > 2");
 
-      if (auto output_info = func.get_output_info(term->id()); output_info)
+      if (auto output_info = func->get_output_info(term->id()); output_info)
       {
         if (auto term_val_it = temps_values.find(term->id()); term_val_it != temps_values.end())
           outputs_values.emplace(term->id(), ir::ParamTermInfo{output_info->label_, term_val_it->second});
