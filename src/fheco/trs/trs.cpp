@@ -61,7 +61,7 @@ void TRS::run()
           clog << "condition not met\n";
           continue;
         }
-        auto equiv_term = construct_term(rule.rhs(), subst, rel_cost);
+        auto equiv_term = construct_term(rule.get_rhs(subst), subst, rel_cost);
         clog << "matched, rel_cost=" << rel_cost << " -> ";
         if (rel_cost <= 0)
         {
