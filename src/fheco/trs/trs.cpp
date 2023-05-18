@@ -39,7 +39,7 @@ void TRS::rewrite_term(ir::Term *term)
       clog << "could not find a substitution\n";
       continue;
     }
-    if (!rule.check_condition(subst))
+    if (!rule.check_cond(subst))
     {
       clog << "condition not met\n";
       continue;

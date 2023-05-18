@@ -104,9 +104,6 @@ Term *Expr::find_op(const OpCode &op_code, const vector<Term *> &operands) const
 
 void Expr::replace(Term *term1, Term *term2)
 {
-  if (*term1 == *term2)
-    return;
-
   for (auto parent_it = term1->parents_.cbegin(); parent_it != term1->parents_.cend();)
   {
     auto parent = *parent_it;

@@ -2,7 +2,9 @@
 
 #include "fheco/trs/op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
+#include "fheco/trs/term_op_code.hpp"
 #include <cstdint>
+#include <vector>
 
 namespace fheco::trs
 {
@@ -37,4 +39,7 @@ TermMatcher square(TermMatcher arg);
 
 // mod
 OpGenMatcher operator%(OpGenMatcher lhs, OpGenMatcher rhs);
+
+// balanced_reduct, used to generate log reduction rules
+TermMatcher balanced_reduct(const std::vector<TermMatcher> &args, const TermOpCode &op_code);
 } // namespace fheco::trs

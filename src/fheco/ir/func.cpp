@@ -179,8 +179,8 @@ Term *Func::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
 
   if (Compiler::cse_enabled())
   {
-    if (op_code.commutativity())
-      sort(operands.begin(), operands.end(), Term::ComparePtr{});
+    // if (op_code.commutativity())
+    //   sort(operands.begin(), operands.end(), Term::ComparePtr{});
 
     if (auto op_term = data_flow_.find_op(op_code, operands); op_term)
       return op_term;
@@ -192,6 +192,9 @@ Term *Func::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
 
 void Func::replace_term_with(Term *term1, Term *term2)
 {
+  if (*term1 == *term2)
+    return;
+
   data_flow_.replace(term1, term2);
   if (auto output_info_node = outputs_info_.extract(term1->id()); !output_info_node.empty())
   {

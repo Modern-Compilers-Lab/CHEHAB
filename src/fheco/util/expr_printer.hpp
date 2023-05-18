@@ -23,7 +23,7 @@ public:
     none,
     prefix,
     infix,
-    infix_explicit_parenthesis,
+    infix_expl_paren,
     posfix
   };
 
@@ -41,7 +41,7 @@ public:
 
   const std::shared_ptr<ir::Func> func() const { return func_; }
 
-  const TermsStrExpr &terms_str_expr() const { return terms_str_expr_; }
+  const TermsStrExpr &terms_str_exprs() const { return terms_str_exprs_; }
 
   Mode mode() const { return mode_; }
 
@@ -55,7 +55,7 @@ private:
 
   std::shared_ptr<ir::Func> func_;
 
-  TermsStrExpr terms_str_expr_{};
+  TermsStrExpr terms_str_exprs_{};
 
   Mode mode_ = Mode::none;
 };

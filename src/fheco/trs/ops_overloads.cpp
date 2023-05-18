@@ -1,6 +1,5 @@
 #include "fheco/trs/ops_overloads.hpp"
 #include "fheco/trs/op_gen_op_code.hpp"
-#include "fheco/trs/term_op_code.hpp"
 #include <utility>
 
 using namespace std;
@@ -73,5 +72,21 @@ TermMatcher square(TermMatcher arg)
 OpGenMatcher operator%(OpGenMatcher lhs, OpGenMatcher rhs)
 {
   return OpGenMatcher{OpGenOpCode::mod, vector<OpGenMatcher>{move(lhs), move(rhs)}};
+}
+
+// balanced_reduct, used to generate log reduction rules
+TermMatcher balanced_reduct(const std::vector<TermMatcher> &args, const TermOpCode &op_code)
+{
+  vector<TermMatcher> balanced_ops;
+  for (size_t i = 0; i < args.size() - 1; i += 2)
+    balanced_ops.push_back(TermMatcher{op_code, vector<TermMatcher>{args[i], args[i + 1]}});
+
+  if (args.size() & 1)
+    balanced_ops.push_back(args.back());
+
+  for (size_t i = 0; i < balanced_ops.size() - 1; i += 2)
+    balanced_ops.push_back(TermMatcher{op_code, vector<TermMatcher>{args[i], args[i + 1]}});
+
+  return balanced_ops.back();
 }
 } // namespace fheco::trs

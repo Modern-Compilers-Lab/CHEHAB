@@ -17,44 +17,44 @@ const unordered_map<ir::OpCode::Type, int> ExprPrinter::ops_precedence_ = {
 
 void ExprPrinter::compute_terms_str_expr(Mode mode)
 {
-  terms_str_expr_.clear();
+  terms_str_exprs_.clear();
   mode_ = mode;
   for (auto term : func_->get_top_sorted_terms())
   {
     if (term->is_leaf())
-      terms_str_expr_.emplace(term->id(), leaf_str_expr(term));
+      terms_str_exprs_.emplace(term->id(), leaf_str_expr(term));
     else
     {
-      if (mode_ == Mode::infix || mode_ == Mode::infix_explicit_parenthesis)
+      if (mode_ == Mode::infix || mode_ == Mode::infix_expl_paren)
       {
-        bool expl_parenth = mode_ == Mode::infix_explicit_parenthesis;
+        bool expl_parenth = mode_ == Mode::infix_expl_paren;
         if (term->op_code().arity() == 1)
         {
           const auto arg = term->operands()[0];
-          const auto &arg_expr = terms_str_expr_.at(arg->id());
+          const auto &arg_expr = terms_str_exprs_.at(arg->id());
           if (term->op_code().type() == ir::OpCode::Type::rotate)
           {
             if (arg->is_operation())
-              terms_str_expr_.emplace(term->id(), "(" + arg_expr + ") " + term->op_code().str_repr());
+              terms_str_exprs_.emplace(term->id(), "(" + arg_expr + ") " + term->op_code().str_repr());
             else
-              terms_str_expr_.emplace(term->id(), arg_expr + " " + term->op_code().str_repr());
+              terms_str_exprs_.emplace(term->id(), arg_expr + " " + term->op_code().str_repr());
           }
           else
           {
             if (
               arg->is_operation() &&
               (expl_parenth || ops_precedence_.at(term->op_code().type()) < ops_precedence_.at(arg->op_code().type())))
-              terms_str_expr_.emplace(term->id(), term->op_code().str_repr() + "(" + arg_expr + ")");
+              terms_str_exprs_.emplace(term->id(), term->op_code().str_repr() + "(" + arg_expr + ")");
             else
-              terms_str_expr_.emplace(term->id(), term->op_code().str_repr() + " " + arg_expr);
+              terms_str_exprs_.emplace(term->id(), term->op_code().str_repr() + " " + arg_expr);
           }
         }
         else if (term->op_code().arity() == 2)
         {
           const auto lhs = term->operands()[0];
           const auto rhs = term->operands()[1];
-          const auto &lhs_expr = terms_str_expr_.at(lhs->id());
-          const auto &rhs_expr = terms_str_expr_.at(rhs->id());
+          const auto &lhs_expr = terms_str_exprs_.at(lhs->id());
+          const auto &rhs_expr = terms_str_exprs_.at(rhs->id());
           string tmp_str_expr = "";
           if (
             lhs->is_operation() &&
@@ -72,7 +72,7 @@ void ExprPrinter::compute_terms_str_expr(Mode mode)
           else
             tmp_str_expr += rhs_expr;
 
-          terms_str_expr_.emplace(term->id(), move(tmp_str_expr));
+          terms_str_exprs_.emplace(term->id(), move(tmp_str_expr));
         }
         else
           throw invalid_argument("infix with non binary unary operation");
@@ -81,16 +81,16 @@ void ExprPrinter::compute_terms_str_expr(Mode mode)
       {
         string tmp_str_expr = term->op_code().str_repr();
         for (const auto operand : term->operands())
-          tmp_str_expr += " " + terms_str_expr_.at(operand->id());
-        terms_str_expr_.emplace(term->id(), move(tmp_str_expr));
+          tmp_str_expr += " " + terms_str_exprs_.at(operand->id());
+        terms_str_exprs_.emplace(term->id(), move(tmp_str_expr));
       }
       else if (mode == Mode::posfix)
       {
         string tmp_str_expr = "";
         for (const auto operand : term->operands())
-          tmp_str_expr += terms_str_expr_.at(operand->id()) + " ";
+          tmp_str_expr += terms_str_exprs_.at(operand->id()) + " ";
         tmp_str_expr += term->op_code().str_repr();
-        terms_str_expr_.emplace(term->id(), move(tmp_str_expr));
+        terms_str_exprs_.emplace(term->id(), move(tmp_str_expr));
       }
       else
         throw invalid_argument("invalid mode");
@@ -126,9 +126,9 @@ string ExprPrinter::expand_term(size_t id, Mode mode, int depth, TermsStrExpr &d
     result = leaf_str_expr(term);
   else
   {
-    if (mode == Mode::infix || mode == Mode::infix_explicit_parenthesis)
+    if (mode == Mode::infix || mode == Mode::infix_expl_paren)
     {
-      bool expl_parenth = mode == Mode::infix_explicit_parenthesis;
+      bool expl_parenth = mode == Mode::infix_expl_paren;
       if (term->op_code().arity() == 1)
       {
         const auto arg = term->operands()[0];
@@ -208,7 +208,7 @@ void ExprPrinter::print_outputs_str_expr(ostream &os) const
   os << "term_label: str_expr\n";
   for (const auto output_info : func_->outputs_info())
   {
-    if (auto it = terms_str_expr_.find(output_info.first); it != terms_str_expr_.end())
+    if (auto it = terms_str_exprs_.find(output_info.first); it != terms_str_exprs_.end())
       os << output_info.second.label_ << ": " << it->second << '\n';
   }
 }
@@ -216,7 +216,7 @@ void ExprPrinter::print_outputs_str_expr(ostream &os) const
 void ExprPrinter::print_terms_str_expr(ostream &os) const
 {
   os << "term_id: str_expr\n";
-  os << terms_str_expr_;
+  os << terms_str_exprs_;
 }
 } // namespace fheco::util
 

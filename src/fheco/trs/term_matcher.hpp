@@ -15,6 +15,8 @@ class TermMatcher
 public:
   static TermMatcherType deduce_result_type(const TermOpCode &op_code, const std::vector<TermMatcher> &operands);
 
+  TermMatcher() : id_{0}, op_code_{TermOpCode::nop}, operands_{}, type_{}, label_{}, val_{} {}
+
   TermMatcher(TermOpCode op_code, std::vector<TermMatcher> operands)
     : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)},
       type_{deduce_result_type(op_code_, operands_)}, label_{}, val_{}

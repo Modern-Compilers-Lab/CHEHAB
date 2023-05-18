@@ -2,15 +2,11 @@
 
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/op_code.hpp"
+#include "fheco/ir/term.hpp"
 #include "fheco/trs/term_op_code.hpp"
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
-
-namespace fheco::ir
-{
-class Term;
-} // namespace fheco::ir
 
 namespace fheco::trs
 {
@@ -35,4 +31,8 @@ ir::OpCode convert_op_code(const TermOpCode &op_code, std::vector<int> generator
 
 // for now just evaluate op_type
 std::int64_t evaluate_term(const ir::Term *term);
+
+using TermsMetric = std::unordered_map<ir::Term *, std::int64_t, ir::Term::HashPtr, ir::Term::EqualPtr>;
+
+void count_ctxt_leaves(ir::Term *term, TermsMetric &dp);
 } // namespace fheco::trs
