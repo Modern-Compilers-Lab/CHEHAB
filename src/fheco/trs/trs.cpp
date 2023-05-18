@@ -163,12 +163,13 @@ bool TRS::match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, i
   }
   unordered_map<const ir::Term *, bool> to_delete_after_rewrite;
   to_delete_after_rewrite.emplace(term, true);
-  rel_cost = -evaluate_term(term);
+  rel_cost = -evaluate_op(term->op_code(), term->operands());
   sorted_terms.pop_back();
-  for (auto term_it = sorted_terms.crbegin(); term_it != sorted_terms.crend(); ++term_it)
+  for (auto sorted_term_it = sorted_terms.crbegin(); sorted_term_it != sorted_terms.crend(); ++sorted_term_it)
   {
-    auto [to_delete_it, inserted] = to_delete_after_rewrite.emplace(*term_it, true);
-    for (auto parent : (*term_it)->parents())
+    auto sorted_term = *sorted_term_it;
+    auto [to_delete_it, inserted] = to_delete_after_rewrite.emplace(sorted_term, true);
+    for (auto parent : sorted_term->parents())
     {
       if (auto parent_it = to_delete_after_rewrite.find(parent); parent_it != to_delete_after_rewrite.end())
       {
@@ -187,7 +188,7 @@ bool TRS::match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, i
       }
     }
     if (to_delete_it->second)
-      rel_cost -= evaluate_term(*term_it);
+      rel_cost -= evaluate_op(sorted_term->op_code(), sorted_term->operands());
   }
   return true;
 }
@@ -235,27 +236,28 @@ ir::Term *TRS::construct_term(
           matching.emplace(top_matcher, func_->insert_const(*top_matcher.val()));
         else
         {
-          vector<ir::Term *> terms_operands;
+          vector<ir::Term *> term_operands;
           for (const auto &operand : top_matcher.operands())
           {
             if (auto matching_it = matching.find(operand); matching_it != matching.end())
-              terms_operands.push_back(matching_it->second);
+              term_operands.push_back(matching_it->second);
             else
               throw logic_error("matching for term_matcher_operand was not found");
           }
-          const auto &op_code = top_matcher.op_code();
-          vector<int> generators_vals(op_code.generators().size());
+          const auto &matcher_op_code = top_matcher.op_code();
+          vector<int> generators_vals(matcher_op_code.generators().size());
           for (size_t i = 0; i < generators_vals.size(); i++)
-            generators_vals[i] = fold_op_gen_matcher(op_code.generators()[i], subst);
+            generators_vals[i] = fold_op_gen_matcher(matcher_op_code.generators()[i], subst);
+
+          ir::OpCode term_op_code = convert_op_code(matcher_op_code, move(generators_vals));
+          if (!func_->find_op_commut(term_op_code, term_operands))
+            rel_cost += evaluate_op(term_op_code, term_operands);
 
           bool inserted;
-          auto term = func_->insert_op(convert_op_code(op_code, move(generators_vals)), terms_operands, inserted);
+          auto term = func_->insert_op(move(term_op_code), move(term_operands), inserted);
           matching.emplace(top_matcher, term);
           if (inserted)
-          {
             created_terms.push_back(term);
-            rel_cost += evaluate_term(term);
-          }
         }
       }
       continue;

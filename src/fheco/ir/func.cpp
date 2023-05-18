@@ -179,15 +179,27 @@ Term *Func::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
 
   if (Compiler::cse_enabled())
   {
-    // if (op_code.commutativity())
-    //   sort(operands.begin(), operands.end(), Term::ComparePtr{});
-
     if (auto op_term = data_flow_.find_op(op_code, operands); op_term)
       return op_term;
   }
 
   inserted = true;
   return data_flow_.insert_op(move(op_code), move(operands));
+}
+
+Term *Func::find_op_commut(const OpCode &op_code, const std::vector<Term *> &operands) const
+{
+  if (!op_code.commutativity())
+    return data_flow_.find_op(op_code, operands);
+
+  auto operands_permut = operands;
+  sort(operands_permut.begin(), operands_permut.end(), Term::ComparePtr{});
+  do
+  {
+    if (auto op_term = data_flow_.find_op(op_code, operands_permut); op_term)
+      return op_term;
+  } while (next_permutation(operands_permut.begin(), operands_permut.end(), Term::ComparePtr{}));
+  return nullptr;
 }
 
 void Func::replace_term_with(Term *term1, Term *term2)

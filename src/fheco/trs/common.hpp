@@ -30,7 +30,7 @@ inline bool operator!=(TermMatcherType term_matcher_type, ir::TermType term_type
 ir::OpCode convert_op_code(const TermOpCode &op_code, std::vector<int> generators_vals);
 
 // for now just evaluate op_type
-std::int64_t evaluate_term(const ir::Term *term);
+std::int64_t evaluate_op(const ir::OpCode &op_code, const std::vector<ir::Term *> &operands);
 
 using TermsMetric = std::unordered_map<ir::Term *, std::int64_t, ir::Term::HashPtr, ir::Term::EqualPtr>;
 

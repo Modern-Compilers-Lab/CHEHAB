@@ -57,6 +57,8 @@ public:
 
   Term *insert_op(OpCode op_code, std::vector<Term *> operands, bool &inserted);
 
+  Term *find_op_commut(const OpCode &op_code, const std::vector<Term *> &operands) const;
+
   void replace_term_with(Term *term1, Term *term2);
 
   void set_output(Term *term, std::string label);

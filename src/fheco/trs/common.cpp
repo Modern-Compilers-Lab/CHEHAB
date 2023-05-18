@@ -17,14 +17,14 @@ ir::OpCode convert_op_code(const TermOpCode &op_code, vector<int> generators_val
   return ir::OpCode{op_code.type(), move(generators_vals), op_code.arity(), op_code.commutativity(), move(str_repr)};
 }
 
-int64_t evaluate_term(const ir::Term *term)
+int64_t evaluate_op(const ir::OpCode &op_code, const vector<ir::Term *> &operands)
 {
-  if (term->type() == ir::TermType::cipher)
+  if (ir::Term::deduce_result_type(op_code, operands) == ir::TermType::cipher)
   {
-    switch (term->op_code().type())
+    switch (op_code.type())
     {
     case ir::OpCode::Type::mul:
-      if (term->operands()[0]->type() == ir::TermType::cipher && term->operands()[1]->type() == ir::TermType::cipher)
+      if (operands[0]->type() == ir::TermType::cipher && operands[1]->type() == ir::TermType::cipher)
         return 100;
 
       else
