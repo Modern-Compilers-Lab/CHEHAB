@@ -14,27 +14,27 @@ namespace fheco::util
 {
 void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool show_key, bool impose_operands_order)
 {
-  auto make_node_label = [&func](const ir::Term *term) -> string {
+  auto make_node_label = [&func](ir::Term *term) -> string {
     // operation term
     if (term->is_operation())
     {
-      if (auto output_info = func->get_output_info(term->id()); output_info)
+      if (auto output_info = func->data_flow().get_output_info(term); output_info)
         return term->op_code().str_repr() + " (" + output_info->label_ + ")";
 
       return term->op_code().str_repr();
     }
 
     // leaf term
-    if (auto input_info = func->get_input_info(term->id()); input_info)
+    if (auto input_info = func->data_flow().get_input_info(term); input_info)
     {
       string label = input_info->label_;
-      if (auto output_info = func->get_output_info(term->id()); output_info)
+      if (auto output_info = func->data_flow().get_output_info(term); output_info)
         label += "(" + output_info->label_ + ")";
       return label;
     }
-    else if (func->is_const_term(term->id()))
+    else if (func->data_flow().is_const(term))
     {
-      if (auto output_info = func->get_output_info(term->id()); output_info)
+      if (auto output_info = func->data_flow().get_output_info(term); output_info)
         return output_info->label_;
 
       return "const_$" + to_string(term->id());
@@ -43,9 +43,9 @@ void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool show_key, bool 
       throw logic_error("invalid leaf term, non-input and non-const");
   };
 
-  auto make_term_attrs = [&func, &make_node_label](const ir::Term *term) -> string {
-    unordered_map<ir::TermType, string> type_to_attrs = {
-      {ir::TermType::cipher, "style=solid"}, {ir::TermType::plain, "style=dashed"}};
+  auto make_term_attrs = [&func, &make_node_label](ir::Term *term) -> string {
+    unordered_map<ir::Term::Type, string> type_to_attrs = {
+      {ir::Term::Type::cipher, "style=solid"}, {ir::Term::Type::plain, "style=dashed"}};
 
     unordered_map<ir::TermQualif, string> qualifs_to_attrs = {
       {ir::TermQualif::in, "color=red fontcolor=red"},
@@ -59,7 +59,7 @@ void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool show_key, bool 
     if (type_attrs_it == type_to_attrs.end())
       throw logic_error("formatting for term type not found");
 
-    auto qualif_attrs = qualifs_to_attrs.find(func->get_term_qualif(term->id()));
+    auto qualif_attrs = qualifs_to_attrs.find(func->data_flow().get_qualif(term));
     if (qualif_attrs == qualifs_to_attrs.end())
       throw logic_error("formatting for term qualifiers not found");
 

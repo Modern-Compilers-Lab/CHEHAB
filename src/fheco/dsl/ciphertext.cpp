@@ -7,7 +7,7 @@ using namespace std;
 
 namespace fheco
 {
-Ciphertext::Ciphertext(vector<size_t> shape) : shape_{move(shape)}
+Ciphertext::Ciphertext(vector<size_t> shape) : shape_{move(shape)}, example_val_{}
 {
   validate_shape(shape_);
 }
@@ -19,13 +19,17 @@ Ciphertext::Ciphertext(string label, vector<size_t> shape) : Ciphertext(move(sha
 
 Ciphertext::Ciphertext(string label, PackedVal example_val, vector<size_t> shape) : Ciphertext(move(shape))
 {
-  Compiler::active_func()->init_input(*this, move(label), move(example_val));
+  Compiler::active_func()->clear_data_evaluator().adjust_packed_val(example_val);
+  example_val_ = move(example_val);
+  Compiler::active_func()->init_input(*this, move(label));
 }
 
 Ciphertext::Ciphertext(string label, integer example_val_slot_min, integer example_val_slot_max, vector<size_t> shape)
   : Ciphertext(move(shape))
 {
-  Compiler::active_func()->init_input(*this, move(label), example_val_slot_min, example_val_slot_max);
+  example_val_ =
+    Compiler::active_func()->clear_data_evaluator().make_rand_packed_val(example_val_slot_min, example_val_slot_max);
+  Compiler::active_func()->init_input(*this, move(label));
 }
 
 Ciphertext::Ciphertext(const Plaintext &plain)
@@ -88,10 +92,7 @@ Ciphertext &Ciphertext::operator[](size_t idx)
 
 const Ciphertext &Ciphertext::set_output(string label) const
 {
-  if (example_val_)
-    Compiler::active_func()->set_output(*this, move(label), *example_val_);
-  else
-    Compiler::active_func()->set_output(*this, move(label));
+  Compiler::active_func()->set_output(*this, move(label));
   return *this;
 }
 

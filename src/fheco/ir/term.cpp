@@ -1,5 +1,5 @@
 #include "fheco/ir/term.hpp"
-#include "fheco/ir/common.hpp"
+#include <stdexcept>
 
 using namespace std;
 
@@ -22,7 +22,22 @@ bool Term::ComparePtr::operator()(const Term *lhs, const Term *rhs) const
   return *lhs < *rhs;
 }
 
-TermType Term::deduce_result_type(const OpCode &op_code, const vector<Term *> &operands)
+string Term::term_type_str_repr(Type term_type)
+{
+  switch (term_type)
+  {
+  case Type::cipher:
+    return "ctxt";
+
+  case Type::plain:
+    return "ptxt";
+
+  default:
+    throw invalid_argument("invalid term_type");
+  }
+}
+
+Term::Type Term::deduce_result_type(const OpCode &op_code, const vector<Term *> &operands)
 {
   if (op_code.arity() != operands.size())
     throw invalid_argument("invalid number of operands for op_code");
@@ -33,26 +48,26 @@ TermType Term::deduce_result_type(const OpCode &op_code, const vector<Term *> &o
   // non arithmetic operations
   if (op_code.type() == OpCode::Type::encrypt)
   {
-    if (operands[0]->type() != TermType::plain)
+    if (operands[0]->type() != Type::plain)
       throw invalid_argument("encrypt arg must be plaintext");
 
-    return TermType::cipher;
+    return Type::cipher;
   }
 
   if (op_code.type() == OpCode::Type::mod_switch)
   {
-    if (operands[0]->type() != TermType::cipher)
+    if (operands[0]->type() != Type::cipher)
       throw invalid_argument("mod_switch arg must be ciphertext");
 
-    return TermType::cipher;
+    return Type::cipher;
   }
 
   if (op_code.type() == OpCode::Type::relin)
   {
-    if (operands[0]->type() != TermType::cipher)
+    if (operands[0]->type() != Type::cipher)
       throw invalid_argument("relin arg must be cipher");
 
-    return TermType::cipher;
+    return Type::cipher;
   }
 
   // arithmetic operations

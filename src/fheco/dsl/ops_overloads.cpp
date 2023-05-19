@@ -372,7 +372,7 @@ void emulate_subscripted_write(Ciphertext &lhs, const Ciphertext &rhs)
   vector<size_t> actual_shape = lhs.shape();
   lhs.shape_.erase(lhs.shape_.begin(), lhs.shape_.begin() + lhs.idx_.size());
   lhs.idx_.clear();
-  if (Compiler::active_func()->is_valid_term_id(lhs.id()))
+  if (Compiler::active_func()->data_flow().is_valid_term_id(lhs.id()))
   {
     PackedVal mask(Compiler::active_func()->slot_count(), 1);
     for (size_t i = start; i < end; ++i)
@@ -398,7 +398,7 @@ void emulate_subscripted_write(Plaintext &lhs, const Plaintext &rhs)
   vector<size_t> actual_shape = lhs.shape();
   lhs.shape_.erase(lhs.shape_.begin(), lhs.shape_.begin() + lhs.idx_.size());
   lhs.idx_.clear();
-  if (Compiler::active_func()->is_valid_term_id(lhs.id()))
+  if (Compiler::active_func()->data_flow().is_valid_term_id(lhs.id()))
   {
     PackedVal mask(Compiler::active_func()->slot_count(), 1);
     for (size_t i = start; i < end; ++i)

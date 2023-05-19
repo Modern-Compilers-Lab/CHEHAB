@@ -51,7 +51,7 @@ private:
 
   std::string expand_term(std::size_t id, Mode mode, int depth, TermsStrExpr &dp) const;
 
-  std::string leaf_str_expr(const ir::Term *term) const;
+  std::string leaf_str_expr(ir::Term *term) const;
 
   std::shared_ptr<ir::Func> func_;
 

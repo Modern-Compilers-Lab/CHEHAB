@@ -1,5 +1,6 @@
 #include "fheco/util/common.hpp"
 #include "fheco/ir/func.hpp"
+#include "fheco/ir/term.hpp"
 #include <stdexcept>
 
 using namespace std;
@@ -21,63 +22,61 @@ void print_io_terms_values(const shared_ptr<ir::Func> &func, ostream &os)
   ios_base::fmtflags f(os.flags());
   os << boolalpha;
 
-  os << func->slot_count() << " " << func->inputs_info().size() << " " << func->outputs_info().size() << '\n';
-  for (const auto &in : func->inputs_info())
+  os << func->slot_count() << " " << func->data_flow().inputs_info().size() << " "
+     << func->data_flow().outputs_info().size() << '\n';
+  for (const auto &input_info : func->data_flow().inputs_info())
   {
-    if (auto in_info_it = func->inputs_info().find(in.first); in_info_it == func->inputs_info().end())
-      throw invalid_argument("no input with id was found");
-
-    auto in_term = func->data_flow().find_term(in.first);
-    os << in.second.label_ << " " << (in_term->type() == ir::TermType::cipher) << " "
+    auto input_term = input_info.first;
+    os << input_info.second.label_ << " " << (input_term->type() == ir::Term::Type::cipher) << " "
        << (func->clear_data_evaluator().signedness() || func->clear_data_evaluator().delayed_reduction());
-    if (in.second.example_val_)
-      os << " " << *in.second.example_val_;
+    if (input_info.second.example_val_)
+      os << " " << *input_info.second.example_val_;
     os << '\n';
   }
-  for (const auto &out : func->outputs_info())
+  for (const auto &output_info : func->data_flow().outputs_info())
   {
-    if (auto out_info_it = func->outputs_info().find(out.first); out_info_it == func->outputs_info().end())
-      throw invalid_argument("no output with id was found");
-
-    auto out_term = func->data_flow().find_term(out.first);
-    os << out.second.label_ << " " << (out_term->type() == ir::TermType::cipher) << " "
+    auto output_term = output_info.first;
+    os << output_info.second.label_ << " " << (output_term->type() == ir::Term::Type::cipher) << " "
        << (func->clear_data_evaluator().signedness() || func->clear_data_evaluator().delayed_reduction());
-    if (out.second.example_val_)
-      os << " " << *out.second.example_val_;
+    if (output_info.second.example_val_)
+      os << " " << *output_info.second.example_val_;
     os << '\n';
   }
   os.flags(f);
 }
 
 void print_io_terms_values(
-  const shared_ptr<ir::Func> &func, const ir::IOTermsInfo &inputs, const ir::IOTermsInfo &outputs, ostream &os)
+  const shared_ptr<ir::Func> &func, const ir::IOTermsInfo &inputs_info, const ir::IOTermsInfo &outputs_info,
+  ostream &os)
 {
   ios_base::fmtflags f(os.flags());
   os << boolalpha;
 
-  os << func->slot_count() << " " << inputs.size() << " " << outputs.size() << '\n';
-  for (const auto &in : inputs)
+  os << func->slot_count() << " " << inputs_info.size() << " " << outputs_info.size() << '\n';
+  for (const auto &input_info : inputs_info)
   {
-    auto in_term = func->data_flow().find_term(in.first);
-    if (!in_term)
-      throw invalid_argument("term with id not found");
+    auto input_term = input_info.first;
+    if (auto in_info_it = func->data_flow().inputs_info().find(input_term);
+        in_info_it == func->data_flow().inputs_info().end())
+      throw invalid_argument("invalid input");
 
-    os << in.second.label_ << " " << (in_term->type() == ir::TermType::cipher) << " "
+    os << input_info.second.label_ << " " << (input_term->type() == ir::Term::Type::cipher) << " "
        << (func->clear_data_evaluator().signedness() || func->clear_data_evaluator().delayed_reduction());
-    if (in.second.example_val_)
-      os << " " << *in.second.example_val_;
+    if (input_info.second.example_val_)
+      os << " " << *input_info.second.example_val_;
     os << '\n';
   }
-  for (const auto &out : outputs)
+  for (const auto &output_info : outputs_info)
   {
-    auto out_term = func->data_flow().find_term(out.first);
-    if (!out_term)
-      throw invalid_argument("term with id not found");
+    auto output_term = output_info.first;
+    if (auto output_info_it = func->data_flow().outputs_info().find(output_info.first);
+        output_info_it == func->data_flow().outputs_info().end())
+      throw invalid_argument("invalid output");
 
-    os << out.second.label_ << " " << (out_term->type() == ir::TermType::cipher) << " "
+    os << output_info.second.label_ << " " << (output_term->type() == ir::Term::Type::cipher) << " "
        << (func->clear_data_evaluator().signedness() || func->clear_data_evaluator().delayed_reduction());
-    if (out.second.example_val_)
-      os << " " << *out.second.example_val_;
+    if (output_info.second.example_val_)
+      os << " " << *output_info.second.example_val_;
     os << '\n';
   }
   os.flags(f);
@@ -87,7 +86,7 @@ void print_io_terms_values(const ir::IOTermsInfo &io_terms_values, size_t lead_t
 {
   for (const auto &term : io_terms_values)
   {
-    os << '$' << term.first << " " << term.second.label_;
+    os << '$' << term.first->id() << " " << term.second.label_;
     if (term.second.example_val_)
     {
       os << " ";
@@ -101,7 +100,7 @@ void print_terms_values(const ir::TermsValues &terms_values, size_t lead_trail_s
 {
   for (const auto &term : terms_values)
   {
-    os << '$' << term.first << " ";
+    os << '$' << term.first->id() << " ";
     print_packed_val(term.second, lead_trail_size, os);
     os << '\n';
   }
@@ -132,7 +131,7 @@ ostream &operator<<(ostream &os, const fheco::ir::IOTermsInfo &io_terms_values)
 {
   for (const auto &term : io_terms_values)
   {
-    os << '$' << term.first << " " << term.second.label_;
+    os << '$' << term.first->id() << " " << term.second.label_;
     if (term.second.example_val_)
       os << " " << *term.second.example_val_;
     os << '\n';
@@ -144,7 +143,7 @@ ostream &operator<<(ostream &os, const fheco::ir::TermsValues &terms_values)
 {
   for (const auto &term : terms_values)
   {
-    os << '$' << term.first << " ";
+    os << '$' << term.first->id() << " ";
     os << term.second;
     os << '\n';
   }

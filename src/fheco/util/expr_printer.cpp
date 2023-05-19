@@ -193,11 +193,11 @@ string ExprPrinter::expand_term(size_t id, Mode mode, int depth, TermsStrExpr &d
   return result;
 }
 
-string ExprPrinter::leaf_str_expr(const ir::Term *term) const
+string ExprPrinter::leaf_str_expr(ir::Term *term) const
 {
-  if (auto input_info = func_->get_input_info(term->id()); input_info)
+  if (auto input_info = func_->data_flow().get_input_info(term); input_info)
     return input_info->label_;
-  else if (auto const_val = func_->get_const_val(term->id()); const_val)
+  else if (auto const_val = func_->data_flow().get_const_val(term); const_val)
     return "const_$" + to_string(term->id());
   else
     throw logic_error("invalid leaf term, non-input and non-const");
@@ -206,9 +206,9 @@ string ExprPrinter::leaf_str_expr(const ir::Term *term) const
 void ExprPrinter::print_outputs_str_expr(ostream &os) const
 {
   os << "term_label: str_expr\n";
-  for (const auto output_info : func_->outputs_info())
+  for (const auto output_info : func_->data_flow().outputs_info())
   {
-    if (auto it = terms_str_exprs_.find(output_info.first); it != terms_str_exprs_.end())
+    if (auto it = terms_str_exprs_.find(output_info.first->id()); it != terms_str_exprs_.end())
       os << output_info.second.label_ << ": " << it->second << '\n';
   }
 }

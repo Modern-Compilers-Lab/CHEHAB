@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fheco/dsl/common.hpp"
+#include "fheco/ir/term.hpp"
 #include <cstddef>
 #include <optional>
 #include <string>
@@ -22,15 +23,6 @@ struct HashPackedVal
 {
   std::size_t operator()(const PackedVal &packed_val) const;
 };
-
-// order of definition is important for type deduction (OpCode::deduce_result_type)
-enum class TermType
-{
-  cipher,
-  plain
-};
-
-std::string term_type_str_repr(TermType);
 
 enum class TermQualif
 {
@@ -58,6 +50,7 @@ inline bool operator!=(const ParamTermInfo &lhs, const ParamTermInfo &rhs)
   return !(lhs == rhs);
 }
 
-using IOTermsInfo = std::unordered_map<std::size_t, ParamTermInfo>;
-using TermsValues = std::unordered_map<std::size_t, PackedVal>;
+using IOTermsInfo = std::unordered_map<Term *, ParamTermInfo, Term::HashPtr, Term::EqualPtr>;
+
+using TermsValues = std::unordered_map<Term *, PackedVal, Term::HashPtr, Term::EqualPtr>;
 } // namespace fheco::ir

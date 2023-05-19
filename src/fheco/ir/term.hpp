@@ -1,8 +1,8 @@
 #pragma once
 
-#include "fheco/ir/common.hpp"
 #include "fheco/ir/op_code.hpp"
 #include <cstddef>
+#include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -29,7 +29,16 @@ public:
 
   using PtrSet = std::unordered_set<Term *, HashPtr, EqualPtr>;
 
-  static TermType deduce_result_type(const OpCode &op_code, const std::vector<Term *> &operands);
+  // order of definition is important for type deduction (OpCode::deduce_result_type)
+  enum class Type
+  {
+    cipher,
+    plain
+  };
+
+  static std::string term_type_str_repr(Type);
+
+  static Type deduce_result_type(const OpCode &op_code, const std::vector<Term *> &operands);
 
   inline std::size_t id() const { return id_; }
 
@@ -37,7 +46,7 @@ public:
 
   inline const std::vector<Term *> &operands() const { return operands_; }
 
-  inline TermType type() const { return type_; }
+  inline Type type() const { return type_; }
 
   inline const PtrSet &parents() const { return parents_; }
 
@@ -53,10 +62,10 @@ private:
       type_{deduce_result_type(op_code_, operands_)}
   {}
 
-  Term(TermType type) : id_{++count_}, op_code_{OpCode::nop}, operands_{}, type_{type} {}
+  Term(Type type) : id_{++count_}, op_code_{OpCode::nop}, operands_{}, type_{type} {}
 
   // to construct temp object used as search keys
-  Term(std::size_t id) : id_{id}, op_code_{OpCode::nop}, operands_{}, type_{TermType::cipher} {}
+  Term(std::size_t id) : id_{id}, op_code_{OpCode::nop}, operands_{}, type_{Type::cipher} {}
 
   static std::size_t count_;
 
@@ -66,7 +75,7 @@ private:
 
   std::vector<Term *> operands_;
 
-  TermType type_;
+  Type type_;
 
   // it seems we don't need parent multiplicity
   PtrSet parents_{};
@@ -79,14 +88,14 @@ inline bool operator==(const Term &lhs, const Term &rhs)
   return lhs.id() == rhs.id();
 }
 
-inline bool operator<(const Term &lhs, const Term &rhs)
-{
-  return lhs.id() < rhs.id();
-}
-
 inline bool operator!=(const Term &lhs, const Term &rhs)
 {
   return !(lhs == rhs);
+}
+
+inline bool operator<(const Term &lhs, const Term &rhs)
+{
+  return lhs.id() < rhs.id();
 }
 
 inline bool operator>(const Term &lhs, const Term &rhs)

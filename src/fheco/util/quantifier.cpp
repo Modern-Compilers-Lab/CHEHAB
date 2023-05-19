@@ -28,9 +28,9 @@ void Quantifier::compute_he_depth_info()
   ctxt_leaves_depth_info_.clear();
 
   stack<pair<const ir::Term *, DepthInfo>> dfs;
-  for (auto output_term : func_->data_flow().outputs())
+  for (auto [output_term, output_info] : func_->data_flow().outputs_info())
   {
-    if (output_term->type() == ir::TermType::cipher && output_term->is_source())
+    if (output_term->type() == ir::Term::Type::cipher && output_term->is_source())
       dfs.push({output_term, DepthInfo{0, 0}});
 
     while (!dfs.empty())
@@ -51,7 +51,7 @@ void Quantifier::compute_he_depth_info()
         ++operands_xdepth;
       for (const auto operand : top_term->operands())
       {
-        if (operand->type() == ir::TermType::cipher)
+        if (operand->type() == ir::Term::Type::cipher)
           dfs.push({operand, DepthInfo{operands_xdepth, operands_depth}});
       }
     }
@@ -115,7 +115,7 @@ void Quantifier::count_terms_classes()
     ++all_terms_count_;
     if (term->is_operation())
     {
-      if (term->type() == ir::TermType::cipher)
+      if (term->type() == ir::Term::Type::cipher)
       {
         if (term->op_code().type() == ir::OpCode::Type::mul)
         {
@@ -137,7 +137,7 @@ void Quantifier::count_terms_classes()
           }
           else
           {
-            const auto &ctxt_arg_info = (term->operands()[0]->type() == ir::TermType::cipher)
+            const auto &ctxt_arg_info = (term->operands()[0]->type() == ir::Term::Type::cipher)
                                           ? ctxts_info.find(term->operands()[0]->id())->second
                                           : ctxts_info.find(term->operands()[1]->id())->second;
 
@@ -207,7 +207,7 @@ void Quantifier::count_terms_classes()
           }
           else
           {
-            const auto &ctxt_arg_info = (term->operands()[0]->type() == ir::TermType::cipher)
+            const auto &ctxt_arg_info = (term->operands()[0]->type() == ir::Term::Type::cipher)
                                           ? ctxts_info.find(term->operands()[0]->id())->second
                                           : ctxts_info.find(term->operands()[1]->id())->second;
             max_arg_info = ctxt_arg_info;
@@ -236,7 +236,7 @@ void Quantifier::count_terms_classes()
     }
     else
     {
-      if (term->type() == ir::TermType::cipher)
+      if (term->type() == ir::Term::Type::cipher)
       {
         ctxts_info.emplace(term->id(), CtxtInfo{0, 2});
         ++captured_terms_count_;

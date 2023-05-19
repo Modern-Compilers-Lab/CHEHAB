@@ -20,9 +20,9 @@ enum class TermMatcherType
   const_
 };
 
-bool operator==(TermMatcherType term_matcher_type, ir::TermType term_type);
+bool operator==(TermMatcherType term_matcher_type, ir::Term::Type term_type);
 
-inline bool operator!=(TermMatcherType term_matcher_type, ir::TermType term_type)
+inline bool operator!=(TermMatcherType term_matcher_type, ir::Term::Type term_type)
 {
   return !(term_matcher_type == term_type);
 }

@@ -7,7 +7,7 @@ using namespace std;
 
 namespace fheco
 {
-Plaintext::Plaintext(vector<size_t> shape) : shape_{move(shape)}
+Plaintext::Plaintext(vector<size_t> shape) : shape_{move(shape)}, example_val_{}
 {
   validate_shape(shape_);
 }
@@ -19,13 +19,17 @@ Plaintext::Plaintext(string label, vector<size_t> shape) : Plaintext(move(shape)
 
 Plaintext::Plaintext(string label, PackedVal example_val, vector<size_t> shape) : Plaintext(move(shape))
 {
-  Compiler::active_func()->init_input(*this, move(label), move(example_val));
+  Compiler::active_func()->clear_data_evaluator().adjust_packed_val(example_val);
+  example_val_ = move(example_val);
+  Compiler::active_func()->init_input(*this, move(label));
 }
 
 Plaintext::Plaintext(string label, integer example_val_slot_min, integer example_val_slot_max, vector<size_t> shape)
   : Plaintext(move(shape))
 {
-  Compiler::active_func()->init_input(*this, move(label), example_val_slot_min, example_val_slot_max);
+  example_val_ =
+    Compiler::active_func()->clear_data_evaluator().make_rand_packed_val(example_val_slot_min, example_val_slot_max);
+  Compiler::active_func()->init_input(*this, move(label));
 }
 
 Plaintext::Plaintext(PackedVal packed_val, vector<size_t> shape) : Plaintext(move(shape))
@@ -36,6 +40,7 @@ Plaintext::Plaintext(PackedVal packed_val, vector<size_t> shape) : Plaintext(mov
 Plaintext::Plaintext(integer scalar_val) : Plaintext(vector<size_t>{Compiler::active_func()->slot_count()})
 {
   PackedVal packed_val(Compiler::active_func()->slot_count(), scalar_val);
+  example_val_ = packed_val;
   Compiler::active_func()->init_const(*this, move(packed_val));
 }
 
@@ -94,10 +99,7 @@ Plaintext &Plaintext::operator[](size_t idx)
 
 const Plaintext &Plaintext::set_output(string label) const
 {
-  if (example_val_)
-    Compiler::active_func()->set_output(*this, move(label), *example_val_);
-  else
-    Compiler::active_func()->set_output(*this, move(label));
+  Compiler::active_func()->set_output(*this, move(label));
   return *this;
 }
 

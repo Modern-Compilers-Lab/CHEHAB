@@ -1,6 +1,5 @@
 #pragma once
 
-#include "fheco/ir/common.hpp"
 #include <cstddef>
 #include <ostream>
 #include <string>

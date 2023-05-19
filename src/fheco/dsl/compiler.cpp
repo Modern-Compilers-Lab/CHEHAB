@@ -1,4 +1,6 @@
 #include "fheco/dsl/compiler.hpp"
+#include "fheco/passes/cse_commut.hpp"
+#include "fheco/trs/ruleset.hpp"
 #include "fheco/trs/trs.hpp"
 #include <stdexcept>
 #include <utility>
@@ -17,9 +19,16 @@ bool Compiler::const_folding_enabled_ = true;
 
 void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityLevel sec_level)
 {
+  // must remove_dead_code or trs traversal will suffer from invalidated iterators
   func->remove_dead_code();
-  trs::TRS trs{move(func)};
-  trs.run();
+
+  trs::TRS depth_opt_trs{func, trs::Ruleset::depth_opt_ruleset(func->slot_count())};
+  depth_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up);
+
+  // trs::TRS ops_opt_trs{func, trs::Ruleset::ops_type_number_opt_ruleset(func->slot_count())};
+  // ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up);
+
+  passes::cse_commut(func);
 }
 
 void Compiler::add_func(shared_ptr<ir::Func> func)
