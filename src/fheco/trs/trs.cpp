@@ -1,10 +1,10 @@
-#include "fheco/trs/trs.hpp"
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
 #include "fheco/trs/common.hpp"
 #include "fheco/trs/fold_op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
+#include "fheco/trs/trs.hpp"
 #include <functional>
 #include <iostream>
 #include <stack>

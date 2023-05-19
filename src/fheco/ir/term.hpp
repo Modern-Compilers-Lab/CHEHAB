@@ -58,8 +58,8 @@ public:
 
 private:
   Term(OpCode op_code, std::vector<Term *> operands)
-    : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)},
-      type_{deduce_result_type(op_code_, operands_)}
+    : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)}, type_{deduce_result_type(
+                                                                                     op_code_, operands_)}
   {}
 
   Term(Type type) : id_{++count_}, op_code_{OpCode::nop}, operands_{}, type_{type} {}

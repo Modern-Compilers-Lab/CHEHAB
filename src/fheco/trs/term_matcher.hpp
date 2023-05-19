@@ -27,8 +27,8 @@ public:
   {}
 
   TermMatcher(PackedVal val)
-    : id_{++count_}, op_code_{TermOpCode::nop}, operands_{}, type_{TermMatcherType::const_}, label_{},
-      val_{std::move(val)}
+    : id_{++count_}, op_code_{TermOpCode::nop}, operands_{}, type_{TermMatcherType::const_}, label_{}, val_{
+                                                                                                         std::move(val)}
   {}
 
   TermMatcher(std::string label, PackedVal val)

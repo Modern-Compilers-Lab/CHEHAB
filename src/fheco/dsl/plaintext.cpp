@@ -1,5 +1,5 @@
-#include "fheco/dsl/plaintext.hpp"
 #include "fheco/dsl/ops_overloads.hpp"
+#include "fheco/dsl/plaintext.hpp"
 #include <stdexcept>
 #include <utility>
 

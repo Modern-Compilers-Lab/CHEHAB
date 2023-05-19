@@ -1,5 +1,5 @@
-#include "fheco/trs/ops_overloads.hpp"
 #include "fheco/trs/op_gen_op_code.hpp"
+#include "fheco/trs/ops_overloads.hpp"
 #include <utility>
 
 using namespace std;

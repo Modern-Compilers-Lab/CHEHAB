@@ -1,5 +1,5 @@
-#include "fheco/trs/common.hpp"
 #include "fheco/ir/common.hpp"
+#include "fheco/trs/common.hpp"
 #include <stack>
 #include <stdexcept>
 #include <string>

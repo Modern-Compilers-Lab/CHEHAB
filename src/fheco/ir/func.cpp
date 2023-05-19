@@ -1,7 +1,7 @@
-#include "fheco/ir/func.hpp"
 #include "fheco/dsl/ciphertext.hpp"
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/dsl/plaintext.hpp"
+#include "fheco/ir/func.hpp"
 #include "fheco/util/common.hpp"
 #include <optional>
 #include <stdexcept>
@@ -13,8 +13,9 @@ using namespace std;
 namespace fheco::ir
 {
 Func::Func(string name, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
-  : name_{move(name)}, slot_count_{slot_count}, need_cyclic_rotations_{false},
-    clear_data_evaluator_{slot_count_, modulus, signedness, delayed_reduction}
+  : name_{move(name)}, slot_count_{slot_count}, need_cyclic_rotations_{false}, clear_data_evaluator_{
+                                                                                 slot_count_, modulus, signedness,
+                                                                                 delayed_reduction}
 {
   if (!is_valid_slot_count(slot_count_))
     throw invalid_argument("slot_count must be a power of two");

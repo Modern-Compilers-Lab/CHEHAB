@@ -1,5 +1,5 @@
-#include "fheco/ir/expr.hpp"
 #include "fheco/dsl/compiler.hpp"
+#include "fheco/ir/expr.hpp"
 #include <algorithm>
 #include <iostream>
 #include <stack>

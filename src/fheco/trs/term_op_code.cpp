@@ -1,6 +1,6 @@
-#include "fheco/trs/term_op_code.hpp"
 #include "fheco/trs/op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
+#include "fheco/trs/term_op_code.hpp"
 #include <stdexcept>
 #include <utility>
 #include <variant>

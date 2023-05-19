@@ -1,7 +1,7 @@
 #include "fheco/dsl/compiler.hpp"
-#include "fheco/passes/cse_commut.hpp"
 #include "fheco/trs/ruleset.hpp"
 #include "fheco/trs/trs.hpp"
+#include "fheco/passes/cse_commut.hpp"
 #include <stdexcept>
 #include <utility>
 

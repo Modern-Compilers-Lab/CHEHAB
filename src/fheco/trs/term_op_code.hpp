@@ -41,8 +41,8 @@ private:
   TermOpCode(
     ir::OpCode::Type type, std::vector<OpGenMatcher> generators, std::size_t arity, bool commutativity,
     std::string str_repr)
-    : type_{type}, generators_{std::move(generators)}, arity_{arity}, commutativity_{commutativity},
-      str_repr_{std::move(str_repr)}
+    : type_{type}, generators_{std::move(generators)}, arity_{arity},
+      commutativity_{commutativity}, str_repr_{std::move(str_repr)}
   {}
 
   ir::OpCode::Type type_;

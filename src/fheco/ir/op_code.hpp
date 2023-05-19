@@ -37,8 +37,8 @@ public:
   static const OpCode relin;
 
   OpCode(Type type, std::vector<int> generators, std::size_t arity, bool commutativity, std::string str_repr)
-    : type_{type}, generators_{std::move(generators)}, arity_{arity}, commutativity_{commutativity},
-      str_repr_{std::move(str_repr)}
+    : type_{type}, generators_{std::move(generators)}, arity_{arity},
+      commutativity_{commutativity}, str_repr_{std::move(str_repr)}
   {}
 
   inline Type type() const { return type_; }

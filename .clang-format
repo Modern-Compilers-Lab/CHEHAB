@@ -82,18 +82,20 @@ IfMacros:
   - KJ_IF_MAYBE
 IncludeBlocks:   Merge
 IncludeCategories:
-  - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
-    Priority:        2
-    SortPriority:    0
-    CaseSensitive:   false
-  - Regex:           '^(<|"(gtest|gmock|isl|json)/)'
-    Priority:        3
-    SortPriority:    0
-    CaseSensitive:   false
-  - Regex:           '.*'
+  - Regex:           '<.*>'
     Priority:        1
-    SortPriority:    0
-    CaseSensitive:   false
+  - Regex:           '"fheco/util/.*"'
+    Priority:        -2
+  - Regex:           '"fheco/passes/.*"'
+    Priority:        -3
+  - Regex:           '"fheco/trs/.*"'
+    Priority:        -4
+  - Regex:           '"fheco/ir/.*"'
+    Priority:        -5
+  - Regex:           '"fheco/dsl/.*"'
+    Priority:        -6
+  - Regex:           '"fheco/.*"'
+    Priority:        -7
 IncludeIsMainRegex: '(Test)?$'
 IncludeIsMainSourceRegex: ''
 IndentAccessModifiers: false
