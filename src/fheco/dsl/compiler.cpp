@@ -23,10 +23,10 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
   func->remove_dead_code();
 
   trs::TRS depth_opt_trs{func, trs::Ruleset::depth_opt_ruleset(func->slot_count())};
-  depth_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up);
+  depth_opt_trs.run(trs::TRS::RewriteHeuristic::top_down, true);
 
-  // trs::TRS ops_opt_trs{func, trs::Ruleset::ops_type_number_opt_ruleset(func->slot_count())};
-  // ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up);
+  trs::TRS ops_opt_trs{func, trs::Ruleset::ops_type_number_opt_ruleset(func->slot_count())};
+  ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, true);
 
   // passes::cse_commut(func);
 }
