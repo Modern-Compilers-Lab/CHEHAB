@@ -1,29 +1,57 @@
 #include "fheco/trs/trs.hpp"
+#include "fheco/dsl/compiler.hpp"
 #include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
 #include "fheco/trs/common.hpp"
 #include "fheco/trs/fold_op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
-#include <cstddef>
 #include <functional>
 #include <iostream>
 #include <stack>
 #include <stdexcept>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 
 using namespace std;
 
 namespace fheco::trs
 {
-void TRS::run()
+void TRS::run(RewriteHeuristic heuristic)
 {
-  for (auto term : func_->get_top_sorted_terms())
-    rewrite_term(term);
+  switch (heuristic)
+  {
+  case RewriteHeuristic::bottom_up:
+    for (auto id : func_->get_top_sorted_terms_ids())
+    {
+      auto term = func_->data_flow().get_term(id);
+      if (!term)
+        continue;
+
+      rewrite_term(term, RewriteHeuristic::bottom_up);
+    }
+
+    break;
+
+  case RewriteHeuristic::top_down:
+  {
+    const auto &sorted_terms_ids = func_->get_top_sorted_terms_ids();
+    for (auto id_it = sorted_terms_ids.crbegin(); id_it != sorted_terms_ids.crend(); ++id_it)
+    {
+      auto term = func_->data_flow().get_term(*id_it);
+      if (!term)
+        continue;
+
+      rewrite_term(term, RewriteHeuristic::top_down);
+    }
+    break;
+  }
+
+  default:
+    throw logic_error("unhandled RewriteHeuristic");
+  }
 }
 
-void TRS::rewrite_term(ir::Term *term)
+void TRS::rewrite_term(ir::Term *term, RewriteHeuristic heuristic)
 {
   if (term->is_leaf())
     return;
@@ -33,7 +61,9 @@ void TRS::rewrite_term(ir::Term *term)
     clog << "trying rule '" << rule.label() << "' on term $" << term->id() << " -> ";
     Subst subst;
     int64_t rel_cost = 0;
-    bool matched = match(rule.lhs(), term, subst, rel_cost);
+    ir::Term::PtrSet to_delete;
+    bool matched = match(rule.lhs(), term, subst, rel_cost, to_delete);
+
     if (!matched)
     {
       clog << "could not find a substitution\n";
@@ -44,16 +74,42 @@ void TRS::rewrite_term(ir::Term *term)
       clog << "condition not met\n";
       continue;
     }
-    vector<ir::Term *> created_terms;
-    auto equiv_term = construct_term(rule.get_rhs(subst), subst, rel_cost, created_terms);
     clog << "matched, rel_cost=" << rel_cost << " -> ";
-    if (rel_cost <= 0)
+    vector<size_t> created_terms_ids;
+    auto equiv_term = construct_term(rule.get_rhs(subst), subst, to_delete, rel_cost, created_terms_ids);
+    if (true || rel_cost <= 0)
     {
       clog << "replace term $" << term->id() << " with term $" << equiv_term->id() << '\n';
       func_->replace_term_with(term, equiv_term);
 
-      for (auto created_term : created_terms)
-        rewrite_term(created_term);
+      switch (heuristic)
+      {
+      case RewriteHeuristic::bottom_up:
+        for (auto created_term_id : created_terms_ids)
+        {
+          auto created_term = func_->data_flow().get_term(created_term_id);
+          if (!created_term)
+            continue;
+
+          rewrite_term(created_term, RewriteHeuristic::bottom_up);
+        }
+        break;
+
+      case RewriteHeuristic::top_down:
+        for (auto created_term_id_it = created_terms_ids.crbegin(); created_term_id_it != created_terms_ids.crend();
+             ++created_term_id_it)
+        {
+          auto created_term = func_->data_flow().get_term(*created_term_id_it);
+          if (!created_term)
+            continue;
+
+          rewrite_term(created_term, RewriteHeuristic::top_down);
+        }
+        break;
+
+      default:
+        throw logic_error("unhandled RewriteHeuristic");
+      }
       break;
     }
     else if (func_->data_flow().can_delete(equiv_term))
@@ -64,7 +120,8 @@ void TRS::rewrite_term(ir::Term *term)
   }
 }
 
-bool TRS::match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, int64_t &rel_cost) const
+bool TRS::match(
+  const TermMatcher &term_matcher, ir::Term *term, Subst &subst, int64_t &rel_cost, ir::Term::PtrSet &to_delete) const
 {
   struct Call
   {
@@ -73,7 +130,7 @@ bool TRS::match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, i
   };
   stack<Call> call_stack;
 
-  unordered_set<ir::Term *, ir::Term::HashPtr, ir::Term::EqualPtr> visited_terms;
+  ir::Term::PtrSet visited_terms;
   vector<ir::Term *> sorted_terms;
   stack<reference_wrapper<const TermMatcher>> term_matchers;
 
@@ -105,7 +162,7 @@ bool TRS::match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, i
     {
       if (top_term_matcher.type() == TermMatcherType::const_)
       {
-        if (!func_->is_const_term(top_term->id()))
+        if (!func_->data_flow().is_const(top_term))
           return false;
       }
       else
@@ -120,7 +177,7 @@ bool TRS::match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, i
     {
       if (top_term_matcher.val())
       {
-        auto const_val = func_->get_const_val(top_term->id());
+        auto const_val = func_->data_flow().get_const_val(top_term);
         if (!const_val)
           return false;
 
@@ -161,40 +218,31 @@ bool TRS::match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, i
       }
     }
   }
-  unordered_map<const ir::Term *, bool> to_delete_after_rewrite;
-  to_delete_after_rewrite.emplace(term, true);
+  to_delete.insert(term);
   rel_cost = -evaluate_op(term->op_code(), term->operands());
   sorted_terms.pop_back();
   for (auto sorted_term_it = sorted_terms.crbegin(); sorted_term_it != sorted_terms.crend(); ++sorted_term_it)
   {
     auto sorted_term = *sorted_term_it;
-    auto [to_delete_it, inserted] = to_delete_after_rewrite.emplace(sorted_term, true);
+    auto [to_delete_it, inserted] = to_delete.insert(sorted_term);
     for (auto parent : sorted_term->parents())
     {
-      if (auto parent_it = to_delete_after_rewrite.find(parent); parent_it != to_delete_after_rewrite.end())
+      if (to_delete.find(parent) == to_delete.end())
       {
-        if (parent_it->second)
-          to_delete_it->second = true;
-        else
-        {
-          to_delete_it->second = false;
-          break;
-        }
-      }
-      else
-      {
-        to_delete_it->second = false;
+        to_delete.erase(to_delete_it);
+        to_delete_it = to_delete.end();
         break;
       }
     }
-    if (to_delete_it->second)
+    if (to_delete_it != to_delete.end())
       rel_cost -= evaluate_op(sorted_term->op_code(), sorted_term->operands());
   }
   return true;
 }
 
 ir::Term *TRS::construct_term(
-  const TermMatcher &matcher, const Subst &subst, int64_t &rel_cost, vector<ir::Term *> &created_terms)
+  const TermMatcher &matcher, const Subst &subst, const ir::Term::PtrSet &to_delete, int64_t &rel_cost,
+  vector<size_t> &created_terms_ids)
 {
   struct Call
   {
@@ -233,7 +281,7 @@ ir::Term *TRS::construct_term(
       else
       {
         if (top_matcher.val())
-          matching.emplace(top_matcher, func_->insert_const(*top_matcher.val()));
+          matching.emplace(top_matcher, func_->insert_const_term(*top_matcher.val()));
         else
         {
           vector<ir::Term *> term_operands;
@@ -246,18 +294,28 @@ ir::Term *TRS::construct_term(
           }
           const auto &matcher_op_code = top_matcher.op_code();
           vector<int> generators_vals(matcher_op_code.generators().size());
-          for (size_t i = 0; i < generators_vals.size(); i++)
+          for (size_t i = 0; i < generators_vals.size(); ++i)
             generators_vals[i] = fold_op_gen_matcher(matcher_op_code.generators()[i], subst);
 
           ir::OpCode term_op_code = convert_op_code(matcher_op_code, move(generators_vals));
-          if (!func_->find_op_commut(term_op_code, term_operands))
+          if (Compiler::cse_enabled())
+          {
+            if (!func_->data_flow().find_op_commut(&term_op_code, &term_operands))
+              rel_cost += evaluate_op(term_op_code, term_operands);
+          }
+          else
             rel_cost += evaluate_op(term_op_code, term_operands);
 
           bool inserted;
-          auto term = func_->insert_op(move(term_op_code), move(term_operands), inserted);
+          auto term = func_->insert_op_term(move(term_op_code), move(term_operands), inserted);
+          if (Compiler::cse_enabled())
+          {
+            if (to_delete.find(term) != to_delete.end())
+              rel_cost += evaluate_op(term->op_code(), term->operands());
+          }
           matching.emplace(top_matcher, term);
           if (inserted)
-            created_terms.push_back(term);
+            created_terms_ids.push_back(term->id());
         }
       }
       continue;

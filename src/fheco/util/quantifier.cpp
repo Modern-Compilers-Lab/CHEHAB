@@ -280,7 +280,7 @@ Quantifier &Quantifier::operator-=(const Quantifier &other)
   return *this;
 }
 
-void Quantifier::print_info(std::ostream &os)
+void Quantifier::print_info(ostream &os)
 {
   print_line_sep(os);
   os << "he_depth_info\n";
@@ -290,7 +290,7 @@ void Quantifier::print_info(std::ostream &os)
   print_terms_classes_info(os);
 }
 
-void Quantifier::print_he_depth_info(std::ostream &os) const
+void Quantifier::print_he_depth_info(ostream &os) const
 {
   os << "ctxt_leaves_*: (xdepth, depth)\n";
   os << "min: (" << he_depth_summary_.min_xdepth_ << ", " << he_depth_summary_.min_depth_ << ")\n";

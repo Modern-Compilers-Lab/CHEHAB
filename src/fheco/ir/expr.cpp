@@ -1,6 +1,7 @@
 #include "fheco/ir/expr.hpp"
 #include "fheco/dsl/compiler.hpp"
 #include <algorithm>
+#include <iostream>
 #include <stack>
 #include <stdexcept>
 #include <tuple>
@@ -72,7 +73,7 @@ Term *Expr::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
 {
   if (Compiler::cse_enabled())
   {
-    if (auto term = find_op(op_code, operands); term)
+    if (auto term = find_op(&op_code, &operands); term)
     {
       inserted = false;
       return term;
@@ -112,7 +113,7 @@ Term *Expr::insert_const(PackedVal packed_val)
   return term;
 }
 
-Term *Expr::find_term(size_t id) const
+Term *Expr::get_term(size_t id) const
 {
   Term t(id);
   if (auto it = terms_.find(&t); it != terms_.end())
@@ -121,30 +122,30 @@ Term *Expr::find_term(size_t id) const
   return nullptr;
 }
 
-Term *Expr::find_op_commut(const OpCode &op_code, const std::vector<Term *> &operands) const
+Term *Expr::find_op_commut(const OpCode *op_code, const vector<Term *> *operands) const
 {
   if (!Compiler::cse_enabled())
     throw logic_error("cse is not enabled");
 
-  if (!op_code.commutativity())
+  if (!op_code->commutativity())
     return find_op(op_code, operands);
 
-  auto operands_permut = operands;
+  auto operands_permut = *operands;
   sort(operands_permut.begin(), operands_permut.end(), Term::ComparePtr{});
   do
   {
-    if (auto op_term = find_op(op_code, operands_permut); op_term)
+    if (auto op_term = find_op(op_code, &operands_permut); op_term)
       return op_term;
   } while (next_permutation(operands_permut.begin(), operands_permut.end(), Term::ComparePtr{}));
   return nullptr;
 }
 
-Term *Expr::find_op(const OpCode &op_code, const vector<Term *> &operands) const
+Term *Expr::find_op(const OpCode *op_code, const vector<Term *> *operands) const
 {
   if (!Compiler::cse_enabled())
     throw logic_error("cse is not enabled");
 
-  if (auto it = op_terms_.find({&op_code, &operands}); it != op_terms_.end())
+  if (auto it = op_terms_.find(OpTermKey{op_code, operands}); it != op_terms_.end())
     return it->second;
 
   return nullptr;
@@ -152,71 +153,94 @@ Term *Expr::find_op(const OpCode &op_code, const vector<Term *> &operands) const
 
 void Expr::replace(Term *term1, Term *term2)
 {
-  for (auto parent_it = term1->parents_.cbegin(); parent_it != term1->parents_.cend();)
+  if (*term1 == *term2)
+    return;
+
+  struct Call
   {
-    auto parent = *parent_it;
-    if (Compiler::cse_enabled())
-      op_terms_.erase(OpTermKey{&parent->op_code(), &parent->operands()});
+    Term *term1_;
+    Term *term2_;
+  };
+  stack<Call> call_stack;
 
-    for (auto operand_it = parent->operands_.begin(); operand_it != parent->operands_.end(); ++operand_it)
+  call_stack.push(Call{term1, term2});
+  while (!call_stack.empty())
+  {
+    auto top_call = call_stack.top();
+    call_stack.pop();
+    auto top_term1 = top_call.term1_;
+    auto top_term2 = top_call.term2_;
+
+    if (auto term1_output_it = outputs_info_.find(top_term1); term1_output_it != outputs_info_.end())
     {
-      // parent multiplicity can be used to stop once replacement is done, not to traverse the whole operands
-      // vector
-      auto operand = *operand_it;
-      if (*operand == *term1)
-        *operand_it = term2;
+      if (auto term2_output_it = outputs_info_.find(top_term2); term2_output_it != outputs_info_.end())
+      {
+        clog << "output term with label '" << term1_output_it->second.label_
+             << "' was merged with the output term with label '" << term2_output_it->second.label_
+             << "', and will be accessible with the latter label\n";
+        outputs_info_.erase(term1_output_it);
+      }
+      else
+      {
+        outputs_info_.emplace(top_term2, move(term1_output_it->second));
+        outputs_info_.erase(term1_output_it);
+      }
     }
-    if (Compiler::cse_enabled())
-      op_terms_.emplace(OpTermKey{&parent->op_code(), &parent->operands()}, parent);
 
-    term2->parents_.insert(parent);
-    parent_it = term1->parents_.erase(parent_it);
+    for (auto parent_it = top_term1->parents_.cbegin(); parent_it != top_term1->parents_.cend();)
+    {
+      auto parent = *parent_it;
+      if (Compiler::cse_enabled())
+        op_terms_.erase(OpTermKey{&parent->op_code(), &parent->operands()});
+
+      for (auto operand_it = parent->operands_.begin(); operand_it != parent->operands_.end(); ++operand_it)
+      {
+        // parent multiplicity can be used to stop once replacement is done, not to traverse the whole operands
+        // vector
+        auto operand = *operand_it;
+        if (*operand == *top_term1)
+          *operand_it = top_term2;
+      }
+      if (Compiler::cse_enabled())
+      {
+        auto [it, inserted] = op_terms_.emplace(OpTermKey{&parent->op_code(), &parent->operands()}, parent);
+        if (!inserted)
+          call_stack.push(Call{parent, it->second});
+      }
+      top_term2->parents_.insert(parent);
+      parent_it = top_term1->parents_.erase(parent_it);
+    }
+    delete_term_cascade(top_term1);
   }
   valid_top_sort_ = false;
 }
 
-void Expr::set_output(Term *term, ParamTermInfo param_term_info)
+void Expr::set_output(const Term *term, ParamTermInfo param_term_info)
 {
-  if (outputs_info_.emplace(term, move(param_term_info)).second)
-  {
-    if (valid_top_sort_ && term->is_leaf())
-    {
-      for (auto sorted_term : sorted_terms_)
-      {
-        if (*term == *sorted_term)
-          return;
-      }
-      sorted_terms_.push_back(term);
-    }
-    else
-      valid_top_sort_ = false;
-  }
+  if (outputs_info_.insert_or_assign(term, move(param_term_info)).second)
+    valid_top_sort_ = false;
 }
 
-void Expr::unset_output(Term *term)
+void Expr::unset_output(const Term *term)
 {
   if (outputs_info_.erase(term))
-  {
-    if (valid_top_sort_ && term->is_leaf())
-    {
-      for (auto it = sorted_terms_.cbegin(); it != sorted_terms_.cend();)
-      {
-        auto sorted_term = *it;
-        if (*term == *sorted_term)
-        {
-          sorted_terms_.erase(it);
-          return;
-        }
-        else
-          ++it;
-      }
-    }
-    else
-      valid_top_sort_ = false;
-  }
+    valid_top_sort_ = false;
 }
 
-unordered_set<size_t> Expr::prune_unreachabe_terms()
+void Expr::prune_unreachabe_terms()
+{
+  delete_terms_cascade(terms_);
+}
+
+void Expr::delete_term_cascade(Term *term)
+{
+  if (!can_delete(term))
+    throw invalid_argument("cannot delete term");
+
+  delete_terms_cascade({term});
+}
+
+void Expr::delete_terms_cascade(const Term::PtrSet &terms)
 {
   struct Call
   {
@@ -225,10 +249,10 @@ unordered_set<size_t> Expr::prune_unreachabe_terms()
   };
   stack<Call> call_stack;
 
-  unordered_set<Term *, Term::HashPtr, Term::EqualPtr> visited_terms;
-  vector<Term *> all_terms_sorted;
+  Term::PtrSet visited_terms;
+  vector<Term *> descendants_sorted;
 
-  for (auto term : terms_)
+  for (auto term : terms)
   {
     if (visited_terms.find(term) == visited_terms.end())
       call_stack.push(Call{term, false});
@@ -241,7 +265,7 @@ unordered_set<size_t> Expr::prune_unreachabe_terms()
       if (top_call.children_processed_)
       {
         visited_terms.insert(top_term);
-        all_terms_sorted.push_back(top_term);
+        descendants_sorted.push_back(top_term);
         continue;
       }
 
@@ -254,87 +278,44 @@ unordered_set<size_t> Expr::prune_unreachabe_terms()
     }
   }
 
-  unordered_set<size_t> deleted_leaves;
-  for (auto it = all_terms_sorted.crbegin(); it != all_terms_sorted.crend(); ++it)
+  for (auto it = descendants_sorted.crbegin(); it != descendants_sorted.crend(); ++it)
   {
     auto term = *it;
     if (can_delete(term))
     {
       if (term->is_leaf())
-        deleted_leaves.insert(term->id());
+      {
+        if (!inputs_info_.erase(term))
+        {
+          if (auto it = const_terms_values_.find(term); it != const_terms_values_.end())
+          {
+            if (Compiler::cse_enabled())
+              values_to_const_terms_.erase(it->second);
+            const_terms_values_.erase(it);
+          }
+          else
+            throw logic_error("invalid leaf, non-input and non-const");
+        }
+      }
       else
       {
         for (auto operand : term->operands())
           operand->parents_.erase(term);
         if (Compiler::cse_enabled())
-          op_terms_.erase(OpTermKey{&term->op_code(), &term->operands()});
+        {
+          auto it = op_terms_.find(OpTermKey{&term->op_code(), &term->operands()});
+          if (*it->second == *term)
+            op_terms_.erase(it);
+        }
       }
       terms_.erase(term);
       delete term;
+      valid_top_sort_ = false;
     }
   }
-  return deleted_leaves;
 }
 
-unordered_set<size_t> Expr::delete_term_cascade(Term *term)
-{
-  if (!can_delete(term))
-    throw invalid_argument("cannot delete term (must be source and not output)");
-
-  struct Call
-  {
-    Term *term_;
-    bool children_processed_;
-  };
-  stack<Call> call_stack;
-
-  unordered_set<Term *, Term::HashPtr, Term::EqualPtr> visited_terms;
-  vector<Term *> sorted_descendants;
-
-  call_stack.push(Call{term, false});
-  while (!call_stack.empty())
-  {
-    auto top_call = call_stack.top();
-    call_stack.pop();
-    auto top_term = top_call.term_;
-    if (top_call.children_processed_)
-    {
-      visited_terms.insert(top_term);
-      sorted_descendants.push_back(top_term);
-      continue;
-    }
-
-    if (auto it = visited_terms.find(top_term); it != visited_terms.end())
-      continue;
-
-    call_stack.push(Call{top_term, true});
-    for (auto operand : top_term->operands())
-      call_stack.push(Call{operand, false});
-  }
-
-  unordered_set<size_t> deleted_leaves;
-  for (auto it = sorted_descendants.crbegin(); it != sorted_descendants.crend(); ++it)
-  {
-    auto term = *it;
-    if (can_delete(term))
-    {
-      if (term->is_leaf())
-        deleted_leaves.insert(term->id());
-      else
-      {
-        for (auto operand : term->operands())
-          operand->parents_.erase(term);
-        if (Compiler::cse_enabled())
-          op_terms_.erase(OpTermKey{&term->op_code(), &term->operands()});
-      }
-      terms_.erase(term);
-      delete term;
-    }
-  }
-  return deleted_leaves;
-}
-
-TermQualif Expr::get_qualif(Term *term) const
+TermQualif Expr::get_qualif(const Term *term) const
 {
   if (is_input(term))
   {
@@ -358,7 +339,7 @@ TermQualif Expr::get_qualif(Term *term) const
   return TermQualif::op;
 }
 
-const ParamTermInfo *Expr::get_input_info(Term *term) const
+const ParamTermInfo *Expr::get_input_info(const Term *term) const
 {
   if (auto it = inputs_info_.find(term); it != inputs_info_.end())
     return &it->second;
@@ -366,7 +347,7 @@ const ParamTermInfo *Expr::get_input_info(Term *term) const
   return nullptr;
 }
 
-const PackedVal *Expr::get_const_val(Term *term) const
+const PackedVal *Expr::get_const_val(const Term *term) const
 {
   if (auto it = const_terms_values_.find(term); it != const_terms_values_.end())
     return &it->second;
@@ -374,7 +355,7 @@ const PackedVal *Expr::get_const_val(Term *term) const
   return nullptr;
 }
 
-const ParamTermInfo *Expr::get_output_info(Term *term) const
+const ParamTermInfo *Expr::get_output_info(const Term *term) const
 {
   if (auto it = outputs_info_.find(term); it != outputs_info_.end())
     return &it->second;
@@ -382,7 +363,7 @@ const ParamTermInfo *Expr::get_output_info(Term *term) const
   return nullptr;
 }
 
-const vector<Term *> &Expr::get_top_sorted_terms()
+const vector<const Term *> &Expr::get_top_sorted_terms()
 {
   if (valid_top_sort_)
     return sorted_terms_;
@@ -391,14 +372,24 @@ const vector<Term *> &Expr::get_top_sorted_terms()
   return sorted_terms_;
 }
 
+const vector<size_t> &Expr::get_top_sorted_terms_ids()
+{
+  if (valid_top_sort_)
+    return sorted_terms_ids_;
+
+  topological_sort();
+  return sorted_terms_ids_;
+}
+
 // iterative version of https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search
 void Expr::topological_sort()
 {
   sorted_terms_.clear();
+  sorted_terms_ids_.clear();
 
   struct Call
   {
-    Term *term_;
+    const Term *term_;
     bool children_processed_;
   };
   stack<Call> call_stack;
@@ -408,7 +399,7 @@ void Expr::topological_sort()
     temp,
     perm
   };
-  unordered_map<Term *, Mark> terms_marks;
+  unordered_map<const Term *, Mark, Term::HashPtr, Term::EqualPtr> terms_marks;
 
   for (auto [term, label] : outputs_info_)
   {
@@ -424,6 +415,7 @@ void Expr::topological_sort()
       {
         terms_marks[top_term] = Mark::perm;
         sorted_terms_.push_back(top_term);
+        sorted_terms_ids_.push_back(top_term->id());
         continue;
       }
 

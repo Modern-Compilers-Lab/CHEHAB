@@ -50,7 +50,7 @@ inline bool operator!=(const ParamTermInfo &lhs, const ParamTermInfo &rhs)
   return !(lhs == rhs);
 }
 
-using IOTermsInfo = std::unordered_map<Term *, ParamTermInfo, Term::HashPtr, Term::EqualPtr>;
+using IOTermsInfo = std::unordered_map<const Term *, ParamTermInfo, Term::HashPtr, Term::EqualPtr>;
 
-using TermsValues = std::unordered_map<Term *, PackedVal, Term::HashPtr, Term::EqualPtr>;
+using TermsValues = std::unordered_map<const Term *, PackedVal, Term::HashPtr, Term::EqualPtr>;
 } // namespace fheco::ir

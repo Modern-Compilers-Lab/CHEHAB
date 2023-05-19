@@ -14,7 +14,7 @@ namespace fheco::util
 {
 void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool show_key, bool impose_operands_order)
 {
-  auto make_node_label = [&func](ir::Term *term) -> string {
+  auto make_node_label = [&func](const ir::Term *term) -> string {
     // operation term
     if (term->is_operation())
     {
@@ -43,7 +43,7 @@ void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool show_key, bool 
       throw logic_error("invalid leaf term, non-input and non-const");
   };
 
-  auto make_term_attrs = [&func, &make_node_label](ir::Term *term) -> string {
+  auto make_term_attrs = [&func, &make_node_label](const ir::Term *term) -> string {
     unordered_map<ir::Term::Type, string> type_to_attrs = {
       {ir::Term::Type::cipher, "style=solid"}, {ir::Term::Type::plain, "style=dashed"}};
 

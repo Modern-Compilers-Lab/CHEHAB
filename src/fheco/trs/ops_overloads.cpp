@@ -75,7 +75,7 @@ OpGenMatcher operator%(OpGenMatcher lhs, OpGenMatcher rhs)
 }
 
 // balanced_reduct, used to generate log reduction rules
-TermMatcher balanced_reduct(const std::vector<TermMatcher> &args, const TermOpCode &op_code)
+TermMatcher balanced_reduct(const vector<TermMatcher> &args, const TermOpCode &op_code)
 {
   vector<TermMatcher> balanced_ops;
   for (size_t i = 0; i < args.size() - 1; i += 2)

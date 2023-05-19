@@ -19,7 +19,7 @@ PackedVal ClearDataEvaluator::make_rand_packed_val(integer slot_min, integer slo
   return packed_val;
 }
 
-void ClearDataEvaluator::operate(const ir::OpCode &op_code, const std::vector<PackedVal> &args, PackedVal &dest) const
+void ClearDataEvaluator::operate(const ir::OpCode &op_code, const vector<PackedVal> &args, PackedVal &dest) const
 {
   if (op_code.arity() != args.size())
     throw invalid_argument("invalid number of args");

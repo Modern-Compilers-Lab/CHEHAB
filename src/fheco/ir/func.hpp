@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -49,13 +48,15 @@ public:
 
   inline Term *insert_const_term(PackedVal packed_val) { return data_flow_.insert_const(std::move(packed_val)); }
 
-  void replace_term_with(Term *term1, Term *term2);
+  inline void replace_term_with(Term *term1, Term *term2) { data_flow_.replace(term1, term2); }
 
-  void remove_dead_code();
+  inline void remove_dead_code() { data_flow_.prune_unreachabe_terms(); }
 
-  void delete_term_cascade(Term *term);
+  inline void delete_term_cascade(Term *term) { data_flow_.delete_term_cascade(term); }
 
-  inline const std::vector<Term *> &get_top_sorted_terms() { return data_flow_.get_top_sorted_terms(); }
+  inline const std::vector<const Term *> &get_top_sorted_terms() { return data_flow_.get_top_sorted_terms(); }
+
+  inline const std::vector<std::size_t> &get_top_sorted_terms_ids() { return data_flow_.get_top_sorted_terms_ids(); }
 
   inline const std::string &name() const { return name_; }
 
@@ -68,8 +69,6 @@ public:
   inline const Expr &data_flow() const { return data_flow_; }
 
 private:
-  // void clean_deleted_leaf_term(std::size_t id);
-
   std::string name_;
 
   std::size_t slot_count_;

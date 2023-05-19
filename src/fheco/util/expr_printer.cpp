@@ -106,7 +106,7 @@ string ExprPrinter::expand_term(size_t id, Mode mode, int depth) const
 
 string ExprPrinter::expand_term(size_t id, Mode mode, int depth, TermsStrExpr &dp) const
 {
-  auto term = func_->data_flow().find_term(id);
+  auto term = func_->data_flow().get_term(id);
   if (!term)
     throw invalid_argument("term with id not found");
 
@@ -193,7 +193,7 @@ string ExprPrinter::expand_term(size_t id, Mode mode, int depth, TermsStrExpr &d
   return result;
 }
 
-string ExprPrinter::leaf_str_expr(ir::Term *term) const
+string ExprPrinter::leaf_str_expr(const ir::Term *term) const
 {
   if (auto input_info = func_->data_flow().get_input_info(term); input_info)
     return input_info->label_;

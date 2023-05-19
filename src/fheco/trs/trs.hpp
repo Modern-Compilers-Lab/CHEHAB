@@ -3,6 +3,7 @@
 #include "fheco/trs/rule.hpp"
 #include "fheco/trs/ruleset.hpp"
 #include "fheco/trs/subst.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -20,18 +21,26 @@ namespace fheco::trs
 class TRS
 {
 public:
-  TRS(std::shared_ptr<ir::Func> func) : func_{std::move(func)}, ruleset_{func_} {}
+  enum class RewriteHeuristic
+  {
+    bottom_up,
+    top_down
+  };
 
-  void run();
+  TRS(std::shared_ptr<ir::Func> func, Ruleset ruleset) : func_{std::move(func)}, ruleset_{std::move(ruleset)} {}
 
-  void rewrite_term(ir::Term *term);
+  void run(RewriteHeuristic heuristic);
+
+  void rewrite_term(ir::Term *term, RewriteHeuristic heuristic);
 
 private:
-  bool match(const TermMatcher &term_matcher, ir::Term *term, Subst &subst, std::int64_t &rel_cost) const;
+  bool match(
+    const TermMatcher &term_matcher, ir::Term *term, Subst &subst, std::int64_t &rel_cost,
+    ir::Term::PtrSet &to_delete) const;
 
   ir::Term *construct_term(
-    const TermMatcher &term_matcher, const Subst &subst, std::int64_t &rel_cost,
-    std::vector<ir::Term *> &created_terms);
+    const TermMatcher &term_matcher, const Subst &subst, const ir::Term::PtrSet &to_delete, std::int64_t &rel_cost,
+    std::vector<std::size_t> &created_terms_ids);
 
   std::shared_ptr<ir::Func> func_;
 

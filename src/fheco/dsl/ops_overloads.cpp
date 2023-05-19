@@ -483,12 +483,12 @@ Plaintext mul_many(const vector<Plaintext> &args)
 }
 
 // exponentiate
-Ciphertext exponentiate(const Ciphertext &arg, std::uint64_t exponent)
+Ciphertext exponentiate(const Ciphertext &arg, uint64_t exponent)
 {
   vector<Ciphertext> args(static_cast<size_t>(exponent), arg);
   return mul_many(args);
 }
-Plaintext exponentiate(const Plaintext &arg, std::uint64_t exponent)
+Plaintext exponentiate(const Plaintext &arg, uint64_t exponent)
 {
   vector<Plaintext> args(static_cast<size_t>(exponent), arg);
   return mul_many(args);

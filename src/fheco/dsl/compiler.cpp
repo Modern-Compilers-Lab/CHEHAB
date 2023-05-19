@@ -28,7 +28,7 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
   // trs::TRS ops_opt_trs{func, trs::Ruleset::ops_type_number_opt_ruleset(func->slot_count())};
   // ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up);
 
-  passes::cse_commut(func);
+  // passes::cse_commut(func);
 }
 
 void Compiler::add_func(shared_ptr<ir::Func> func)

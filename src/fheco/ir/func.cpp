@@ -3,7 +3,6 @@
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/dsl/plaintext.hpp"
 #include "fheco/util/common.hpp"
-#include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
@@ -50,7 +49,7 @@ void Func::init_const(T &constant, PackedVal packed_val)
 template <typename TArg, typename TDest>
 void Func::operate_unary(OpCode op_code, const TArg &arg, TDest &dest)
 {
-  auto arg_term = data_flow_.find_term(arg.id());
+  auto arg_term = data_flow_.get_term(arg.id());
   if (!arg_term)
     throw invalid_argument("operand not defined");
 
@@ -80,8 +79,8 @@ void Func::operate_unary(OpCode op_code, const TArg &arg, TDest &dest)
 template <typename TArg1, typename TArg2, typename TDest>
 void Func::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &arg2, TDest &dest)
 {
-  auto arg1_term = data_flow_.find_term(arg1.id());
-  auto arg2_term = data_flow_.find_term(arg2.id());
+  auto arg1_term = data_flow_.get_term(arg1.id());
+  auto arg2_term = data_flow_.get_term(arg2.id());
   if (!arg1_term || !arg2_term)
     throw invalid_argument("operand not defined");
 
@@ -104,7 +103,7 @@ void Func::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &arg2, 
 template <typename T>
 void Func::set_output(const T &output, string label)
 {
-  if (auto term = data_flow_.find_term(output.id()); term)
+  if (auto term = data_flow_.get_term(output.id()); term)
     data_flow_.set_output(term, ParamTermInfo{move(label), output.example_val()});
   else
     throw invalid_argument("object not defined");
@@ -136,71 +135,6 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
 
   return data_flow_.insert_op(move(op_code), move(operands), inserted);
 }
-
-void Func::replace_term_with(Term *term1, Term *term2)
-{
-  if (*term1 == *term2)
-    return;
-
-  data_flow_.replace(term1, term2);
-  // if (auto output_info_node = outputs_info_.extract(term1->id()); !output_info_node.empty())
-  // {
-  //   const auto &output_info = output_info_node.mapped();
-  //   if (output_info.example_val_)
-  //     set_output(term2, move(output_info.label_));
-  //   else
-  //     set_output(term2, move(output_info.label_), *output_info.example_val_);
-  //   data_flow_.unset_output(term1);
-  // }
-  // delete_term_cascade(term1);
-}
-
-// void Func::set_output(Term *term, string label)
-// {
-//   auto [it, inserted] = outputs_info_.emplace(term->id(), ParamTermInfo{move(label), nullopt});
-//   if (inserted)
-//     data_flow_.set_output(term);
-//   else
-//     clog << "the output term with label '" << label << "' was merged with the output term with label '"
-//          << it->second.label_ << "', and will be accessible with the latter label\n";
-// }
-
-// void Func::set_output(Term *term, string label, PackedVal example_val)
-// {
-//   auto [it, inserted] = outputs_info_.emplace(term->id(), ParamTermInfo{move(label), move(example_val)});
-//   if (inserted)
-//     data_flow_.set_output(term);
-//   else
-//     clog << "the output term with label '" << label << "' was merged with the output term with label '"
-//          << it->second.label_ << "', and will be accessible with the latter label\n";
-// }
-
-// void Func::remove_dead_code()
-// {
-//   for (auto leaf : data_flow_.prune_unreachabe_terms())
-//     clean_deleted_leaf_term(leaf);
-// }
-
-// void Func::delete_term_cascade(Term *term)
-// {
-//   for (auto leaf : data_flow_.delete_term_cascade(term))
-//     clean_deleted_leaf_term(leaf);
-// }
-
-// void Func::clean_deleted_leaf_term(size_t id)
-// {
-//   if (!inputs_info_.erase(id))
-//   {
-//     if (auto it = const_values_.find(id); it != const_values_.end())
-//     {
-//       if (Compiler::cse_enabled())
-//         values_to_const_terms_.erase(it->second);
-//       const_values_.erase(it);
-//     }
-//     else
-//       throw logic_error("invalid leaf, non-input and non-const");
-//   }
-// }
 
 // init_input
 template void Func::init_input(Ciphertext &, string);

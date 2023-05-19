@@ -5,20 +5,28 @@
 #include "fheco/trs/term_matcher.hpp"
 #include "fheco/trs/term_op_code.hpp"
 #include <cstddef>
-#include <memory>
+#include <utility>
 #include <vector>
-
-namespace fheco::ir
-{
-class Func;
-} // namespace fheco::ir
 
 namespace fheco::trs
 {
 class Ruleset
 {
 public:
-  Ruleset(const std::shared_ptr<ir::Func> &func);
+  static Ruleset depth_opt_ruleset(std::size_t slot_count);
+
+  static Ruleset log2_reduct_opt_ruleset(std::size_t slot_count);
+
+  static Ruleset ops_type_number_opt_ruleset(std::size_t slot_count);
+
+  Ruleset(
+    std::size_t slot_count, std::vector<Rule> encrypt_rules, std::vector<Rule> add_rules, std::vector<Rule> sub_rules,
+    std::vector<Rule> negate_rules, std::vector<Rule> rotate_rules, std::vector<Rule> square_rules,
+    std::vector<Rule> mul_rules)
+    : slot_count_{slot_count}, encrypt_rules_{std::move(encrypt_rules)}, add_rules_{std::move(add_rules)},
+      sub_rules_{std::move(sub_rules)}, negate_rules_{std::move(negate_rules)}, rotate_rules_{std::move(rotate_rules)},
+      square_rules_{std::move(square_rules)}, mul_rules_{std::move(mul_rules)}
+  {}
 
   const std::vector<Rule> &pick_rules(const ir::OpCode &op_code) const;
 
