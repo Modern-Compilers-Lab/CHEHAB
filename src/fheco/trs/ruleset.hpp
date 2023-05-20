@@ -3,7 +3,6 @@
 #include "fheco/ir/op_code.hpp"
 #include "fheco/trs/rule.hpp"
 #include "fheco/trs/term_matcher.hpp"
-#include "fheco/trs/term_op_code.hpp"
 #include <cstddef>
 #include <utility>
 #include <vector>
@@ -28,6 +27,8 @@ public:
       negate_rules_{std::move(negate_rules)}, rotate_rules_{std::move(rotate_rules)},
       square_rules_{std::move(square_rules)}, mul_rules_{std::move(mul_rules)}
   {}
+
+  Ruleset(std::size_t slot_count, std::vector<Rule> rules);
 
   const std::vector<Rule> &pick_rules(const ir::OpCode &op_code) const;
 

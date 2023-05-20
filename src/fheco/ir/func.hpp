@@ -3,7 +3,7 @@
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/expr.hpp"
 #include "fheco/ir/op_code.hpp"
-#include "fheco/util/clear_data_evaluator.hpp"
+#include "fheco/util/clear_data_eval.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -17,11 +17,13 @@ class Term;
 class Func
 {
 public:
-  Func(std::string name, std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction = false);
+  Func(
+    std::string name, std::size_t slot_count, integer modulus, bool signedness, bool need_full_cyclic_rotation,
+    bool delayed_reduction);
 
-  Func(std::string name, std::size_t slot_count, int bit_width, bool signedness);
-
-  static bool is_valid_slot_count(std::size_t slot_count);
+  Func(std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_full_cyclic_rotation)
+    : Func(std::move(name), slot_count, (1 << bit_width) - 1, signedness, need_full_cyclic_rotation, true)
+  {}
 
   template <typename T>
   void init_input(T &input, std::string label);
@@ -71,9 +73,9 @@ public:
 
   inline const std::size_t &slot_count() const { return slot_count_; }
 
-  inline const util::ClearDataEvaluator &clear_data_evaluator() const { return clear_data_evaluator_; }
+  inline const util::ClearDataEval &clear_data_evaluator() const { return clear_data_evaluator_; }
 
-  inline bool need_cyclic_rotations() const { return need_cyclic_rotations_; }
+  inline bool need_full_cyclic_rotation() const { return need_full_cyclic_rotation_; }
 
   inline const Expr &data_flow() const { return data_flow_; }
 
@@ -82,9 +84,9 @@ private:
 
   std::size_t slot_count_;
 
-  bool need_cyclic_rotations_;
+  bool need_full_cyclic_rotation_;
 
-  util::ClearDataEvaluator clear_data_evaluator_;
+  util::ClearDataEval clear_data_evaluator_;
 
   Expr data_flow_{};
 };

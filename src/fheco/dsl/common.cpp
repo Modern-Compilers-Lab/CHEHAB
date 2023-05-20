@@ -15,8 +15,5 @@ void validate_shape(const vector<size_t> &shape)
 
   if (slot_count > Compiler::active_func()->slot_count())
     throw invalid_argument("shape too large, total number of elements must be <= function slot count");
-
-  if (!Compiler::active_func()->is_valid_slot_count(slot_count))
-    throw invalid_argument("invalid shape, total number of elements must be a power of two");
 }
 } // namespace fheco

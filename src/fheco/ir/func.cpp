@@ -12,21 +12,14 @@ using namespace std;
 
 namespace fheco::ir
 {
-Func::Func(string name, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
-  : name_{move(name)}, slot_count_{slot_count}, need_cyclic_rotations_{false},
+Func::Func(
+  string name, size_t slot_count, integer modulus, bool signedness, bool need_full_cyclic_rotation,
+  bool delayed_reduction)
+  : name_{move(name)}, slot_count_{slot_count}, need_full_cyclic_rotation_{need_full_cyclic_rotation},
     clear_data_evaluator_{slot_count_, modulus, signedness, delayed_reduction}
 {
-  if (!is_valid_slot_count(slot_count_))
-    throw invalid_argument("slot_count must be a power of two");
-}
-
-Func::Func(string name, size_t slot_count, int bit_width, bool signedness)
-  : Func(move(name), slot_count, (2 << (bit_width - 1)) - 1, signedness, true)
-{}
-
-bool Func::is_valid_slot_count(size_t slot_count)
-{
-  return slot_count != 0 && (slot_count & (slot_count - 1)) == 0;
+  if (need_full_cyclic_rotation && !util::is_power_of2(slot_count_))
+    throw invalid_argument("when need_full_cyclic_rotation, slot_count must be a power of two");
 }
 
 template <typename T>

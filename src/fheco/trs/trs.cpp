@@ -40,6 +40,33 @@ void TRS::run(RewriteHeuristic heuristic, bool global_analysis)
   }
 }
 
+bool TRS::apply_rule(ir::Term *term, const Rule &rule)
+{
+  Subst subst;
+  bool global_analysis = false;
+  int64_t rel_cost = 0;
+  ir::Term::PtrSet to_delete;
+  bool matched = match(rule.lhs(), term, subst, global_analysis, rel_cost, to_delete);
+  if (!matched)
+  {
+    clog << "could not find a substitution\n";
+    return false;
+  }
+  if (!rule.check_cond(subst))
+  {
+    clog << "condition not met\n";
+    return false;
+  }
+  vector<size_t> created_terms_ids;
+  auto equiv_term = construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
+  clog << "replace term $" << term->id() << " with term $" << equiv_term->id() << '\n';
+  util::ExprPrinter p{func_};
+  cout << p.expand_term(term, 10) << endl;
+  func_->replace_term_with(term, equiv_term);
+  cout << p.expand_term(equiv_term, 10) << endl;
+  return true;
+}
+
 void TRS::rewrite_term(size_t id, RewriteHeuristic heuristic, bool global_analysis)
 {
   stack<size_t> call_stack;

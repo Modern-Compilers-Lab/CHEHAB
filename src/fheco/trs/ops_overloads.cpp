@@ -1,4 +1,3 @@
-#include "fheco/trs/op_gen_op_code.hpp"
 #include "fheco/trs/ops_overloads.hpp"
 #include <utility>
 
@@ -74,8 +73,7 @@ OpGenMatcher operator%(OpGenMatcher lhs, OpGenMatcher rhs)
   return OpGenMatcher{OpGenOpCode::mod, vector<OpGenMatcher>{move(lhs), move(rhs)}};
 }
 
-// balanced_reduct, used to generate log reduction rules
-TermMatcher balanced_reduct(const vector<TermMatcher> &args, const TermOpCode &op_code)
+TermMatcher balanced_op(const vector<TermMatcher> &args, const TermOpCode &op_code)
 {
   vector<TermMatcher> balanced_ops;
   for (size_t i = 0; i < args.size() - 1; i += 2)

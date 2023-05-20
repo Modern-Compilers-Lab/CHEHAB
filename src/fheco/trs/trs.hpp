@@ -31,6 +31,8 @@ public:
 
   void run(RewriteHeuristic heuristic, bool global_analysis);
 
+  bool apply_rule(ir::Term *term, const Rule &rule);
+
   void rewrite_term(std::size_t id, RewriteHeuristic heuristic, bool global_analysis);
 
 private:

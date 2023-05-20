@@ -1,7 +1,6 @@
 #pragma once
 
 #include "fheco/ir/common.hpp"
-#include "fheco/ir/op_code.hpp"
 #include "fheco/ir/term.hpp"
 #include <cstddef>
 #include <unordered_map>

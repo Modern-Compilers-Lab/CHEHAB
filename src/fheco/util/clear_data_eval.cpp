@@ -1,4 +1,4 @@
-#include "fheco/util/clear_data_evaluator.hpp"
+#include "fheco/util/clear_data_eval.hpp"
 #include "fheco/util/common.hpp"
 #include <iostream>
 
@@ -6,20 +6,20 @@ using namespace std;
 
 namespace fheco::util
 {
-void ClearDataEvaluator::adjust_packed_val(PackedVal &packed_val) const
+void ClearDataEval::adjust_packed_val(PackedVal &packed_val) const
 {
   packed_val.resize(slot_count_);
   // reduce(packed_val);
 }
 
-PackedVal ClearDataEvaluator::make_rand_packed_val(integer slot_min, integer slot_max) const
+PackedVal ClearDataEval::make_rand_packed_val(integer slot_min, integer slot_max) const
 {
   PackedVal packed_val(slot_count_);
   init_random(packed_val, slot_min, slot_max);
   return packed_val;
 }
 
-void ClearDataEvaluator::operate(const ir::OpCode &op_code, const vector<PackedVal> &args, PackedVal &dest) const
+void ClearDataEval::operate(const ir::OpCode &op_code, const vector<PackedVal> &args, PackedVal &dest) const
 {
   if (op_code.arity() != args.size())
     throw invalid_argument("invalid number of args");
@@ -39,7 +39,7 @@ void ClearDataEvaluator::operate(const ir::OpCode &op_code, const vector<PackedV
   }
 }
 
-void ClearDataEvaluator::operate_unary(const ir::OpCode &op_code, const PackedVal &arg, PackedVal &dest) const
+void ClearDataEval::operate_unary(const ir::OpCode &op_code, const PackedVal &arg, PackedVal &dest) const
 {
   switch (op_code.type())
   {
@@ -56,7 +56,7 @@ void ClearDataEvaluator::operate_unary(const ir::OpCode &op_code, const PackedVa
   }
 }
 
-void ClearDataEvaluator::operate_binary(
+void ClearDataEval::operate_binary(
   const ir::OpCode &op_code, const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const
 {
   switch (op_code.type())
@@ -78,7 +78,7 @@ void ClearDataEvaluator::operate_binary(
   }
 }
 
-void ClearDataEvaluator::reduce(PackedVal &packed_val) const
+void ClearDataEval::reduce(PackedVal &packed_val) const
 {
   if (delayed_reduction_)
   {
@@ -129,7 +129,7 @@ void ClearDataEvaluator::reduce(PackedVal &packed_val) const
   }
 }
 
-void ClearDataEvaluator::add(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const
+void ClearDataEval::add(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const
 {
   dest.resize(slot_count_);
   for (size_t i = 0; i < slot_count_; ++i)
@@ -138,7 +138,7 @@ void ClearDataEvaluator::add(const PackedVal &arg1, const PackedVal &arg2, Packe
   reduce(dest);
 }
 
-void ClearDataEvaluator::sub(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const
+void ClearDataEval::sub(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const
 {
   dest.resize(slot_count_);
   for (size_t i = 0; i < slot_count_; ++i)
@@ -147,7 +147,7 @@ void ClearDataEvaluator::sub(const PackedVal &arg1, const PackedVal &arg2, Packe
   reduce(dest);
 }
 
-void ClearDataEvaluator::negate(const PackedVal &arg, PackedVal &dest) const
+void ClearDataEval::negate(const PackedVal &arg, PackedVal &dest) const
 {
   dest.resize(slot_count_);
   for (size_t i = 0; i < slot_count_; ++i)
@@ -156,7 +156,7 @@ void ClearDataEvaluator::negate(const PackedVal &arg, PackedVal &dest) const
   reduce(dest);
 }
 
-void ClearDataEvaluator::rotate(const PackedVal &arg, int steps, PackedVal &dest) const
+void ClearDataEval::rotate(const PackedVal &arg, int steps, PackedVal &dest) const
 {
   dest.resize(slot_count_);
   steps = static_cast<int>(steps % slot_count_);
@@ -164,7 +164,7 @@ void ClearDataEvaluator::rotate(const PackedVal &arg, int steps, PackedVal &dest
     dest[i] = arg[(i + steps) % slot_count_];
 }
 
-void ClearDataEvaluator::mul(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const
+void ClearDataEval::mul(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const
 {
   dest.resize(slot_count_);
   for (size_t i = 0; i < slot_count_; ++i)

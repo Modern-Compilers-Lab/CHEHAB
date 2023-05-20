@@ -351,6 +351,45 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
   return Ruleset{slot_count, move(add_rules), move(sub_rules), move(negate_rules), move(rotate_rules), {}, mul_rules};
 }
 
+Ruleset::Ruleset(size_t slot_count, vector<Rule> rules)
+{
+  for (auto &rule : rules)
+  {
+    switch (rule.lhs().op_code().type())
+    {
+    case ir::OpCode::Type::nop:
+      throw invalid_argument("rule lhs is a leaf, no context!");
+
+    case ir::OpCode::Type::add:
+      add_rules_.push_back(move(rule));
+      break;
+
+    case ir::OpCode::Type::sub:
+      sub_rules_.push_back(move(rule));
+      break;
+
+    case ir::OpCode::Type::negate:
+      negate_rules_.push_back(move(rule));
+      break;
+
+    case ir::OpCode::Type::rotate:
+      rotate_rules_.push_back(move(rule));
+      break;
+
+    case ir::OpCode::Type::square:
+      square_rules_.push_back(move(rule));
+      break;
+
+    case ir::OpCode::Type::mul:
+      mul_rules_.push_back(move(rule));
+      break;
+
+    default:
+      throw logic_error("unhandled operation of rule lhs");
+    }
+  }
+}
+
 const vector<Rule> &Ruleset::pick_rules(const ir::OpCode &op_code) const
 {
   switch (op_code.type())
@@ -407,7 +446,7 @@ Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, size_t size, const Term
 
     elts[i] = x << i;
   }
-  auto lhs = balanced_reduct(elts, op_code);
+  auto lhs = balanced_op(elts, op_code);
 
   vector<TermMatcher> sorted_elts(size);
   size_t j = 0;
@@ -417,7 +456,7 @@ Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, size_t size, const Term
     sorted_elts[i + 1] = elts[j + largest_power2];
     ++j;
   }
-  auto rhs = balanced_reduct(sorted_elts, op_code);
+  auto rhs = balanced_op(sorted_elts, op_code);
 
   return Rule{"log-reduct-" + op_code.str_repr() + "-" + to_string(size), lhs, rhs};
 }

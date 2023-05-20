@@ -19,7 +19,15 @@ class Func;
 
 namespace fheco::util
 {
+
+inline bool is_power_of2(std::size_t n)
+{
+  return n != 0 && (n & (n - 1)) == 0;
+}
+
 void init_random(PackedVal &packed_val, integer slot_min, integer slot_max);
+
+bool is_scalar(const PackedVal &packed_val);
 
 void print_io_terms_values(const std::shared_ptr<ir::Func> &func, std::ostream &os);
 

@@ -1,11 +1,12 @@
 set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/cse_commut.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/scalar_mul_to_add.cpp
 )
 
 install(
     FILES
     ${CMAKE_CURRENT_LIST_DIR}/cse_commut.hpp
-
+    ${CMAKE_CURRENT_LIST_DIR}/scalar_mul_to_add.cpp
 
     DESTINATION
         ${FHECO_INCLUDES_INSTALL_DIR}/pass

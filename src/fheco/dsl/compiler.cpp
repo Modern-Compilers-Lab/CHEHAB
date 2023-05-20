@@ -1,7 +1,7 @@
 #include "fheco/dsl/compiler.hpp"
-#include "fheco/trs/ruleset.hpp"
 #include "fheco/trs/trs.hpp"
 #include "fheco/passes/cse_commut.hpp"
+#include "fheco/passes/scalar_mul_to_add.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <utility>
@@ -44,6 +44,9 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
   clog << "ops_opt_trs\n";
   trs::TRS ops_opt_trs{func, trs::Ruleset::ops_type_number_opt_ruleset(func->slot_count())};
   ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, false);
+
+  clog << "convert_scalar_mul_to_add\n";
+  passes::convert_scalar_mul_to_add(func, 1 << 30);
 
   clog << "cse_commut\n";
   passes::cse_commut(func);

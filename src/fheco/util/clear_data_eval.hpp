@@ -9,10 +9,10 @@
 namespace fheco::util
 {
 // "modular SIMD arithmetic" like
-class ClearDataEvaluator
+class ClearDataEval
 {
 public:
-  ClearDataEvaluator(std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
+  ClearDataEval(std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
     : slot_count_{slot_count}, modulus_{modulus}, signedness_{signedness}, delayed_reduction_{delayed_reduction}
   {}
 
@@ -48,8 +48,11 @@ private:
   void mul(const PackedVal &arg1, const PackedVal &arg2, PackedVal &dest) const;
 
   std::size_t slot_count_;
+
   integer modulus_;
+
   bool signedness_;
+
   bool delayed_reduction_;
 };
 } // namespace fheco::util

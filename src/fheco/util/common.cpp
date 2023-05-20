@@ -6,7 +6,6 @@
 using namespace std;
 
 namespace fheco::util
-
 {
 void init_random(PackedVal &packed_val, integer slot_min, integer slot_max)
 {
@@ -15,6 +14,16 @@ void init_random(PackedVal &packed_val, integer slot_min, integer slot_max)
   uniform_int_distribution<integer> uni(slot_min, slot_max);
   for (auto it = packed_val.begin(); it != packed_val.end(); ++it)
     *it = uni(rng);
+}
+
+bool is_scalar(const PackedVal &packed_val)
+{
+  for (size_t i = 0; i < packed_val.size() - 1; ++i)
+  {
+    if (packed_val[i] != packed_val[i + 1])
+      return false;
+  }
+  return true;
 }
 
 void print_io_terms_values(const shared_ptr<ir::Func> &func, ostream &os)
