@@ -2,6 +2,7 @@
 #include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
 #include "fheco/util/expr_printer.hpp"
+#include <stack>
 #include <stdexcept>
 #include <utility>
 
@@ -98,99 +99,135 @@ void ExprPrinter::compute_terms_str_expr(Mode mode)
   }
 }
 
-string ExprPrinter::expand_term(size_t id, int depth, Mode mode) const
+string ExprPrinter::expand_term(const ir::Term *term, size_t depth, Mode mode) const
 {
-  TermsStrExpr dp{};
-  return expand_term(id, mode, depth, dp);
-}
-
-string ExprPrinter::expand_term(size_t id, Mode mode, int depth, TermsStrExpr &dp) const
-{
-  auto term = func_->data_flow().get_term(id);
-  if (!term)
-    throw invalid_argument("term with id not found");
-
-  if (depth <= 0)
+  struct Call
   {
-    if (term->is_leaf())
-      return leaf_str_expr(term);
-    else
-      return "$" + to_string(id);
-  }
+    const ir::Term *term_;
+    size_t depth_;
+    bool children_processed_;
+  };
+  stack<Call> call_stack;
 
-  if (auto it = dp.find(id); it != dp.end())
-    return it->second;
-
-  string result;
-  if (term->is_leaf())
-    result = leaf_str_expr(term);
-  else
+  struct HashCall
   {
-    if (mode == Mode::infix || mode == Mode::infix_expl_paren)
+    size_t operator()(const Call &call) const
     {
-      bool expl_parenth = mode == Mode::infix_expl_paren;
-      if (term->op_code().arity() == 1)
-      {
-        const auto arg = term->operands()[0];
-        if (term->op_code().type() == ir::OpCode::Type::rotate)
-        {
-          if (arg->is_operation() && depth > 1)
-            result = "(" + expand_term(arg->id(), mode, depth - 1, dp) + ") " + term->op_code().str_repr();
-          else
-            result = expand_term(arg->id(), mode, depth - 1, dp) + " " + term->op_code().str_repr();
-        }
-        else
-        {
-          if (
-            arg->is_operation() && depth > 1 &&
-            (expl_parenth || ops_precedence_.at(term->op_code().type()) < ops_precedence_.at(arg->op_code().type())))
-            result = term->op_code().str_repr() + "(" + expand_term(arg->id(), mode, depth - 1, dp) + ")";
-          else
-            result = term->op_code().str_repr() + " " + expand_term(arg->id(), mode, depth - 1, dp);
-        }
-      }
-      else if (term->op_code().arity() == 2)
-      {
-        const auto lhs = term->operands()[0];
-        const auto rhs = term->operands()[1];
-        result = "";
-        if (
-          lhs->is_operation() && depth > 1 &&
-          (expl_parenth || ops_precedence_.at(term->op_code().type()) < ops_precedence_.at(lhs->op_code().type())))
-          result += "(" + expand_term(lhs->id(), mode, depth - 1, dp) + ")";
-        else
-          result += expand_term(lhs->id(), mode, depth - 1, dp);
+      size_t h = hash<ir::Term>()(*call.term_);
+      ir::hash_combine(h, call.depth_);
+      return h;
+    }
+  };
+  struct EqualCall
+  {
+    bool operator()(const Call &lhs, const Call &rhs) const
+    {
+      return *lhs.term_ == *rhs.term_ && lhs.depth_ == rhs.depth_;
+    }
+  };
+  unordered_map<Call, string, HashCall, EqualCall> dp;
 
-        result += " " + term->op_code().str_repr() + " ";
-
-        if (
-          rhs->is_operation() && depth > 1 &&
-          (expl_parenth || ops_precedence_.at(term->op_code().type()) < ops_precedence_.at(rhs->op_code().type())))
-          result += "(" + expand_term(rhs->id(), mode, depth - 1, dp) + ")";
-        else
-          result += expand_term(rhs->id(), mode, depth - 1, dp);
-      }
+  call_stack.push(Call{term, depth, false});
+  while (!call_stack.empty())
+  {
+    auto top_call = call_stack.top();
+    call_stack.pop();
+    auto top_term = top_call.term_;
+    if (top_call.children_processed_)
+    {
+      string result;
+      if (top_term->is_leaf())
+        result = leaf_str_expr(top_term);
       else
-        throw invalid_argument("infix with non binary unary operation");
+      {
+        if (mode == Mode::infix || mode == Mode::infix_expl_paren)
+        {
+          bool expl_parenth = mode == Mode::infix_expl_paren;
+          if (top_term->op_code().arity() == 1)
+          {
+            const auto arg = top_term->operands()[0];
+            if (top_term->op_code().type() == ir::OpCode::Type::rotate)
+            {
+              if (arg->is_operation() && depth > 1)
+                result = "(" + dp.at(Call{arg, top_call.depth_ - 1}) + ") " + top_term->op_code().str_repr();
+              else
+                result = dp.at(Call{arg, top_call.depth_ - 1}) + " " + top_term->op_code().str_repr();
+            }
+            else
+            {
+              if (
+                arg->is_operation() && depth > 1 &&
+                (expl_parenth ||
+                 ops_precedence_.at(top_term->op_code().type()) < ops_precedence_.at(arg->op_code().type())))
+                result = top_term->op_code().str_repr() + "(" + dp.at(Call{arg, top_call.depth_ - 1}) + ")";
+              else
+                result = top_term->op_code().str_repr() + " " + dp.at(Call{arg, top_call.depth_ - 1});
+            }
+          }
+          else if (top_term->op_code().arity() == 2)
+          {
+            const auto lhs = top_term->operands()[0];
+            const auto rhs = top_term->operands()[1];
+            result = "";
+            if (
+              lhs->is_operation() && depth > 1 &&
+              (expl_parenth ||
+               ops_precedence_.at(top_term->op_code().type()) < ops_precedence_.at(lhs->op_code().type())))
+              result += "(" + dp.at(Call{lhs, top_call.depth_ - 1}) + ")";
+            else
+              result += dp.at(Call{lhs, top_call.depth_ - 1});
+
+            result += " " + top_term->op_code().str_repr() + " ";
+
+            if (
+              rhs->is_operation() && depth > 1 &&
+              (expl_parenth ||
+               ops_precedence_.at(top_term->op_code().type()) < ops_precedence_.at(rhs->op_code().type())))
+              result += "(" + dp.at(Call{rhs, top_call.depth_ - 1}) + ")";
+            else
+              result += dp.at(Call{rhs, top_call.depth_ - 1});
+          }
+          else
+            throw invalid_argument("infix with non binary unary operation");
+        }
+        else if (mode == Mode::prefix)
+        {
+          result = top_term->op_code().str_repr();
+          for (const auto operand : top_term->operands())
+            result += " " + dp.at(Call{operand, top_call.depth_ - 1});
+        }
+        else if (mode == Mode::posfix)
+        {
+          result = "";
+          for (const auto operand : top_term->operands())
+            result += dp.at(Call{operand, top_call.depth_ - 1}) + " ";
+          result += top_term->op_code().str_repr();
+        }
+        else
+          throw invalid_argument("invalid mode");
+      }
+      dp.emplace(Call{top_term, top_call.depth_}, move(result));
+      continue;
     }
-    else if (mode == Mode::prefix)
+
+    if (auto it = dp.find(Call{top_term, top_call.depth_}); it != dp.end())
+      continue;
+
+    if (top_call.depth_ == 0)
     {
-      result = term->op_code().str_repr();
-      for (const auto operand : term->operands())
-        result += " " + expand_term(operand->id(), mode, depth - 1, dp);
+      if (top_term->is_leaf())
+        dp.emplace(Call{top_term, 0}, leaf_str_expr(top_term));
+      else
+        dp.emplace(Call{top_term, 0}, "$" + to_string(top_term->id()));
+
+      continue;
     }
-    else if (mode == Mode::posfix)
-    {
-      result = "";
-      for (const auto operand : term->operands())
-        result += expand_term(operand->id(), mode, depth - 1, dp) + " ";
-      result += term->op_code().str_repr();
-    }
-    else
-      throw invalid_argument("invalid mode");
+
+    call_stack.push(Call{top_term, top_call.depth_, true});
+    for (auto operand : top_term->operands())
+      call_stack.push(Call{operand, top_call.depth_ - 1, false});
   }
-  dp.emplace(id, result);
-  return result;
+  return dp.at(Call{term, depth});
 }
 
 string ExprPrinter::leaf_str_expr(const ir::Term *term) const

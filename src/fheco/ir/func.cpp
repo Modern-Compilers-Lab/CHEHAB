@@ -43,7 +43,7 @@ void Func::init_input(T &input, string label)
 template <typename T>
 void Func::init_const(T &constant, PackedVal packed_val)
 {
-  constant.id_ = data_flow_.insert_const(move(packed_val))->id();
+  constant.id_ = insert_const_term(move(packed_val))->id();
 }
 
 template <typename TArg, typename TDest>
@@ -128,14 +128,13 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
     if (can_fold)
     {
       if (op_code.type() == OpCode::Type::encrypt)
-        return data_flow_.insert_const(const_vals[0]);
+        return data_flow_.insert_const(const_vals[0], inserted);
 
       PackedVal dest_val;
       clear_data_evaluator_.operate(op_code, const_vals, dest_val);
-      return data_flow_.insert_const(dest_val);
+      return data_flow_.insert_const(dest_val, inserted);
     }
   }
-
   return data_flow_.insert_op(move(op_code), move(operands), inserted);
 }
 

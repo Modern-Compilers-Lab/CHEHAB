@@ -43,7 +43,7 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
 
   clog << "ops_opt_trs\n";
   trs::TRS ops_opt_trs{func, trs::Ruleset::ops_type_number_opt_ruleset(func->slot_count())};
-  ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, true);
+  ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, false);
 
   clog << "cse_commut\n";
   passes::cse_commut(func);

@@ -5,6 +5,7 @@
 #include "fheco/trs/fold_op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
 #include "fheco/trs/trs.hpp"
+#include "fheco/util/expr_printer.hpp"
 #include <functional>
 #include <iostream>
 #include <stack>
@@ -22,13 +23,7 @@ void TRS::run(RewriteHeuristic heuristic, bool global_analysis)
   {
   case RewriteHeuristic::bottom_up:
     for (auto id : func_->get_top_sorted_terms_ids())
-    {
-      auto term = func_->data_flow().get_term(id);
-      if (!term)
-        continue;
-
-      rewrite_term(term, RewriteHeuristic::bottom_up, global_analysis);
-    }
+      rewrite_term(id, RewriteHeuristic::bottom_up, global_analysis);
 
     break;
 
@@ -36,13 +31,7 @@ void TRS::run(RewriteHeuristic heuristic, bool global_analysis)
   {
     const auto &sorted_terms_ids = func_->get_top_sorted_terms_ids();
     for (auto id_it = sorted_terms_ids.crbegin(); id_it != sorted_terms_ids.crend(); ++id_it)
-    {
-      auto term = func_->data_flow().get_term(*id_it);
-      if (!term)
-        continue;
-
-      rewrite_term(term, RewriteHeuristic::top_down, global_analysis);
-    }
+      rewrite_term(*id_it, RewriteHeuristic::top_down, global_analysis);
     break;
   }
 
@@ -51,76 +40,80 @@ void TRS::run(RewriteHeuristic heuristic, bool global_analysis)
   }
 }
 
-void TRS::rewrite_term(ir::Term *term, RewriteHeuristic heuristic, bool global_analysis)
+void TRS::rewrite_term(size_t id, RewriteHeuristic heuristic, bool global_analysis)
 {
-  if (term->is_leaf())
-    return;
-
-  for (const auto &rule : ruleset_.pick_rules(term->op_code()))
+  stack<size_t> call_stack;
+  call_stack.push(id);
+  while (!call_stack.empty())
   {
-    clog << "trying rule '" << rule.label() << "' on term $" << term->id() << " -> ";
-    Subst subst;
-    int64_t rel_cost = 0;
-    ir::Term::PtrSet to_delete;
-    bool matched = match(rule.lhs(), term, subst, global_analysis, rel_cost, to_delete);
+    auto top_term_id = call_stack.top();
+    call_stack.pop();
 
-    if (!matched)
-    {
-      clog << "could not find a substitution\n";
+    auto top_term = func_->data_flow().get_term(top_term_id);
+    if (!top_term)
       continue;
-    }
-    if (!rule.check_cond(subst))
-    {
-      clog << "condition not met\n";
+
+    if (top_term->is_leaf())
       continue;
-    }
-    if (global_analysis)
-      clog << "matched, rel_cost=" << rel_cost << " -> ";
-    else
-      clog << "matched, no_global_analysis" << rel_cost << " -> ";
 
-    vector<size_t> created_terms_ids;
-    auto equiv_term =
-      construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
-    if (!global_analysis || rel_cost <= 0)
+    util::ExprPrinter p{func_};
+
+    for (const auto &rule : ruleset_.pick_rules(top_term->op_code()))
     {
-      clog << "replace term $" << term->id() << " with term $" << equiv_term->id() << '\n';
-      func_->replace_term_with(term, equiv_term);
+      clog << "trying rule '" << rule.label() << "' on term $" << top_term->id() << " -> ";
+      Subst subst;
+      int64_t rel_cost = 0;
+      ir::Term::PtrSet to_delete;
+      bool matched = match(rule.lhs(), top_term, subst, global_analysis, rel_cost, to_delete);
 
-      switch (heuristic)
+      if (!matched)
       {
-      case RewriteHeuristic::bottom_up:
-        for (auto created_term_id : created_terms_ids)
-        {
-          auto created_term = func_->data_flow().get_term(created_term_id);
-          if (!created_term)
-            continue;
-
-          rewrite_term(created_term, RewriteHeuristic::bottom_up, global_analysis);
-        }
-        break;
-
-      case RewriteHeuristic::top_down:
-        for (auto created_term_id_it = created_terms_ids.crbegin(); created_term_id_it != created_terms_ids.crend();
-             ++created_term_id_it)
-        {
-          auto created_term = func_->data_flow().get_term(*created_term_id_it);
-          if (!created_term)
-            continue;
-
-          rewrite_term(created_term, RewriteHeuristic::top_down, global_analysis);
-        }
-        break;
-
-      default:
-        throw logic_error("unhandled RewriteHeuristic");
+        clog << "could not find a substitution\n";
+        continue;
       }
-      break;
-    }
-    else if (func_->data_flow().can_delete(equiv_term))
-    {
-      clog << "delete constructed equiv_term $" << equiv_term->id() << " -> ";
-      func_->delete_term_cascade(equiv_term);
+      if (!rule.check_cond(subst))
+      {
+        clog << "condition not met\n";
+        continue;
+      }
+      if (global_analysis)
+        clog << "matched, rel_cost=" << rel_cost << " -> ";
+      else
+        clog << "matched, no_global_analysis" << rel_cost << " -> ";
+
+      vector<size_t> created_terms_ids;
+      auto equiv_term =
+        construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
+      if (!global_analysis || rel_cost <= 0)
+      {
+        clog << "replace term $" << top_term->id() << " with term $" << equiv_term->id() << '\n';
+        cout << p.expand_term(top_term, 10) << endl;
+        func_->replace_term_with(top_term, equiv_term);
+        cout << p.expand_term(equiv_term, 10) << endl;
+
+        switch (heuristic)
+        {
+        case RewriteHeuristic::bottom_up:
+          for (auto created_term_id_it = created_terms_ids.crbegin(); created_term_id_it != created_terms_ids.crend();
+               ++created_term_id_it)
+            call_stack.push(*created_term_id_it);
+          break;
+
+        case RewriteHeuristic::top_down:
+          for (auto created_term_id : created_terms_ids)
+            call_stack.push(created_term_id);
+          break;
+
+        default:
+          throw logic_error("unhandled RewriteHeuristic");
+        }
+        break;
+      }
+      else if (func_->data_flow().can_delete(equiv_term))
+      {
+        clog << "delete constructed equiv_term $" << equiv_term->id() << " -> ";
+        func_->delete_term_cascade(equiv_term);
+      }
     }
   }
 }

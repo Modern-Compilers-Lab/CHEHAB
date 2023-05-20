@@ -33,7 +33,7 @@ public:
 
   void compute_terms_str_expr(Mode mode);
 
-  std::string expand_term(std::size_t id, int depth, Mode mode = Mode::infix_expl_paren) const;
+  std::string expand_term(const ir::Term *term, size_t depth, Mode mode = Mode::infix_expl_paren) const;
 
   void print_outputs_str_expr(std::ostream &os) const;
 
@@ -48,8 +48,6 @@ public:
 private:
   // for infix representation to reduce unnecessary parenthesis
   static const std::unordered_map<ir::OpCode::Type, int> ops_precedence_;
-
-  std::string expand_term(std::size_t id, Mode mode, int depth, TermsStrExpr &dp) const;
 
   std::string leaf_str_expr(const ir::Term *term) const;
 

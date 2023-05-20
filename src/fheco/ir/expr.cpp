@@ -97,14 +97,18 @@ Term *Expr::insert_input(Term::Type type, ParamTermInfo input_info)
   return term;
 }
 
-Term *Expr::insert_const(PackedVal packed_val)
+Term *Expr::insert_const(PackedVal packed_val, bool &inserted)
 {
   if (Compiler::cse_enabled())
   {
     auto it = values_to_const_terms_.find(packed_val);
     if (it != values_to_const_terms_.end())
+    {
+      inserted = false;
       return it->second;
+    }
   }
+  inserted = false;
   Term *term = new Term(Term::Type::plain);
   const_terms_values_.emplace(term, packed_val);
   if (Compiler::cse_enabled())

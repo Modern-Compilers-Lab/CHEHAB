@@ -46,7 +46,16 @@ public:
 
   Term *insert_op_term(OpCode op_code, std::vector<Term *> operands, bool &inserted);
 
-  inline Term *insert_const_term(PackedVal packed_val) { return data_flow_.insert_const(std::move(packed_val)); }
+  inline Term *insert_const_term(PackedVal packed_val)
+  {
+    bool inserted;
+    return data_flow_.insert_const(std::move(packed_val), inserted);
+  }
+
+  inline Term *insert_const_term(PackedVal packed_val, bool inserted)
+  {
+    return data_flow_.insert_const(std::move(packed_val), inserted);
+  }
 
   inline void replace_term_with(Term *term1, Term *term2) { data_flow_.replace(term1, term2); }
 

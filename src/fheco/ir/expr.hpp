@@ -29,7 +29,7 @@ public:
 
   Term *insert_input(Term::Type type, ParamTermInfo input_info);
 
-  Term *insert_const(PackedVal packed_val);
+  Term *insert_const(PackedVal packed_val, bool &inserted);
 
   Term *get_term(std::size_t id) const;
 
