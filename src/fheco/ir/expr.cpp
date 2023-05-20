@@ -194,6 +194,12 @@ void Expr::replace(Term *term1, Term *term2)
     for (auto parent_it = top_term1->parents_.cbegin(); parent_it != top_term1->parents_.cend();)
     {
       auto parent = *parent_it;
+      if (*parent == *term2)
+      {
+        ++parent_it;
+        continue;
+      }
+
       if (Compiler::cse_enabled())
         op_terms_.erase(OpTermKey{&parent->op_code(), &parent->operands()});
 
@@ -214,7 +220,8 @@ void Expr::replace(Term *term1, Term *term2)
       top_term2->parents_.insert(parent);
       parent_it = top_term1->parents_.erase(parent_it);
     }
-    delete_term_cascade(top_term1);
+    if (can_delete(top_term1))
+      delete_term_cascade(top_term1);
   }
   valid_top_sort_ = false;
 }

@@ -1,6 +1,7 @@
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/trs/trs.hpp"
 #include "fheco/passes/cse_commut.hpp"
+#include "fheco/passes/insert_relin.hpp"
 #include "fheco/passes/scalar_mul_to_add.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -50,6 +51,9 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
 
   clog << "cse_commut\n";
   passes::cse_commut(func);
+
+  clog << "insert_relin_ops\n";
+  passes::insert_relin_ops(func, 3);
 }
 
 void Compiler::add_func(shared_ptr<ir::Func> func)
