@@ -18,7 +18,7 @@ Func::Func(
   : name_{move(name)}, slot_count_{slot_count}, need_full_cyclic_rotation_{need_full_cyclic_rotation},
     clear_data_evaluator_{slot_count_, modulus, signedness, delayed_reduction}
 {
-  if (need_full_cyclic_rotation && !util::is_power_of2(slot_count_))
+  if (need_full_cyclic_rotation && !util::is_power_of_two(slot_count_))
     throw invalid_argument("when need_full_cyclic_rotation, slot_count must be a power of two");
 }
 

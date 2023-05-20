@@ -1,8 +1,7 @@
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/trs/trs.hpp"
-#include "fheco/passes/cse_commut.hpp"
-#include "fheco/passes/insert_relin.hpp"
-#include "fheco/passes/scalar_mul_to_add.hpp"
+#include "fheco/passes/passes.hpp"
+#include "fheco/util/common.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <utility>
@@ -51,6 +50,9 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
 
   clog << "cse_commut\n";
   passes::cse_commut(func);
+
+  clog << "reduce_rotation_keys\n";
+  passes::reduce_rotation_keys(func, 2 * util::get_power_of_two(util::next_power_of_two(func->slot_count())));
 
   clog << "insert_relin_ops\n";
   passes::insert_relin_ops(func, 3);

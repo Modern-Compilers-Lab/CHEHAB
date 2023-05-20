@@ -1,6 +1,7 @@
 set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/cse_commut.cpp
     ${CMAKE_CURRENT_LIST_DIR}/insert_relin.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/reduce_rotation_keys.cpp
     ${CMAKE_CURRENT_LIST_DIR}/scalar_mul_to_add.cpp
 )
 
@@ -8,6 +9,8 @@ install(
     FILES
     ${CMAKE_CURRENT_LIST_DIR}/cse_commut.hpp
     ${CMAKE_CURRENT_LIST_DIR}/insert_relin.hpp
+    ${CMAKE_CURRENT_LIST_DIR}/passes.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/reduce_rotation_keys.hpp
     ${CMAKE_CURRENT_LIST_DIR}/scalar_mul_to_add.cpp
 
     DESTINATION

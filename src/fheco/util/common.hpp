@@ -12,6 +12,14 @@
 #include <type_traits>
 #include <vector>
 
+static_assert(sizeof(std::size_t) == 8, "require sizeof(std::size_t) == 8");
+
+// from SEAL
+#define FHECO_MSB_INDEX_UINT64(result, value)                            \
+  {                                                                      \
+    *result = 63UL - static_cast<unsigned long>(__builtin_clzll(value)); \
+  }
+
 namespace fheco::ir
 {
 class Func;
@@ -19,10 +27,39 @@ class Func;
 
 namespace fheco::util
 {
-
-inline bool is_power_of2(std::size_t n)
+inline bool is_power_of_two(std::size_t v)
 {
-  return n != 0 && (n & (n - 1)) == 0;
+  return v != 0 && (v & (v - 1)) == 0;
+}
+
+// https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+inline std::size_t next_power_of_two(std::size_t v)
+{
+  v--;
+  v |= v >> 1;
+  v |= v >> 2;
+  v |= v >> 4;
+  v |= v >> 8;
+  v |= v >> 16;
+  v |= v >> 32;
+  v++;
+  return v;
+}
+
+// from SEAL
+/**
+if the value is a power of two, return the power; otherwise, return -1.
+*/
+inline int get_power_of_two(std::size_t value)
+{
+  if (value == 0 || (value & (value - 1)) != 0)
+  {
+    return -1;
+  }
+
+  unsigned long result = 0;
+  FHECO_MSB_INDEX_UINT64(&result, value);
+  return static_cast<int>(result);
 }
 
 void init_random(PackedVal &packed_val, integer slot_min, integer slot_max);
