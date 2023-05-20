@@ -98,7 +98,7 @@ void ExprPrinter::compute_terms_str_expr(Mode mode)
   }
 }
 
-string ExprPrinter::expand_term(size_t id, Mode mode, int depth) const
+string ExprPrinter::expand_term(size_t id, int depth, Mode mode) const
 {
   TermsStrExpr dp{};
   return expand_term(id, mode, depth, dp);

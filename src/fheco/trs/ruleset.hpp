@@ -15,22 +15,21 @@ class Ruleset
 public:
   static Ruleset depth_opt_ruleset(std::size_t slot_count);
 
+  static Ruleset log2_reduct_prep_ruleset(std::size_t slot_count);
+
   static Ruleset log2_reduct_opt_ruleset(std::size_t slot_count);
 
   static Ruleset ops_type_number_opt_ruleset(std::size_t slot_count);
 
   Ruleset(
-    std::size_t slot_count, std::vector<Rule> encrypt_rules, std::vector<Rule> add_rules, std::vector<Rule> sub_rules,
-    std::vector<Rule> negate_rules, std::vector<Rule> rotate_rules, std::vector<Rule> square_rules,
-    std::vector<Rule> mul_rules)
-    : slot_count_{slot_count}, encrypt_rules_{std::move(encrypt_rules)}, add_rules_{std::move(add_rules)},
-      sub_rules_{std::move(sub_rules)}, negate_rules_{std::move(negate_rules)}, rotate_rules_{std::move(rotate_rules)},
+    std::size_t slot_count, std::vector<Rule> add_rules, std::vector<Rule> sub_rules, std::vector<Rule> negate_rules,
+    std::vector<Rule> rotate_rules, std::vector<Rule> square_rules, std::vector<Rule> mul_rules)
+    : slot_count_{slot_count}, add_rules_{std::move(add_rules)}, sub_rules_{std::move(sub_rules)},
+      negate_rules_{std::move(negate_rules)}, rotate_rules_{std::move(rotate_rules)},
       square_rules_{std::move(square_rules)}, mul_rules_{std::move(mul_rules)}
   {}
 
   const std::vector<Rule> &pick_rules(const ir::OpCode &op_code) const;
-
-  inline const std::vector<Rule> &encrypt_rules() const { return encrypt_rules_; }
 
   inline const std::vector<Rule> &add_rules() const { return add_rules_; }
 
@@ -45,13 +44,12 @@ public:
   inline const std::vector<Rule> &mul_rules() const { return mul_rules_; }
 
 private:
-  std::vector<Rule> get_log_reduct_rules(const TermMatcher &x, const TermOpCode &op_code) const;
+  static std::vector<Rule> get_log_reduct_rules(
+    std::size_t slot_count, const TermMatcher &x, const TermOpCode &op_code);
 
-  Rule make_log_reduct_comp(const TermMatcher &x, std::size_t size, const TermOpCode &op_code) const;
+  static Rule make_log_reduct_comp(const TermMatcher &x, std::size_t size, const TermOpCode &op_code);
 
   std::size_t slot_count_;
-
-  std::vector<Rule> encrypt_rules_;
 
   std::vector<Rule> add_rules_;
 

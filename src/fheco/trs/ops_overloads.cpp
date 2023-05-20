@@ -85,7 +85,7 @@ TermMatcher balanced_reduct(const vector<TermMatcher> &args, const TermOpCode &o
     balanced_ops.push_back(args.back());
 
   for (size_t i = 0; i < balanced_ops.size() - 1; i += 2)
-    balanced_ops.push_back(TermMatcher{op_code, vector<TermMatcher>{args[i], args[i + 1]}});
+    balanced_ops.push_back(TermMatcher{op_code, vector<TermMatcher>{balanced_ops[i], balanced_ops[i + 1]}});
 
   return balanced_ops.back();
 }

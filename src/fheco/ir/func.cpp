@@ -13,9 +13,8 @@ using namespace std;
 namespace fheco::ir
 {
 Func::Func(string name, size_t slot_count, integer modulus, bool signedness, bool delayed_reduction)
-  : name_{move(name)}, slot_count_{slot_count}, need_cyclic_rotations_{false}, clear_data_evaluator_{
-                                                                                 slot_count_, modulus, signedness,
-                                                                                 delayed_reduction}
+  : name_{move(name)}, slot_count_{slot_count}, need_cyclic_rotations_{false},
+    clear_data_evaluator_{slot_count_, modulus, signedness, delayed_reduction}
 {
   if (!is_valid_slot_count(slot_count_))
     throw invalid_argument("slot_count must be a power of two");
@@ -128,6 +127,9 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
     }
     if (can_fold)
     {
+      if (op_code.type() == OpCode::Type::encrypt)
+        return data_flow_.insert_const(const_vals[0]);
+
       PackedVal dest_val;
       clear_data_evaluator_.operate(op_code, const_vals, dest_val);
       return data_flow_.insert_const(dest_val);

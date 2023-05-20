@@ -82,12 +82,70 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
     {"assoc-balan-mul-2-1", x * (y * (z * t)), (x * y) * (z * t), assoc_balan_cond(z, t, x)},
     {"assoc-balan-mul-2-2", x * ((z * t) * y), (x * z) * (t * y), assoc_balan_cond(z, t, x)}};
 
-  return Ruleset{slot_count, {}, move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
+  return Ruleset{slot_count, move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
+}
+
+Ruleset Ruleset::log2_reduct_prep_ruleset(std::size_t slot_count)
+{
+  TermMatcher x{TermMatcherType::term, "x"};
+  TermMatcher y{TermMatcherType::term, "y"};
+
+  OpGenMatcher n{"n"};
+  OpGenMatcher m{"m"};
+
+  vector<Rule> add_rules{{"merge-rotate-add", (x << n) + (y << n), (x + y) << n}};
+
+  vector<Rule> sub_rules{{"merge-rotate-sub", (x << n) - (y << n), (x - y) << n}};
+
+  vector<Rule> rotate_rules{{"rotate0", x << 0, x}, {"fold-rotate", x << n << m, x << ((m + n) % slot_count)}};
+
+  vector<Rule> mul_rules{{"merge-rotate-mul", (x << n) * (y << n), (x * y) << n}};
+
+  return Ruleset{slot_count, move(add_rules), move(sub_rules), {}, {move(rotate_rules)}, {}, move(mul_rules)};
 }
 
 Ruleset Ruleset::log2_reduct_opt_ruleset(std::size_t slot_count)
 {
-  return Ruleset{slot_count, {}, {}, {}, {}, {}, {}, {}};
+  TermMatcher x{TermMatcherType::term, "x"};
+  TermMatcher y{TermMatcherType::term, "y"};
+
+  OpGenMatcher n{"n"};
+  OpGenMatcher m{"m"};
+
+  vector<Rule> add_rules = get_log_reduct_rules(slot_count, x, TermOpCode::add);
+  vector<Rule> add_rules_rotate{
+    {"nest-rotate-add-1", (x << n) + (y << m), (x + (y << (m - n))) << n,
+     [n, m](const Subst subst) {
+       return subst.get(n) < subst.get(m);
+     }},
+    {"nest-rotate-add-2", (x << n) + (y << m), ((x << (n - m)) + y) << m, [n, m](const Subst subst) {
+       return subst.get(n) > subst.get(m);
+     }}};
+  add_rules.insert(add_rules.end(), add_rules_rotate.begin(), add_rules_rotate.end());
+
+  vector<Rule> sub_rules = get_log_reduct_rules(slot_count, x, TermOpCode::sub);
+  vector<Rule> sub_rules_rotate{
+    {"nest-rotate-sub-1", (x << n) - (y << m), (x - (y << (m - n))) << n,
+     [n, m](const Subst subst) {
+       return subst.get(n) < subst.get(m);
+     }},
+    {"nest-rotate-sub-2", (x << n) - (y << m), ((x << (n - m)) - y) << m, [n, m](const Subst subst) {
+       return subst.get(n) > subst.get(m);
+     }}};
+  sub_rules.insert(sub_rules.end(), sub_rules_rotate.begin(), sub_rules_rotate.end());
+
+  vector<Rule> mul_rules = get_log_reduct_rules(slot_count, x, TermOpCode::mul);
+  vector<Rule> mul_rules_rotate{
+    {"nest-rotate-mul-1", (x << n) * (y << m), (x * (y << (m - n))) << n,
+     [n, m](const Subst subst) {
+       return subst.get(n) < subst.get(m);
+     }},
+    {"nest-rotate-mul-2", (x << n) * (y << m), ((x << (n - m)) * y) << m, [n, m](const Subst subst) {
+       return subst.get(n) > subst.get(m);
+     }}};
+  mul_rules.insert(mul_rules.end(), mul_rules_rotate.begin(), mul_rules_rotate.end());
+
+  return Ruleset{slot_count, move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
 }
 
 Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
@@ -113,8 +171,6 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
 
   OpGenMatcher n{"n"};
   OpGenMatcher m{"m"};
-
-  vector<Rule> encrypt_rules{{"encrypt-plain", encrypt(p_x), p_x}};
 
   vector<Rule> add_rules{
     {"add0-1", x + zero, x},
@@ -292,9 +348,7 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
        return subst.get(n) > subst.get(m);
      }}};
 
-  return Ruleset{
-    slot_count, move(encrypt_rules), move(add_rules), move(sub_rules), move(negate_rules), move(rotate_rules), {},
-    mul_rules};
+  return Ruleset{slot_count, move(add_rules), move(sub_rules), move(negate_rules), move(rotate_rules), {}, mul_rules};
 }
 
 const vector<Rule> &Ruleset::pick_rules(const ir::OpCode &op_code) const
@@ -303,9 +357,6 @@ const vector<Rule> &Ruleset::pick_rules(const ir::OpCode &op_code) const
   {
   case ir::OpCode::Type::nop:
     throw invalid_argument("cannot pick rules for nop");
-
-  case ir::OpCode::Type::encrypt:
-    return encrypt_rules_;
 
   case ir::OpCode::Type::add:
     return add_rules_;
@@ -330,10 +381,9 @@ const vector<Rule> &Ruleset::pick_rules(const ir::OpCode &op_code) const
   }
 }
 
-vector<Rule> Ruleset::get_log_reduct_rules(const TermMatcher &x, const TermOpCode &op_code) const
+vector<Rule> Ruleset::get_log_reduct_rules(size_t slot_count, const TermMatcher &x, const TermOpCode &op_code)
 {
   vector<Rule> rules;
-  size_t slot_count = slot_count_;
   while (slot_count > 1)
   {
     rules.push_back(make_log_reduct_comp(x, slot_count, op_code));
@@ -342,14 +392,15 @@ vector<Rule> Ruleset::get_log_reduct_rules(const TermMatcher &x, const TermOpCod
   return rules;
 }
 
-Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, size_t size, const TermOpCode &op_code) const
+Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, size_t size, const TermOpCode &op_code)
 {
   if (op_code.arity() != 2)
     throw invalid_argument("binary operation assumed for reduction");
 
   vector<TermMatcher> elts(size);
   size_t largest_power2 = 1;
-  for (size_t i = 0; i < size; ++i)
+  elts[0] = x;
+  for (size_t i = 1; i < size; ++i)
   {
     if (i != 0 && (i & (i - 1)) == 0)
       largest_power2 = i;

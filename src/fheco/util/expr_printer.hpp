@@ -33,7 +33,7 @@ public:
 
   void compute_terms_str_expr(Mode mode);
 
-  std::string expand_term(std::size_t id, Mode mode, int depth) const;
+  std::string expand_term(std::size_t id, int depth, Mode mode = Mode::infix_expl_paren) const;
 
   void print_outputs_str_expr(std::ostream &os) const;
 
