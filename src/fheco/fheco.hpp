@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fheco/param_select/encryption_params.hpp"
 #include "fheco/dsl/ciphertext.hpp"
 #include "fheco/dsl/common.hpp"
 #include "fheco/dsl/compiler.hpp"

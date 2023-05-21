@@ -1,14 +1,13 @@
-#include "encryption_parameters.hpp"
+#include "fheco/param_select/encryption_params.hpp"
 #include <iostream>
 
 using namespace std;
 
-namespace param_selector
+namespace fheco::param_select
 {
-
-EncryptionParameters::EncryptionParameters(
+EncryptionParams::EncryptionParams(
   size_t poly_modulus_degree, int plain_modulus_bit_size, int coeff_mod_data_level_bit_count)
-  : poly_modulus_degree_(poly_modulus_degree), plain_modulus_bit_size_(plain_modulus_bit_size)
+  : poly_modulus_degree_{poly_modulus_degree}, plain_modulus_bit_size_{plain_modulus_bit_size}
 {
   coeff_mod_bit_sizes_.assign(coeff_mod_data_level_bit_count / MOD_BIT_COUNT_MAX, MOD_BIT_COUNT_MAX);
   int remaining_bits = coeff_mod_data_level_bit_count % MOD_BIT_COUNT_MAX;
@@ -24,9 +23,8 @@ EncryptionParameters::EncryptionParameters(
   coeff_mod_bit_count_ = coeff_mod_data_level_bit_count + coeff_mod_bit_sizes_.back();
 }
 
-int EncryptionParameters::increase_coeff_mod_bit_sizes(int max_total_amount)
+int EncryptionParams::increase_coeff_mod_bit_sizes(int max_total_amount)
 {
-
   int start_idx = last_coeff_mod_big_prime_idx() + 1;
   int i;
   for (i = 0; i < max_total_amount; ++i)
@@ -41,7 +39,7 @@ int EncryptionParameters::increase_coeff_mod_bit_sizes(int max_total_amount)
   return i;
 }
 
-int EncryptionParameters::last_coeff_mod_big_prime_idx() const
+int EncryptionParams::last_coeff_mod_big_prime_idx() const
 {
   int idx = 0;
   // Consider only data level primes
@@ -50,15 +48,15 @@ int EncryptionParameters::last_coeff_mod_big_prime_idx() const
   return idx;
 }
 
-vector<int> EncryptionParameters::coeff_mod_data_level_bit_sizes() const
+vector<int> EncryptionParams::coeff_mod_data_level_bit_sizes() const
 {
-  vector<int> data_level_part(coeff_mod_bit_sizes_);
+  vector<int> data_level_part{coeff_mod_bit_sizes_};
   // Remove special prime
   data_level_part.pop_back();
   return data_level_part;
 }
 
-void EncryptionParameters::print_parameters() const
+void EncryptionParams::print_params() const
 {
   cout << "/" << endl;
   cout << "| Encryption parameters :" << endl;
@@ -77,5 +75,4 @@ void EncryptionParameters::print_parameters() const
   cout << ") bits" << endl;
   cout << "\\" << endl;
 }
-
-} // namespace param_selector
+} // namespace fheco::param_select
