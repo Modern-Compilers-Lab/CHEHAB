@@ -9,7 +9,7 @@ namespace fheco::ir
 size_t Term::count_ = 0;
 
 Term::Term(OpCode op_code, vector<Term *> operands)
-  : id_{++count_}, op_code_{move(op_code)}, operands_{move(operands)}, type_{deduce_result_type(op_code_, operands)}
+  : id_{++count_}, op_code_{move(op_code)}, operands_{move(operands)}, type_{deduce_result_type(op_code_, operands_)}
 {}
 
 size_t Term::HashPtr::operator()(const Term *p) const

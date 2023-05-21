@@ -215,7 +215,15 @@ void Expr::replace(Term *term1, Term *term2)
       {
         auto [it, inserted] = op_terms_.emplace(OpTermKey{&parent->op_code(), &parent->operands()}, parent);
         if (!inserted)
-          call_stack.push(Call{parent, it->second});
+        {
+          if (*it->second == *top_term1)
+          {
+            op_terms_.erase(it);
+            it = op_terms_.emplace(OpTermKey{&parent->op_code(), &parent->operands()}, parent).first;
+          }
+          else
+            call_stack.push(Call{parent, it->second});
+        }
       }
       top_term2->parents_.insert(parent);
       parent_it = top_term1->parents_.erase(parent_it);
