@@ -9,7 +9,7 @@ namespace fheco::util
 void ClearDataEval::adjust_packed_val(PackedVal &packed_val) const
 {
   packed_val.resize(slot_count_);
-  // reduce(packed_val);
+  reduce(packed_val);
 }
 
 PackedVal ClearDataEval::make_rand_packed_val(integer slot_min, integer slot_max) const
@@ -51,6 +51,10 @@ void ClearDataEval::operate_unary(const ir::OpCode &op_code, const PackedVal &ar
     rotate(arg, op_code.steps(), dest);
     break;
 
+  case ir::OpCode::Type::square:
+    mul(arg, arg, dest);
+    break;
+
   default:
     throw logic_error("unhandled clear evaluation for unary operation");
   }
@@ -80,7 +84,7 @@ void ClearDataEval::operate_binary(
 
 void ClearDataEval::reduce(PackedVal &packed_val) const
 {
-  if (delayed_reduction_)
+  if (overflow_warnings_ && delayed_reduction_)
   {
     if (signedness_)
     {
@@ -111,7 +115,7 @@ void ClearDataEval::reduce(PackedVal &packed_val) const
   {
     for (auto it = packed_val.begin(); it != packed_val.end(); ++it)
     {
-      if (signedness_)
+      if (overflow_warnings_ && signedness_)
       {
         if (*it > modulus_ >> 1)
           cerr << "detected signed overflow\n";

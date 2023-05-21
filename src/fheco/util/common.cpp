@@ -166,7 +166,6 @@ ostream &operator<<(ostream &os, const fheco::PackedVal &packed_val)
 
   for (size_t i = 0; i < packed_val.size() - 1; ++i)
     os << packed_val[i] << " ";
-  os << packed_val.back();
-  return os;
+  return os << packed_val.back();
 }
 } // namespace std

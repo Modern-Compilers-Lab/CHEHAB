@@ -15,16 +15,18 @@ class Compiler
 public:
   static inline void create_func(
     std::string name, std::size_t slot_count, integer modulus, bool signedness, bool need_full_cyclic_rotation,
-    bool delayed_reduction = false)
+    bool delayed_reduction = false, bool overflow_warnings = false)
   {
     add_func(std::make_shared<ir::Func>(
       std::move(name), slot_count, modulus, signedness, need_full_cyclic_rotation, delayed_reduction));
   }
 
   static inline void create_func(
-    std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_full_cyclic_rotation)
+    std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_full_cyclic_rotation,
+    bool overflow_warnings = false)
   {
-    add_func(std::make_shared<ir::Func>(std::move(name), slot_count, bit_width, signedness, need_full_cyclic_rotation));
+    add_func(std::make_shared<ir::Func>(
+      std::move(name), slot_count, bit_width, signedness, need_full_cyclic_rotation, overflow_warnings));
   }
 
   static void compile(

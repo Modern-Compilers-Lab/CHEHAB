@@ -105,6 +105,7 @@ size_t relin_after_each_mul(const shared_ptr<ir::Func> &func)
         break;
     }
   }
+  return 1;
 }
 
 size_t get_ctxt_result_size(ir::OpCode::Type op_code_type, const vector<size_t> &ctxt_args_sizes)

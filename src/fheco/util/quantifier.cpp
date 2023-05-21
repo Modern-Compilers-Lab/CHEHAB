@@ -707,8 +707,7 @@ ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermsDepthIn
 
 ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermDepthInfo &ctxt_term_depth_info)
 {
-  os << ctxt_term_depth_info.xdepth_ << ", " << ctxt_term_depth_info.depth_;
-  return os;
+  return os << ctxt_term_depth_info.xdepth_ << ", " << ctxt_term_depth_info.depth_;
 }
 
 ostream &operator<<(ostream &os, const fheco::util::Quantifier::CCOpCount &cc_op_count)
@@ -720,8 +719,7 @@ ostream &operator<<(ostream &os, const fheco::util::Quantifier::CCOpCount &cc_op
     os << "(L-" << e.first.opposite_level_ << ", " << e.first.arg1_size_ << ", " << e.first.arg2_size_
        << "): " << e.second << '\n';
   }
-  os << "total: " << total << '\n';
-  return os;
+  return os << "total: " << total << '\n';
 }
 
 ostream &operator<<(ostream &os, const fheco::util::Quantifier::CAOpCount &ca_op_count)
@@ -732,8 +730,7 @@ ostream &operator<<(ostream &os, const fheco::util::Quantifier::CAOpCount &ca_op
     total += e.second;
     os << "(L-" << e.first.opposite_level_ << ", " << e.first.arg_size_ << "): " << e.second << '\n';
   }
-  os << "total: " << total << '\n';
-  return os;
+  return os << "total: " << total << '\n';
 }
 
 ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermsInfo &ctxt_terms_info)
@@ -745,7 +742,6 @@ ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermsInfo &c
 
 ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermInfo &ctxt_term_info)
 {
-  os << ctxt_term_info.opposite_level_ << ", " << ctxt_term_info.size_;
-  return os;
+  return os << ctxt_term_info.opposite_level_ << ", " << ctxt_term_info.size_;
 }
 } // namespace std
