@@ -1,4 +1,6 @@
 #include "fheco/ir/func.hpp"
+#include "fheco/trs/ops_overloads.hpp"
+#include "fheco/trs/trs.hpp"
 #include "fheco/passes/insert_relin.hpp"
 #include <algorithm>
 #include <stdexcept>
@@ -80,6 +82,29 @@ size_t lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_t
     }
   }
   return keys_count;
+}
+
+size_t relin_after_each_mul(const shared_ptr<ir::Func> &func)
+{
+  trs::TermMatcher c_x{trs::TermMatcherType::cipher, "ctxt_x"};
+  trs::TermMatcher c_y{trs::TermMatcherType::cipher, "ctxt_y"};
+
+  vector<trs::Rule> relin_rules{
+    {"relin-mul", c_x * c_y, relin(c_x * c_y)}, {"relin-square", square(c_x), relin(square(c_x))}};
+
+  trs::TRS trs = trs::TRS::make_void_trs(func);
+  for (auto id : func->get_top_sorted_terms_ids())
+  {
+    auto term = func->data_flow().get_term(id);
+    if (!term)
+      continue;
+
+    for (const auto &rule : relin_rules)
+    {
+      if (trs.apply_rule(term, rule))
+        break;
+    }
+  }
 }
 
 size_t get_ctxt_result_size(ir::OpCode::Type op_code_type, const vector<size_t> &ctxt_args_sizes)

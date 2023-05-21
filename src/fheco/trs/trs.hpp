@@ -27,6 +27,8 @@ public:
     top_down
   };
 
+  static TRS make_void_trs(std::shared_ptr<ir::Func> func);
+
   TRS(std::shared_ptr<ir::Func> func, Ruleset ruleset) : func_{std::move(func)}, ruleset_{std::move(ruleset)} {}
 
   bool run(RewriteHeuristic heuristic, std::int64_t max_iter, bool global_analysis);

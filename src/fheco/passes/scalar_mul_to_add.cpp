@@ -37,18 +37,18 @@ void convert_scalar_mul_to_add(const std::shared_ptr<ir::Func> &func, size_t sca
     return abs(const_val[0]) <= scalar_threshold && util::is_scalar(const_val);
   };
 
-  vector<trs::Rule> scalar_mul_to_add{
-    {"ctxt_mul_scalar", c_x * const1, gen_balan_add, const_scalar_cond},
-    {"scalar_ctxt_mul", const1 * c_x, gen_balan_add, const_scalar_cond}};
+  vector<trs::Rule> scalar_mul_to_add_rules{
+    {"ctxt-mul-scalar", c_x * const1, gen_balan_add, const_scalar_cond},
+    {"scalar-ctxt-mul", const1 * c_x, gen_balan_add, const_scalar_cond}};
 
-  trs::TRS trs{func, trs::Ruleset{func->slot_count(), {}}};
+  trs::TRS trs = trs::TRS::make_void_trs(func);
   for (auto id : func->get_top_sorted_terms_ids())
   {
     auto term = func->data_flow().get_term(id);
     if (!term)
       continue;
 
-    for (const auto &rule : scalar_mul_to_add)
+    for (const auto &rule : scalar_mul_to_add_rules)
     {
       if (trs.apply_rule(term, rule))
         break;

@@ -17,6 +17,13 @@ using namespace std;
 
 namespace fheco::trs
 {
+
+TRS TRS::make_void_trs(std::shared_ptr<ir::Func> func)
+{
+  size_t slot_count = func->slot_count();
+  return TRS{move(func), Ruleset{slot_count, {}}};
+}
+
 bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool global_analysis)
 {
   bool did_rewrite = false;

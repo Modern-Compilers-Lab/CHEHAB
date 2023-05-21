@@ -39,5 +39,8 @@ TermMatcher square(TermMatcher arg);
 // mod
 OpGenMatcher operator%(OpGenMatcher lhs, OpGenMatcher rhs);
 
+// other
 TermMatcher balanced_op(const std::vector<TermMatcher> &args, const TermOpCode &op_code);
+
+TermMatcher relin(TermMatcher arg);
 } // namespace fheco::trs

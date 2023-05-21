@@ -73,6 +73,8 @@ OpGenMatcher operator%(OpGenMatcher lhs, OpGenMatcher rhs)
   return OpGenMatcher{OpGenOpCode::mod, vector<OpGenMatcher>{move(lhs), move(rhs)}};
 }
 
+// other
+
 TermMatcher balanced_op(const vector<TermMatcher> &args, const TermOpCode &op_code)
 {
   vector<TermMatcher> balanced_ops;
@@ -86,5 +88,10 @@ TermMatcher balanced_op(const vector<TermMatcher> &args, const TermOpCode &op_co
     balanced_ops.push_back(TermMatcher{op_code, vector<TermMatcher>{balanced_ops[i], balanced_ops[i + 1]}});
 
   return balanced_ops.back();
+}
+
+TermMatcher relin(TermMatcher arg)
+{
+  return TermMatcher{TermOpCode::relin, vector<TermMatcher>{move(arg)}};
 }
 } // namespace fheco::trs
