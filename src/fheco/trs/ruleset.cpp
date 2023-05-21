@@ -4,6 +4,7 @@
 #include "fheco/trs/ops_overloads.hpp"
 #include "fheco/trs/ruleset.hpp"
 #include "fheco/util/common.hpp"
+#include <cstdint>
 #include <utility>
 
 using namespace std;
@@ -25,11 +26,28 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
       auto y_term = subst.get(y);
       auto t_term = subst.get(t);
 
-      count_ctxt_leaves(x_term, dp);
-      count_ctxt_leaves(y_term, dp);
-      count_ctxt_leaves(t_term, dp);
+      int64_t x_ctxt_leaves_count = 0;
+      if (x_term->type() == ir::Term::Type::cipher)
+      {
+        count_ctxt_leaves(x_term, dp);
+        x_ctxt_leaves_count = dp.at(x_term);
+      }
 
-      return dp.at(t_term) - dp.at(x_term) - dp.at(y_term) < 0;
+      int64_t y_ctxt_leaves_count = 0;
+      if (y_term->type() == ir::Term::Type::cipher)
+      {
+        count_ctxt_leaves(y_term, dp);
+        y_ctxt_leaves_count = dp.at(y_term);
+      }
+
+      int64_t t_ctxt_leaves_count = 0;
+      if (t_term->type() == ir::Term::Type::cipher)
+      {
+        count_ctxt_leaves(t_term, dp);
+        t_ctxt_leaves_count = dp.at(t_term);
+      }
+
+      return t_ctxt_leaves_count - x_ctxt_leaves_count - y_ctxt_leaves_count < 0;
     };
   };
 
