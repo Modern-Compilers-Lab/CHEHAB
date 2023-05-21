@@ -9,10 +9,12 @@ using namespace std;
 
 namespace fheco::passes
 {
-void lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_threshold)
+size_t lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_threshold)
 {
   if (ctxt_size_threshold < 3)
     throw invalid_argument("invalid ctxt_size_threshold");
+
+  size_t keys_count = 0;
 
   unordered_map<ir::Term *, size_t> ctxt_terms_sizes;
   for (auto id : func->get_top_sorted_terms_ids())
@@ -56,6 +58,7 @@ void lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_thr
           while (ctxt_result_size > ctxt_size_threshold)
           {
             ir::Term *relin_operand = func->insert_op_term(ir::OpCode::relin, {ctxt_terms_with_size[i].first});
+            keys_count = max(keys_count, ctxt_terms_with_size[i].second - 2);
             func->replace_term_with(ctxt_terms_with_size[i].first, relin_operand);
             ctxt_terms_sizes.erase(ctxt_terms_with_size[i].first);
             ctxt_terms_sizes.emplace(relin_operand, 2);
@@ -76,6 +79,7 @@ void lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_thr
       ctxt_terms_sizes.emplace(term, ctxt_result_size);
     }
   }
+  return keys_count;
 }
 
 size_t get_ctxt_result_size(ir::OpCode::Type op_code_type, const vector<size_t> &ctxt_args_sizes)

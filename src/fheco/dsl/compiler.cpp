@@ -4,6 +4,7 @@
 #include "fheco/util/common.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <unordered_set>
 #include <utility>
 
 using namespace std;
@@ -52,10 +53,12 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
   passes::cse_commut(func);
 
   clog << "reduce_rotation_keys\n";
-  passes::reduce_rotation_keys(func, 2 * util::get_power_of_two(util::next_power_of_two(func->slot_count())));
+  unordered_set<int> rotation_steps_keys;
+  rotation_steps_keys =
+    passes::reduce_rotation_keys(func, 2 * util::get_power_of_two(util::next_power_of_two(func->slot_count())));
 
   clog << "insert_relin_ops\n";
-  passes::insert_relin_ops(func, 3);
+  size_t relin_keys_count = passes::lazy_relin_heuristic(func, 3);
 }
 
 void Compiler::add_func(shared_ptr<ir::Func> func)
