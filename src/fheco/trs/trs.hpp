@@ -29,11 +29,11 @@ public:
 
   TRS(std::shared_ptr<ir::Func> func, Ruleset ruleset) : func_{std::move(func)}, ruleset_{std::move(ruleset)} {}
 
-  void run(RewriteHeuristic heuristic, bool global_analysis);
+  bool run(RewriteHeuristic heuristic, std::int64_t max_iter, bool global_analysis);
 
   bool apply_rule(ir::Term *term, const Rule &rule);
 
-  void rewrite_term(std::size_t id, RewriteHeuristic heuristic, bool global_analysis);
+  bool rewrite_term(std::size_t id, RewriteHeuristic heuristic, std::int64_t &max_iter, bool global_analysis);
 
 private:
   bool match(

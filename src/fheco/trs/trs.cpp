@@ -17,13 +17,14 @@ using namespace std;
 
 namespace fheco::trs
 {
-void TRS::run(RewriteHeuristic heuristic, bool global_analysis)
+bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool global_analysis)
 {
+  bool did_rewrite = false;
   switch (heuristic)
   {
   case RewriteHeuristic::bottom_up:
     for (auto id : func_->get_top_sorted_terms_ids())
-      rewrite_term(id, RewriteHeuristic::bottom_up, global_analysis);
+      did_rewrite = rewrite_term(id, RewriteHeuristic::bottom_up, max_iter, global_analysis);
 
     break;
 
@@ -31,17 +32,19 @@ void TRS::run(RewriteHeuristic heuristic, bool global_analysis)
   {
     const auto &sorted_terms_ids = func_->get_top_sorted_terms_ids();
     for (auto id_it = sorted_terms_ids.crbegin(); id_it != sorted_terms_ids.crend(); ++id_it)
-      rewrite_term(*id_it, RewriteHeuristic::top_down, global_analysis);
+      did_rewrite = rewrite_term(*id_it, RewriteHeuristic::top_down, max_iter, global_analysis);
     break;
   }
 
   default:
     throw logic_error("unhandled RewriteHeuristic");
   }
+  return did_rewrite;
 }
 
 bool TRS::apply_rule(ir::Term *term, const Rule &rule)
 {
+  clog << "trying rule '" << rule.label() << "' on term $" << term->id() << " -> ";
   Subst subst;
   bool global_analysis = false;
   int64_t rel_cost = 0;
@@ -64,11 +67,12 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
   return true;
 }
 
-void TRS::rewrite_term(size_t id, RewriteHeuristic heuristic, bool global_analysis)
+bool TRS::rewrite_term(size_t id, RewriteHeuristic heuristic, int64_t &max_iter, bool global_analysis)
 {
+  bool did_rewrite = false;
   stack<size_t> call_stack;
   call_stack.push(id);
-  while (!call_stack.empty())
+  while (max_iter > 0 && !call_stack.empty())
   {
     auto top_term_id = call_stack.top();
     call_stack.pop();
@@ -110,6 +114,7 @@ void TRS::rewrite_term(size_t id, RewriteHeuristic heuristic, bool global_analys
       {
         clog << "replace term $" << top_term->id() << " with term $" << equiv_term->id() << '\n';
         func_->replace_term_with(top_term, equiv_term);
+        did_rewrite = true;
 
         switch (heuristic)
         {
@@ -135,7 +140,9 @@ void TRS::rewrite_term(size_t id, RewriteHeuristic heuristic, bool global_analys
         func_->delete_term_cascade(equiv_term);
       }
     }
+    --max_iter;
   }
+  return did_rewrite;
 }
 
 bool TRS::match(
