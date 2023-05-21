@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <string>
 #include <unordered_set>
-#include <utility>
 #include <vector>
 
 namespace fheco::ir
@@ -40,6 +39,8 @@ public:
 
   static Type deduce_result_type(const OpCode &op_code, const std::vector<Term *> &operands);
 
+  static Type deduce_result_type(const OpCode &op_code, const std::vector<Type> &operands_types);
+
   inline std::size_t id() const { return id_; }
 
   inline const OpCode &op_code() const { return op_code_; }
@@ -57,10 +58,7 @@ public:
   inline bool is_source() const { return parents_.empty(); }
 
 private:
-  Term(OpCode op_code, std::vector<Term *> operands)
-    : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)}, type_{deduce_result_type(
-                                                                                     op_code_, operands_)}
-  {}
+  Term(OpCode op_code, std::vector<Term *> operands);
 
   Term(Type type) : id_{++count_}, op_code_{OpCode::nop}, operands_{}, type_{type} {}
 

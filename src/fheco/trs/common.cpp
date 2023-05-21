@@ -17,46 +17,6 @@ ir::OpCode convert_op_code(const TermOpCode &op_code, vector<int> generators_val
   return ir::OpCode{op_code.type(), move(generators_vals), op_code.arity(), op_code.commutativity(), move(str_repr)};
 }
 
-int64_t evaluate_op(const ir::OpCode &op_code, const vector<ir::Term *> &operands)
-{
-  if (ir::Term::deduce_result_type(op_code, operands) == ir::Term::Type::plain)
-    return 0;
-
-  switch (op_code.type())
-  {
-  case ir::OpCode::Type::mul:
-    if (operands[0]->type() == ir::Term::Type::cipher && operands[1]->type() == ir::Term::Type::cipher)
-      return 100;
-
-    else
-      return 20;
-
-  case ir::OpCode::Type::square:
-    return 70;
-
-  case ir::OpCode::Type::encrypt:
-    return 50;
-
-  case ir::OpCode::Type::rotate:
-    return 25;
-
-  case ir::OpCode::Type::add:
-  case ir::OpCode::Type::sub:
-  case ir::OpCode::Type::negate:
-    return 1;
-
-  case ir::OpCode::Type::nop:
-    return 0;
-
-  case ir::OpCode::Type::mod_switch:
-  case ir::OpCode::Type::relin:
-    throw invalid_argument("at TRS level the circuit should not contain ciphertext maintenance operations");
-
-  default:
-    throw invalid_argument("unhandled op_code resulting in a ciphertext");
-  }
-}
-
 bool operator==(TermMatcherType term_matcher_type, ir::Term::Type term_type)
 {
   switch (term_matcher_type)

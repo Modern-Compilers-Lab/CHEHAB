@@ -3,6 +3,7 @@
 #include "fheco/trs/common.hpp"
 #include "fheco/trs/ops_overloads.hpp"
 #include "fheco/trs/ruleset.hpp"
+#include "fheco/util/common.hpp"
 #include <utility>
 
 using namespace std;
@@ -423,6 +424,8 @@ const vector<Rule> &Ruleset::pick_rules(const ir::OpCode &op_code) const
 vector<Rule> Ruleset::get_log_reduct_rules(size_t slot_count, const TermMatcher &x, const TermOpCode &op_code)
 {
   vector<Rule> rules;
+  if (!util::is_power_of_two(slot_count))
+    slot_count = util::next_power_of_two(slot_count >> 1);
   while (slot_count > 1)
   {
     rules.push_back(make_log_reduct_comp(x, slot_count, op_code));
@@ -433,28 +436,31 @@ vector<Rule> Ruleset::get_log_reduct_rules(size_t slot_count, const TermMatcher 
 
 Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, size_t size, const TermOpCode &op_code)
 {
+  if (!util::is_power_of_two(size))
+    throw invalid_argument("make_log_reduct_comp size must be a power of two");
+
   if (op_code.arity() != 2)
     throw invalid_argument("binary operation assumed for reduction");
 
-  vector<TermMatcher> elts(size);
+  vector<TermMatcher> elts;
+  elts.reserve(size);
   size_t largest_power2 = 1;
-  elts[0] = x;
+  elts.push_back(x);
   for (size_t i = 1; i < size; ++i)
   {
     if (i != 0 && (i & (i - 1)) == 0)
       largest_power2 = i;
 
-    elts[i] = x << i;
+    elts.push_back(x << i);
   }
   auto lhs = balanced_op(elts, op_code);
 
-  vector<TermMatcher> sorted_elts(size);
-  size_t j = 0;
-  for (size_t i = 0; i < size; i += 2)
+  vector<TermMatcher> sorted_elts;
+  sorted_elts.reserve(size);
+  for (size_t j = 0; j < largest_power2; ++j)
   {
-    sorted_elts[i] = elts[j];
-    sorted_elts[i + 1] = elts[j + largest_power2];
-    ++j;
+    sorted_elts.push_back(elts[j]);
+    sorted_elts.push_back(elts[j + largest_power2]);
   }
   auto rhs = balanced_op(sorted_elts, op_code);
 

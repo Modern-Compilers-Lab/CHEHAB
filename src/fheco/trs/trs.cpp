@@ -1,11 +1,11 @@
 #include "fheco/dsl/compiler.hpp"
+#include "fheco/ir/common.hpp"
 #include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
 #include "fheco/trs/common.hpp"
 #include "fheco/trs/fold_op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
 #include "fheco/trs/trs.hpp"
-#include "fheco/util/expr_printer.hpp"
 #include <functional>
 #include <iostream>
 #include <stack>
@@ -60,10 +60,7 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
   vector<size_t> created_terms_ids;
   auto equiv_term = construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
   clog << "replace term $" << term->id() << " with term $" << equiv_term->id() << '\n';
-  util::ExprPrinter p{func_};
-  cout << p.expand_term(term, 10) << endl;
   func_->replace_term_with(term, equiv_term);
-  cout << p.expand_term(equiv_term, 10) << endl;
   return true;
 }
 
@@ -82,8 +79,6 @@ void TRS::rewrite_term(size_t id, RewriteHeuristic heuristic, bool global_analys
 
     if (top_term->is_leaf())
       continue;
-
-    util::ExprPrinter p{func_};
 
     for (const auto &rule : ruleset_.pick_rules(top_term->op_code()))
     {
@@ -114,9 +109,7 @@ void TRS::rewrite_term(size_t id, RewriteHeuristic heuristic, bool global_analys
       if (!global_analysis || rel_cost <= 0)
       {
         clog << "replace term $" << top_term->id() << " with term $" << equiv_term->id() << '\n';
-        cout << p.expand_term(top_term, 10) << endl;
         func_->replace_term_with(top_term, equiv_term);
-        cout << p.expand_term(equiv_term, 10) << endl;
 
         switch (heuristic)
         {
@@ -250,7 +243,7 @@ bool TRS::match(
   if (global_analysis)
   {
     to_delete.insert(term);
-    rel_cost = -evaluate_op(term->op_code(), term->operands());
+    rel_cost = -ir::evaluate_raw_op_code(term->op_code(), term->operands());
     sorted_terms.pop_back();
     for (auto sorted_term_it = sorted_terms.crbegin(); sorted_term_it != sorted_terms.crend(); ++sorted_term_it)
     {
@@ -266,7 +259,7 @@ bool TRS::match(
         }
       }
       if (to_delete_it != to_delete.end())
-        rel_cost -= evaluate_op(sorted_term->op_code(), sorted_term->operands());
+        rel_cost -= ir::evaluate_raw_op_code(sorted_term->op_code(), sorted_term->operands());
     }
   }
   return true;
@@ -325,9 +318,10 @@ ir::Term *TRS::construct_term(
               throw logic_error("matching for term_matcher_operand was not found");
           }
           const auto &matcher_op_code = top_matcher.op_code();
-          vector<int> generators_vals(matcher_op_code.generators().size());
-          for (size_t i = 0; i < generators_vals.size(); ++i)
-            generators_vals[i] = fold_op_gen_matcher(matcher_op_code.generators()[i], subst);
+          vector<int> generators_vals;
+          generators_vals.reserve(matcher_op_code.generators().size());
+          for (auto op_gen_matcher : matcher_op_code.generators())
+            generators_vals.push_back(fold_op_gen_matcher(op_gen_matcher, subst));
 
           ir::OpCode term_op_code = convert_op_code(matcher_op_code, move(generators_vals));
           if (global_analysis)
@@ -335,10 +329,10 @@ ir::Term *TRS::construct_term(
             if (Compiler::cse_enabled())
             {
               if (!func_->data_flow().find_op_commut(&term_op_code, &term_operands))
-                rel_cost += evaluate_op(term_op_code, term_operands);
+                rel_cost += ir::evaluate_raw_op_code(term_op_code, term_operands);
             }
             else
-              rel_cost += evaluate_op(term_op_code, term_operands);
+              rel_cost += ir::evaluate_raw_op_code(term_op_code, term_operands);
           }
 
           bool inserted;
@@ -346,7 +340,7 @@ ir::Term *TRS::construct_term(
           if (global_analysis && Compiler::cse_enabled())
           {
             if (to_delete.find(term) != to_delete.end())
-              rel_cost += evaluate_op(term->op_code(), term->operands());
+              rel_cost += ir::evaluate_raw_op_code(term->op_code(), term->operands());
           }
           matching.emplace(top_matcher, term);
           if (inserted)

@@ -37,9 +37,10 @@ void lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_thr
       auto ctxt_result_size = get_ctxt_result_size(term->op_code().type(), ctxt_args_sizes);
       if (ctxt_result_size > ctxt_size_threshold)
       {
-        vector<pair<ir::Term *, size_t>> ctxt_terms_with_size{ctxt_args_sizes.size()};
+        vector<pair<ir::Term *, size_t>> ctxt_terms_with_size;
+        ctxt_terms_with_size.reserve(term->operands().size());
         for (size_t i = 0; i < term->operands().size(); ++i)
-          ctxt_terms_with_size[i] = {term->operands()[i], ctxt_args_sizes[i]};
+          ctxt_terms_with_size.push_back({term->operands()[i], ctxt_args_sizes[i]});
 
         sort(
           ctxt_terms_with_size.begin(), ctxt_terms_with_size.end(),
@@ -61,7 +62,7 @@ void lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_thr
             ctxt_terms_with_size[i].second = 2;
             ctxt_args_sizes[i] = 2;
             size_t j = i + 1;
-            while (ctxt_terms_with_size[j].first == ctxt_terms_with_size[i].first)
+            while (j < ctxt_terms_with_size.size() && ctxt_terms_with_size[j].first == ctxt_terms_with_size[i].first)
             {
               ctxt_terms_with_size[j].second = 2;
               ctxt_args_sizes[j] = 2;

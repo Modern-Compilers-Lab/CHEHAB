@@ -23,9 +23,10 @@ void convert_scalar_mul_to_add(const std::shared_ptr<ir::Func> &func, size_t sca
     bool is_negative = scalar_val < 0;
     size_t uscalar_val = abs(scalar_val);
 
-    vector<trs::TermMatcher> elts{uscalar_val};
+    vector<trs::TermMatcher> elts;
+    elts.reserve(uscalar_val);
     for (size_t i = 0; i < uscalar_val; ++i)
-      elts[i] = c_x;
+      elts.push_back(c_x);
 
     return is_negative ? -trs::balanced_op(elts, trs::TermOpCode::add) : trs::balanced_op(elts, trs::TermOpCode::add);
   };
