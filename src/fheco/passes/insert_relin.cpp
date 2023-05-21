@@ -2,15 +2,16 @@
 #include "fheco/passes/insert_relin.hpp"
 #include <algorithm>
 #include <stdexcept>
+#include <tuple>
 #include <unordered_map>
 
 using namespace std;
 
 namespace fheco::passes
 {
-void insert_relin_ops(const shared_ptr<ir::Func> &func, size_t ctxt_size_threshold)
+void lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_threshold)
 {
-  if (ctxt_size_threshold < 2)
+  if (ctxt_size_threshold < 3)
     throw invalid_argument("invalid ctxt_size_threshold");
 
   unordered_map<ir::Term *, size_t> ctxt_terms_sizes;
@@ -34,13 +35,44 @@ void insert_relin_ops(const shared_ptr<ir::Func> &func, size_t ctxt_size_thresho
           ctxt_args_sizes.push_back(ctxt_terms_sizes.at(operand));
       }
       auto ctxt_result_size = get_ctxt_result_size(term->op_code().type(), ctxt_args_sizes);
-      ctxt_terms_sizes.emplace(term, ctxt_result_size);
       if (ctxt_result_size > ctxt_size_threshold)
       {
-        ir::Term *relin_term = func->insert_op_term(ir::OpCode::relin, {term});
-        func->replace_term_with(term, relin_term);
-        ctxt_terms_sizes.emplace(relin_term, 2);
+        vector<pair<ir::Term *, size_t>> ctxt_terms_with_size{ctxt_args_sizes.size()};
+        for (size_t i = 0; i < term->operands().size(); ++i)
+          ctxt_terms_with_size[i] = {term->operands()[i], ctxt_args_sizes[i]};
+
+        sort(
+          ctxt_terms_with_size.begin(), ctxt_terms_with_size.end(),
+          [](const pair<ir::Term *, size_t> &lhs, const pair<ir::Term *, size_t> &rhs) {
+            return lhs.second > rhs.second;
+          });
+
+        for (size_t i = 0; i < ctxt_terms_with_size.size(); ++i)
+          ctxt_args_sizes[i] = ctxt_terms_with_size[i].second;
+
+        {
+          size_t i = 0;
+          while (ctxt_result_size > ctxt_size_threshold)
+          {
+            ir::Term *relin_operand = func->insert_op_term(ir::OpCode::relin, {ctxt_terms_with_size[i].first});
+            func->replace_term_with(ctxt_terms_with_size[i].first, relin_operand);
+            ctxt_terms_sizes.erase(ctxt_terms_with_size[i].first);
+            ctxt_terms_sizes.emplace(relin_operand, 2);
+            ctxt_terms_with_size[i].second = 2;
+            ctxt_args_sizes[i] = 2;
+            size_t j = i + 1;
+            while (ctxt_terms_with_size[j].first == ctxt_terms_with_size[i].first)
+            {
+              ctxt_terms_with_size[j].second = 2;
+              ctxt_args_sizes[j] = 2;
+              ++j;
+            }
+            i = j;
+            ctxt_result_size = get_ctxt_result_size(term->op_code().type(), ctxt_args_sizes);
+          }
+        }
       }
+      ctxt_terms_sizes.emplace(term, ctxt_result_size);
     }
   }
 }
