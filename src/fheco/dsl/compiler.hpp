@@ -55,13 +55,19 @@ public:
 
   static bool const_folding_enabled() { return const_folding_enabled_; }
 
-  static inline void enable_cse() { cse_enabled_ = true; }
+  static bool scalar_vector_shape_enabled() { return scalar_vector_shape_; }
+
+    static inline void enable_cse() { cse_enabled_ = true; }
 
   static inline void disable_cse() { cse_enabled_ = false; }
 
   static inline void enable_const_folding() { const_folding_enabled_ = true; }
 
   static inline void disable_const_folding() { const_folding_enabled_ = false; }
+
+  static inline void enable_scalar_vector_shape() { scalar_vector_shape_ = true; }
+
+  static inline void disable_scalar_vector_shape() { scalar_vector_shape_ = false; }
 
 private:
   using FuncsTable = std::unordered_map<std::string, std::shared_ptr<ir::Func>>;
@@ -75,5 +81,7 @@ private:
   static bool cse_enabled_;
 
   static bool const_folding_enabled_;
+
+  static bool scalar_vector_shape_;
 };
 } // namespace fheco

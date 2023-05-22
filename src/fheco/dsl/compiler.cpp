@@ -20,15 +20,15 @@ bool Compiler::cse_enabled_ = true;
 
 bool Compiler::const_folding_enabled_ = true;
 
+bool Compiler::scalar_vector_shape_ = false;
+
 void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityLevel sec_level)
 {
-  int64_t max_iter = 50000;
+  size_t max_passes = 4;
+  int64_t max_iter = 1000;
+
   // clog << "remove_dead_code\n";
   func->remove_dead_code();
-
-  clog << "depth_opt_trs\n";
-  trs::TRS depth_opt_trs{func, trs::Ruleset::depth_opt_ruleset(func->slot_count())};
-  depth_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false);
 
   // clog << "log2_reduct_prep_trs\n";
   // trs::TRS log2_reduct_prep_trs{func, trs::Ruleset::log2_reduct_prep_ruleset(func->slot_count())};
@@ -46,23 +46,30 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
   //   rel_slot_count >>= 1;
   // }
 
-  clog << "ops_opt_trs\n";
+  trs::TRS depth_opt_trs{func, trs::Ruleset::depth_opt_ruleset(func->slot_count())};
   trs::TRS ops_opt_trs{func, trs::Ruleset::ops_type_number_opt_ruleset(func->slot_count())};
-  ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false);
+  for (size_t i = 0; i < max_passes; ++i)
+  {
+    clog << "depth_opt_trs\n";
+    depth_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
 
-  clog << "convert_scalar_mul_to_add\n";
-  passes::convert_scalar_mul_to_add(func, 1 << 30);
+    clog << "ops_opt_trs\n";
+    ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
 
-  clog << "cse_commut\n";
-  passes::cse_commut(func);
+    clog << "cse_commut\n";
+    passes::cse_commut(func);
+  }
 
-  clog << "reduce_rotation_keys\n";
-  unordered_set<int> rotation_steps_keys;
-  rotation_steps_keys =
-    passes::reduce_rotation_keys(func, 2 * util::get_power_of_two(util::next_power_of_two(func->slot_count())));
+  // clog << "convert_scalar_mul_to_add\n";
+  // passes::convert_scalar_mul_to_add(func, 1 << 30);
 
-  clog << "insert_relin_ops\n";
-  size_t relin_keys_count = passes::lazy_relin_heuristic(func, 3);
+  // clog << "reduce_rotation_keys\n";
+  // unordered_set<int> rotation_steps_keys;
+  // rotation_steps_keys =
+  //   passes::reduce_rotation_keys(func, 2 * util::get_power_of_two(util::next_power_of_two(func->slot_count())));
+
+  // clog << "insert_relin_ops\n";
+  // size_t relin_keys_count = passes::lazy_relin_heuristic(func, 3);
 }
 
 void Compiler::add_func(shared_ptr<ir::Func> func)

@@ -1,6 +1,6 @@
-#include "fheco/passes/cse_commut.hpp"
 #include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
+#include "fheco/passes/cse_commut.hpp"
 #include <algorithm>
 #include <unordered_set>
 
@@ -20,7 +20,7 @@ void cse_commut(const shared_ptr<ir::Func> &func)
       continue;
 
     auto sorted_operands = term->operands();
-    sort(sorted_operands.begin(), sorted_operands.end(), ir::Term::EqualPtr{});
+    sort(sorted_operands.begin(), sorted_operands.end(), ir::Term::ComparePtr{});
     auto new_term = func->insert_op_term(term->op_code(), move(sorted_operands));
     func->replace_term_with(term, new_term);
   }

@@ -19,6 +19,9 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
   TermMatcher z{TermMatcherType::term, "z"};
   TermMatcher t{TermMatcherType::term, "t"};
 
+  OpGenMatcher n{"n"};
+  OpGenMatcher m{"m"};
+
   auto assoc_balan_cond = [](const TermMatcher &x, const TermMatcher &y, const TermMatcher &t) {
     return [x, y, t](const Subst &subst) {
       TermsMetric dp;
@@ -67,7 +70,9 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
     {"assoc-balan-add-sub-2-2-1", x + (y + (z - t)), (x + y) + (z - t), assoc_balan_cond(z, t, x)},
     {"assoc-balan-add-sub-2-2-2", x + ((z - t) + y), (x + z) - (t - y), assoc_balan_cond(z, t, x)},
     {"assoc-balan-add-sub-2-3-1", x + (y - (z - t)), (x + y) - (z - t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-add-sub-2-3-2", x + ((z - t) - y), (x + z) - (t + y), assoc_balan_cond(z, t, x)}};
+    {"assoc-balan-add-sub-2-3-2", x + ((z - t) - y), (x + z) - (t + y), assoc_balan_cond(z, t, x)},
+    {"undo-nest-rotate-add-1", (x + (y << (n))) << m, (x << m) + (y << (n + m) % slot_count)},
+    {"undo-nest-rotate-add-2", ((x << (n)) + y) << m, (x << (n + m) % slot_count) + (y << m)}};
 
   vector<Rule> sub_rules{
     {"assoc-balan-sub-1-1", ((x - y) - z) - t, (x - y) - (z + t), assoc_balan_cond(x, y, t)},
@@ -85,7 +90,9 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
     {"assoc-balan-sub-add-2-2-1", x - (y - (z + t)), (x - y) + (z + t), assoc_balan_cond(z, t, x)},
     {"assoc-balan-sub-add-2-2-2", x - ((z + t) - y), (x - z) - (t - y), assoc_balan_cond(z, t, x)},
     {"assoc-balan-sub-add-2-3-1", x - (y + (z + t)), (x - y) - (z + t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-sub-add-2-3-2", x - ((z + t) + y), (x - z) - (t + y), assoc_balan_cond(z, t, x)}};
+    {"assoc-balan-sub-add-2-3-2", x - ((z + t) + y), (x - z) - (t + y), assoc_balan_cond(z, t, x)},
+    {"undo-nest-rotate-sub-1", (x - (y << (n))) << m, (x << m) - (y << (n + m) % slot_count)},
+    {"undo-nest-rotate-sub-2", ((x << (n)) - y) << m, (x << (n + m) % slot_count) - (y << m)}};
 
   vector<Rule> mul_rules{
     {"assoc-balan-mul-square-1-1", ((x * y) * x) * z, (x * x) * (y * z), assoc_balan_cond(x, y, z)},
@@ -99,7 +106,9 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
     {"assoc-balan-mul-1-1", ((x * y) * z) * t, (x * y) * (z * t), assoc_balan_cond(x, y, t)},
     {"assoc-balan-mul-1-2", (z * (x * y)) * t, (z * x) * (y * t), assoc_balan_cond(x, y, t)},
     {"assoc-balan-mul-2-1", x * (y * (z * t)), (x * y) * (z * t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-mul-2-2", x * ((z * t) * y), (x * z) * (t * y), assoc_balan_cond(z, t, x)}};
+    {"assoc-balan-mul-2-2", x * ((z * t) * y), (x * z) * (t * y), assoc_balan_cond(z, t, x)},
+    {"undo-nest-rotate-mul-1", (x * (y << (n))) << m, (x << m) * (y << (n + m) % slot_count)},
+    {"undo-nest-rotate-mul-2", ((x << (n)) * y) << m, (x << (n + m) % slot_count) * (y << m)}};
 
   return Ruleset{slot_count, move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
 }
@@ -133,34 +142,37 @@ Ruleset Ruleset::log2_reduct_opt_ruleset(std::size_t slot_count)
 
   vector<Rule> add_rules = get_log_reduct_rules(slot_count, x, TermOpCode::add);
   vector<Rule> add_rules_rotate{
-    {"nest-rotate-add-1", (x << n) + (y << m), (x + (y << (m - n))) << n,
+    {"nest-rotate-add-1", (x << n) + (y << m), ((x << (n - m)) + y) << m,
      [n, m](const Subst subst) {
-       return subst.get(n) < subst.get(m);
-     }},
-    {"nest-rotate-add-2", (x << n) + (y << m), ((x << (n - m)) + y) << m, [n, m](const Subst subst) {
        return subst.get(n) > subst.get(m);
+     }},
+    {"nest-rotate-add-2", (x << n) + (y << m), (x + (y << (m - n))) << n, [n, m](const Subst subst) {
+       return subst.get(n) < subst.get(m);
      }}};
   add_rules.insert(add_rules.end(), add_rules_rotate.begin(), add_rules_rotate.end());
 
   vector<Rule> sub_rules = get_log_reduct_rules(slot_count, x, TermOpCode::sub);
   vector<Rule> sub_rules_rotate{
-    {"nest-rotate-sub-1", (x << n) - (y << m), (x - (y << (m - n))) << n,
+
+    {"nest-rotate-sub-1", (x << n) - (y << m), ((x << (n - m)) - y) << m,
+     [n, m](const Subst subst) {
+       return subst.get(n) > subst.get(m);
+     }},
+    {"nest-rotate-sub-2", (x << n) - (y << m), (x - (y << (m - n))) << n,
      [n, m](const Subst subst) {
        return subst.get(n) < subst.get(m);
      }},
-    {"nest-rotate-sub-2", (x << n) - (y << m), ((x << (n - m)) - y) << m, [n, m](const Subst subst) {
-       return subst.get(n) > subst.get(m);
-     }}};
+  };
   sub_rules.insert(sub_rules.end(), sub_rules_rotate.begin(), sub_rules_rotate.end());
 
   vector<Rule> mul_rules = get_log_reduct_rules(slot_count, x, TermOpCode::mul);
   vector<Rule> mul_rules_rotate{
-    {"nest-rotate-mul-1", (x << n) * (y << m), (x * (y << (m - n))) << n,
+    {"nest-rotate-mul-1", (x << n) * (y << m), ((x << (n - m)) * y) << m,
      [n, m](const Subst subst) {
-       return subst.get(n) < subst.get(m);
-     }},
-    {"nest-rotate-mul-2", (x << n) * (y << m), ((x << (n - m)) * y) << m, [n, m](const Subst subst) {
        return subst.get(n) > subst.get(m);
+     }},
+    {"nest-rotate-mul-2", (x << n) * (y << m), (x * (y << (m - n))) << n, [n, m](const Subst subst) {
+       return subst.get(n) < subst.get(m);
      }}};
   mul_rules.insert(mul_rules.end(), mul_rules_rotate.begin(), mul_rules_rotate.end());
 
@@ -202,17 +214,26 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
     {"part-fold-assoc-add-sub-2", const1 + (x - const2), (const1 - const2) + x},
     {"part-fold-assoc-add-sub-3", (const1 - x) + const2, -x + (const1 + const2)},
     {"part-fold-assoc-add-sub-4", (x - const1) + const2, x + (-const1 + const2)},
-    // {"fold-add-negate-1", x + (-y), x - y},
-    // {"fold-add-negate-2", (-y) + x, x - y},
+    {"fold-add-negate-1", x + (-y), x - y},
+    {"fold-add-negate-2", (-y) + x, x - y},
     {"merge-rotate-add", (x << n) + (y << n), (x + y) << n},
-    {"nest-rotate-add-1", (x << n) + (y << m), (x + (y << (m - n))) << n,
-     [n, m](const Subst subst) {
-       return subst.get(n) < subst.get(m);
-     }},
-    {"nest-rotate-add-2", (x << n) + (y << m), ((x << (n - m)) + y) << m,
+    {"nest-rotate-add-1", (x << n) + (y << m), ((x << (n - m)) + y) << m,
      [n, m](const Subst subst) {
        return subst.get(n) > subst.get(m);
      }},
+    {"nest-rotate-add-2", (x << n) + (y << m), (x + (y << (m - n))) << n,
+     [n, m](const Subst subst) {
+       return subst.get(n) < subst.get(m);
+     }},
+    {"fold-rotation-add-1-1", ((x << n) + y) + (z << n), ((x + z) << n) + y},
+    {"fold-rotation-add-1-2", (y + (x << n)) + (z << n), y + ((x + z) << n)},
+    {"fold-rotation-add-2-1", (z << n) + ((x << n) + y), ((z + x) << n) + y},
+    {"fold-rotation-add-2-2", (z << n) + (y + (x << n)), y + ((z + x) << n)},
+    {"fold-rotation-add-sub-1-1", ((x << n) - y) + (z << n), ((x + z) << n) - y},
+    {"fold-rotation-add-sub-1-2", (y - (x << n)) + (z << n), y - ((x - z) << n)},
+    {"fold-rotation-add-sub-2-1", (z << n) + ((x << n) - y), ((z + x) << n) - y},
+    {"fold-rotation-add-sub-2-2", (z << n) + (y - (x << n)), y + ((z - x) << n)},
+
     {"fact-add-1-1", x * c_y + z * c_y, (x + z) * c_y},
     {"fact-add-1-2", c_x * p_y + c_z * p_y, (c_x + c_z) * p_y},
     {"fact-add-1-3", p_x * p_y + p_z * p_y, (p_x + p_z) * p_y},
@@ -257,17 +278,25 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
     {"part-fold-assoc-sub-add-2", const1 - (x + const2), (const1 - const2) + x},
     {"part-fold-assoc-sub-add-3", (const1 + x) - const2, x + (const1 - const2)},
     {"part-fold-assoc-sub-add-4", (x + const1) - const2, x + (const1 - const2)},
-    // {"fold-sub-negate-1", x - (-y), x + y},
-    // {"fold-sub-negate-2", (-y) - x, x + y},
+    {"fold-sub-negate-1", x - (-y), x + y},
+    {"fold-sub-negate-2", (-y) - x, x + y},
     {"merge-rotate-sub", (x << n) - (y << n), (x - y) << n},
-    {"nest-rotate-sub-1", (x << n) - (y << m), (x - (y << (m - n))) << n,
-     [n, m](const Subst subst) {
-       return subst.get(n) < subst.get(m);
-     }},
-    {"nest-rotate-sub-2", (x << n) - (y << m), ((x << (n - m)) - y) << m,
+    {"nest-rotate-sub-1", (x << n) - (y << m), ((x << (n - m)) - y) << m,
      [n, m](const Subst subst) {
        return subst.get(n) > subst.get(m);
      }},
+    {"nest-rotate-sub-2", (x << n) - (y << m), (x - (y << (m - n))) << n,
+     [n, m](const Subst subst) {
+       return subst.get(n) < subst.get(m);
+     }},
+    {"fold-rotation-sub-1-1", ((x << n) - y) - (z << n), ((x - z) << n) - y},
+    {"fold-rotation-sub-1-2", (y - (x << n)) - (z << n), y - ((x - z) << n)},
+    {"fold-rotation-sub-2-1", (z << n) - ((x << n) - y), ((z - x) << n) - y},
+    {"fold-rotation-sub-2-2", (z << n) - (y - (x << n)), y - ((z - x) << n)},
+    {"fold-rotation-sub-add-1-1", ((x << n) + y) - (z << n), ((x - z) << n) + y},
+    {"fold-rotation-sub-add-1-2", (y + (x << n)) - (z << n), y + ((x - z) << n)},
+    {"fold-rotation-sub-add-2-1", (z << n) - ((x << n) + y), ((z - x) << n) - y},
+    {"fold-rotation-sub-add-2-2", (z << n) - (y + (x << n)), -y + ((z - x) << n)},
     {"fact-sub-1-1", x * c_y - z * c_y, (x - z) * c_y},
     {"fact-sub-1-2", c_x * p_y - c_z * p_y, (c_x - c_z) * p_y},
     {"fact-sub-1-3", p_x * p_y - p_z * p_y, (p_x - p_z) * p_y},
@@ -311,29 +340,70 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
     {"part-fold-rotate-sub-2", (const1 - x) << n, (const1 << n) - (x << n)},
     {"part-fold-rotate-mul-1", (x * const1) << n, (x << n) * (const1 << n)},
     {"part-fold-rotate-mul-2", (const1 * x) << n, (const1 << n) * (x << n)},
-    {"rev-nest-rotate-add-1", (x + (y << n)) << m, (x << m) + y,
+    {"nest-large-steps-rotate-add-1-1", (x + (y << n)) << m, (x << m) + (y << (n + m) % slot_count),
      [n, m, slot_count](const Subst subst) {
-       return (subst.get(n) + subst.get(m)) % slot_count == 0;
+       return subst.get(n) + subst.get(m) >= slot_count;
      }},
-    {"rev-nest-rotate-add-2", ((x << n) + y) << m, x + (y << m),
+    {"nest-large-steps-rotate-add-1-2", ((y << n) + x) << m, (y << (n + m) % slot_count) + (x << m),
      [n, m, slot_count](const Subst subst) {
-       return (subst.get(n) + subst.get(m)) % slot_count == 0;
+       return subst.get(n) + subst.get(m) >= slot_count;
      }},
-    {"rev-nest-rotate-sub-1", (x - (y << n)) << m, (x << m) - y,
+    {"nest-large-steps-rotate-add-2-1", ((x + (y << n)) + z) << m, (y << (n + m) % slot_count) + ((x + z) << m),
      [n, m, slot_count](const Subst subst) {
-       return (subst.get(n) + subst.get(m)) % slot_count == 0;
+       return subst.get(n) + subst.get(m) >= slot_count;
      }},
-    {"rev-nest-rotate-sub-2", ((x << n) - y) << m, x - (y << m),
+    {"nest-large-steps-rotate-add-2-2", (z + ((y << n) + x)) << m, ((z + x) << m) + (y << (n + m) % slot_count),
      [n, m, slot_count](const Subst subst) {
-       return (subst.get(n) + subst.get(m)) % slot_count == 0;
+       return subst.get(n) + subst.get(m) >= slot_count;
      }},
-    {"rev-nest-rotate-mul-1", (x * (y << n)) << m, (x << m) * y,
+    {"nest-large-steps-rotate-sub-1-1", (x - (y << n)) << m, (x << m) - (y << (n + m) % slot_count),
      [n, m, slot_count](const Subst subst) {
-       return (subst.get(n) + subst.get(m)) % slot_count == 0;
+       return subst.get(n) + subst.get(m) >= slot_count;
      }},
-    {"rev-nest-rotate-mul-2", ((x << n) * y) << m, x * (y << m),
+    {"nest-large-steps-rotate-sub-1-2", ((y << n) - x) << m, (y << (n + m) % slot_count) - (x << m),
      [n, m, slot_count](const Subst subst) {
-       return (subst.get(n) + subst.get(m)) % slot_count == 0;
+       return subst.get(n) + subst.get(m) >= slot_count;
+     }},
+    {"nest-large-steps-rotate-sub-2-1", ((x - (y << n)) - z) << m, (y << (n + m) % slot_count) - ((x - z) << m),
+     [n, m, slot_count](const Subst subst) {
+       return subst.get(n) + subst.get(m) >= slot_count;
+     }},
+    {"nest-large-steps-rotate-sub-2-2", (z - ((y << n) - x)) << m, ((z + x) << m) - (y << (n + m) % slot_count),
+     [n, m, slot_count](const Subst subst) {
+       return subst.get(n) + subst.get(m) >= slot_count;
+     }},
+
+    {"nest-large-steps-rotate-add-sub-1-1", ((x + (y << n)) - z) << m, (y << (n + m) % slot_count) + ((x - z) << m),
+     [n, m, slot_count](const Subst subst) {
+       return subst.get(n) + subst.get(m) >= slot_count;
+     }},
+    {"nest-large-steps-rotate-add-sub-1-2", ((x - (y << n)) + z) << m, -(y << (n + m) % slot_count) + ((x + z) << m),
+     [n, m, slot_count](const Subst subst) {
+       return subst.get(n) + subst.get(m) >= slot_count;
+     }},
+    {"nest-large-steps-rotate-add-sub-2-1", (z + ((y << n) - x)) << m, ((z - x) << m) + (y << (n + m) % slot_count),
+     [n, m, slot_count](const Subst subst) {
+       return subst.get(n) + subst.get(m) >= slot_count;
+     }},
+    {"nest-large-steps-rotate-add-sub-2-2", (z - ((y << n) + x)) << m, ((z - x) << m) - (y << (n + m) % slot_count),
+     [n, m, slot_count](const Subst subst) {
+       return subst.get(n) + subst.get(m) >= slot_count;
+     }},
+    {"nest-large-steps-rotate-mul-1-1", (x * (y << n)) << m, (x << m) * (y << (n + m) % slot_count),
+     [n, m, slot_count](const Subst subst) {
+       return subst.get(n) + subst.get(m) >= slot_count;
+     }},
+    {"nest-large-steps-rotate-mul-1-2", ((y << n) * x) << m, (y << (n + m) % slot_count) * (x << m),
+     [n, m, slot_count](const Subst subst) {
+       return subst.get(n) + subst.get(m) >= slot_count;
+     }},
+    {"nest-large-steps-rotate-mul-2-1", ((x * (y << n)) * z) << m, (y << (n + m) % slot_count) * ((x * z) << m),
+     [n, m, slot_count](const Subst subst) {
+       return subst.get(n) + subst.get(m) >= slot_count;
+     }},
+    {"nest-large-steps-rotate-mul-2-2", (z * ((y << n) * x)) << m, ((z * x) << m) * (y << (n + m) % slot_count),
+     [n, m, slot_count](const Subst subst) {
+       return subst.get(n) + subst.get(m) >= slot_count;
      }},
   };
 
@@ -345,28 +415,48 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
     {"mul-m1-1", x * m_one, -x},
     {"mul-m1-2", m_one * x, -x},
     {"mul-to-square", x * x, square(x)},
-    {"part-fold-dist-add-1", const1 * (const2 + x), const1 * const2 + const1 * x},
-    {"part-fold-dist-add-2", const1 * (x + const2), const1 * x + const1 * const2},
-    {"part-fold-dist-add-3", (const1 + x) * const2, const1 * const2 + x * const2},
-    {"part-fold-dist-add-4", (x + const1) * const2, x * const2 + const1 * const2},
-    {"part-fold-dist-sub-1", const1 * (const2 - x), const1 * const2 - const1 * x},
-    {"part-fold-dist-sub-2", const1 * (x - const2), const1 * x - const1 * const2},
-    {"part-fold-dist-sub-3", (const1 - x) * const2, const1 * const2 - x * const2},
-    {"part-fold-dist-sub-4", (x - const1) * const2, x * const2 - const1 * const2},
-    {"part-fold-dist-sub-4", (x - const1) * const2, x * const2 - const1 * const2},
+    {"part-fold-dist-add-1-1", const1 * (const2 + x), const1 * const2 + const1 * x},
+    {"part-fold-dist-add-1-2", const1 * (x + const2), const1 * x + const1 * const2},
+    {"part-fold-dist-add-1-3", (const1 + x) * const2, const1 * const2 + x * const2},
+    {"part-fold-dist-add-1-4", (x + const1) * const2, x * const2 + const1 * const2},
+    {"part-fold-dist-add-2-1-1", const1 * ((x * const2) + y), x * (const1 * const2) + const1 * y},
+    {"part-fold-dist-add-2-1-2", const1 * ((const2 * x) + y), (const1 * const2) * x + const1 * y},
+    {"part-fold-dist-add-2-1-3", const1 * (y + (x * const2)), const1 * y + x * (const1 * const2)},
+    {"part-fold-dist-add-2-1-4", const1 * (y + (const2 * x)), const1 * y + (const1 * const2) * x},
+    {"part-fold-dist-add-2-2-1", ((x * const2) + y) * const1, x * (const2 * const1) + y * const1},
+    {"part-fold-dist-add-2-2-2", ((const2 * x) + y) * const1, (const2 * const1) * x + y * const1},
+    {"part-fold-dist-add-2-2-3", (y + (x * const2)) * const1, y * const1 + x * (const2 * const1)},
+    {"part-fold-dist-add-2-2-4", (y + (const2 * x)) * const1, y * const1 + (const2 * const1) * x},
+    {"part-fold-dist-sub-1-1", const1 * (const2 - x), const1 * const2 - const1 * x},
+    {"part-fold-dist-sub-1-2", const1 * (x - const2), const1 * x - const1 * const2},
+    {"part-fold-dist-sub-1-3", (const1 - x) * const2, const1 * const2 - x * const2},
+    {"part-fold-dist-sub-1-4", (x - const1) * const2, x * const2 - const1 * const2},
+    {"part-fold-dist-sub-2-1-1", const1 * ((x * const2) - y), x * (const1 * const2) - const1 * y},
+    {"part-fold-dist-sub-2-1-2", const1 * ((const2 * x) - y), (const1 * const2) * x - const1 * y},
+    {"part-fold-dist-sub-2-1-3", const1 * (y - (x * const2)), const1 * y - x * (const1 * const2)},
+    {"part-fold-dist-sub-2-1-4", const1 * (y - (const2 * x)), const1 * y - (const1 * const2) * x},
+    {"part-fold-dist-sub-2-2-1", ((x * const2) - y) * const1, x * (const2 * const1) - y * const1},
+    {"part-fold-dist-sub-2-2-2", ((const2 * x) - y) * const1, (const2 * const1) * x - y * const1},
+    {"part-fold-dist-sub-2-2-3", (y - (x * const2)) * const1, y * const1 - x * (const2 * const1)},
+    {"part-fold-dist-sub-2-2-4", (y - (const2 * x)) * const1, y * const1 - (const2 * const1) * x},
     {"part-fold-assoc-mul-1", const1 * (const2 * x), (const1 * const2) * x},
     {"part-fold-assoc-mul-2", const1 * (x * const2), (const1 * const2) * x},
     {"part-fold-assoc-mul-3", (const1 * x) * const2, x * (const1 * const2)},
     {"part-fold-assoc-mul-4", (x * const1) * const2, x * (const1 * const2)},
     {"merge-rotate-mul", (x << n) * (y << n), (x * y) << n},
-    {"nest-rotate-mul-1", (x << n) * (y << m), (x * (y << (m - n))) << n,
+    {"nest-rotate-mul-1", (x << n) * (y << m), ((x << (n - m)) * y) << m,
+     [n, m](const Subst subst) {
+       return subst.get(n) > subst.get(m);
+     }},
+    {"nest-rotate-mul-2", (x << n) * (y << m), (x * (y << (m - n))) << n,
      [n, m](const Subst subst) {
        return subst.get(n) < subst.get(m);
      }},
-    {"nest-rotate-mul-2", (x << n) * (y << m), ((x << (n - m)) * y) << m, [n, m](const Subst subst) {
-       return subst.get(n) > subst.get(m);
-     }}};
-
+    {"fold-rotation-mul-1-1", ((x << n) * y) * (z << n), ((x * z) << n) * y},
+    {"fold-rotation-mul-1-2", (y - (x << n)) * (z << n), y * ((x * z) << n)},
+    {"fold-rotation-mul-2-1", (z << n) * ((x << n) * y), ((z * x) << n) * y},
+    {"fold-rotation-mul-2-2", (z << n) * (y * (x << n)), y * ((z * x) << n)},
+  };
   return Ruleset{slot_count, move(add_rules), move(sub_rules), move(negate_rules), move(rotate_rules), {}, mul_rules};
 }
 
