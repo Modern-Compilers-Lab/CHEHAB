@@ -57,7 +57,7 @@ Ciphertext &Ciphertext::operator=(Ciphertext &&other)
   else
   {
     id_ = other.id_;
-    shape_ = other.shape_;
+    shape_ = move(other.shape_);
     example_val_ = move(other.example_val_);
   }
   return *this;

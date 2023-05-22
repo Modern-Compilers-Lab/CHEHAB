@@ -12,9 +12,12 @@ using namespace std;
 
 namespace fheco::util
 {
-void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool show_key, bool impose_operands_order)
+void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool id_as_label, bool show_key, bool impose_operands_order)
 {
-  auto make_node_label = [&func](const ir::Term *term) -> string {
+  auto make_node_label = [id_as_label, &func](const ir::Term *term) -> string {
+    if (id_as_label)
+      return "$" + to_string(term->id());
+
     // operation term
     if (term->is_operation())
     {

@@ -48,6 +48,8 @@ public:
 
   const Ciphertext &set_output(std::string label) const;
 
+  inline void set_scalar() { set_shape({}); }
+
   void set_shape(std::vector<std::size_t> shape);
 
   inline std::size_t id() const { return id_; }

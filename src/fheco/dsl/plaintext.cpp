@@ -37,7 +37,10 @@ Plaintext::Plaintext(PackedVal packed_val, vector<size_t> shape) : Plaintext(mov
   Compiler::active_func()->init_const(*this, move(packed_val));
 }
 
-Plaintext::Plaintext(integer scalar_val) : Plaintext(vector<size_t>{Compiler::active_func()->slot_count()})
+Plaintext::Plaintext(integer scalar_val)
+  : Plaintext(
+      Compiler::scalar_vector_shape_enabled() ? vector<size_t>{Compiler::active_func()->slot_count()}
+                                              : vector<size_t>{})
 {
   PackedVal packed_val(Compiler::active_func()->slot_count(), scalar_val);
   example_val_ = packed_val;
@@ -64,13 +67,13 @@ Plaintext &Plaintext::operator=(Plaintext &&other)
   else
   {
     id_ = other.id_;
-    shape_ = other.shape_;
+    shape_ = move(other.shape_);
     example_val_ = move(other.example_val_);
   }
   return *this;
 }
 
-Plaintext Plaintext::operator[](size_t idx) const
+const Plaintext Plaintext::operator[](size_t idx) const
 {
   size_t actual_dim = shape_.size() - idx_.size();
   if (actual_dim == 0)
@@ -87,7 +90,7 @@ Plaintext Plaintext::operator[](size_t idx) const
 Plaintext &Plaintext::operator[](size_t idx)
 {
   size_t actual_dim = shape_.size() - idx_.size();
-  if (actual_dim == 1)
+  if (actual_dim == 0)
     throw invalid_argument("subscript on dimension 0");
 
   if (idx < 0 || idx > shape_[shape_.size() - actual_dim] - 1)

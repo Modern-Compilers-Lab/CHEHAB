@@ -111,7 +111,7 @@ void ClearDataEval::reduce(PackedVal &packed_val) const
     }
   }
   // !delayed_reduction_
-  else
+  else if (!delayed_reduction_)
   {
     for (auto it = packed_val.begin(); it != packed_val.end(); ++it)
     {
@@ -163,8 +163,11 @@ void ClearDataEval::negate(const PackedVal &arg, PackedVal &dest) const
 void ClearDataEval::rotate(const PackedVal &arg, int steps, PackedVal &dest) const
 {
   dest.resize(slot_count_);
-  steps = static_cast<int>(steps % slot_count_);
-  for (int i = 0; i < slot_count_; ++i)
+  int64_t slot_count = static_cast<int64_t>(slot_count_);
+  steps %= slot_count;
+  if (steps < 0)
+    steps += slot_count;
+  for (size_t i = 0; i < slot_count_; ++i)
     dest[i] = arg[(i + steps) % slot_count_];
 }
 

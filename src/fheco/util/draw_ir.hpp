@@ -11,5 +11,6 @@ class Func;
 namespace fheco::util
 {
 void draw_ir(
-  const std::shared_ptr<ir::Func> &func, std::ostream &os, bool show_key = false, bool impose_operands_order = false);
+  const std::shared_ptr<ir::Func> &func, std::ostream &os, bool id_as_label = false, bool show_key = false,
+  bool impose_operands_order = false);
 } // namespace fheco::util

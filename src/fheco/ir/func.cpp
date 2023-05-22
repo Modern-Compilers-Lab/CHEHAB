@@ -16,7 +16,7 @@ Func::Func(
   string name, size_t slot_count, integer modulus, bool signedness, bool need_full_cyclic_rotation,
   bool delayed_reduction, bool overflow_warnings)
   : name_{move(name)}, slot_count_{slot_count}, need_full_cyclic_rotation_{need_full_cyclic_rotation},
-    clear_data_evaluator_{slot_count_, modulus, signedness, delayed_reduction, overflow_warnings}
+    clear_data_eval_{slot_count_, modulus, signedness, delayed_reduction, overflow_warnings}
 {
   if (need_full_cyclic_rotation && !util::is_power_of_two(slot_count_))
     throw invalid_argument("when need_full_cyclic_rotation, slot_count must be a power of two");
@@ -36,6 +36,8 @@ void Func::init_input(T &input, string label)
 template <typename T>
 void Func::init_const(T &constant, PackedVal packed_val)
 {
+  clear_data_eval_.adjust_packed_val(packed_val);
+  constant.example_val_ = packed_val;
   constant.id_ = insert_const_term(move(packed_val))->id();
 }
 
@@ -60,7 +62,7 @@ void Func::operate_unary(OpCode op_code, const TArg &arg, TDest &dest)
     else
     {
       PackedVal dest_example_val;
-      clear_data_evaluator_.operate_unary(op_code, *arg.example_val(), dest_example_val);
+      clear_data_eval_.operate_unary(op_code, *arg.example_val(), dest_example_val);
       dest.example_val_ = move(dest_example_val);
     }
   }
@@ -85,7 +87,7 @@ void Func::operate_binary(OpCode op_code, const TArg1 &arg1, const TArg2 &arg2, 
   if (arg1.example_val() && arg2.example_val())
   {
     PackedVal dest_example_val;
-    clear_data_evaluator_.operate_binary(op_code, *arg1.example_val(), *arg2.example_val(), dest_example_val);
+    clear_data_eval_.operate_binary(op_code, *arg1.example_val(), *arg2.example_val(), dest_example_val);
     dest.example_val_ = move(dest_example_val);
   }
 
@@ -124,7 +126,7 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
         return data_flow_.insert_const(const_vals[0], inserted);
 
       PackedVal dest_val;
-      clear_data_evaluator_.operate(op_code, const_vals, dest_val);
+      clear_data_eval_.operate(op_code, const_vals, dest_val);
       return data_flow_.insert_const(dest_val, inserted);
     }
   }

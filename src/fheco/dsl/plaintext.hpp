@@ -45,11 +45,13 @@ public:
 
   Plaintext &operator=(Plaintext &&other);
 
-  Plaintext operator[](std::size_t idx) const;
+  const Plaintext operator[](std::size_t idx) const;
 
   Plaintext &operator[](std::size_t idx);
 
   const Plaintext &set_output(std::string label) const;
+
+  inline void set_scalar() { set_shape({}); }
 
   void set_shape(std::vector<std::size_t> shape);
 

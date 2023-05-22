@@ -86,14 +86,13 @@ ir::IOTermsInfo evaluate_on_clear(const shared_ptr<ir::Func> &func, const ir::IO
       }
       else
         throw logic_error("unhandled clear data evaluation for operations with arity > 2");
-
-      if (auto output_info = func->data_flow().get_output_info(term); output_info)
-      {
-        if (auto term_val_it = temps_values.find(term); term_val_it != temps_values.end())
-          outputs_values.emplace(term, ir::ParamTermInfo{output_info->label_, term_val_it->second});
-        else
-          cerr << "could not compute output term (output id=" << term->id() << ")\n";
-      }
+    }
+    if (auto output_info = func->data_flow().get_output_info(term); output_info)
+    {
+      if (auto term_val_it = temps_values.find(term); term_val_it != temps_values.end())
+        outputs_values.emplace(term, ir::ParamTermInfo{output_info->label_, term_val_it->second});
+      else
+        cerr << "could not compute output term (output id=" << term->id() << ")\n";
     }
   }
   return outputs_values;

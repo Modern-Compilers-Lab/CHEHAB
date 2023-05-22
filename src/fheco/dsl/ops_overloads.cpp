@@ -2,6 +2,7 @@
 #include "fheco/dsl/ops_overloads.hpp"
 #include "fheco/ir/op_code.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <tuple>
 #include <vector>
 
@@ -216,8 +217,10 @@ Ciphertext rotate(const Ciphertext &arg, int steps)
   if (arg.idx().size())
     throw invalid_argument("subscript read must be performed on const variables");
 
-  // this should work since slot_count is a power of 2
-  steps = static_cast<int>(steps % Compiler::active_func()->slot_count());
+  int64_t slot_count = static_cast<int64_t>(Compiler::active_func()->slot_count());
+  steps %= slot_count;
+  if (steps < 0)
+    steps += slot_count;
   Ciphertext dest{};
   Compiler::active_func()->operate_unary(ir::OpCode::rotate(steps), arg, dest);
   return dest;
@@ -228,8 +231,10 @@ Plaintext rotate(const Plaintext &arg, int steps)
   if (arg.idx().size())
     throw invalid_argument("subscript read must be performed on const variables");
 
-  // this should work since slot_count is a power of 2
-  steps = static_cast<int>(steps % Compiler::active_func()->slot_count());
+  int64_t slot_count = static_cast<int64_t>(Compiler::active_func()->slot_count());
+  steps %= slot_count;
+  if (steps < 0)
+    steps += slot_count;
   Plaintext dest{};
   Compiler::active_func()->operate_unary(ir::OpCode::rotate(steps), arg, dest);
   return dest;

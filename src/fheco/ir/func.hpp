@@ -77,7 +77,7 @@ public:
 
   inline const std::size_t &slot_count() const { return slot_count_; }
 
-  inline const util::ClearDataEval &clear_data_evaluator() const { return clear_data_evaluator_; }
+  inline const util::ClearDataEval &clear_data_evaluator() const { return clear_data_eval_; }
 
   inline bool need_full_cyclic_rotation() const { return need_full_cyclic_rotation_; }
 
@@ -90,7 +90,7 @@ private:
 
   bool need_full_cyclic_rotation_;
 
-  util::ClearDataEval clear_data_evaluator_;
+  util::ClearDataEval clear_data_eval_;
 
   Expr data_flow_{};
 };
