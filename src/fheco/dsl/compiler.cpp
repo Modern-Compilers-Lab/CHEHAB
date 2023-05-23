@@ -30,35 +30,34 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
   // clog << "remove_dead_code\n";
   func->remove_dead_code();
 
-  // clog << "log2_reduct_prep_trs\n";
-  // trs::TRS log2_reduct_prep_trs{func, trs::Ruleset::log2_reduct_prep_ruleset(func->slot_count())};
-  // log2_reduct_prep_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false);
-
-  // clog << "log2_reduct_trs\n";
-  // trs::TRS log2_reduct_trs{func, trs::Ruleset::log2_reduct_opt_ruleset(func->slot_count())};
-  // size_t rel_slot_count = func->slot_count();
-  // while (rel_slot_count > 1)
-  // {
-  //   bool did_rewrite = log2_reduct_trs.run(trs::TRS::RewriteHeuristic::top_down, max_iter, false);
-  //   if (!did_rewrite)
-  //     break;
-
-  //   rel_slot_count >>= 1;
-  // }
-
+  clog << "depth_opt_trs\n";
   trs::TRS depth_opt_trs{func, trs::Ruleset::depth_opt_ruleset(func->slot_count())};
-  trs::TRS ops_opt_trs{func, trs::Ruleset::ops_type_number_opt_ruleset(func->slot_count())};
-  for (size_t i = 0; i < max_passes; ++i)
+  depth_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
+
+  clog << "log2_reduct_trs\n";
+  trs::TRS log2_reduct_trs{func, trs::Ruleset::log2_reduct_opt_ruleset(func->slot_count())};
+  size_t rel_slot_count = func->slot_count();
+  while (rel_slot_count > 2)
   {
-    clog << "depth_opt_trs\n";
-    depth_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
+    bool did_rewrite = log2_reduct_trs.run(trs::TRS::RewriteHeuristic::top_down, max_iter, false, true);
+    if (!did_rewrite)
+      break;
 
-    clog << "ops_opt_trs\n";
-    ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
-
-    clog << "cse_commut\n";
-    passes::cse_commut(func);
+    rel_slot_count >>= 1;
   }
+
+  // trs::TRS ops_opt_trs{func, trs::Ruleset::ops_type_number_opt_ruleset(func->slot_count())};
+  // for (size_t i = 0; i < max_passes; ++i)
+  // {
+  //   clog << "depth_opt_trs\n";
+  //   depth_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
+
+  //   clog << "ops_opt_trs\n";
+  //   ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
+
+  //   clog << "cse_commut\n";
+  //   passes::cse_commut(func);
+  // }
 
   // clog << "convert_scalar_mul_to_add\n";
   // passes::convert_scalar_mul_to_add(func, 1 << 30);
