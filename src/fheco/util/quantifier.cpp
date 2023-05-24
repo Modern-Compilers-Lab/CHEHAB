@@ -30,21 +30,21 @@ void Quantifier::compute_he_depth_info()
 
     while (!dfs.empty())
     {
-      auto [top_term, top_ctxt_depth_info] = dfs.top();
+      auto [top_term, top_ctxt_info] = dfs.top();
       dfs.pop();
       if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
       {
         auto [it, inserted] = ctxt_leaves_depth_info_.emplace(top_term, CtxtTermDepthInfo{0, 0});
-        int new_xdepth = max(it->second.xdepth_, top_ctxt_depth_info.xdepth_);
-        int new_depth = max(it->second.depth_, top_ctxt_depth_info.depth_);
+        int new_xdepth = max(it->second.xdepth_, top_ctxt_info.xdepth_);
+        int new_depth = max(it->second.depth_, top_ctxt_info.depth_);
         it->second = CtxtTermDepthInfo{new_xdepth, new_depth};
         continue;
       }
-      int operands_xdepth = top_ctxt_depth_info.xdepth_;
-      int operands_depth = top_ctxt_depth_info.depth_ + 1;
+      int operands_xdepth = top_ctxt_info.xdepth_;
+      int operands_depth = top_ctxt_info.depth_ + 1;
       if (top_term->op_code().type() == ir::OpCode::Type::mul || top_term->op_code().type() == ir::OpCode::Type::square)
         ++operands_xdepth;
-      for (auto operand : top_term->operands())
+      for (const auto operand : top_term->operands())
       {
         if (operand->type() == ir::Term::Type::cipher)
           dfs.push({operand, CtxtTermDepthInfo{operands_xdepth, operands_depth}});

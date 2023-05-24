@@ -3,7 +3,6 @@
 #include <stack>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <utility>
 
 using namespace std;
@@ -39,69 +38,10 @@ bool operator==(TermMatcherType term_matcher_type, ir::Term::Type term_type)
   }
 }
 
-int64_t compute_xdepth(ir::Term *term)
-{
-  stack<pair<ir::Term *, int64_t>> dfs;
-  dfs.push({term, 0});
-  TermsMetric ctxt_leaves_xdepth;
-  int64_t max_xdepth = 0;
-  while (!dfs.empty())
-  {
-    auto [top_term, xdepth] = dfs.top();
-    dfs.pop();
-    if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
-    {
-      auto [it, inserted] = ctxt_leaves_xdepth.emplace(top_term, 0);
-      int64_t new_xdepth = max(it->second, xdepth);
-      it->second = new_xdepth;
-      if (new_xdepth > max_xdepth)
-        max_xdepth = new_xdepth;
-      continue;
-    }
-    int64_t operands_xdepth = xdepth + 1;
-    if (top_term->op_code().type() == ir::OpCode::Type::mul || top_term->op_code().type() == ir::OpCode::Type::square)
-      ++operands_xdepth;
-    for (auto operand : top_term->operands())
-    {
-      if (operand->type() == ir::Term::Type::cipher)
-        dfs.push({operand, operands_xdepth});
-    }
-  }
-  return max_xdepth;
-}
-
-int64_t compute_depth(ir::Term *term)
-{
-  stack<pair<ir::Term *, int64_t>> dfs;
-  dfs.push({term, 0});
-  TermsMetric ctxt_leaves_depth;
-  int64_t max_depth = 0;
-  while (!dfs.empty())
-  {
-    auto [top_term, depth] = dfs.top();
-    dfs.pop();
-    if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
-    {
-      auto [it, inserted] = ctxt_leaves_depth.emplace(top_term, 0);
-      int64_t new_depth = max(it->second, depth);
-      it->second = new_depth;
-      if (new_depth > max_depth)
-        max_depth = new_depth;
-      continue;
-    }
-    for (auto operand : top_term->operands())
-    {
-      if (operand->type() == ir::Term::Type::cipher)
-        dfs.push({operand, depth + 1});
-    }
-  }
-  return max_depth;
-}
-
-int64_t count_ctxt_leaves(ir::Term *term, TermsMetric &dp)
+void count_ctxt_leaves(ir::Term *term, TermsMetric &dp)
 {
   if (term->type() != ir::Term::Type::cipher)
-    return 0;
+    return;
 
   struct Call
   {
@@ -151,7 +91,5 @@ int64_t count_ctxt_leaves(ir::Term *term, TermsMetric &dp)
   }
   for (auto e : interm_results)
     dp.emplace(e.first, e.second);
-
-  return interm_results.at(term);
 }
 } // namespace fheco::trs
