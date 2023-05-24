@@ -509,6 +509,12 @@ void Quantifier::print_terms_classes_info(ostream &os) const
 
 void Quantifier::print_global_metrics(std::ostream &os) const
 {
+  if (!global_metrics_)
+  {
+    os << "global_metrics_ not computed\n";
+    return;
+  }
+
   os << "circuit_cost: " << circuit_cost_ << '\n';
   os << "rotation_keys_total_size_: " << rotation_keys_total_size_ / 1024.0 << " MB (" << rotation_keys_count_
      << " keys)\n";

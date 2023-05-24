@@ -96,7 +96,7 @@ public:
 
   Quantifier &operator-=(const Quantifier &other);
 
-  void print_info(std::ostream &os, bool depth_details);
+  void print_info(std::ostream &os, bool depth_details = false);
 
   void print_he_depth_info(std::ostream &os, bool details) const;
 
