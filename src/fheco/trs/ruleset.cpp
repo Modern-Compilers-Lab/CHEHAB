@@ -18,6 +18,8 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
   TermMatcher y{TermMatcherType::term, "y"};
   TermMatcher z{TermMatcherType::term, "z"};
   TermMatcher t{TermMatcherType::term, "t"};
+  TermMatcher u{TermMatcherType::term, "u"};
+  TermMatcher v{TermMatcherType::term, "v"};
 
   TermMatcher zero{"zero", PackedVal(slot_count, 0)};
   TermMatcher one{"one", PackedVal(slot_count, 1)};
@@ -27,86 +29,94 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
   OpGenMatcher n{"n"};
   OpGenMatcher m{"m"};
 
-  auto assoc_balan_cond = [](const TermMatcher &x, const TermMatcher &y, const TermMatcher &t) {
-    return [x, y, t](const Subst &subst) {
-      TermsMetric dp;
-      auto x_term = subst.get(x);
-      auto y_term = subst.get(y);
-      auto t_term = subst.get(t);
-
-      int64_t x_ctxt_leaves_count = 0;
-      if (x_term->type() == ir::Term::Type::cipher)
-      {
-        count_ctxt_leaves(x_term, dp);
-        x_ctxt_leaves_count = dp.at(x_term);
-      }
-
-      int64_t y_ctxt_leaves_count = 0;
-      if (y_term->type() == ir::Term::Type::cipher)
-      {
-        count_ctxt_leaves(y_term, dp);
-        y_ctxt_leaves_count = dp.at(y_term);
-      }
-
-      int64_t t_ctxt_leaves_count = 0;
-      if (t_term->type() == ir::Term::Type::cipher)
-      {
-        count_ctxt_leaves(t_term, dp);
-        t_ctxt_leaves_count = dp.at(t_term);
-      }
-
-      return t_ctxt_leaves_count - x_ctxt_leaves_count - y_ctxt_leaves_count < 0;
-    };
-  };
-
   vector<Rule> add_rules{
     {"add0-1", x + zero, x},
     {"add0-2", zero + x, x},
-    {"assoc-balan-add-1-1", ((x + y) + z) + t, (x + y) + (z + t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-add-1-2", (z + (x + y)) + t, (z + x) + (y + t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-add-2-1", x + (y + (z + t)), (x + y) + (z + t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-add-2-2", x + ((z + t) + y), (x + z) + (t + y), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-add-sub-1-1-1", ((x + y) - z) + t, (x + y) - (z - t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-add-sub-1-1-2", (z - (x + y)) + t, (z - x) - (y - t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-add-sub-1-2-1", ((x - y) + z) + t, (x - y) + (z + t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-add-sub-1-2-2", (z + (x - y)) + t, (z + x) - (y - t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-add-sub-1-3-1", ((x - y) - z) + t, (x - y) - (z - t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-add-sub-1-3-2", (z - (x - y)) + t, (z - x) + (y + t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-add-sub-2-1-1", x + (y - (z + t)), (x + y) - (z + t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-add-sub-2-1-2", x + ((z + t) - y), (x + z) + (t - y), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-add-sub-2-2-1", x + (y + (z - t)), (x + y) + (z - t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-add-sub-2-2-2", x + ((z - t) + y), (x + z) - (t - y), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-add-sub-2-3-1", x + (y - (z - t)), (x + y) - (z - t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-add-sub-2-3-2", x + ((z - t) - y), (x + z) - (t + y), assoc_balan_cond(z, t, x)},
-    {"undo-nest-rotate-add-1", (x + (y << (n))) << m, (x << m) + (y << (n + m) % slot_count)},
-    {"undo-nest-rotate-add-2", ((x << (n)) + y) << m, (x << (n + m) % slot_count) + (y << m)}};
+    {"assoc-balan-add-1", ((x + y) + z) + t, (x + y) + (z + t), &compute_depth},
+    {"assoc-balan-add-2", (z + (x + y)) + t, (z + x) + (y + t), &compute_depth},
+    {"assoc-balan-add-3", t + ((x + y) + z), (t + x) + (y + z), &compute_depth},
+    {"assoc-balan-add-4", t + (z + (x + y)), (t + z) + (x + y), &compute_depth},
+    {"assoc-balan-add-rotate-1-1", (((x + y) + ((z + t) << n)) + u) + v, ((z + t) << n) + ((x + y) + (u + v)),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-2", ((((z + t) << n) + (x + y)) + u) + v, ((z + t) << n) + ((x + y) + (u + v)),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-3", (((z + t) << n) + ((x + y) + u)) + v, ((z + t) << n) + ((x + y) + (u + v)),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-4", (((z + t) << n) + (u + (x + y))) + v, ((z + t) << n) + ((u + x) + (y + v)),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-5", (u + ((x + y) + ((z + t) << n))) + v, ((z + t) << n) + ((u + x) + (y + v)),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-6", (((u + (x + y)) + ((z + t) << n))) + v, ((z + t) << n) + ((u + x) + (y + v)),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-7", ((((x + y) + u) + ((z + t) << n))) + v, ((z + t) << n) + ((x + y) + (u + v)),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-8", (u + (((z + t) << n) + (x + y))) + v, ((z + t) << n) + ((u + x) + (y + v)),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-9", v + (((x + y) + ((z + t) << n)) + u), ((v + x) + (y + u)) + ((z + t) << n),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-10", v + ((((z + t) << n) + (x + y)) + u), ((v + x) + (y + u)) + ((z + t) << n),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-11", v + (((z + t) << n) + ((x + y) + u)), ((v + x) + (y + u)) + ((z + t) << n),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-12", v + (((z + t) << n) + (u + (x + y))), ((v + u) + (x + y)) + ((z + t) << n),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-13", v + (u + ((x + y) + ((z + t) << n))), ((v + u) + (x + y)) + ((z + t) << n),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-14", v + ((u + (x + y)) + ((z + t) << n)), ((v + u) + (x + y)) + ((z + t) << n),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-15", v + (((x + y) + u) + ((z + t) << n)), ((v + x) + (y + u)) + ((z + t) << n),
+     &compute_depth},
+    {"assoc-balan-add-rotate-1-16", v + (u + (((z + t) << n) + (x + y))), ((v + u) + (x + y)) + ((z + t) << n),
+     &compute_depth},
+    {"assoc-balan-add-rotate-2-1", ((x << n) + y) + z, (x << n) + (y + z), &compute_depth},
+    {"assoc-balan-add-rotate-2-2", (y + (x << n)) + z, (x << n) + (y + z), &compute_depth},
+    {"assoc-balan-add-rotate-2-3", z + ((x << n) + y), (z + y) + (x << n), &compute_depth},
+    {"assoc-balan-add-rotate-2-4", z + (y + (x << n)), (z + y) + (x << n), &compute_depth},
+    {"assoc-balan-add-sub-1-1-1", ((x + y) - z) + t, (x + y) - (z - t), &compute_depth},
+    {"assoc-balan-add-sub-1-1-2", (z - (x + y)) + t, (z - x) - (y - t), &compute_depth},
+    {"assoc-balan-add-sub-1-2-1", ((x - y) + z) + t, (x - y) + (z + t), &compute_depth},
+    {"assoc-balan-add-sub-1-2-2", (z + (x - y)) + t, (z + x) - (y - t), &compute_depth},
+    {"assoc-balan-add-sub-1-3-1", ((x - y) - z) + t, (x - y) - (z - t), &compute_depth},
+    {"assoc-balan-add-sub-1-3-2", (z - (x - y)) + t, (z - x) + (y + t), &compute_depth},
+    {"assoc-balan-add-sub-2-1-1", x + (y - (z + t)), (x + y) - (z + t), &compute_depth},
+    {"assoc-balan-add-sub-2-1-2", x + ((z + t) - y), (x + z) + (t - y), &compute_depth},
+    {"assoc-balan-add-sub-2-2-1", x + (y + (z - t)), (x + y) + (z - t), &compute_depth},
+    {"assoc-balan-add-sub-2-2-2", x + ((z - t) + y), (x + z) - (t - y), &compute_depth},
+    {"assoc-balan-add-sub-2-3-1", x + (y - (z - t)), (x + y) - (z - t), &compute_depth},
+    {"assoc-balan-add-sub-2-3-2", x + ((z - t) - y), (x + z) - (t + y), &compute_depth}};
 
   vector<Rule> sub_rules{
     {"sub0-1", x - zero, x},
     {"subx-x", x - x, zero},
-    {"assoc-balan-sub-1-1", ((x - y) - z) - t, (x - y) - (z + t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-sub-1-2", (z - (x - y)) - t, (z - x) + (y - t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-sub-2-1", x - (y - (z - t)), (x - y) - (z + t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-sub-2-2", x - ((z - t) - y), (x - z) + (t + y), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-sub-add-1-1-1", ((x - y) + z) - t, (x - y) + (z - t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-sub-add-1-1-2", (z + (x - y)) - t, (z + x) - (y + t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-sub-add-1-2-1", ((x + y) - z) - t, (x + y) - (z + t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-sub-add-1-2-2", (z - (x + y)) - t, (z - x) - (y + t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-sub-add-1-3-1", ((x + y) + z) - t, (x + y) + (z - t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-sub-add-1-3-2", (z + (x + y)) - t, (z + x) + (y - t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-sub-add-2-1-1", x - (y + (z - t)), (x - y) - (z - t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-sub-add-2-1-2", x - ((z - t) + y), (x - z) + (t - y), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-sub-add-2-2-1", x - (y - (z + t)), (x - y) + (z + t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-sub-add-2-2-2", x - ((z + t) - y), (x - z) - (t - y), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-sub-add-2-3-1", x - (y + (z + t)), (x - y) - (z + t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-sub-add-2-3-2", x - ((z + t) + y), (x - z) - (t + y), assoc_balan_cond(z, t, x)},
-    {"undo-nest-rotate-sub-1", (x - (y << (n))) << m, (x << m) - (y << (n + m) % slot_count)},
-    {"undo-nest-rotate-sub-2", ((x << (n)) - y) << m, (x << (n + m) % slot_count) - (y << m)}};
+    {"assoc-balan-sub-1-1", ((x - y) - z) - t, (x - y) - (z + t), &compute_depth},
+    {"assoc-balan-sub-1-2", (z - (x - y)) - t, (z - x) + (y - t), &compute_depth},
+    {"assoc-balan-sub-2-1", x - (y - (z - t)), (x - y) - (z + t), &compute_depth},
+    {"assoc-balan-sub-2-2", x - ((z - t) - y), (x - z) + (t + y), &compute_depth},
+    {"assoc-balan-sub-add-1-1-1", ((x - y) + z) - t, (x - y) + (z - t), &compute_depth},
+    {"assoc-balan-sub-add-1-1-2", (z + (x - y)) - t, (z + x) - (y + t), &compute_depth},
+    {"assoc-balan-sub-add-1-2-1", ((x + y) - z) - t, (x + y) - (z + t), &compute_depth},
+    {"assoc-balan-sub-add-1-2-2", (z - (x + y)) - t, (z - x) - (y + t), &compute_depth},
+    {"assoc-balan-sub-add-1-3-1", ((x + y) + z) - t, (x + y) + (z - t), &compute_depth},
+    {"assoc-balan-sub-add-1-3-2", (z + (x + y)) - t, (z + x) + (y - t), &compute_depth},
+    {"assoc-balan-sub-add-2-1-1", x - (y + (z - t)), (x - y) - (z - t), &compute_depth},
+    {"assoc-balan-sub-add-2-1-2", x - ((z - t) + y), (x - z) + (t - y), &compute_depth},
+    {"assoc-balan-sub-add-2-2-1", x - (y - (z + t)), (x - y) + (z + t), &compute_depth},
+    {"assoc-balan-sub-add-2-2-2", x - ((z + t) - y), (x - z) - (t - y), &compute_depth},
+    {"assoc-balan-sub-add-2-3-1", x - (y + (z + t)), (x - y) - (z + t), &compute_depth},
+    {"assoc-balan-sub-add-2-3-2", x - ((z + t) + y), (x - z) - (t + y), &compute_depth}};
 
   vector<Rule> negate_rules{
     {"fold-negate", -(-x), x}, {"fold-negate-add", -(-x + y), x - y}, {"fold-negate-sub", -(-x - y), x + y}};
 
-  vector<Rule> rotate_rules{{"rotate0", x << 0, x}, {"fold-rotate", x << n << m, x << ((m + n) % slot_count)}};
+  vector<Rule> rotate_rules{
+    {"rotate0", x << 0, x},
+    {"fold-rotate", x << n << m, x << ((m + n) % slot_count)},
+    {"undo-nest-rotate-add-1", (x + (y << (n))) << m, (x << m) + (y << (n + m) % slot_count)},
+    {"undo-nest-rotate-add-2", ((y << (n)) + x) << m, (y << (n + m) % slot_count) + (x << m)},
+    {"undo-nest-rotate-sub-1", (x - (y << (n))) << m, (x << m) - (y << (n + m) % slot_count)},
+    {"undo-nest-rotate-sub-2", ((x << (n)) - y) << m, (x << (n + m) % slot_count) - (y << m)},
+    {"undo-nest-rotate-mul-1", (x * (y << (n))) << m, (x << m) * (y << (n + m) % slot_count)},
+    {"undo-nest-rotate-mul-2", ((x << (n)) * y) << m, (x << (n + m) % slot_count) * (y << m)}};
 
   vector<Rule> mul_rules{
     {"mul0-1", x * zero, zero},
@@ -115,20 +125,18 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
     {"mul1-2", one * x, x},
     {"mul-m1-1", x * m_one, -x},
     {"mul-m1-2", m_one * x, -x},
-    {"assoc-balan-mul-square-1-1", ((x * y) * x) * z, (x * x) * (y * z), assoc_balan_cond(x, y, z)},
-    {"assoc-balan-mul-square-1-2", (x * (x * y)) * z, (x * x) * (y * z), assoc_balan_cond(x, y, z)},
-    {"assoc-balan-mul-square-2-1", ((x * y) * y) * z, (x * z) * (y * y), assoc_balan_cond(x, y, z)},
-    {"assoc-balan-mul-square-2-2", (y * (x * y)) * z, (y * y) * (x * z), assoc_balan_cond(x, y, z)},
+    {"assoc-balan-mul-square-1-1", ((x * y) * x) * z, (x * x) * (y * z), &compute_xdepth},
+    {"assoc-balan-mul-square-1-2", (x * (x * y)) * z, (x * x) * (y * z), &compute_xdepth},
+    {"assoc-balan-mul-square-2-1", ((x * y) * y) * z, (x * z) * (y * y), &compute_xdepth},
+    {"assoc-balan-mul-square-2-2", (y * (x * y)) * z, (y * y) * (x * z), &compute_xdepth},
     {"assoc-balan-mul-square-3-1", ((x * y) * z) * x, (x * x) * (y * z)},
     {"assoc-balan-mul-square-3-2", x * ((x * y) * z), (x * x) * (y * z)},
     {"assoc-balan-mul-square-4-1", ((x * y) * z) * y, (x * z) * (y * y)},
     {"assoc-balan-mul-square-4-2", y * ((x * y) * z), (y * y) * (x * z)},
-    {"assoc-balan-mul-1-1", ((x * y) * z) * t, (x * y) * (z * t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-mul-1-2", (z * (x * y)) * t, (z * x) * (y * t), assoc_balan_cond(x, y, t)},
-    {"assoc-balan-mul-2-1", x * (y * (z * t)), (x * y) * (z * t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-mul-2-2", x * ((z * t) * y), (x * z) * (t * y), assoc_balan_cond(z, t, x)},
-    {"undo-nest-rotate-mul-1", (x * (y << (n))) << m, (x << m) * (y << (n + m) % slot_count)},
-    {"undo-nest-rotate-mul-2", ((x << (n)) * y) << m, (x << (n + m) % slot_count) * (y << m)}};
+    {"assoc-balan-mul-1-1", ((x * y) * z) * t, (x * y) * (z * t), &compute_xdepth},
+    {"assoc-balan-mul-1-2", (z * (x * y)) * t, (z * x) * (y * t), &compute_xdepth},
+    {"assoc-balan-mul-2-1", x * (y * (z * t)), (x * y) * (z * t), &compute_xdepth},
+    {"assoc-balan-mul-2-2", x * ((z * t) * y), (x * z) * (t * y), &compute_xdepth}};
 
   return Ruleset{slot_count, move(add_rules), move(sub_rules), move(negate_rules), move(rotate_rules),
                  {},         move(mul_rules)};
@@ -148,6 +156,8 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
   TermMatcher x{TermMatcherType::term, "x"};
   TermMatcher y{TermMatcherType::term, "y"};
   TermMatcher z{TermMatcherType::term, "z"};
+  TermMatcher t{TermMatcherType::term, "t"};
+  TermMatcher u{TermMatcherType::term, "u"};
 
   TermMatcher const1{TermMatcherType::const_, "const1"};
   TermMatcher const2{TermMatcherType::const_, "const2"};
@@ -175,7 +185,11 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
     {"part-fold-assoc-add-sub-4", (x - const1) + const2, x + (-const1 + const2)},
     {"fold-add-negate-1", x + (-y), x - y},
     {"fold-add-negate-2", (-y) + x, x - y},
-    {"merge-rotate-add", (x << n) + (y << n), (x + y) << n},
+    {"merge-rotate-add-1", (x << n) + (y << n), (x + y) << n},
+    {"merge-rotate-add-2-1", (x + (y << n)) + (z + (t << n)), (x + z) + ((y + t) << n)},
+    {"merge-rotate-add-2-2", (x + (y << n)) + ((t << n) + z), (x + z) + ((y + t) << n)},
+    {"merge-rotate-add-2-3", ((y << n) + x) + (z + (t << n)), ((y + t) << n) + (x + z)},
+    {"merge-rotate-add-2-4", ((y << n) + x) + ((t << n) + z), ((y + t) << n) + (x + z)},
     {"nest-rotate-add-1", (x << n) + (y << m), ((x << (n - m)) + y) << m,
      [n, m](const Subst subst) {
        return subst.get(n) > subst.get(m);
@@ -186,13 +200,41 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
      }},
     {"fold-rotation-add-1-1", ((x << n) + y) + (z << n), ((x + z) << n) + y},
     {"fold-rotation-add-1-2", (y + (x << n)) + (z << n), y + ((x + z) << n)},
-    {"fold-rotation-add-2-1", (z << n) + ((x << n) + y), ((z + x) << n) + y},
-    {"fold-rotation-add-2-2", (z << n) + (y + (x << n)), y + ((z + x) << n)},
+    {"fold-rotation-add-1-3", (z << n) + ((x << n) + y), ((z + x) << n) + y},
+    {"fold-rotation-add-1-4", (z << n) + (y + (x << n)), y + ((z + x) << n)},
+
+    {"fold-rotation-add-2-1", ((x << n) + y) + ((z << n) + t), ((x + z) << n) + (y + t)},
+    {"fold-rotation-add-2-2", ((x << n) + y) + (t + (z << n)), ((x + z) << n) + (y + t)},
+    {"fold-rotation-add-2-3", (y + (x << n)) + ((z << n) + t), (y + t) + ((x + z) << n)},
+    {"fold-rotation-add-2-4", (y + (x << n)) + (t + (z << n)), (y + t) + ((x + z) << n)},
+
+    {"fold-rotation-add-3-1", ((x << n) + y) + (((z << n) + t) + u), ((x + z) << n) + (y + (t + u))},
+    {"fold-rotation-add-3-2", ((x << n) + y) + ((z << n) + (t + u)), ((x + z) << n) + (y + (t + u))},
+    {"fold-rotation-add-3-3", ((x << n) + y) + ((t + u) + (z << n)), ((x + z) << n) + (y + (t + u))},
+
+    {"fold-rotation-add-3-4", ((x << n) + y) + ((t + (z << n)) + u), ((x + z) << n) + (y + (t + u))},
+    {"fold-rotation-add-3-5", ((x << n) + y) + (t + ((z << n) + u)), ((x + z) << n) + (y + (t + u))},
+    {"fold-rotation-add-3-6", ((x << n) + y) + (((z << n) + u) + t), ((x + z) << n) + (y + (u + t))},
+
+    {"fold-rotation-add-3-7", ((x << n) + y) + (u + ((z << n) + t)), ((x + z) << n) + (y + (u + t))},
+    {"fold-rotation-add-3-8", ((x << n) + y) + ((u + (z << n)) + t), ((x + z) << n) + (y + (u + t))},
+    {"fold-rotation-add-3-9", ((x << n) + y) + (t + (u + (z << n))), ((x + z) << n) + (y + (t + u))},
+
+    {"fold-rotation-add-3-10", ((x << n) + y) + (u + (t + (z << n))), ((x + z) << n) + (y + (u + t))},
+
+    {"fold-rotation-add-3-11", ((x << n) + y) + ((u + t) + (z << n)), ((x + z) << n) + (y + (u + t))},
+    {"fold-rotation-add-3-12", ((x << n) + y) + ((z << n) + (u + t)), ((x + z) << n) + (y + (u + t))},
+
+    {"fold-rotation-add-3-13", (y + (x << n)) + (((z << n) + t) + u), (y + (t + u)) + ((x + z) << n)},
+
+    {"fold-rotation-add-3-14", (y + (x << n)) + ((t + (z << n)) + u), (y + (t + u)) + ((x + z) << n)},
+    {"fold-rotation-add-3-15", (y + (x << n)) + (u + ((z << n) + t)), (y + (u + t)) + ((x + z) << n)},
+    {"fold-rotation-add-3-16", (y + (x << n)) + (u + (t + (z << n))), (y + (u + t)) + ((x + z) << n)},
+
     {"fold-rotation-add-sub-1-1", ((x << n) - y) + (z << n), ((x + z) << n) - y},
     {"fold-rotation-add-sub-1-2", (y - (x << n)) + (z << n), y - ((x - z) << n)},
     {"fold-rotation-add-sub-2-1", (z << n) + ((x << n) - y), ((z + x) << n) - y},
     {"fold-rotation-add-sub-2-2", (z << n) + (y - (x << n)), y + ((z - x) << n)},
-
     {"fact-add-1-1", x * c_y + z * c_y, (x + z) * c_y},
     {"fact-add-1-2", c_x * p_y + c_z * p_y, (c_x + c_z) * p_y},
     {"fact-add-1-3", p_x * p_y + p_z * p_y, (p_x + p_z) * p_y},
@@ -324,7 +366,6 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
      [n, m, slot_count](const Subst subst) {
        return subst.get(n) + subst.get(m) >= slot_count;
      }},
-
     {"nest-large-steps-rotate-add-sub-1-1", ((x + (y << n)) - z) << m, (y << (n + m) % slot_count) + ((x - z) << m),
      [n, m, slot_count](const Subst subst) {
        return subst.get(n) + subst.get(m) >= slot_count;

@@ -65,13 +65,23 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
     clog << "could not find a substitution\n";
     return false;
   }
-  if (!rule.check_cond(subst))
+  if (rule.has_cond() && !rule.check_cond(subst))
   {
     clog << "condition not met\n";
     return false;
   }
   vector<size_t> created_terms_ids;
   auto equiv_term = construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
+  if (rule.has_valuation() && !rule.check_valuation(term, equiv_term))
+  {
+    clog << "valuation not met\n";
+    if (func_->data_flow().can_delete(equiv_term))
+    {
+      clog << "delete constructed equiv_term $" << equiv_term->id() << '\n';
+      func_->delete_term_cascade(equiv_term);
+    }
+    return false;
+  }
   clog << "replace term $" << term->id() << " with term $" << equiv_term->id() << '\n';
   func_->replace_term_with(term, equiv_term);
   return true;
@@ -97,7 +107,7 @@ bool TRS::rewrite_term(
     if (top_term->is_leaf())
       continue;
 
-    cout << "now $" << top_term->id() << ": " << p.expand_term(top_term, 10) << endl;
+    cout << "now $" << top_term->id() << ": " << p.expand_term(top_term, 12) << endl;
     for (const auto &rule : ruleset_.pick_rules(top_term->op_code()))
     {
       clog << "trying rule '" << rule.label() << "' on term $" << top_term->id() << " -> ";
@@ -111,7 +121,7 @@ bool TRS::rewrite_term(
         clog << "could not find a substitution\n";
         continue;
       }
-      if (!rule.check_cond(subst))
+      if (rule.has_cond() && !rule.check_cond(subst))
       {
         clog << "condition not met\n";
         continue;
@@ -121,49 +131,64 @@ bool TRS::rewrite_term(
       auto equiv_term =
         construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
 
+      if (rule.has_valuation() && !rule.check_valuation(top_term, equiv_term))
+      {
+        clog << "valuation not met\n";
+        if (func_->data_flow().can_delete(equiv_term))
+        {
+          clog << "delete constructed equiv_term $" << equiv_term->id() << '\n';
+          func_->delete_term_cascade(equiv_term);
+        }
+        continue;
+      }
+
+      if (rel_cost > 0 && global_analysis)
+      {
+        clog << "rel_cost not met\n";
+        if (func_->data_flow().can_delete(equiv_term))
+        {
+          clog << "delete constructed equiv_term $" << equiv_term->id() << '\n';
+          func_->delete_term_cascade(equiv_term);
+        }
+        continue;
+      }
+
       if (global_analysis)
         clog << "constructed rhs, rel_cost=" << rel_cost << " -> ";
       else
         clog << "constructed rhs, no_global_analysis -> ";
-      if (rel_cost <= 0 || !global_analysis)
+
+      clog << "replace term $" << top_term->id() << " with term $" << equiv_term->id() << '\n';
+      cout << p.expand_term(equiv_term, 12) << endl;
+
+      func_->replace_term_with(top_term, equiv_term);
+      did_rewrite = true;
+
+      if (rewrite_created_sub_terms)
       {
-        clog << "replace term $" << top_term->id() << " with term $" << equiv_term->id() << '\n';
-        cout << p.expand_term(equiv_term, 10) << endl;
-
-        func_->replace_term_with(top_term, equiv_term);
-        did_rewrite = true;
-
-        if (rewrite_created_sub_terms)
+        switch (heuristic)
         {
-          switch (heuristic)
-          {
-          case RewriteHeuristic::bottom_up:
-            for (auto created_term_id_it = created_terms_ids.crbegin(); created_term_id_it != created_terms_ids.crend();
-                 ++created_term_id_it)
-              call_stack.push(*created_term_id_it);
-            break;
+        case RewriteHeuristic::bottom_up:
+          for (auto created_term_id_it = created_terms_ids.crbegin(); created_term_id_it != created_terms_ids.crend();
+               ++created_term_id_it)
+            call_stack.push(*created_term_id_it);
+          break;
 
-          case RewriteHeuristic::top_down:
-            for (auto created_term_id : created_terms_ids)
-              call_stack.push(created_term_id);
-            break;
+        case RewriteHeuristic::top_down:
+          for (auto created_term_id : created_terms_ids)
+            call_stack.push(created_term_id);
+          break;
 
-          default:
-            throw logic_error("unhandled RewriteHeuristic");
-          }
+        default:
+          throw logic_error("unhandled RewriteHeuristic");
         }
-        else
-        {
-          if (created_terms_ids.size() && created_terms_ids.back() == equiv_term->id())
-            call_stack.push(equiv_term->id());
-        }
-        break;
       }
-      else if (func_->data_flow().can_delete(equiv_term))
+      else
       {
-        clog << "delete constructed equiv_term $" << equiv_term->id() << '\n';
-        func_->delete_term_cascade(equiv_term);
+        if (created_terms_ids.size() && created_terms_ids.back() == equiv_term->id())
+          call_stack.push(equiv_term->id());
       }
+      break;
     }
     --max_iter;
   }

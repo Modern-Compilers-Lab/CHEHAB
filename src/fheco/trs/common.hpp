@@ -30,5 +30,9 @@ ir::OpCode convert_op_code(const TermOpCode &op_code, std::vector<int> generator
 
 using TermsMetric = std::unordered_map<ir::Term *, std::int64_t, ir::Term::HashPtr, ir::Term::EqualPtr>;
 
-void count_ctxt_leaves(ir::Term *term, TermsMetric &dp);
+std::int64_t compute_xdepth(ir::Term *term);
+
+std::int64_t compute_depth(ir::Term *term);
+
+std::int64_t count_ctxt_leaves(ir::Term *term, TermsMetric &dp);
 } // namespace fheco::trs
