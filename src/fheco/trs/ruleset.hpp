@@ -18,7 +18,7 @@ public:
 
   static Ruleset log2_reduct_opt_ruleset(std::size_t slot_count);
 
-  static Ruleset ops_type_number_opt_ruleset(std::size_t slot_count);
+  static Ruleset ops_cost_opt_ruleset(std::size_t slot_count);
 
   Ruleset(
     std::size_t slot_count, std::vector<Rule> add_rules, std::vector<Rule> sub_rules, std::vector<Rule> negate_rules,

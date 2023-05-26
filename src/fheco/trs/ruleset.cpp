@@ -77,9 +77,7 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
     {"assoc-balan-add-sub-2-2-1", x + (y + (z - t)), (x + y) + (z - t), assoc_balan_cond(z, t, x)},
     {"assoc-balan-add-sub-2-2-2", x + ((z - t) + y), (x + z) - (t - y), assoc_balan_cond(z, t, x)},
     {"assoc-balan-add-sub-2-3-1", x + (y - (z - t)), (x + y) - (z - t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-add-sub-2-3-2", x + ((z - t) - y), (x + z) - (t + y), assoc_balan_cond(z, t, x)},
-    {"undo-nest-rotate-add-1", (x + (y << (n))) << m, (x << m) + (y << (n + m) % slot_count)},
-    {"undo-nest-rotate-add-2", ((x << (n)) + y) << m, (x << (n + m) % slot_count) + (y << m)}};
+    {"assoc-balan-add-sub-2-3-2", x + ((z - t) - y), (x + z) - (t + y), assoc_balan_cond(z, t, x)}};
 
   vector<Rule> sub_rules{
     {"sub0-1", x - zero, x},
@@ -99,14 +97,20 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
     {"assoc-balan-sub-add-2-2-1", x - (y - (z + t)), (x - y) + (z + t), assoc_balan_cond(z, t, x)},
     {"assoc-balan-sub-add-2-2-2", x - ((z + t) - y), (x - z) - (t - y), assoc_balan_cond(z, t, x)},
     {"assoc-balan-sub-add-2-3-1", x - (y + (z + t)), (x - y) - (z + t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-sub-add-2-3-2", x - ((z + t) + y), (x - z) - (t + y), assoc_balan_cond(z, t, x)},
-    {"undo-nest-rotate-sub-1", (x - (y << (n))) << m, (x << m) - (y << (n + m) % slot_count)},
-    {"undo-nest-rotate-sub-2", ((x << (n)) - y) << m, (x << (n + m) % slot_count) - (y << m)}};
+    {"assoc-balan-sub-add-2-3-2", x - ((z + t) + y), (x - z) - (t + y), assoc_balan_cond(z, t, x)}};
 
   vector<Rule> negate_rules{
     {"fold-negate", -(-x), x}, {"fold-negate-add", -(-x + y), x - y}, {"fold-negate-sub", -(-x - y), x + y}};
 
-  vector<Rule> rotate_rules{{"rotate0", x << 0, x}, {"fold-rotate", x << n << m, x << ((m + n) % slot_count)}};
+  vector<Rule> rotate_rules{
+    {"rotate0", x << 0, x},
+    {"fold-rotate", x << n << m, x << ((m + n) % slot_count)},
+    {"undo-nest-rotate-add-1", (x + (y << (n))) << m, (x << m) + (y << (n + m) % slot_count)},
+    {"undo-nest-rotate-add-2", ((x << (n)) + y) << m, (x << (n + m) % slot_count) + (y << m)},
+    {"undo-nest-rotate-sub-1", (x - (y << (n))) << m, (x << m) - (y << (n + m) % slot_count)},
+    {"undo-nest-rotate-sub-2", ((x << (n)) - y) << m, (x << (n + m) % slot_count) - (y << m)},
+    {"undo-nest-rotate-mul-1", (x * (y << (n))) << m, (x << m) * (y << (n + m) % slot_count)},
+    {"undo-nest-rotate-mul-2", ((x << (n)) * y) << m, (x << (n + m) % slot_count) * (y << m)}};
 
   vector<Rule> mul_rules{
     {"mul0-1", x * zero, zero},
@@ -126,9 +130,7 @@ Ruleset Ruleset::depth_opt_ruleset(size_t slot_count)
     {"assoc-balan-mul-1-1", ((x * y) * z) * t, (x * y) * (z * t), assoc_balan_cond(x, y, t)},
     {"assoc-balan-mul-1-2", (z * (x * y)) * t, (z * x) * (y * t), assoc_balan_cond(x, y, t)},
     {"assoc-balan-mul-2-1", x * (y * (z * t)), (x * y) * (z * t), assoc_balan_cond(z, t, x)},
-    {"assoc-balan-mul-2-2", x * ((z * t) * y), (x * z) * (t * y), assoc_balan_cond(z, t, x)},
-    {"undo-nest-rotate-mul-1", (x * (y << (n))) << m, (x << m) * (y << (n + m) % slot_count)},
-    {"undo-nest-rotate-mul-2", ((x << (n)) * y) << m, (x << (n + m) % slot_count) * (y << m)}};
+    {"assoc-balan-mul-2-2", x * ((z * t) * y), (x * z) * (t * y), assoc_balan_cond(z, t, x)}};
 
   return Ruleset{slot_count, move(add_rules), move(sub_rules), move(negate_rules), move(rotate_rules),
                  {},         move(mul_rules)};
@@ -143,7 +145,7 @@ Ruleset Ruleset::log2_reduct_opt_ruleset(std::size_t slot_count)
   return Ruleset{slot_count, move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
 }
 
-Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
+Ruleset Ruleset::ops_cost_opt_ruleset(size_t slot_count)
 {
   TermMatcher x{TermMatcherType::term, "x"};
   TermMatcher y{TermMatcherType::term, "y"};
@@ -235,8 +237,7 @@ Ruleset Ruleset::ops_type_number_opt_ruleset(size_t slot_count)
     {"part-fold-assoc-sub-add-2", const1 - (x + const2), (const1 - const2) + x},
     {"part-fold-assoc-sub-add-3", (const1 + x) - const2, x + (const1 - const2)},
     {"part-fold-assoc-sub-add-4", (x + const1) - const2, x + (const1 - const2)},
-    {"fold-sub-negate-1", x - (-y), x + y},
-    {"fold-sub-negate-2", (-y) - x, x + y},
+    {"fold-sub-negate", x - (-y), x + y},
     {"merge-rotate-sub", (x << n) - (y << n), (x - y) << n},
     {"nest-rotate-sub-1", (x << n) - (y << m), ((x << (n - m)) - y) << m,
      [n, m](const Subst subst) {

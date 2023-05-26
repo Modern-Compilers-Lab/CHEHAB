@@ -97,7 +97,7 @@ bool TRS::rewrite_term(
     if (top_term->is_leaf())
       continue;
 
-    cout << "now $" << top_term->id() << ": " << p.expand_term(top_term, 10) << endl;
+    clog << "now $" << top_term->id() << ": " << p.expand_term(top_term, 10) << endl;
     for (const auto &rule : ruleset_.pick_rules(top_term->op_code()))
     {
       clog << "trying rule '" << rule.label() << "' on term $" << top_term->id() << " -> ";
@@ -128,7 +128,7 @@ bool TRS::rewrite_term(
       if (rel_cost <= 0 || !global_analysis)
       {
         clog << "replace term $" << top_term->id() << " with term $" << equiv_term->id() << '\n';
-        cout << p.expand_term(equiv_term, 10) << endl;
+        clog << p.expand_term(equiv_term, 10) << endl;
 
         func_->replace_term_with(top_term, equiv_term);
         did_rewrite = true;
