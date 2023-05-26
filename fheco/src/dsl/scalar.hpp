@@ -17,7 +17,7 @@ public:
   using ScalarValueType = std::variant<int64_t, double, uint64_t>;
 
 private:
-  ScalarValueType data = 0;
+  ScalarValueType data = (int64_t)0;
 
   std::string label; // symbol
 
