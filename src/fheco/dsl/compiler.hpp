@@ -51,15 +51,21 @@ public:
 
   static void delete_func(const std::string &name);
 
-  static bool cse_enabled() { return cse_enabled_; }
+  static inline bool cse_enabled() { return cse_enabled_; }
 
-  static bool const_folding_enabled() { return const_folding_enabled_; }
+  static inline bool order_operands_enabled() { return order_operands_enabled_; }
 
-  static bool scalar_vector_shape_enabled() { return scalar_vector_shape_; }
+  static inline bool const_folding_enabled() { return const_folding_enabled_; }
 
-    static inline void enable_cse() { cse_enabled_ = true; }
+  static inline bool scalar_vector_shape_enabled() { return scalar_vector_shape_; }
+
+  static inline void enable_cse() { cse_enabled_ = true; }
 
   static inline void disable_cse() { cse_enabled_ = false; }
+
+  static inline void enable_order_operands() { order_operands_enabled_ = true; }
+
+  static inline void disable_order_operands() { order_operands_enabled_ = false; }
 
   static inline void enable_const_folding() { const_folding_enabled_ = true; }
 
@@ -79,6 +85,8 @@ private:
   static FuncsTable::const_iterator active_func_it_;
 
   static bool cse_enabled_;
+
+  static bool order_operands_enabled_;
 
   static bool const_folding_enabled_;
 

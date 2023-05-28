@@ -18,6 +18,8 @@ Compiler::FuncsTable::const_iterator Compiler::active_func_it_ = Compiler::funcs
 
 bool Compiler::cse_enabled_ = true;
 
+bool Compiler::order_operands_enabled_ = true;
+
 bool Compiler::const_folding_enabled_ = true;
 
 bool Compiler::scalar_vector_shape_ = false;
@@ -25,45 +27,30 @@ bool Compiler::scalar_vector_shape_ = false;
 void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityLevel sec_level)
 {
   size_t max_passes = 3;
-  int64_t max_iter = 1000;
+  int64_t max_iter = 10000;
 
-  // clog << "remove_dead_code\n";
+  clog << "remove_dead_code\n";
   func->remove_dead_code();
 
-  trs::TRS ops_opt_trs{func, trs::Ruleset::ops_cost_opt_ruleset(func->slot_count())};
-  // clog << "ops_opt_trs\n";
-  // ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, true, true);
+  // clog << "cse_commut\n";
+  // passes::cse_commut(func);
 
-  trs::TRS depth_opt_trs{func, trs::Ruleset::depth_opt_ruleset(func->slot_count())};
-  // clog << "depth_opt_trs\n";
-  // depth_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
+  // clog << "halide_adapted_trs\n";
+  // trs::TRS halide_adapted_trs{func, trs::Ruleset::halide_adapted_ruleset(func)};
+  // halide_adapted_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, false);
 
-  // clog << "log2_reduct_trs\n";
-  // trs::TRS log2_reduct_trs{func, trs::Ruleset::log2_reduct_opt_ruleset(func->slot_count())};
-  // size_t rel_slot_count = func->slot_count();
-  // while (rel_slot_count > 2)
-  // {
-  //   bool did_rewrite = log2_reduct_trs.run(trs::TRS::RewriteHeuristic::top_down, max_iter, false, true);
-  //   if (!did_rewrite)
-  //     break;
+  clog << "halide_adapted_trs\n";
+  trs::TRS halide_augmented_trs{func, trs::Ruleset::halide_augmented_ruleset(func)};
+  halide_augmented_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
 
-  //   rel_slot_count >>= 1;
-  // }
+  clog << "depth_after_simplify_trs\n";
+  trs::TRS depth_after_simplify_trs{func, trs::Ruleset::depth_after_simplify_ruleset(func)};
+  depth_after_simplify_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
 
-  clog << "convert_scalar_mul_to_add\n";
-  passes::convert_scalar_mul_to_add(func, 1 << 30);
+  // halide_augmented_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
 
-  for (size_t i = 0; i < max_passes; ++i)
-  {
-    clog << "ops_opt_trs\n";
-    ops_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
-
-    clog << "depth_opt_trs\n";
-    depth_opt_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
-
-    clog << "cse_commut\n";
-    passes::cse_commut(func);
-  }
+  // clog << "convert_scalar_mul_to_add\n";
+  // passes::convert_scalar_mul_to_add(func, 1 << 30);
 
   // clog << "reduce_rotation_keys\n";
   // unordered_set<int> rotation_steps_keys;

@@ -1,52 +1,52 @@
-(x + 0) => (x)
-(0 + x) => (x)
+x + 0 => x (1)
+0 + x => x (1)
 
-(x + y*(-1)) => (x - y)
-(x * (-1) + y) => (y - x)
+x + y*(-1) => x - y maybe_diff (1)
+x * (-1) + y => y - x maybe_diff (1)
 
-((x + c0) + c1) => (x + fold(c0 + c1))
+(x + c0) + c1 => x + fold(c0 + c1) (1)
 
-((x + c0) + y) => ((x + y) + c0)
-(x + (y + c0)) => ((x + y) + c0)
+(x + c0) + y => (x + y) + c0 no_depth
+x + (y + c0) => (x + y) + c0 no_depth
 
-((c0 - x) + c1) => (fold(c0 + c1) - x)
+(c0 - x) + c1 => fold(c0 + c1) - x (1)
 
-((c0 - x) + y) => ((y - x) + c0)
+(c0 - x) + y => (y - x) + c0 no_depth
 
-((x - y) + y) => (x)
-(x + (y - x)) => (y)
+(x - y) + y => x (1)
+x + (y - x) => y (1)
 
-(((x - y) + z) + y) => (x + z)
-((z + (x - y)) + y) => (z + x)
-(x + ((y - x) + z )) => (y + z)
-(x + (z + (y - x))) => (z + y)
+((x - y) + z) + y => x + z (1)
+(z + (x - y)) + y => z + x (1)
+x + ((y - x) + z ) => y + z (1)
+x + (z + (y - x)) => z + y (1)
 
-(x + (c0 - y)) => ((x - y) + c0)
+x + (c0 - y) => (x - y) + c0 no
 
-((x - y) + (y - z)) => (x - z)
-((x - y) + (z - x)) => (z - y)
+(x - y) + (y - z) => x - z (1)
+(x - y) + (z - x) => z - y (1)
 
-((x - y) + (y + z)) => (x + z)
-((x - y) + (z + y)) => (x + z)
+(x - y) + (y + z) => x + z (1)
+(x - y) + (z + y) => x + z (1)
 
-(x + ((y - x) - z)) => (y - z)
-(((x - y) - z) + y) => (x - z)
-(x + (y - (x + z))) => (y - z)
-(x + (y - (z + x))) => (y - z)
-((x - (y + z)) + y) => (x - z)
-((x - (y + z)) + z) => (x - y)
+x + ((y - x) - z) => y - z (1)
+((x - y) - z) + y => x - z (1)
+x + (y - (x + z)) => y - z (1)
+x + (y - (z + x)) => y - z (1)
+(x - (y + z)) + y => x - z (1)
+(x - (y + z)) + z => x - y (1)
 
-(x + ((0 - y) - z)) => (x - (y + z))
-(((0 - x) - y) + z) => (z - (x + y))
+x + ((0 - y) - z) => x - (y + z) maybe_diff (1)
+((0 - x) - y) + z => z - (x + y) maybe_diff (1)
 
-(((c0 - x) - y) + c1) => ((fold(c0 + c1) - y) - x)
+((c0 - x) - y) + c1 => (fold(c0 + c1) - y) - x (1)
 
-(x*y + z*y) => ((x + z)*y)
-(x*y + y*z) => ((x + z)*y)
-(y*x + z*y) => (y*(x + z))
-(y*x + y*z) => (y*(x + z))
+x*y + z*y => (x + z)*y (2)
+x*y + y*z => (x + z)*y (2)
+y*x + z*y => y*(x + z) (2)
+y*x + y*z => y*(x + z) (2)
 
-(x + x*y) => (x*(y + 1))
-(x + y*x) => ((y + 1)*x)
-(x*y + x) => (x*(y + 1))
-(y*x + x) => ((y + 1)*x), !isconst(x)
+x + x*y => x*(y + 1) (1)
+x + y*x => (y + 1)*x (1)
+x*y + x => x*(y + 1) (1)
+y*x + x => (y + 1)*x, !isconst(x) (1)

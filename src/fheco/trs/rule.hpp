@@ -3,15 +3,29 @@
 #include "fheco/trs/subst.hpp"
 #include "fheco/trs/term_matcher.hpp"
 #include <functional>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
+
+namespace fheco::ir
+{
+class Func;
+} // namespace fheco::ir
 
 namespace fheco::trs
 {
 class Rule
 {
 public:
+  static std::function<bool(const Subst &)> is_not_const(TermMatcher x, std::shared_ptr<ir::Func> func);
+
+  static std::function<bool(const Subst &)> is_not_rotation(TermMatcher x);
+
+  static std::function<bool(const Subst &)> has_less_ctxt_leaves(TermMatcher x, TermMatcher y);
+
+  static std::function<bool(const Subst &)> has_less_ctxt_leaves(TermMatcher x, TermMatcher y1, TermMatcher y2);
+
   Rule(
     std::string label, TermMatcher lhs, std::function<TermMatcher(const Subst &)> rhs,
     std::function<bool(const Subst &)> cond = [](const Subst &) { return true; })

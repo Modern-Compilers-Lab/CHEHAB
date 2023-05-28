@@ -4,31 +4,44 @@
 #include "fheco/trs/rule.hpp"
 #include "fheco/trs/term_matcher.hpp"
 #include <cstddef>
+#include <memory>
 #include <utility>
 #include <vector>
+
+namespace fheco::ir
+{
+class Func;
+} // namespace fheco::ir
 
 namespace fheco::trs
 {
 class Ruleset
 {
 public:
-  static Ruleset depth_opt_ruleset(std::size_t slot_count);
+  static Ruleset depth_after_simplify_ruleset(std::shared_ptr<ir::Func> func);
 
-  static Ruleset log2_reduct_prep_ruleset(std::size_t slot_count);
+  static Ruleset depth_ruleset(std::shared_ptr<ir::Func> func);
 
-  static Ruleset log2_reduct_opt_ruleset(std::size_t slot_count);
+  static Ruleset halide_adapted_ruleset(std::shared_ptr<ir::Func> func);
 
-  static Ruleset ops_cost_opt_ruleset(std::size_t slot_count);
+  static Ruleset halide_augmented_ruleset(std::shared_ptr<ir::Func> func);
+
+  static Ruleset joined_ruleset(std::shared_ptr<ir::Func> func);
+
+  static Ruleset ops_cost_ruleset(std::shared_ptr<ir::Func> func);
+
+  static Ruleset log2_reduct_opt_ruleset(std::shared_ptr<ir::Func> func);
 
   Ruleset(
-    std::size_t slot_count, std::vector<Rule> add_rules, std::vector<Rule> sub_rules, std::vector<Rule> negate_rules,
-    std::vector<Rule> rotate_rules, std::vector<Rule> square_rules, std::vector<Rule> mul_rules)
-    : slot_count_{slot_count}, add_rules_{std::move(add_rules)}, sub_rules_{std::move(sub_rules)},
+    std::shared_ptr<ir::Func> func, std::vector<Rule> add_rules, std::vector<Rule> sub_rules,
+    std::vector<Rule> negate_rules, std::vector<Rule> rotate_rules, std::vector<Rule> square_rules,
+    std::vector<Rule> mul_rules)
+    : func_{std::move(func)}, add_rules_{std::move(add_rules)}, sub_rules_{std::move(sub_rules)},
       negate_rules_{std::move(negate_rules)}, rotate_rules_{std::move(rotate_rules)},
       square_rules_{std::move(square_rules)}, mul_rules_{std::move(mul_rules)}
   {}
 
-  Ruleset(std::size_t slot_count, std::vector<Rule> rules);
+  Ruleset(std::shared_ptr<ir::Func> func, std::vector<Rule> rules);
 
   const std::vector<Rule> &pick_rules(const ir::OpCode &op_code) const;
 
@@ -50,7 +63,7 @@ private:
 
   static Rule make_log_reduct_comp(const TermMatcher &x, std::size_t size, const TermOpCode &op_code);
 
-  std::size_t slot_count_;
+  std::shared_ptr<ir::Func> func_;
 
   std::vector<Rule> add_rules_;
 
