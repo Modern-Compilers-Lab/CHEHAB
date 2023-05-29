@@ -21,9 +21,9 @@ function<bool(const Subst &)> Rule::is_not_rotation(TermMatcher x)
   };
 }
 
-function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y)
+function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y, TermsMetric &dp)
 {
-  return [x = move(x), y = move(y)](const Subst &subst) {
+  return [x = move(x), y = move(y), &dp](const Subst &subst) {
     TermsMetric dp;
     auto x_term = subst.get(x);
     auto y_term = subst.get(y);
@@ -46,10 +46,9 @@ function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatc
   };
 };
 
-function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y1, TermMatcher y2)
+function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &dp)
 {
-  return [x = move(x), y1 = move(y1), y2 = move(y2)](const Subst &subst) {
-    TermsMetric dp;
+  return [x = move(x), y1 = move(y1), y2 = move(y2), &dp](const Subst &subst) {
     auto x_term = subst.get(x);
     auto y1_term = subst.get(y1);
     auto y2_term = subst.get(y2);

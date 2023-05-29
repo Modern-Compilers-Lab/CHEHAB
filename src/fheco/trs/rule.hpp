@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fheco/trs/common.hpp"
 #include "fheco/trs/subst.hpp"
 #include "fheco/trs/term_matcher.hpp"
 #include <functional>
@@ -22,9 +23,10 @@ public:
 
   static std::function<bool(const Subst &)> is_not_rotation(TermMatcher x);
 
-  static std::function<bool(const Subst &)> has_less_ctxt_leaves(TermMatcher x, TermMatcher y);
+  static std::function<bool(const Subst &)> has_less_ctxt_leaves(TermMatcher x, TermMatcher y, TermsMetric &dp);
 
-  static std::function<bool(const Subst &)> has_less_ctxt_leaves(TermMatcher x, TermMatcher y1, TermMatcher y2);
+  static std::function<bool(const Subst &)> has_less_ctxt_leaves(
+    TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &dp);
 
   Rule(
     std::string label, TermMatcher lhs, std::function<TermMatcher(const Subst &)> rhs,

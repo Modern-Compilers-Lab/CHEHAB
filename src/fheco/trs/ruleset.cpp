@@ -18,7 +18,8 @@ Ruleset Ruleset::log2_reduct_opt_ruleset(shared_ptr<ir::Func> func)
   return Ruleset{move(func), move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
 }
 
-Ruleset::Ruleset(shared_ptr<ir::Func> func, vector<Rule> rules) : func_{move(func)}
+Ruleset::Ruleset(shared_ptr<ir::Func> func, vector<Rule> rules, unique_ptr<TermsMetric> terms_ctxt_leaves_count_dp)
+  : func_{move(func)}, terms_ctxt_leaves_count_dp_{move(terms_ctxt_leaves_count_dp)}
 {
   for (auto &rule : rules)
   {
