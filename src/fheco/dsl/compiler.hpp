@@ -2,6 +2,7 @@
 
 #include "fheco/ir/func.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -29,13 +30,9 @@ public:
       std::move(name), slot_count, bit_width, signedness, need_full_cyclic_rotation, overflow_warnings));
   }
 
-  static void compile(
-    std::shared_ptr<ir::Func> func, bool use_mod_switch = true, SecurityLevel sec_level = SecurityLevel::tc128);
+  static void compile(std::shared_ptr<ir::Func> func, std::int64_t max_iter);
 
-  static inline void compile(bool use_mod_switch = true, SecurityLevel sec_level = SecurityLevel::tc128)
-  {
-    compile(active_func(), use_mod_switch, sec_level);
-  }
+  static inline void compile(std::int64_t max_iter) { compile(active_func(), max_iter); }
 
   static inline const std::shared_ptr<ir::Func> &active_func()
   {

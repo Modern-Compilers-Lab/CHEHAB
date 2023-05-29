@@ -2,7 +2,6 @@
 #include "fheco/trs/trs.hpp"
 #include "fheco/passes/passes.hpp"
 #include "fheco/util/common.hpp"
-#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 #include <unordered_set>
@@ -24,12 +23,10 @@ bool Compiler::const_folding_enabled_ = true;
 
 bool Compiler::scalar_vector_shape_ = true;
 
-void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityLevel sec_level)
+void Compiler::compile(shared_ptr<ir::Func> func, int64_t max_iter)
 {
-  int64_t max_iter = 1000;
-
-  clog << "remove_dead_code\n";
-  func->remove_dead_code();
+  // clog << "remove_dead_code\n";
+  // func->remove_dead_code();
 
   // clog << "cse_commut\n";
   // passes::cse_commut(func);
@@ -44,7 +41,11 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
 
   clog << "depth_after_simplify_trs\n";
   trs::TRS depth_after_simplify_trs{func, trs::Ruleset::depth_after_simplify_ruleset(func)};
-  depth_after_simplify_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
+  depth_after_simplify_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, false);
+
+  // clog << "depth_trs\n";
+  // trs::TRS depth_trs{func, trs::Ruleset::depth_ruleset(func)};
+  // depth_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, false);
 
   // clog << "convert_scalar_mul_to_add\n";
   // passes::convert_scalar_mul_to_add(func, 1 << 30);
