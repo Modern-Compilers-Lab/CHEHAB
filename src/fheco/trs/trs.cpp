@@ -6,7 +6,6 @@
 #include "fheco/trs/fold_op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
 #include "fheco/trs/trs.hpp"
-#include "fheco/util/expr_printer.hpp"
 #include <functional>
 #include <iostream>
 #include <stack>
@@ -42,6 +41,7 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool global_analysis
     const auto &sorted_terms_ids = func_->get_top_sorted_terms_ids();
     for (auto id_it = sorted_terms_ids.crbegin(); id_it != sorted_terms_ids.crend(); ++id_it)
       did_rewrite = rewrite_term(*id_it, RewriteHeuristic::top_down, iter, global_analysis, rewrite_created_sub_terms);
+
     break;
   }
 
@@ -54,25 +54,19 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool global_analysis
 
 bool TRS::apply_rule(ir::Term *term, const Rule &rule)
 {
-  clog << "trying rule '" << rule.label() << "' on term $" << term->id() << " -> ";
   Subst subst;
   bool global_analysis = false;
   int64_t rel_cost = 0;
   ir::Term::PtrSet to_delete;
   bool matched = match(rule.lhs(), term, subst, global_analysis, rel_cost, to_delete);
   if (!matched)
-  {
-    clog << "could not find a substitution\n";
     return false;
-  }
+
   if (!rule.check_cond(subst))
-  {
-    clog << "condition not met\n";
     return false;
-  }
+
   vector<size_t> created_terms_ids;
   auto equiv_term = construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
-  clog << "replace term $" << term->id() << " with term $" << equiv_term->id() << '\n';
   func_->replace_term_with(term, equiv_term);
   return true;
 }
@@ -80,8 +74,6 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
 bool TRS::rewrite_term(
   size_t id, RewriteHeuristic heuristic, int64_t &max_iter, bool global_analysis, bool rewrite_created_sub_terms)
 {
-  util::ExprPrinter p{func_};
-
   bool did_rewrite = false;
   stack<size_t> call_stack;
   call_stack.push(id);
@@ -97,39 +89,25 @@ bool TRS::rewrite_term(
     if (top_term->is_leaf())
       continue;
 
-    clog << "now $" << top_term->id() << ": " << p.expand_term(top_term, 15) << endl;
     for (const auto &rule : ruleset_.pick_rules(top_term->op_code()))
     {
-      clog << "trying rule '" << rule.label() << "' on term $" << top_term->id() << " -> ";
       Subst subst;
       int64_t rel_cost = 0;
       ir::Term::PtrSet to_delete;
       bool matched = match(rule.lhs(), top_term, subst, global_analysis, rel_cost, to_delete);
 
       if (!matched)
-      {
-        clog << "could not find a substitution\n";
         continue;
-      }
+
       if (!rule.check_cond(subst))
-      {
-        clog << "condition not met\n";
         continue;
-      }
-      clog << "matched -> ";
+
       vector<size_t> created_terms_ids;
       auto equiv_term =
         construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
 
-      if (global_analysis)
-        clog << "constructed rhs, rel_cost=" << rel_cost << " -> ";
-      else
-        clog << "constructed rhs, no_global_analysis -> ";
       if (rel_cost <= 0 || !global_analysis)
       {
-        clog << "replace term $" << top_term->id() << " with term $" << equiv_term->id() << '\n';
-        clog << p.expand_term(equiv_term, 15) << endl;
-
         func_->replace_term_with(top_term, equiv_term);
         did_rewrite = true;
 
@@ -160,11 +138,8 @@ bool TRS::rewrite_term(
         break;
       }
       else if (func_->data_flow().can_delete(equiv_term))
-      {
-        clog << "delete constructed equiv_term $" << equiv_term->id() << '\n';
         func_->delete_term_cascade(equiv_term);
-      }
-    }
+        }
     --max_iter;
   }
   return did_rewrite;
