@@ -22,12 +22,11 @@ bool Compiler::order_operands_enabled_ = true;
 
 bool Compiler::const_folding_enabled_ = true;
 
-bool Compiler::scalar_vector_shape_ = false;
+bool Compiler::scalar_vector_shape_ = true;
 
 void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityLevel sec_level)
 {
-  size_t max_passes = 3;
-  int64_t max_iter = 10000;
+  int64_t max_iter = 1000;
 
   clog << "remove_dead_code\n";
   func->remove_dead_code();
@@ -39,15 +38,13 @@ void Compiler::compile(shared_ptr<ir::Func> func, bool use_mod_switch, SecurityL
   // trs::TRS halide_adapted_trs{func, trs::Ruleset::halide_adapted_ruleset(func)};
   // halide_adapted_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, false);
 
-  clog << "halide_adapted_trs\n";
-  trs::TRS halide_augmented_trs{func, trs::Ruleset::halide_augmented_ruleset(func)};
-  halide_augmented_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
+  // clog << "halide_adapted_trs\n";
+  // trs::TRS halide_augmented_trs{func, trs::Ruleset::halide_augmented_ruleset(func)};
+  // halide_augmented_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
 
   clog << "depth_after_simplify_trs\n";
   trs::TRS depth_after_simplify_trs{func, trs::Ruleset::depth_after_simplify_ruleset(func)};
   depth_after_simplify_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
-
-  // halide_augmented_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
 
   // clog << "convert_scalar_mul_to_add\n";
   // passes::convert_scalar_mul_to_add(func, 1 << 30);
