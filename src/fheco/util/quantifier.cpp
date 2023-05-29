@@ -18,6 +18,12 @@ void Quantifier::run_all_analysis(const param_select::EncryptionParams &params)
   compute_global_metrics(params);
 }
 
+void Quantifier::run_all_analysis()
+{
+  compute_he_depth_info();
+  count_terms_classes();
+}
+
 void Quantifier::compute_he_depth_info()
 {
   ctxt_leaves_depth_info_.clear();
@@ -98,6 +104,7 @@ void Quantifier::count_terms_classes()
   mod_switch_count_.clear();
   he_add_sub_negate_count_.clear();
   ctxt_output_terms_info_.clear();
+  circuit_static_cost_ = 0;
 
   global_metrics_ = false;
 
@@ -234,6 +241,8 @@ void Quantifier::count_terms_classes()
         ++captured_terms_count_;
         ++pp_ops_count_;
       }
+
+      circuit_static_cost_ += ir::evaluate_raw_op_code(term->op_code(), term->operands());
     }
     else
     {
@@ -385,6 +394,7 @@ Quantifier Quantifier::operator-(const Quantifier &other) const
     result.mod_switch_count_ -= other.mod_switch_count_;
     result.he_add_sub_negate_count_ -= other.he_add_sub_negate_count_;
     result.ctxt_output_terms_info_ -= other.ctxt_output_terms_info_;
+    result.circuit_static_cost_ -= other.circuit_static_cost_;
   }
   if (global_metrics_ && other.global_metrics())
   {
@@ -444,6 +454,7 @@ void Quantifier::print_terms_classes_info(ostream &os) const
     return;
   }
 
+  os << "circuit_static_cost: " << circuit_static_cost_ << '\n';
   os << "all_terms: " << all_terms_count_ << '\n';
   os << "captured_terms: " << captured_terms_count_ << " (%"
      << static_cast<double>(captured_terms_count_) / all_terms_count_ * 100 << ")\n";

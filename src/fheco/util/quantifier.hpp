@@ -86,6 +86,8 @@ public:
 
   void run_all_analysis(const param_select::EncryptionParams &params);
 
+  void run_all_analysis();
+
   void compute_he_depth_info();
 
   void count_terms_classes();
@@ -202,6 +204,8 @@ private:
   CAOpCount he_add_sub_negate_count_{};
 
   CtxtTermsInfo ctxt_output_terms_info_{};
+
+  std::int64_t circuit_static_cost_ = 0;
 
   bool global_metrics_ = false;
 
