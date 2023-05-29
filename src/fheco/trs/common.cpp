@@ -62,23 +62,23 @@ void count_ctxt_leaves(ir::Term *term, TermsMetric &dp)
     {
       if (top_term->is_leaf())
       {
-        dp.emplace(top_term, 1);
+        dp.emplace(top_term->id(), 1);
         if (top_call.parent_)
-          ++interm_results[top_call.parent_];
+          ++interm_results[top_call.parent_->id()];
       }
       else
       {
-        auto [it, inserted] = dp.emplace(top_term, interm_results.at(top_term));
+        auto [it, inserted] = dp.emplace(top_term->id(), interm_results.at(top_term->id()));
         if (top_call.parent_)
-          interm_results[top_call.parent_] += it->second;
+          interm_results[top_call.parent_->id()] += it->second;
       }
       continue;
     }
 
-    if (auto it = dp.find(top_term); it != dp.end())
+    if (auto it = dp.find(top_term->id()); it != dp.end())
     {
       if (top_call.parent_)
-        interm_results[top_call.parent_] += it->second;
+        interm_results[top_call.parent_->id()] += it->second;
       continue;
     }
 

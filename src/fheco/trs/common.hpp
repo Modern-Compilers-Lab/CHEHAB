@@ -3,6 +3,7 @@
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/term.hpp"
 #include "fheco/trs/term_op_code.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
@@ -28,7 +29,7 @@ inline bool operator!=(TermMatcherType term_matcher_type, ir::Term::Type term_ty
 
 ir::OpCode convert_op_code(const TermOpCode &op_code, std::vector<int> generators_vals);
 
-using TermsMetric = std::unordered_map<ir::Term *, std::int64_t, ir::Term::HashPtr, ir::Term::EqualPtr>;
+using TermsMetric = std::unordered_map<std::size_t, std::int64_t>;
 
 void count_ctxt_leaves(ir::Term *term, TermsMetric &dp);
 } // namespace fheco::trs

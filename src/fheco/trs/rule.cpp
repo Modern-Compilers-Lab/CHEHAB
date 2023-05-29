@@ -32,14 +32,14 @@ function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatc
     if (x_term->type() == ir::Term::Type::cipher)
     {
       count_ctxt_leaves(x_term, dp);
-      x_ctxt_leaves_count = dp.at(x_term);
+      x_ctxt_leaves_count = dp.at(x_term->id());
     }
 
     int64_t y_ctxt_leaves_count = 0;
     if (y_term->type() == ir::Term::Type::cipher)
     {
       count_ctxt_leaves(y_term, dp);
-      y_ctxt_leaves_count = dp.at(y_term);
+      y_ctxt_leaves_count = dp.at(y_term->id());
     }
 
     return x_ctxt_leaves_count < y_ctxt_leaves_count;
@@ -57,21 +57,21 @@ function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatc
     if (x_term->type() == ir::Term::Type::cipher)
     {
       count_ctxt_leaves(x_term, dp);
-      x_ctxt_leaves_count = dp.at(x_term);
+      x_ctxt_leaves_count = dp.at(x_term->id());
     }
 
     int64_t y1_ctxt_leaves_count = 0;
     if (y1_term->type() == ir::Term::Type::cipher)
     {
       count_ctxt_leaves(y1_term, dp);
-      y1_ctxt_leaves_count = dp.at(y1_term);
+      y1_ctxt_leaves_count = dp.at(y1_term->id());
     }
 
     int64_t y2_ctxt_leaves_count = 0;
     if (y2_term->type() == ir::Term::Type::cipher)
     {
       count_ctxt_leaves(y2_term, dp);
-      y2_ctxt_leaves_count = dp.at(y2_term);
+      y2_ctxt_leaves_count = dp.at(y2_term->id());
     }
 
     return x_ctxt_leaves_count < (y1_ctxt_leaves_count + y2_ctxt_leaves_count);
