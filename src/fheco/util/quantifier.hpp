@@ -148,6 +148,8 @@ public:
 
   inline const CtxtTermsInfo &ctxt_output_terms_info() const { return ctxt_output_terms_info_; }
 
+  inline std::int64_t circuit_static_cost() const { return circuit_static_cost_; }
+
   inline bool global_metrics() const { return global_metrics_; }
 
   inline std::int64_t circuit_cost() const { return circuit_cost_; }

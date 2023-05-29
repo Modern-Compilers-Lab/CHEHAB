@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   if (argc > 1)
     max_iter = stoull(argv[1]);
 
-  cout << "max_iter: " << max_iter << '\n';
+  cout << max_iter;
 
   string func_name = "cryptonets";
   Compiler::create_func(func_name, 8192, 20, false, true);
@@ -129,15 +129,18 @@ int main(int argc, char **argv)
 
   Compiler::disable_cse();
 
-  cout << "compile" << endl;
   Compiler::compile(max_iter);
-  cout << "end compile" << endl;
 
-  cout << "quantifier1" << endl;
   util::Quantifier quantifier1(Compiler::active_func());
   quantifier1.run_all_analysis();
-  cout << "end quantifier1" << endl;
-  quantifier1.print_info(cout, false);
+
+  cout << quantifier1.circuit_static_cost() << " ";
+
+  cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().avg_xdepth_ << " "
+       << quantifier1.he_depth_summary().min_xdepth_ << " ";
+
+  cout << quantifier1.he_depth_summary().max_depth_ << " " << quantifier1.he_depth_summary().avg_depth_ << " "
+       << quantifier1.he_depth_summary().min_depth_ << '\n';
 
   return 0;
 }
