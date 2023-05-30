@@ -23,29 +23,43 @@ bool Compiler::const_folding_enabled_ = true;
 
 bool Compiler::scalar_vector_shape_ = true;
 
-void Compiler::compile(shared_ptr<ir::Func> func, int64_t max_iter)
+void Compiler::compile(
+  shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, int64_t max_iter,
+  bool rewrite_created_sub_terms)
 {
   // clog << "remove_dead_code\n";
   // func->remove_dead_code();
 
-  // clog << "cse_commut\n";
-  // passes::cse_commut(func);
+  switch (ruleset)
+  {
+  case Ruleset::depth:
+  {
+    clog << "depth_trs\n";
+    trs::TRS depth_trs{func, trs::Ruleset::depth_ruleset(func)};
+    depth_trs.run(rewrite_heuristic, max_iter, false, rewrite_created_sub_terms);
+    break;
+  }
 
-  // clog << "halide_adapted_trs\n";
-  // trs::TRS halide_adapted_trs{func, trs::Ruleset::halide_adapted_ruleset(func)};
-  // halide_adapted_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, false);
+  case Ruleset::ops_cost:
+  {
+    clog << "ops_cost_trs\n";
+    trs::TRS ops_cost_trs{func, trs::Ruleset::ops_cost_ruleset(func)};
+    ops_cost_trs.run(rewrite_heuristic, max_iter, false, rewrite_created_sub_terms);
+    break;
+  }
 
-  // clog << "halide_adapted_trs\n";
-  // trs::TRS halide_augmented_trs{func, trs::Ruleset::halide_augmented_ruleset(func)};
-  // halide_augmented_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, true);
+  case Ruleset::joined:
+  {
+    clog << "joined_trs\n";
+    trs::TRS joined_trs{func, trs::Ruleset::joined_ruleset(func)};
+    joined_trs.run(rewrite_heuristic, max_iter, false, rewrite_created_sub_terms);
+    break;
+  }
 
-  clog << "depth_after_simplify_trs\n";
-  trs::TRS depth_after_simplify_trs{func, trs::Ruleset::depth_after_simplify_ruleset(func)};
-  depth_after_simplify_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, false);
-
-  // clog << "depth_trs\n";
-  // trs::TRS depth_trs{func, trs::Ruleset::depth_ruleset(func)};
-  // depth_trs.run(trs::TRS::RewriteHeuristic::bottom_up, max_iter, false, false);
+  default:
+    throw invalid_argument("invalid ruleset selector");
+    break;
+  }
 
   // clog << "convert_scalar_mul_to_add\n";
   // passes::convert_scalar_mul_to_add(func, 1 << 30);
@@ -90,3 +104,30 @@ void Compiler::delete_func(const string &name)
   funcs_table_.erase(name);
 }
 } // namespace fheco
+
+namespace std
+{
+ostream &operator<<(ostream &os, fheco::Compiler::Ruleset ruleset)
+{
+  switch (ruleset)
+  {
+  case fheco::Compiler::Ruleset::depth:
+    os << "depth";
+    break;
+
+  case fheco::Compiler::Ruleset::ops_cost:
+    os << "ops_cost";
+    break;
+
+  case fheco::Compiler::Ruleset::joined:
+    os << "joined";
+    break;
+
+  default:
+    throw invalid_argument("invalid ruleset selector");
+    break;
+  }
+
+  return os;
+}
+} // namespace std

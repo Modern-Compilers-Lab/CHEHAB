@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fheco/trs/common.hpp"
 #include "fheco/trs/rule.hpp"
 #include "fheco/trs/ruleset.hpp"
 #include "fheco/trs/subst.hpp"
@@ -21,12 +22,6 @@ namespace fheco::trs
 class TRS
 {
 public:
-  enum class RewriteHeuristic
-  {
-    bottom_up,
-    top_down
-  };
-
   static TRS make_void_trs(std::shared_ptr<ir::Func> func);
 
   TRS(std::shared_ptr<ir::Func> func, Ruleset ruleset) : func_{std::move(func)}, ruleset_{std::move(ruleset)} {}

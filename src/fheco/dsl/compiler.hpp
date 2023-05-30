@@ -1,9 +1,11 @@
 #pragma once
 
 #include "fheco/ir/func.hpp"
+#include "fheco/trs/common.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -14,6 +16,13 @@ namespace fheco
 class Compiler
 {
 public:
+  enum class Ruleset
+  {
+    depth,
+    ops_cost,
+    joined
+  };
+
   static inline void create_func(
     std::string name, std::size_t slot_count, integer modulus, bool signedness, bool need_full_cyclic_rotation,
     bool delayed_reduction = false, bool overflow_warnings = false)
@@ -30,9 +39,15 @@ public:
       std::move(name), slot_count, bit_width, signedness, need_full_cyclic_rotation, overflow_warnings));
   }
 
-  static void compile(std::shared_ptr<ir::Func> func, std::int64_t max_iter);
+  static void compile(
+    std::shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::int64_t max_iter,
+    bool rewrite_created_sub_terms);
 
-  static inline void compile(std::int64_t max_iter) { compile(active_func(), max_iter); }
+  static inline void compile(
+    Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::int64_t max_iter, bool rewrite_created_sub_terms)
+  {
+    compile(active_func(), ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms);
+  }
 
   static inline const std::shared_ptr<ir::Func> &active_func()
   {
@@ -90,3 +105,8 @@ private:
   static bool scalar_vector_shape_;
 };
 } // namespace fheco
+
+namespace std
+{
+ostream &operator<<(ostream &os, fheco::Compiler::Ruleset ruleset);
+} // namespace std

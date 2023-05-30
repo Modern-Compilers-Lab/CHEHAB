@@ -5,6 +5,7 @@
 #include "fheco/trs/term_op_code.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <ostream>
 #include <unordered_map>
 #include <vector>
 
@@ -20,6 +21,12 @@ enum class TermMatcherType
   const_
 };
 
+enum class RewriteHeuristic
+{
+  bottom_up,
+  top_down
+};
+
 bool operator==(TermMatcherType term_matcher_type, ir::Term::Type term_type);
 
 inline bool operator!=(TermMatcherType term_matcher_type, ir::Term::Type term_type)
@@ -33,3 +40,8 @@ using TermsMetric = std::unordered_map<std::size_t, std::int64_t>;
 
 void count_ctxt_leaves(ir::Term *term, TermsMetric &dp);
 } // namespace fheco::trs
+
+namespace std
+{
+ostream &operator<<(ostream &os, fheco::trs::RewriteHeuristic rewrite_heuristic);
+} // namespace std

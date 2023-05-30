@@ -1,7 +1,9 @@
 #include <cstddef>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include "ml.hpp"
@@ -15,6 +17,10 @@ void cryptonets(
   const vector<size_t> &b8_shape)
 {
   // declare inputs
+  int x_min_val = -40;
+  int x_max_val = 40;
+  int wb_min = -5;
+  int wb_max = 5;
   vector<vector<vector<Ciphertext>>> x;
   for (size_t i = 0; i < x_shape[0]; ++i)
   {
@@ -23,7 +29,8 @@ void cryptonets(
     {
       x[i].push_back(vector<Ciphertext>());
       for (size_t k = 0; k < x_shape[2]; ++k)
-        x[i][j].push_back(Ciphertext("x[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "]"));
+        x[i][j].push_back(
+          Ciphertext("x[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "]", x_min_val, x_max_val));
     }
   }
 
@@ -38,15 +45,16 @@ void cryptonets(
       {
         w1[i][j].push_back(vector<Plaintext>());
         for (size_t l = 0; l < w1_shape[3]; ++l)
-          w1[i][j][k].push_back(
-            Plaintext("w1[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]"));
+          w1[i][j][k].push_back(Plaintext(
+            "w1[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]", wb_min,
+            wb_max));
       }
     }
   }
 
   vector<Plaintext> b1;
   for (size_t i = 0; i < b1_shape[0]; ++i)
-    b1.push_back(Plaintext("b1[" + to_string(i) + "]"));
+    b1.push_back(Plaintext("b1[" + to_string(i) + "]", wb_min, wb_max));
 
   vector<vector<vector<vector<Plaintext>>>> w4;
   for (size_t i = 0; i < w4_shape[0]; ++i)
@@ -59,28 +67,51 @@ void cryptonets(
       {
         w4[i][j].push_back(vector<Plaintext>());
         for (size_t l = 0; l < w4_shape[3]; ++l)
-          w4[i][j][k].push_back(
-            Plaintext("w4[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]"));
+          w4[i][j][k].push_back(Plaintext(
+            "w4[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]", wb_min,
+            wb_max));
       }
     }
   }
 
   vector<Plaintext> b4;
   for (size_t i = 0; i < b4_shape[0]; ++i)
-    b4.push_back(Plaintext("b4[" + to_string(i) + "]"));
+    b4.push_back(Plaintext("b4[" + to_string(i) + "]", wb_min, wb_max));
 
   vector<vector<Plaintext>> w8;
   for (size_t i = 0; i < w8_shape[0]; ++i)
   {
     w8.push_back(vector<Plaintext>());
     for (size_t j = 0; j < w8_shape[1]; ++j)
-      w8[i].push_back(Plaintext("w8[" + to_string(i) + "][" + to_string(j) + "]"));
+      w8[i].push_back(Plaintext("w8[" + to_string(i) + "][" + to_string(j) + "]", wb_min, wb_max));
   }
 
   vector<Plaintext> b8;
   for (size_t i = 0; i < b8_shape[0]; ++i)
-    b8.push_back(Plaintext("b8[" + to_string(i) + "]"));
+    b8.push_back(Plaintext("b8[" + to_string(i) + "]", wb_min, wb_max));
 
+  // show passed shapes
+  cout << "x: ";
+  print_vector(shape(x), cout);
+  cout << '\n';
+  cout << "w1: ";
+  print_vector(shape(w1), cout);
+  cout << '\n';
+  cout << "b1: ";
+  print_vector(shape(b1), cout);
+  cout << '\n';
+  cout << "w4: ";
+  print_vector(shape(w4), cout);
+  cout << '\n';
+  cout << "b4: ";
+  print_vector(shape(b4), cout);
+  cout << '\n';
+  cout << "w8: ";
+  print_vector(shape(w8), cout);
+  cout << '\n';
+  cout << "b8: ";
+  print_vector(shape(b8), cout);
+  cout << '\n';
   // predict
   auto y = predict(x, w1, b1, w4, b4, w8, b8);
   // declare outputs
@@ -161,7 +192,22 @@ int main(int argc, char **argv)
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
     vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
 
+  ofstream init_ir_os(func_name + "_init_ir.dot");
+  util::draw_ir(Compiler::active_func(), init_ir_os);
+
+  const auto &rand_inputs = Compiler::active_func()->data_flow().inputs_info();
+
   Compiler::compile(ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms);
+
+  auto outputs = util::evaluate_on_clear(Compiler::active_func(), rand_inputs);
+  if (outputs != Compiler::active_func()->data_flow().outputs_info())
+    throw logic_error("compilation correctness-test failed");
+
+  ofstream rand_example_os(func_name + "_rand_example.txt");
+  util::print_io_terms_values(Compiler::active_func(), rand_example_os);
+
+  ofstream final_ir_os(func_name + "_final_ir.dot");
+  util::draw_ir(Compiler::active_func(), final_ir_os);
 
   if (call_quantifier)
   {

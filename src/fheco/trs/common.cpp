@@ -93,3 +93,25 @@ void count_ctxt_leaves(ir::Term *term, TermsMetric &dp)
     dp.emplace(e.first, e.second);
 }
 } // namespace fheco::trs
+
+namespace std
+{
+ostream &operator<<(ostream &os, fheco::trs::RewriteHeuristic rewrite_heuristic)
+{
+  switch (rewrite_heuristic)
+  {
+  case fheco::trs::RewriteHeuristic::bottom_up:
+    os << "bottom_up";
+    break;
+
+  case fheco::trs::RewriteHeuristic::top_down:
+    os << "top_down";
+    break;
+
+  default:
+    throw invalid_argument("invalid rewrite_heuristic selector");
+    break;
+  }
+  return os;
+}
+} // namespace std
