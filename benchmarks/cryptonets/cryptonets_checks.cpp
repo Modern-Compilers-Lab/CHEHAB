@@ -213,14 +213,7 @@ int main(int argc, char **argv)
   {
     util::Quantifier quantifier1(Compiler::active_func());
     quantifier1.run_all_analysis();
-
-    cout << quantifier1.circuit_static_cost() << " ";
-
-    cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().avg_xdepth_ << " "
-         << quantifier1.he_depth_summary().min_xdepth_ << " ";
-
-    cout << quantifier1.he_depth_summary().max_depth_ << " " << quantifier1.he_depth_summary().avg_depth_ << " "
-         << quantifier1.he_depth_summary().min_depth_ << '\n';
+    quantifier1.print_info(cout);
   }
   return 0;
 }

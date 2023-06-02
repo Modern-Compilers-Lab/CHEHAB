@@ -99,11 +99,11 @@ int main(int argc, char **argv)
   if (argc > 1)
     call_quantifier = stoi(argv[1]);
 
-  Compiler::Ruleset ruleset = Compiler::Ruleset::joined;
+  auto ruleset = Compiler::Ruleset::joined;
   if (argc > 2)
     ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
 
-  trs::RewriteHeuristic rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+  auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
   if (argc > 3)
     rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
 
@@ -127,17 +127,17 @@ int main(int argc, char **argv)
   if (argc > 8)
     const_folding = stoi(argv[8]);
 
-  print_bool_arg(call_quantifier, "call_quantifier", cout);
-  cout << " ";
-  cout << ruleset << " " << rewrite_heuristic << " " << max_iter << " ";
-  print_bool_arg(rewrite_created_sub_terms, "rewrite_created_sub_terms", cout);
-  cout << " ";
-  print_bool_arg(cse, "cse", cout);
-  cout << " ";
-  print_bool_arg(cse_order_operands, "cse_order_operands", cout);
-  cout << " ";
-  print_bool_arg(const_folding, "const_folding", cout);
-  cout << '\n';
+  print_bool_arg(call_quantifier, "call_quantifier", clog);
+  clog << " ";
+  clog << ruleset << " " << rewrite_heuristic << " " << max_iter << " ";
+  print_bool_arg(rewrite_created_sub_terms, "rewrite_created_sub_terms", clog);
+  clog << " ";
+  print_bool_arg(cse, "cse", clog);
+  clog << " ";
+  print_bool_arg(cse_order_operands, "cse_order_operands", clog);
+  clog << " ";
+  print_bool_arg(const_folding, "const_folding", clog);
+  clog << '\n';
 
   if (cse)
     Compiler::enable_cse();
@@ -167,14 +167,10 @@ int main(int argc, char **argv)
   {
     util::Quantifier quantifier1(Compiler::active_func());
     quantifier1.run_all_analysis();
-
     cout << quantifier1.circuit_static_cost() << " ";
-
-    cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().avg_xdepth_ << " "
-         << quantifier1.he_depth_summary().min_xdepth_ << " ";
-
-    cout << quantifier1.he_depth_summary().max_depth_ << " " << quantifier1.he_depth_summary().avg_depth_ << " "
-         << quantifier1.he_depth_summary().min_depth_ << '\n';
+    cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().max_depth_ << '\n';
   }
+  
+  // getchar();
   return 0;
 }

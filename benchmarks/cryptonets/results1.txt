@@ -1,0 +1,80 @@
+depth_trs
+performed 485360 iter
+call_quantifier depth bottom_up 500000 rewrite_created_sub_terms no_cse cse_order_operands const_folding
+851400 5 5 5 31 28.0268 26
+real 107.951000
+depth_trs
+performed 345245 iter
+call_quantifier depth bottom_up 500000 rewrite_created_sub_terms cse cse_order_operands const_folding
+851400 5 5 5 29 27.6454 25
+real 154.995000 97792 kB
+depth_trs
+performed 167180 iter
+call_quantifier depth top_down 500000 rewrite_created_sub_terms no_cse cse_order_operands const_folding
+852780 5 5 5 31 28.6811 27
+real 111.675000
+depth_trs
+performed 142515 iter
+call_quantifier depth top_down 500000 rewrite_created_sub_terms cse cse_order_operands const_folding
+852935 5 5 5 30 28.4809 26
+real 88.019000 97792 kB
+ops_cost_trs
+performed 94130 iter
+call_quantifier ops_cost bottom_up 500000 rewrite_created_sub_terms no_cse cse_order_operands const_folding
+820800 5 5 5 197 125.58 28
+real 15.497000
+ops_cost_trs
+performed 83600 iter
+call_quantifier ops_cost bottom_up 500000 rewrite_created_sub_terms cse cse_order_operands const_folding
+820800 5 5 5 197 125.58 28
+real 15.416000 97792 kB
+ops_cost_trs
+performed 94130 iter
+call_quantifier ops_cost top_down 500000 rewrite_created_sub_terms no_cse cse_order_operands const_folding
+827020 5 5 5 197 153.714 92
+real 2.316000
+ops_cost_trs
+performed 83600 iter
+call_quantifier ops_cost top_down 500000 rewrite_created_sub_terms cse cse_order_operands const_folding
+827020 5 5 5 197 153.714 92
+real 1.713000 97792 kB
+joined_trs
+performed 486380 iter
+call_quantifier joined bottom_up 500000 rewrite_created_sub_terms no_cse cse_order_operands const_folding
+820800 5 5 5 31 28.0268 26
+real 109.421000
+joined_trs
+performed 346025 iter
+call_quantifier joined bottom_up 500000 rewrite_created_sub_terms cse cse_order_operands const_folding
+820800 5 5 5 29 27.6454 25
+real 144.838000 97792 kB
+joined_trs
+performed 168200 iter
+call_quantifier joined top_down 500000 rewrite_created_sub_terms no_cse cse_order_operands const_folding
+822180 5 5 5 31 28.6811 27
+real 126.552000
+joined_trs
+performed 143535 iter
+call_quantifier joined top_down 500000 rewrite_created_sub_terms cse cse_order_operands const_folding
+822335 5 5 5 30 28.4809 26
+real 111.244000 97792 kB
+depth_trs
+performed 0 iter
+call_quantifier depth bottom_up 0 no_rewrite_created_sub_terms no_cse no_cse_order_operands no_const_folding
+1047540 5 4.97977 0 203 154.133 41
+real 0.201000 97000 kB
+depth_trs
+performed 0 iter
+call_quantifier depth bottom_up 0 no_rewrite_created_sub_terms no_cse no_cse_order_operands const_folding
+858850 5 5 5 200 154.214 92
+real 0.252000 97128 kB
+depth_trs
+performed 0 iter
+call_quantifier depth bottom_up 0 no_rewrite_created_sub_terms cse cse_order_operands no_const_folding
+885660 5 5 5 203 154.276 92
+real 0.240000 97856 kB
+depth_trs
+performed 0 iter
+call_quantifier depth bottom_up 0 no_rewrite_created_sub_terms cse cse_order_operands const_folding
+858850 5 5 5 200 154.214 92
+real 0.290000 97792 kB
