@@ -97,11 +97,11 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"simplify-add-sub-3-4", (x - y) + (z + y), x + z},
 
     {"simplify-add-sub-4-1", x + ((y - x) - z), y - z},
-    {"simplify-add-sub-4-1", ((x - y) - z) + y, x - z},
-    {"simplify-add-sub-4-1", x + (y - (x + z)), y - z},
-    {"simplify-add-sub-4-1", x + (y - (z + x)), y - z},
-    {"simplify-add-sub-4-1", (x - (y + z)) + y, x - z},
-    {"simplify-add-sub-4-1", (x - (y + z)) + z, x - y},
+    {"simplify-add-sub-4-2", ((x - y) - z) + y, x - z},
+    {"simplify-add-sub-4-3", x + (y - (x + z)), y - z},
+    {"simplify-add-sub-4-4", x + (y - (z + x)), y - z},
+    {"simplify-add-sub-4-5", (x - (y + z)) + y, x - z},
+    {"simplify-add-sub-4-6", (x - (y + z)) + z, x - y},
 
     {"part-fold-zero_m-1", x + ((zero - y) - z), x - (y + z)},
     {"part-fold-zero_m-2", ((zero - x) - y) + z, z - (x + y)},
@@ -150,9 +150,9 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"simplify-sub-4", y - (x + y), -x},
     {"simplify-sub-5", (x - y) - x, -y},
 
-    {"part-fold-assoc-sub-1-1", (x + c0) - c1, x + (c0 - c1)},
-    {"part-fold-assoc-sub-1-2", (x + c0) - (c1 - y), (x + y) + (c0 - c1)},
-    {"part-fold-assoc-sub-1-3", (x + c0) - (y + c1), (x - y) + (c0 - c1)},
+    {"part-fold-assoc-sub-1", (x + c0) - c1, x + (c0 - c1)},
+    {"part-fold-assoc-sub-2", (x + c0) - (c1 - y), (x + y) + (c0 - c1)},
+    {"part-fold-assoc-sub-3", (x + c0) - (y + c1), (x - y) + (c0 - c1)},
 
     {"const-up-assoc-sub-1", (x + c0) - y, (x - y) + c0},
 
@@ -335,6 +335,7 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
   vector<Rule> mul_rules{
     {"mul_0-1", zero * x, zero},
     {"mul_0-2", x * zero, zero},
+
     {"mul_1-1", one * x, x},
     {"mul_1-2", x * one, x},
 
@@ -375,6 +376,7 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"rotation-up-assoc-mul-1", (x * (y << n)) * z, (x * z) * (y << n), Rule::is_not_rotation(z)},
     {"rotation-up-assoc-mul-2", x * (y * (z << n)), (x * y) * (z << n), Rule::is_not_rotation(x)}};
 
-  return Ruleset{move(func), move(add_rules), move(sub_rules), move(negate_rules), move(rotate_rules), {}, move(mul_rules)};
+  return Ruleset{move(func), move(add_rules), move(sub_rules), move(negate_rules), move(rotate_rules),
+                 {},         move(mul_rules)};
 }
 } // namespace fheco::trs
