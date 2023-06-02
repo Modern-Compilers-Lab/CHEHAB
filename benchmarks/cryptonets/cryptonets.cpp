@@ -1,3 +1,4 @@
+#include "fheco/fheco.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -170,7 +171,7 @@ int main(int argc, char **argv)
     cout << quantifier1.circuit_static_cost() << " ";
     cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().max_depth_ << '\n';
   }
-  
+
   // getchar();
   return 0;
 }
