@@ -73,7 +73,7 @@ Term *Expr::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
 {
   if (Compiler::cse_enabled())
   {
-    if (Compiler::order_operands_enabled())
+    if (op_code.commutativity() && Compiler::order_operands_enabled())
       sort(operands.begin(), operands.end(), Term::ComparePtr());
 
     if (auto term = find_op(&op_code, &operands); term)
@@ -134,7 +134,7 @@ Term *Expr::find_op_commut(const OpCode *op_code, const vector<Term *> *operands
   if (!Compiler::cse_enabled())
     throw logic_error("cse is not enabled");
 
-  if (Compiler::order_operands_enabled() || !op_code->commutativity())
+  if (!op_code->commutativity() || Compiler::order_operands_enabled())
     return find_op(op_code, operands);
 
   auto operands_permut = *operands;

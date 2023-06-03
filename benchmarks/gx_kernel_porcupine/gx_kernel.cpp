@@ -77,6 +77,21 @@ int main(int argc, char **argv)
   if (argc > 8)
     const_folding = stoi(argv[8]);
 
+  if (cse)
+    Compiler::enable_cse();
+  else
+    Compiler::disable_cse();
+
+  if (cse_order_operands)
+    Compiler::enable_order_operands();
+  else
+    Compiler::disable_order_operands();
+
+  if (const_folding)
+    Compiler::enable_const_folding();
+  else
+    Compiler::disable_const_folding();
+
   print_bool_arg(call_quantifier, "call_quantifier", clog);
   clog << " ";
   clog << ruleset << " " << rewrite_heuristic << " " << max_iter << " ";

@@ -1,2 +1,2 @@
 add_executable(linear_reg_porcupine linear_reg.cpp)
-target_link_libraries(linear_reg_porcupine PRIVATE fhecompiler)
+target_link_libraries(linear_reg_porcupine PRIVATE fheco)

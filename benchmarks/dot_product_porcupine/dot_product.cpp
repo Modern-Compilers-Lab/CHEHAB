@@ -73,6 +73,21 @@ int main(int argc, char **argv)
   print_bool_arg(const_folding, "const_folding", clog);
   clog << '\n';
 
+  if (cse)
+    Compiler::enable_cse();
+  else
+    Compiler::disable_cse();
+
+  if (cse_order_operands)
+    Compiler::enable_order_operands();
+  else
+    Compiler::disable_order_operands();
+
+  if (const_folding)
+    Compiler::enable_const_folding();
+  else
+    Compiler::disable_const_folding();
+
   string func_name = "dot_product";
   Compiler::create_func(func_name, 8, 16, false, false, false);
 
