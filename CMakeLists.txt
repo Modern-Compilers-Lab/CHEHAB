@@ -19,7 +19,7 @@ install(TARGETS fheco ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTAL
 
 # add_subdirectory(benchmarks/test)
 # add_subdirectory(benchmarks/box_blur)
-# add_subdirectory(benchmarks/box_blur_porcupine)
+add_subdirectory(benchmarks/box_blur_porcupine)
 add_subdirectory(benchmarks/cryptonets)
 # add_subdirectory(benchmarks/dot_product)
 # add_subdirectory(benchmarks/dot_product_porcupine)

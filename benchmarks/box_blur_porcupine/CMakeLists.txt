@@ -1,2 +1,2 @@
 add_executable(box_blur_porcupine box_blur.cpp)
-target_link_libraries(box_blur_porcupine PRIVATE fhecompiler)
+target_link_libraries(box_blur_porcupine PRIVATE fheco)

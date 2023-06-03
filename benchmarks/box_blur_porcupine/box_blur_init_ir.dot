@@ -1,52 +1,20 @@
 digraph "box_blur" {
 node [shape=circle width=1 margin=0]
 edge [dir=back]
-6 [label="6" style=solid]
-ciphertext0 [label="c0" style=dashed color=blue fontcolor=blue]
-ciphertext3 [label="rotate" style=dashed]
-ciphertext3 -> ciphertext0
-ciphertext3 -> 6
-5 [label="5" style=solid]
-ciphertext2 [label="rotate" style=dashed]
-ciphertext2 -> ciphertext0
-ciphertext2 -> 5
-ciphertext5 [label="+" style=dashed]
-ciphertext5 -> ciphertext2
-ciphertext5 -> ciphertext3
-1 [label="1" style=solid]
-ciphertext1 [label="rotate" style=dashed]
-ciphertext1 -> ciphertext0
-ciphertext1 -> 1
-ciphertext4 [label="+" style=dashed]
-ciphertext4 -> ciphertext1
-ciphertext4 -> ciphertext0
-ciphertext6 [label="+" style=dashed color=red fontcolor=red]
-ciphertext6 -> ciphertext4
-ciphertext6 -> ciphertext5
-subgraph cluster_key {
-    graph[label="Key"]
-    node [width=0.5]
-    edge [dir=forward style=invis]
-    in_cipher [label=input color=blue fontcolor=blue style=dashed]
-    tmp_cipher [label=tmp color=black fontcolor=black style=dashed]
-    out_cipher [label=out color=red fontcolor=red style=dashed]
-    cipher [shape=plain]
-
-    in_plain [label=in icolor=blue fontcolor=blue style=dotted]
-    tmp_plain [label=tmp color=black fontcolor=black style=dotted]
-    out_plain [label=out color=red fontcolor=red style=dotted]
-    plain [shape=plain]
-    
-    other [color=black fontcolor=black style=solid]
-    scalar [color=darkgreen fontcolor=darkgreen style=solid]
-    const[shape=plain]
-    
-    cipher -> plain
-    plain -> const
-    out_cipher -> out_plain
-    in_cipher -> in_plain
-    tmp_cipher -> tmp_plain
-    in_plain -> other
-    out_plain -> scalar
-}
+1 [label="c0" style=solid color=red fontcolor=red]
+2 [label="<< 1" style=solid color=black fontcolor=black]
+2 -> 1
+5 [label="+" style=solid color=black fontcolor=black]
+5 -> 1
+5 -> 2
+3 [label="<< 5" style=solid color=black fontcolor=black]
+3 -> 1
+4 [label="<< 6" style=solid color=black fontcolor=black]
+4 -> 1
+6 [label="+" style=solid color=black fontcolor=black]
+6 -> 3
+6 -> 4
+7 [label="+ (c6)" style=solid color=blue fontcolor=black]
+7 -> 5
+7 -> 6
 }

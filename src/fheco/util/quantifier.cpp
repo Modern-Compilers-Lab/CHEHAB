@@ -522,7 +522,7 @@ void Quantifier::print_global_metrics(std::ostream &os) const
 {
   if (!global_metrics_)
   {
-    os << "global_metrics_ not computed\n";
+    os << "global_metrics not computed\n";
     return;
   }
 
