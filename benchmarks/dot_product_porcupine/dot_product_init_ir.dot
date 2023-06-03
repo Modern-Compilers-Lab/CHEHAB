@@ -1,56 +1,24 @@
 digraph "dot_product" {
 node [shape=circle width=1 margin=0]
 edge [dir=back]
-4 [label="4" style=solid]
-ciphertext1 [label="c00" style=dashed color=blue fontcolor=blue]
-ciphertext0 [label="c0" style=dashed color=blue fontcolor=blue]
-ciphertext2 [label="*" style=dashed]
-ciphertext2 -> ciphertext0
-ciphertext2 -> ciphertext1
-ciphertext3 [label="rotate" style=dashed]
-ciphertext3 -> ciphertext2
-ciphertext3 -> 4
-ciphertext4 [label="+" style=dashed]
-ciphertext4 -> ciphertext2
-ciphertext4 -> ciphertext3
-1 [label="1" style=solid]
-ciphertext5 [label="rotate" style=dashed]
-ciphertext5 -> ciphertext4
-ciphertext5 -> 1
-ciphertext6 [label="+" style=dashed]
-ciphertext6 -> ciphertext5
-ciphertext6 -> ciphertext4
-2 [label="2" style=solid]
-ciphertext7 [label="rotate" style=dashed]
-ciphertext7 -> ciphertext6
-ciphertext7 -> 2
-ciphertext8 [label="+" style=dashed color=red fontcolor=red]
-ciphertext8 -> ciphertext7
-ciphertext8 -> ciphertext6
-subgraph cluster_key {
-    graph[label="Key"]
-    node [width=0.5]
-    edge [dir=forward style=invis]
-    in_cipher [label=input color=blue fontcolor=blue style=dashed]
-    tmp_cipher [label=tmp color=black fontcolor=black style=dashed]
-    out_cipher [label=out color=red fontcolor=red style=dashed]
-    cipher [shape=plain]
-
-    in_plain [label=in icolor=blue fontcolor=blue style=dotted]
-    tmp_plain [label=tmp color=black fontcolor=black style=dotted]
-    out_plain [label=out color=red fontcolor=red style=dotted]
-    plain [shape=plain]
-    
-    other [color=black fontcolor=black style=solid]
-    scalar [color=darkgreen fontcolor=darkgreen style=solid]
-    const[shape=plain]
-    
-    cipher -> plain
-    plain -> const
-    out_cipher -> out_plain
-    in_cipher -> in_plain
-    tmp_cipher -> tmp_plain
-    in_plain -> other
-    out_plain -> scalar
-}
+1 [label="c0" style=solid color=red fontcolor=red]
+2 [label="v1" style=dashed color=red fontcolor=red]
+3 [label="*" style=solid color=black fontcolor=black]
+3 -> 1
+3 -> 2
+4 [label="<< 4" style=solid color=black fontcolor=black]
+4 -> 3
+5 [label="+" style=solid color=black fontcolor=black]
+5 -> 3
+5 -> 4
+6 [label="<< 1" style=solid color=black fontcolor=black]
+6 -> 5
+7 [label="+" style=solid color=black fontcolor=black]
+7 -> 5
+7 -> 6
+8 [label="<< 2" style=solid color=black fontcolor=black]
+8 -> 7
+9 [label="+ (c_result)" style=solid color=blue fontcolor=black]
+9 -> 7
+9 -> 8
 }
