@@ -1,73 +1,35 @@
 digraph "gx_kernel" {
 node [shape=circle width=1 margin=0]
 edge [dir=back]
-1018 [label="1018" style=solid]
-ciphertext0 [label="c0" style=dashed color=blue fontcolor=blue]
-ciphertext6 [label="rotate" style=dashed]
-ciphertext6 -> ciphertext0
-ciphertext6 -> 1018
-1020 [label="1020" style=solid]
-ciphertext5 [label="rotate" style=dashed]
-ciphertext5 -> ciphertext0
-ciphertext5 -> 1020
-ciphertext9 [label="+" style=dashed]
-ciphertext9 -> ciphertext5
-ciphertext9 -> ciphertext6
-ciphertext11 [label="+" style=dashed]
-ciphertext11 -> ciphertext9
-ciphertext11 -> ciphertext9
-1023 [label="1023" style=solid]
-ciphertext4 [label="rotate" style=dashed]
-ciphertext4 -> ciphertext0
-ciphertext4 -> 1023
-6 [label="6" style=solid]
-ciphertext3 [label="rotate" style=dashed]
-ciphertext3 -> ciphertext0
-ciphertext3 -> 6
-ciphertext8 [label="+" style=dashed]
-ciphertext8 -> ciphertext3
-ciphertext8 -> ciphertext4
-5 [label="5" style=solid]
-ciphertext2 [label="rotate" style=dashed]
-ciphertext2 -> ciphertext0
-ciphertext2 -> 5
-1 [label="1" style=solid]
-ciphertext1 [label="rotate" style=dashed]
-ciphertext1 -> ciphertext0
-ciphertext1 -> 1
-ciphertext7 [label="+" style=dashed]
-ciphertext7 -> ciphertext1
-ciphertext7 -> ciphertext2
-ciphertext10 [label="+" style=dashed]
-ciphertext10 -> ciphertext7
-ciphertext10 -> ciphertext8
-ciphertext12 [label="+" style=dashed color=red fontcolor=red]
-ciphertext12 -> ciphertext10
-ciphertext12 -> ciphertext11
-subgraph cluster_key {
-    graph[label="Key"]
-    node [width=0.5]
-    edge [dir=forward style=invis]
-    in_cipher [label=input color=blue fontcolor=blue style=dashed]
-    tmp_cipher [label=tmp color=black fontcolor=black style=dashed]
-    out_cipher [label=out color=red fontcolor=red style=dashed]
-    cipher [shape=plain]
-
-    in_plain [label=in icolor=blue fontcolor=blue style=dotted]
-    tmp_plain [label=tmp color=black fontcolor=black style=dotted]
-    out_plain [label=out color=red fontcolor=red style=dotted]
-    plain [shape=plain]
-    
-    other [color=black fontcolor=black style=solid]
-    scalar [color=darkgreen fontcolor=darkgreen style=solid]
-    const[shape=plain]
-    
-    cipher -> plain
-    plain -> const
-    out_cipher -> out_plain
-    in_cipher -> in_plain
-    tmp_cipher -> tmp_plain
-    in_plain -> other
-    out_plain -> scalar
-}
+1 [label="c0" style=solid color=red fontcolor=red]
+2 [label="<< 1" style=solid color=black fontcolor=black]
+2 -> 1
+3 [label="<< 5" style=solid color=black fontcolor=black]
+3 -> 1
+8 [label="+" style=solid color=black fontcolor=black]
+8 -> 2
+8 -> 3
+4 [label="<< 6" style=solid color=black fontcolor=black]
+4 -> 1
+5 [label="<< 12" style=solid color=black fontcolor=black]
+5 -> 1
+9 [label="+" style=solid color=black fontcolor=black]
+9 -> 4
+9 -> 5
+11 [label="+" style=solid color=black fontcolor=black]
+11 -> 8
+11 -> 9
+6 [label="<< 9" style=solid color=black fontcolor=black]
+6 -> 1
+7 [label="<< 7" style=solid color=black fontcolor=black]
+7 -> 1
+10 [label="+" style=solid color=black fontcolor=black]
+10 -> 6
+10 -> 7
+12 [label="+" style=solid color=black fontcolor=black]
+12 -> 10
+12 -> 10
+13 [label="+ (c12)" style=solid color=blue fontcolor=black]
+13 -> 11
+13 -> 12
 }

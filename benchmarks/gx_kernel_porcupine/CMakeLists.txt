@@ -1,2 +1,2 @@
 add_executable(gx_kernel_porcupine gx_kernel.cpp)
-target_link_libraries(gx_kernel_porcupine PRIVATE fhecompiler)
+target_link_libraries(gx_kernel_porcupine PRIVATE fheco)
