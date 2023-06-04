@@ -105,8 +105,8 @@ int main(int argc, char **argv)
   clog << '\n';
 
   string func_name = "gx_kernel";
-  // Compiler::create_func(func_name, 13, 16, false, true, false);
-  Compiler::create_func(func_name, 13, 16, false, false, false);
+  // Compiler::create_func(func_name, 13, 16, true, true, false);
+  Compiler::create_func(func_name, 13, 16, true, false, false);
 
   gx_kernel_naive();
 

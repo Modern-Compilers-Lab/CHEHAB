@@ -1,62 +1,24 @@
 digraph "roberts_cross" {
 node [shape=circle width=1 margin=0]
 edge [dir=back]
-1018 [label="1018" style=solid]
-ciphertext0 [label="c0" style=dashed color=blue fontcolor=blue]
-ciphertext5 [label="rotate" style=dashed]
-ciphertext5 -> ciphertext0
-ciphertext5 -> 1018
-ciphertext6 [label="-" style=dashed]
-ciphertext6 -> ciphertext0
-ciphertext6 -> ciphertext5
-ciphertext20 [label="*" style=dashed]
-ciphertext20 -> ciphertext6
-ciphertext20 -> ciphertext6
-ciphertext7 [label="relin" style=dashed]
-ciphertext7 -> ciphertext20
-1019 [label="1019" style=solid]
-4 [label="4" style=solid]
-ciphertext15 [label="rotate" style=dashed]
-ciphertext15 -> ciphertext0
-ciphertext15 -> 4
-ciphertext16 [label="-" style=dashed]
-ciphertext16 -> ciphertext0
-ciphertext16 -> ciphertext15
-ciphertext22 [label="*" style=dashed]
-ciphertext22 -> ciphertext16
-ciphertext22 -> ciphertext16
-ciphertext18 [label="relin" style=dashed]
-ciphertext18 -> ciphertext22
-ciphertext4 [label="rotate" style=dashed]
-ciphertext4 -> ciphertext18
-ciphertext4 -> 1019
-ciphertext8 [label="+" style=dashed color=red fontcolor=red]
-ciphertext8 -> ciphertext4
-ciphertext8 -> ciphertext7
-subgraph cluster_key {
-    graph[label="Key"]
-    node [width=0.5]
-    edge [dir=forward style=invis]
-    in_cipher [label=input color=blue fontcolor=blue style=dashed]
-    tmp_cipher [label=tmp color=black fontcolor=black style=dashed]
-    out_cipher [label=out color=red fontcolor=red style=dashed]
-    cipher [shape=plain]
-
-    in_plain [label=in icolor=blue fontcolor=blue style=dotted]
-    tmp_plain [label=tmp color=black fontcolor=black style=dotted]
-    out_plain [label=out color=red fontcolor=red style=dotted]
-    plain [shape=plain]
-    
-    other [color=black fontcolor=black style=solid]
-    scalar [color=darkgreen fontcolor=darkgreen style=solid]
-    const[shape=plain]
-    
-    cipher -> plain
-    plain -> const
-    out_cipher -> out_plain
-    in_cipher -> in_plain
-    tmp_cipher -> tmp_plain
-    in_plain -> other
-    out_plain -> scalar
-}
+1 [label="c0" style=solid color=red fontcolor=red]
+10 [label="<< 4" style=solid color=black fontcolor=black]
+10 -> 1
+11 [label="-" style=solid color=black fontcolor=black]
+11 -> 1
+11 -> 10
+12 [label="<< 8" style=solid color=black fontcolor=black]
+12 -> 11
+13 [label="square" style=solid color=black fontcolor=black]
+13 -> 12
+6 [label="<< 7" style=solid color=black fontcolor=black]
+6 -> 1
+7 [label="-" style=solid color=black fontcolor=black]
+7 -> 1
+7 -> 6
+14 [label="square" style=solid color=black fontcolor=black]
+14 -> 7
+9 [label="+ (c_result)" style=solid color=blue fontcolor=black]
+9 -> 13
+9 -> 14
 }
