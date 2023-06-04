@@ -20,7 +20,7 @@ void box_blur_baseline()
   c6.set_output("c6");
 }
 
-void box_blur_opt()
+void box_blur_synthesized()
 {
   Ciphertext c0("c0", 0, 255);
   Ciphertext c1 = c0 << 1;
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 
   string func_name = "box_blur";
   // Compiler::create_func(func_name, 13, 16, false, true, false);
-  Compiler::create_func(func_name, 13, 16, false, false, false);
+  Compiler::create_func(func_name, 16, 16, false, false, false);
 
   box_blur_baseline();
 
