@@ -1,60 +1,24 @@
 digraph "poly_reg" {
 node [shape=circle width=1 margin=0]
 edge [dir=back]
-ciphertext2 [label="c2" style=dashed color=blue fontcolor=blue]
-ciphertext2_level0 [label="mod_switch" style=dashed]
-ciphertext2_level0 -> ciphertext2
-ciphertext3 [label="c3" style=dashed color=blue fontcolor=blue]
-ciphertext4 [label="c4" style=dashed color=blue fontcolor=blue]
-ciphertext0 [label="c0" style=dashed color=blue fontcolor=blue]
-ciphertext11 [label="*" style=dashed]
-ciphertext11 -> ciphertext0
-ciphertext11 -> ciphertext4
-ciphertext5 [label="relin" style=dashed]
-ciphertext5 -> ciphertext11
-ciphertext6 [label="+" style=dashed]
-ciphertext6 -> ciphertext5
-ciphertext6 -> ciphertext3
-ciphertext13 [label="*" style=dashed]
-ciphertext13 -> ciphertext0
-ciphertext13 -> ciphertext6
-ciphertext13_level0 [label="mod_switch" style=dashed]
-ciphertext13_level0 -> ciphertext13
-ciphertext7 [label="relin" style=dashed]
-ciphertext7 -> ciphertext13_level0
-ciphertext8 [label="+" style=dashed]
-ciphertext8 -> ciphertext7
-ciphertext8 -> ciphertext2_level0
-ciphertext1 [label="c1" style=dashed color=blue fontcolor=blue]
-ciphertext1_level0 [label="mod_switch" style=dashed]
-ciphertext1_level0 -> ciphertext1
-ciphertext9 [label="-" style=dashed color=red fontcolor=red]
-ciphertext9 -> ciphertext1_level0
-ciphertext9 -> ciphertext8
-subgraph cluster_key {
-    graph[label="Key"]
-    node [width=0.5]
-    edge [dir=forward style=invis]
-    in_cipher [label=input color=blue fontcolor=blue style=dashed]
-    tmp_cipher [label=tmp color=black fontcolor=black style=dashed]
-    out_cipher [label=out color=red fontcolor=red style=dashed]
-    cipher [shape=plain]
-
-    in_plain [label=in icolor=blue fontcolor=blue style=dotted]
-    tmp_plain [label=tmp color=black fontcolor=black style=dotted]
-    out_plain [label=out color=red fontcolor=red style=dotted]
-    plain [shape=plain]
-    
-    other [color=black fontcolor=black style=solid]
-    scalar [color=darkgreen fontcolor=darkgreen style=solid]
-    const[shape=plain]
-    
-    cipher -> plain
-    plain -> const
-    out_cipher -> out_plain
-    in_cipher -> in_plain
-    tmp_cipher -> tmp_plain
-    in_plain -> other
-    out_plain -> scalar
-}
+2 [label="c1" style=solid color=red fontcolor=red]
+3 [label="c2" style=solid color=red fontcolor=red]
+1 [label="c0" style=solid color=red fontcolor=red]
+4 [label="c3" style=solid color=red fontcolor=red]
+5 [label="c4" style=solid color=red fontcolor=red]
+12 [label="*" style=solid color=black fontcolor=black]
+12 -> 1
+12 -> 5
+13 [label="+" style=solid color=black fontcolor=black]
+13 -> 4
+13 -> 12
+14 [label="*" style=solid color=black fontcolor=black]
+14 -> 1
+14 -> 13
+10 [label="+" style=solid color=black fontcolor=black]
+10 -> 3
+10 -> 14
+11 [label="- (c_result)" style=solid color=blue fontcolor=black]
+11 -> 2
+11 -> 10
 }
