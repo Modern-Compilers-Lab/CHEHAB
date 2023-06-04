@@ -41,11 +41,16 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"add_0-1", x + zero, x},
     {"add_0-2", zero + x, x},
 
-    {"fold-add-negate-1", x + (-y), x - y},
-    {"fold-add-negate-2", (-y) + x, x - y},
+    {"simplify-add-negate-1-1", x + (-y), x - y},
+    {"simplify-add-negate-1-2", (-y) + x, x - y},
 
     {"simplify-add-mul_m1-1", x + y * m_one, x - y},
-    {"simplify-add-mu1_m1-2", x * m_one + y, y - x},
+    {"simplify-add-mul_m1-2", x * m_one + y, y - x},
+
+    {"simplify-add-mul_negate-1", x * (-y) + z, z - x * y},
+    {"simplify-add-mul_negate-2", (-y) * x + z, z - y * x},
+    {"simplify-add-mul_negate-3", z + x * (-y), z - x * y},
+    {"simplify-add-mul_negate-4", z + (-y) * x, z - y * x},
 
     {"merge-rotate-add", (x << n) + (y << n), (x + y) << n},
 
@@ -108,14 +113,42 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
 
     {"part-fold-assoc-add-sub-3", ((c0 - x) - y) + c1, ((c0 + c1) - y) - x},
 
-    {"fact-add-1-1", x * ct_y + z * ct_y, (x + z) * ct_y},
-    {"fact-add-1-2", ct_x * pt_y + ct_z * pt_y, (ct_x + ct_z) * pt_y},
-    {"fact-add-2-1", x * ct_y + ct_y * z, (x + z) * ct_y},
-    {"fact-add-2-2", ct_x * pt_y + pt_y * ct_z, (ct_x + ct_z) * pt_y},
-    {"fact-add-3-1", ct_y * x + z * ct_y, ct_y * (x + z)},
-    {"fact-add-3-2", pt_y * ct_x + ct_z * pt_y, pt_y * (ct_x + ct_z)},
-    {"fact-add-4-1", ct_y * x + ct_y * z, ct_y * (x + z)},
-    {"fact-add-4-2", pt_y * ct_x + pt_y * ct_z, pt_y * (ct_x + ct_z)},
+    {"fact-add-square-1", x * ct_y + square(ct_y), (x + ct_y) * ct_y},
+    {"fact-add-square-2", ct_y * x + square(ct_y), ct_y * (x + ct_y)},
+    {"fact-add-square-3", square(ct_y) + x * ct_y, ct_y * (ct_y + x)},
+    {"fact-add-square-4", square(ct_y) + ct_y * x, ct_y * (ct_y + x)},
+
+    {"fact-add-1-1-1", x * ct_y + z * ct_y, (x + z) * ct_y},
+    {"fact-add-1-1-2", x * square(ct_y) + z * ct_y, (x * ct_y + z) * ct_y},
+    {"fact-add-1-1-3", x * ct_y + z * square(ct_y), (x + z * ct_y) * ct_y},
+
+    {"fact-add-1-2-1", ct_x * pt_y + ct_z * pt_y, (ct_x + ct_z) * pt_y},
+    {"fact-add-1-2-2", ct_x * square(pt_y) + ct_z * pt_y, (ct_x * pt_y + ct_z) * pt_y},
+    {"fact-add-1-2-3", ct_x * pt_y + ct_z * square(pt_y), (ct_x + ct_z * pt_y) * pt_y},
+
+    {"fact-add-2-1-1", x * ct_y + ct_y * z, (x + z) * ct_y},
+    {"fact-add-2-1-2", x * square(ct_y) + ct_y * z, (x * ct_y + z) * ct_y},
+    {"fact-add-2-1-3", x * ct_y + square(ct_y) * z, (x + ct_y * z) * ct_y},
+
+    {"fact-add-2-2-1", ct_x * pt_y + pt_y * ct_z, (ct_x + ct_z) * pt_y},
+    {"fact-add-2-2-2", ct_x * square(pt_y) + pt_y * ct_z, (ct_x * pt_y + ct_z) * pt_y},
+    {"fact-add-2-2-3", ct_x * pt_y + square(pt_y) * ct_z, (ct_x + pt_y * ct_z) * pt_y},
+
+    {"fact-add-3-1-1", ct_y * x + z * ct_y, ct_y * (x + z)},
+    {"fact-add-3-1-2", square(ct_y) * x + z * ct_y, ct_y * (ct_y * x + z)},
+    {"fact-add-3-1-3", ct_y * x + z * square(ct_y), ct_y * (x + z * ct_y)},
+
+    {"fact-add-3-2-1", pt_y * ct_x + ct_z * pt_y, pt_y * (ct_x + ct_z)},
+    {"fact-add-3-2-2", square(pt_y) * ct_x + ct_z * pt_y, pt_y * (pt_y * ct_x + ct_z)},
+    {"fact-add-3-2-3", pt_y * ct_x + ct_z * square(pt_y), pt_y * (ct_x + ct_z * pt_y)},
+
+    {"fact-add-4-1-1", ct_y * x + ct_y * z, ct_y * (x + z)},
+    {"fact-add-4-1-2", square(ct_y) * x + ct_y * z, ct_y * (ct_y * x + z)},
+    {"fact-add-4-1-3", ct_y * x + square(ct_y) * z, ct_y * (x + ct_y * z)},
+
+    {"fact-add-4-2-1", pt_y * ct_x + pt_y * ct_z, pt_y * (ct_x + ct_z)},
+    {"fact-add-4-2-2", square(pt_y) * ct_x + pt_y * ct_z, pt_y * (pt_y * ct_x + ct_z)},
+    {"fact-add-4-2-3", pt_y * ct_x + square(pt_y) * ct_z, pt_y * (ct_x + pt_y * ct_z)},
 
     {"fact_one-add-1", x + x * y, x * (y + one)},
     {"fact_one-add-2", x + y * x, (y + one) * x},
@@ -128,6 +161,12 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"sub_self", x - x, zero},
 
     {"simplify-sub-negate", x - (-y), x + y},
+
+    {"simplify-sub-mul_m1-1", x - y * m_one, x + y},
+    {"simplify-sub-mul_m1-2", x * m_one - y, x + y},
+
+    {"simplify-sub-mul_negate-1", z - x * (-y), z + x * y},
+    {"simplify-sub-mul_negate-2", z - (-y) * x, z + y * x},
 
     {"merge-rotate-sub", (x << n) - (y << n), (x - y) << n},
 
@@ -169,14 +208,58 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
 
     {"part-fold-assoc-sub-5", (c0 - x) - c1, (c0 - c1) - x},
 
-    {"fact-sub-1-1-1", x * ct_y - z * ct_y, (x - z) * ct_y},
-    {"fact-sub-1-1-2", ct_x * pt_y - ct_z * pt_y, (ct_x - ct_z) * pt_y},
-    {"fact-sub-1-2-1", x * ct_y - ct_y * z, (x - z) * ct_y},
-    {"fact-sub-1-2-2", ct_x * pt_y - pt_y * ct_z, (ct_x - ct_z) * pt_y},
-    {"fact-sub-1-3-1", ct_y * x - z * ct_y, ct_y * (x - z)},
-    {"fact-sub-1-3-2", pt_y * ct_x - ct_z * pt_y, pt_y * (ct_x - ct_z)},
-    {"fact-sub-1-4-1", ct_y * x - ct_y * z, ct_y * (x - z)},
-    {"fact-sub-1-4-2", pt_y * ct_x - pt_y * ct_z, pt_y * (ct_x - ct_z)},
+    {"fact-sub-square-1", x * ct_y - square(ct_y), (x - ct_y) * ct_y},
+    {"fact-sub-square-2", ct_y * x - square(ct_y), ct_y * (x - ct_y)},
+    {"fact-sub-square-3", square(ct_y) - x * ct_y, ct_y * (ct_y - x)},
+    {"fact-sub-square-4", square(ct_y) - ct_y * x, ct_y * (ct_y - x)},
+
+    {"fact-sub-1-1-1-1", x * ct_y - z * ct_y, (x - z) * ct_y},
+    {"fact-sub-1-1-1-2", x * square(ct_y) - z * ct_y, (x * ct_y - z) * ct_y},
+    {"fact-sub-1-1-1-3", x * ct_y - z * square(ct_y), (x - z * ct_y) * ct_y},
+    {"fact-sub-1-1-1-4", x * (-ct_y) - z * ct_y, -(x + z) * ct_y},
+    {"fact-sub-1-1-1-5", x * (-ct_y) - z * square(ct_y), -(x + z * ct_y) * ct_y},
+
+    {"fact-sub-1-1-2-1", ct_x * pt_y - ct_z * pt_y, (ct_x - ct_z) * pt_y},
+    {"fact-sub-1-1-2-2", ct_x * square(pt_y) - ct_z * pt_y, (ct_x * pt_y - ct_z) * pt_y},
+    {"fact-sub-1-1-2-3", ct_x * pt_y - ct_z * square(pt_y), (ct_x - ct_z * pt_y) * pt_y},
+    {"fact-sub-1-1-2-4", ct_x * (-pt_y) - ct_z * pt_y, -(ct_x + ct_z) * pt_y},
+    {"fact-sub-1-1-2-5", ct_x * (-pt_y) - ct_z * square(pt_y), -(ct_x + ct_z * pt_y) * pt_y},
+
+    {"fact-sub-1-2-1-1", x * ct_y - ct_y * z, (x - z) * ct_y},
+    {"fact-sub-1-2-1-2", x * square(ct_y) - ct_y * z, (x * ct_y - z) * ct_y},
+    {"fact-sub-1-2-1-3", x * ct_y - square(ct_y) * z, (x - ct_y * z) * ct_y},
+    {"fact-sub-1-2-1-4", x * (-ct_y) - ct_y * z, -(x + z) * ct_y},
+    {"fact-sub-1-2-1-5", x * (-ct_y) - square(ct_y) * z, -(x + ct_y * z) * ct_y},
+
+    {"fact-sub-1-2-2-1", ct_x * pt_y - pt_y * ct_z, (ct_x - ct_z) * pt_y},
+    {"fact-sub-1-2-2-2", ct_x * square(pt_y) - pt_y * ct_z, (ct_x * pt_y - ct_z) * pt_y},
+    {"fact-sub-1-2-2-3", ct_x * pt_y - square(pt_y) * ct_z, (ct_x - pt_y * ct_z) * pt_y},
+    {"fact-sub-1-2-2-4", ct_x * (-pt_y) - pt_y * ct_z, -(ct_x + ct_z) * pt_y},
+    {"fact-sub-1-2-2-5", ct_x * (-pt_y) - square(pt_y) * ct_z, -(ct_x + pt_y * ct_z) * pt_y},
+
+    {"fact-sub-1-3-1-1", ct_y * x - z * ct_y, ct_y * (x - z)},
+    {"fact-sub-1-3-1-2", square(ct_y) * x - z * ct_y, ct_y * (ct_y * x - z)},
+    {"fact-sub-1-3-1-3", ct_y * x - z * square(ct_y), ct_y * (x - z * ct_y)},
+    {"fact-sub-1-3-1-4", (-ct_y) * x - z * ct_y, -ct_y * (x + z)},
+    {"fact-sub-1-3-1-5", (-ct_y) * x - z * square(ct_y), -ct_y * (x + z * ct_y)},
+
+    {"fact-sub-1-3-2-1", pt_y * ct_x - ct_z * pt_y, pt_y * (ct_x - ct_z)},
+    {"fact-sub-1-3-2-2", square(pt_y) * ct_x - ct_z * pt_y, pt_y * (pt_y * ct_x - ct_z)},
+    {"fact-sub-1-3-2-3", pt_y * ct_x - ct_z * square(pt_y), pt_y * (ct_x - ct_z * pt_y)},
+    {"fact-sub-1-3-2-4", (-pt_y) * ct_x - ct_z * pt_y, -pt_y * (ct_x + ct_z)},
+    {"fact-sub-1-3-2-5", (-pt_y) * ct_x - ct_z * square(pt_y), -pt_y * (ct_x + ct_z * pt_y)},
+
+    {"fact-sub-1-4-1-1", ct_y * x - ct_y * z, ct_y * (x - z)},
+    {"fact-sub-1-4-1-2", square(ct_y) * x - ct_y * z, ct_y * (ct_y * x - z)},
+    {"fact-sub-1-4-1-3", ct_y * x - square(ct_y) * z, ct_y * (x - ct_y * z)},
+    {"fact-sub-1-4-1-4", (-ct_y) * x - ct_y * z, -ct_y * (x + z)},
+    {"fact-sub-1-4-1-5", (-ct_y) * x - square(ct_y) * z, -ct_y * (x + ct_y * z)},
+
+    {"fact-sub-1-4-2-1", pt_y * ct_x - pt_y * ct_z, pt_y * (ct_x - ct_z)},
+    {"fact-sub-1-4-2-2", square(pt_y) * ct_x - pt_y * ct_z, pt_y * (pt_y * ct_x - ct_z)},
+    {"fact-sub-1-4-2-3", pt_y * ct_x - square(pt_y) * ct_z, pt_y * (ct_x - pt_y * ct_z)},
+    {"fact-sub-1-4-2-4", (-pt_y) * ct_x - pt_y * ct_z, -pt_y * (ct_x + ct_z)},
+    {"fact-sub-1-4-2-5", (-pt_y) * ct_x - square(pt_y) * ct_z, -pt_y * (ct_x + pt_y * ct_z)},
 
     {"fact-sub-2-1-1", (u + x * ct_y) - z * ct_y, u + (x - z) * ct_y},
     {"fact-sub-2-1-2", (u + ct_x * pt_y) - ct_z * pt_y, u + (ct_x - ct_z) * pt_y},

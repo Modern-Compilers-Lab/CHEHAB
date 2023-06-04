@@ -34,7 +34,12 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
     {"add_0-2", zero + x, x},
 
     {"simplify-add-negate-1-1", x + (-y), x - y},
-    {"simplify-add-negate-1-2", -y + x, x - y},
+    {"simplify-add-negate-1-2", (-y) + x, x - y},
+
+    {"simplify-add-mul_negate-1", x * (-y) + z, z - x * y},
+    {"simplify-add-mul_negate-2", (-y) * x + z, z - y * x},
+    {"simplify-add-mul_negate-3", z + x * (-y), z - x * y},
+    {"simplify-add-mul_negate-4", z + (-y) * x, z - y * x},
 
     {"part-fold-assoc-add-1", c0 + (c1 + x), (c0 + c1) + x},
     {"part-fold-assoc-add-2", c0 + (x + c1), (c0 + c1) + x},
@@ -63,11 +68,11 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
     {"simplify-add-sub-3-4", (x - y) + (z + y), x + z},
 
     {"simplify-add-sub-4-1", x + ((y - x) - z), y - z},
-    {"simplify-add-sub-4-1", ((x - y) - z) + y, x - z},
-    {"simplify-add-sub-4-1", x + (y - (x + z)), y - z},
-    {"simplify-add-sub-4-1", x + (y - (z + x)), y - z},
-    {"simplify-add-sub-4-1", (x - (y + z)) + y, x - z},
-    {"simplify-add-sub-4-1", (x - (y + z)) + z, x - y},
+    {"simplify-add-sub-4-2", ((x - y) - z) + y, x - z},
+    {"simplify-add-sub-4-3", x + (y - (x + z)), y - z},
+    {"simplify-add-sub-4-4", x + (y - (z + x)), y - z},
+    {"simplify-add-sub-4-5", (x - (y + z)) + y, x - z},
+    {"simplify-add-sub-4-6", (x - (y + z)) + z, x - y},
 
     {"part-fold-zero_m-1", x + ((zero - y) - z), x - (y + z)},
     {"part-fold-zero_m-2", ((zero - x) - y) + z, z - (x + y)},
@@ -96,6 +101,9 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
     {"sub_self", x - x, zero},
 
     {"simplify-sub-negate", x - (-y), x + y},
+
+    {"simplify-sub-mul_negate-1", z - x * (-y), z + x * y},
+    {"simplify-sub-mul_negate-2", z - (-y) * x, z + y * x},
 
     {"part-fold-assoc-sub-1-1", c0 - (c1 - x), (c0 - c1) + x},
     {"part-fold-assoc-sub-1-2", c0 - (x - c1), (c0 + c1) - x},

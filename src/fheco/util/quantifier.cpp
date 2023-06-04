@@ -121,7 +121,7 @@ void Quantifier::count_terms_classes()
       {
         if (term->op_code().type() == ir::OpCode::Type::mul)
         {
-          if (term->operands()[0] == term->operands()[1])
+          if (term->operands()[0]->type() == term->operands()[1]->type())
           {
             const auto &arg1_info = ctxt_terms_info.find(term->operands()[0])->second;
             const auto &arg2_info = ctxt_terms_info.find(term->operands()[1])->second;

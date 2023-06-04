@@ -8,7 +8,7 @@
 using namespace std;
 using namespace fheco;
 
-void gx_kernel_naive()
+void gx_kernel_baseline()
 {
   Ciphertext c0("c0", 0, 255);
   Ciphertext c1 = c0 << 1;
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
   // Compiler::create_func(func_name, 13, 16, true, true, false);
   Compiler::create_func(func_name, 13, 16, true, false, false);
 
-  gx_kernel_naive();
+  gx_kernel_baseline();
 
   ofstream init_ir_os(func_name + "_init_ir.dot");
   util::draw_ir(Compiler::active_func(), init_ir_os);

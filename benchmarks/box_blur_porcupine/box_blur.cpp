@@ -8,7 +8,7 @@
 using namespace std;
 using namespace fheco;
 
-void box_blur_naive()
+void box_blur_baseline()
 {
   Ciphertext c0("c0", 0, 255);
   Ciphertext c1 = c0 << 1;
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
   // Compiler::create_func(func_name, 13, 16, false, true, false);
   Compiler::create_func(func_name, 13, 16, false, false, false);
 
-  box_blur_naive();
+  box_blur_baseline();
 
   ofstream init_ir_os(func_name + "_init_ir.dot");
   util::draw_ir(Compiler::active_func(), init_ir_os);
