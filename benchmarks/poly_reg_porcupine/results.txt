@@ -1,0 +1,27 @@
+call_quantifier depth bottom_up 0 no_rewrite_created_sub_terms no_cse no_cse_order_operands no_const_folding
+depth_trs
+performed 0 iter
+273 2 5
+call_quantifier ops_cost top_down 400000 rewrite_created_sub_terms cse cse_order_operands const_folding
+ops_cost_trs
+performed 6 iter
+203 2 5
+call_quantifier ops_cost bottom_up 400000 rewrite_created_sub_terms cse cse_order_operands const_folding
+ops_cost_trs
+performed 9 iter
+203 2 5
+real 0.000000
+real    0m0.006s
+
+./build/he_poly_reg 0 100
+output ciphertexts info (L=1)
+id: level, remaining_noise_budget, actual_noise_upper_bound (maybe mod_switch was used to sacrifice some noise budget)
+c_result: 1, 28, 72
+time: 39.5517 ms
+
+
+./build/he_poly_reg 1 100
+output ciphertexts info (L=1)
+id: level, remaining_noise_budget, actual_noise_upper_bound (maybe mod_switch was used to sacrifice some noise budget)
+c_result: 1, 28, 72
+time: 28.6118 ms
