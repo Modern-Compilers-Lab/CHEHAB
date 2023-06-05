@@ -23,7 +23,7 @@ void hamming_distance_baseline()
   c_result.set_output("c_result");
 }
 
-void hamming_distance_opt()
+void hamming_distance_synthesized()
 {
   Plaintext d0(2);
   Ciphertext c0("c0", 0, 1);
