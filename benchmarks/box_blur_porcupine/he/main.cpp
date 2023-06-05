@@ -13,7 +13,7 @@ int main(int argc, char **argv)
   if (argc > 1)
     func = stoi(argv[1]);
 
-  int repeat = 100;
+  int repeat = 10;
   if (argc > 2)
     repeat = stoi(argv[2]);
 

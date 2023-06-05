@@ -1,18 +1,24 @@
+#include <chrono>
+#include <cstddef>
+#include <iostream>
 #include "gen_he_poly_reg.hpp"
 #include "utils.hpp"
-#include <chrono>
-#include <ctime>
-#include <iostream>
-#include <vector>
 
 using namespace std;
 using namespace seal;
 
 int main(int argc, char **argv)
 {
-  int repeat = 100;
+  int func = 0;
   if (argc > 1)
-    repeat = stoi(argv[1]);
+    func = stoi(argv[1]);
+
+  int repeat = 10;
+  if (argc > 2)
+    repeat = stoi(argv[2]);
+
+  if (repeat < 1)
+    throw invalid_argument("invalid repeat");
 
   string func_name = "poly_reg";
   clear_args_info_map clear_inputs, clear_outputs;
@@ -39,17 +45,27 @@ int main(int argc, char **argv)
 
   chrono::high_resolution_clock::time_point time_start, time_end;
   chrono::duration<double, milli> time_sum(0);
-  clock_t c_start, c_end;
-  clock_t c_sum = 0;
-  c_start = clock();
   time_start = chrono::high_resolution_clock::now();
-  poly_reg(
-    encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-    relin_keys, galois_keys);
-  c_end = clock();
+  switch (func)
+  {
+  case 0:
+    poly_reg_baseline(
+      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
+      relin_keys, galois_keys);
+    break;
+
+  case 1:
+    poly_reg_opt1(
+      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
+      relin_keys, galois_keys);
+    break;
+
+  default:
+    throw invalid_argument("invalid func");
+    break;
+  }
   time_end = chrono::high_resolution_clock::now();
   time_sum += time_end - time_start;
-  c_sum += c_end - c_start;
 
   clear_args_info_map obtained_clear_outputs;
   get_clear_outputs(
@@ -59,20 +75,31 @@ int main(int argc, char **argv)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
   // get peak memory from /proc
-  getchar();
+  // getchar();
 
-  c_start = clock();
   time_start = chrono::high_resolution_clock::now();
-  for (int i = 0; i < repeat - 1; ++i)
-    poly_reg(
-      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-      relin_keys, galois_keys);
-  c_end = clock();
-  time_end = chrono::high_resolution_clock::now();
+  switch (func)
+  {
+  case 0:
+    for (size_t i = 0; i < repeat - 1; ++i)
+      poly_reg_baseline(
+        encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
+        relin_keys, galois_keys);
+    break;
 
+  case 1:
+    for (size_t i = 0; i < repeat - 1; ++i)
+      poly_reg_opt1(
+        encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
+        relin_keys, galois_keys);
+    break;
+
+  default:
+    throw invalid_argument("invalid func");
+    break;
+  }
+  time_end = chrono::high_resolution_clock::now();
   time_sum += time_end - time_start;
-  c_sum += c_end - c_start;
 
   cout << "time: " << time_sum.count() / repeat << " ms\n";
-  cout << "cpu time: " << 1000.0 * c_sum / CLOCKS_PER_SEC / repeat << " ms\n";
 }

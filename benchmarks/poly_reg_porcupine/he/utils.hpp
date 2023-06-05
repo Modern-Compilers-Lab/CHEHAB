@@ -1,14 +1,14 @@
 #pragma once
 
-#include "seal/seal.h"
 #include <cstdint>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
+#include "seal/seal.h"
 
-using encrypted_args_map = std::map<std::string, seal::Ciphertext>;
-using encoded_args_map = std::map<std::string, seal::Plaintext>;
+using encrypted_args_map = std::unordered_map<std::string, seal::Ciphertext>;
+using encoded_args_map = std::unordered_map<std::string, seal::Plaintext>;
 
 struct ClearArgInfo
 {
@@ -22,7 +22,7 @@ struct ClearArgInfo
   }
 };
 
-using clear_args_info_map = std::map<std::string, ClearArgInfo>;
+using clear_args_info_map = std::unordered_map<std::string, ClearArgInfo>;
 
 void parse_inputs_outputs_file(const std::string &file_name, clear_args_info_map &inputs, clear_args_info_map &outputs);
 

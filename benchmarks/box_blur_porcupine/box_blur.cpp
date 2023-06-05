@@ -97,8 +97,8 @@ int main(int argc, char **argv)
     Compiler::disable_const_folding();
 
   string func_name = "box_blur";
-  // Compiler::create_func(func_name, 13, 16, false, true, false);
-  Compiler::create_func(func_name, 16, 16, false, false, false);
+  // Compiler::create_func(func_name, 13, 20, false, true, false);
+  Compiler::create_func(func_name, 16, 20, false, true, false);
 
   box_blur_baseline();
 

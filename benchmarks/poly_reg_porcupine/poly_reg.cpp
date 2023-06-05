@@ -10,22 +10,22 @@ using namespace fheco;
 
 void poly_reg_baseline()
 {
-  Ciphertext c0("c0", -100, 100);
-  Ciphertext c1("c1", -100, 100);
-  Ciphertext c2("c2", -100, 100);
-  Ciphertext c3("c3", -100, 100);
-  Ciphertext c4("c4", -100, 100);
+  Ciphertext c0("c0", -10, 10);
+  Ciphertext c1("c1", -10, 10);
+  Ciphertext c2("c2", -10, 10);
+  Ciphertext c3("c3", -10, 10);
+  Ciphertext c4("c4", -10, 10);
   Ciphertext c_result = c1 - (square(c0) * c4 + c0 * c3 + c2);
   c_result.set_output("c_result");
 }
 
-void poly_reg_opt()
+void poly_reg_synthesized()
 {
-  Ciphertext c0("c0", -100, 100);
-  Ciphertext c1("c1", -100, 100);
-  Ciphertext c2("c2", -100, 100);
-  Ciphertext c3("c3", -100, 100);
-  Ciphertext c4("c4", -100, 100);
+  Ciphertext c0("c0", -10, 10);
+  Ciphertext c1("c1", -10, 10);
+  Ciphertext c2("c2", -10, 10);
+  Ciphertext c3("c3", -10, 10);
+  Ciphertext c4("c4", -10, 10);
   Ciphertext c5 = c0 * c4;
   Ciphertext c6 = c5 + c3;
   Ciphertext c7 = c0 * c6;
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
     Compiler::disable_const_folding();
 
   string func_name = "poly_reg";
-  Compiler::create_func(func_name, 1024, 16, true, false, false);
+  Compiler::create_func(func_name, 1024, 20, true, false, false);
 
   poly_reg_baseline();
 

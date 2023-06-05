@@ -1,43 +1,74 @@
-#include "seal/seal.h"
-#include <vector>
-#include <map>
 #include <cstdint>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+#include "seal/seal.h"
 
-seal::SEALContext create_context(){
-seal::EncryptionParameters params(seal::scheme_type::bfv);
-params.set_poly_modulus_degree(8192);
-params.set_plain_modulus(seal::PlainModulus::Batching(8192,18));
-params.set_coeff_modulus(seal::CoeffModulus::Create(8192,{60, 60, 60}));
-seal::SEALContext context(params,true,seal::sec_level_type::tc128);
-return context;
+seal::SEALContext create_context()
+{
+  seal::EncryptionParameters params(seal::scheme_type::bfv);
+  params.set_poly_modulus_degree(8192);
+  params.set_plain_modulus(seal::PlainModulus::Batching(8192, 20));
+  params.set_coeff_modulus(seal::CoeffModulus::Create(8192, {60, 60, 60}));
+  seal::SEALContext context(params, true, seal::sec_level_type::tc128);
+  return context;
 }
 
-void poly_reg(std::map<std::string, seal::Ciphertext>& encrypted_inputs, std::map<std::string, seal::Plaintext>& encoded_inputs, std::map<std::string, seal::Ciphertext>& encrypted_outputs, std::map<std::string, seal::Plaintext>& encoded_outputs, const seal::BatchEncoder& encoder, const seal::Encryptor& encryptor, const seal::Evaluator& evaluator, const seal::RelinKeys& relin_keys, const seal::GaloisKeys& galois_keys)
+void poly_reg_baseline(
+  const std::unordered_map<std::string, seal::Ciphertext> &encrypted_inputs,
+  const std::unordered_map<std::string, seal::Plaintext> &encoded_inputs,
+  std::unordered_map<std::string, seal::Ciphertext> &encrypted_outputs,
+  std::unordered_map<std::string, seal::Plaintext> &encoded_outputs, const seal::BatchEncoder &encoder,
+  const seal::Encryptor &encryptor, const seal::Evaluator &evaluator, const seal::RelinKeys &relin_keys,
+  const seal::GaloisKeys &galois_keys)
 {
-seal::Ciphertext ciphertext2 = encrypted_inputs["c2"];
-seal::Ciphertext ciphertext2_level0;
-evaluator.mod_switch_to_next(ciphertext2,ciphertext2_level0);
-seal::Ciphertext ciphertext3 = encrypted_inputs["c3"];
-seal::Ciphertext ciphertext4 = encrypted_inputs["c4"];
-seal::Ciphertext ciphertext0 = encrypted_inputs["c0"];
-seal::Ciphertext ciphertext11;
-evaluator.multiply(ciphertext0,ciphertext4,ciphertext11);
-seal::Ciphertext ciphertext5;
-evaluator.relinearize(ciphertext11,relin_keys,ciphertext5);
-seal::Ciphertext ciphertext6;
-evaluator.add(ciphertext5,ciphertext3,ciphertext6);
-seal::Ciphertext ciphertext13;
-evaluator.multiply(ciphertext0,ciphertext6,ciphertext13);
-seal::Ciphertext ciphertext13_level0;
-evaluator.mod_switch_to_next(ciphertext13,ciphertext13_level0);
-seal::Ciphertext ciphertext7;
-evaluator.relinearize(ciphertext13_level0,relin_keys,ciphertext7);
-seal::Ciphertext ciphertext8;
-evaluator.add(ciphertext7,ciphertext2_level0,ciphertext8);
-seal::Ciphertext ciphertext1 = encrypted_inputs["c1"];
-seal::Ciphertext ciphertext1_level0;
-evaluator.mod_switch_to_next(ciphertext1,ciphertext1_level0);
-seal::Ciphertext ciphertext9;
-evaluator.sub(ciphertext1_level0,ciphertext8,ciphertext9);
-encrypted_outputs.insert({"c_result",ciphertext9});
+  seal::Ciphertext c0 = encrypted_inputs.at("c0");
+  seal::Ciphertext c1 = encrypted_inputs.at("c1");
+  seal::Ciphertext c2 = encrypted_inputs.at("c2");
+  seal::Ciphertext c3 = encrypted_inputs.at("c3");
+  seal::Ciphertext c4 = encrypted_inputs.at("c4");
+  seal::Ciphertext c5;
+  evaluator.square(c0, c5);
+  evaluator.relinearize_inplace(c5, relin_keys);
+  seal::Ciphertext c6;
+  evaluator.multiply(c5, c4, c6);
+  evaluator.relinearize_inplace(c6, relin_keys);
+  seal::Ciphertext c7;
+  evaluator.multiply(c0, c3, c7);
+  evaluator.relinearize_inplace(c7, relin_keys);
+  seal::Ciphertext c8;
+  evaluator.add(c6, c7, c8);
+  seal::Ciphertext c9;
+  evaluator.add(c8, c2, c9);
+  seal::Ciphertext c10;
+  evaluator.sub(c1, c9, c10);
+  encrypted_outputs.emplace("c_result", std::move(c10));
+}
+
+void poly_reg_opt1(
+  const std::unordered_map<std::string, seal::Ciphertext> &encrypted_inputs,
+  const std::unordered_map<std::string, seal::Plaintext> &encoded_inputs,
+  std::unordered_map<std::string, seal::Ciphertext> &encrypted_outputs,
+  std::unordered_map<std::string, seal::Plaintext> &encoded_outputs, const seal::BatchEncoder &encoder,
+  const seal::Encryptor &encryptor, const seal::Evaluator &evaluator, const seal::RelinKeys &relin_keys,
+  const seal::GaloisKeys &galois_keys)
+{
+  seal::Ciphertext c0 = encrypted_inputs.at("c0");
+  seal::Ciphertext c1 = encrypted_inputs.at("c1");
+  seal::Ciphertext c2 = encrypted_inputs.at("c2");
+  seal::Ciphertext c3 = encrypted_inputs.at("c3");
+  seal::Ciphertext c4 = encrypted_inputs.at("c4");
+  seal::Ciphertext c5;
+  evaluator.multiply(c0, c4, c5);
+  evaluator.relinearize_inplace(c5, relin_keys);
+  seal::Ciphertext c6;
+  evaluator.add(c5, c3, c6);
+  seal::Ciphertext c7;
+  evaluator.multiply(c0, c6, c7);
+  evaluator.relinearize_inplace(c7, relin_keys);
+  seal::Ciphertext c8;
+  evaluator.add(c7, c2, c8);
+  seal::Ciphertext c9;
+  evaluator.sub(c1, c8, c9);
+  encrypted_outputs.emplace("c_result", std::move(c9));
 }
