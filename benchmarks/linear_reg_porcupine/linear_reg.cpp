@@ -8,12 +8,12 @@
 using namespace std;
 using namespace fheco;
 
-void linear_reg_opt()
+void linear_reg_synthesized()
 {
-  Ciphertext c0("c0", -100, 100);
-  Ciphertext c1("c1", -100, 100);
-  Ciphertext c2("c2", -100, 100);
-  Ciphertext c3("c3", -100, 100);
+  Ciphertext c0("c0", -10, 10);
+  Ciphertext c1("c1", -10, 10);
+  Ciphertext c2("c2", -10, 10);
+  Ciphertext c3("c3", -10, 10);
   Ciphertext c4 = c2 * c0;
   Ciphertext c5 = c1 - c4;
   Ciphertext c_result = c5 - c3;
@@ -87,9 +87,9 @@ int main(int argc, char **argv)
     Compiler::disable_const_folding();
 
   string func_name = "linear_reg";
-  Compiler::create_func(func_name, 8, 16, true, false, false);
+  Compiler::create_func(func_name, 1024, 20, true, false, false);
 
-  linear_reg_opt();
+  linear_reg_synthesized();
 
   ofstream init_ir_os(func_name + "_init_ir.dot");
   util::draw_ir(Compiler::active_func(), init_ir_os);

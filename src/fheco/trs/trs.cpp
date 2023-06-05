@@ -106,7 +106,7 @@ bool TRS::rewrite_term(
       auto equiv_term =
         construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
 
-      if (rel_cost <= 0 || !global_analysis)
+      if (!global_analysis || rel_cost <= 0)
       {
         func_->replace_term_with(top_term, equiv_term);
         did_rewrite = true;
@@ -139,7 +139,7 @@ bool TRS::rewrite_term(
       }
       else if (func_->data_flow().can_delete(equiv_term))
         func_->delete_term_cascade(equiv_term);
-        }
+    }
     --max_iter;
   }
   return did_rewrite;
@@ -157,6 +157,7 @@ bool TRS::match(
   stack<Call> call_stack;
 
   ir::Term::PtrSet visited_terms;
+  ir::Term::PtrSet subst_terms;
   vector<ir::Term *> sorted_terms;
   stack<reference_wrapper<const TermMatcher>> term_matchers;
 
@@ -198,6 +199,9 @@ bool TRS::match(
       }
       if (!subst.insert(top_term_matcher, top_term))
         return false;
+
+      if (global_analysis)
+        subst_terms.insert(top_term);
     }
     else
     {
@@ -255,6 +259,9 @@ bool TRS::match(
     for (auto sorted_term_it = sorted_terms.crbegin(); sorted_term_it != sorted_terms.crend(); ++sorted_term_it)
     {
       auto sorted_term = *sorted_term_it;
+      if (subst_terms.find(sorted_term) != subst_terms.end())
+        continue;
+
       auto [to_delete_it, inserted] = to_delete.insert(sorted_term);
       for (auto parent : sorted_term->parents())
       {

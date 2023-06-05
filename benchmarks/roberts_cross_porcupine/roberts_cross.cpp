@@ -8,7 +8,7 @@
 using namespace std;
 using namespace fheco;
 
-void roberts_cross_opt()
+void roberts_cross_synthesized()
 {
   int w = 5;
   Ciphertext c0("c0", 0, 255);
@@ -90,10 +90,10 @@ int main(int argc, char **argv)
     Compiler::disable_const_folding();
 
   string func_name = "roberts_cross";
-  // Compiler::create_func(func_name, 13, 16, true, true, false);
-  Compiler::create_func(func_name, 13, 16, true, false, false);
+  Compiler::create_func(func_name, 13, 20, true, false, false);
+  // Compiler::create_func(func_name, 16, 20, true, true, false);
 
-  roberts_cross_opt();
+  roberts_cross_synthesized();
 
   ofstream init_ir_os(func_name + "_init_ir.dot");
   util::draw_ir(Compiler::active_func(), init_ir_os);

@@ -26,7 +26,7 @@ void gx_kernel_baseline()
   c12.set_output("c12");
 }
 
-void gx_kernel_opt()
+void gx_kernel_synthesized()
 {
   Ciphertext c0("c0", 0, 255);
   Ciphertext c1 = c0 << -5;
@@ -105,8 +105,8 @@ int main(int argc, char **argv)
   clog << '\n';
 
   string func_name = "gx_kernel";
-  // Compiler::create_func(func_name, 13, 16, true, true, false);
-  Compiler::create_func(func_name, 13, 16, true, false, false);
+  Compiler::create_func(func_name, 13, 20, true, false, false);
+  // Compiler::create_func(func_name, 16, 20, true, true, false);
 
   gx_kernel_baseline();
 

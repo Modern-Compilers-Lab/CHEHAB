@@ -8,10 +8,10 @@
 using namespace std;
 using namespace fheco;
 
-void dot_product_opt()
+void dot_product_synthesized()
 {
-  Ciphertext c0("c0", -100, 100);
-  Plaintext v1("v1", -100, 100);
+  Ciphertext c0("c0", -10, 10);
+  Plaintext v1("v1", -10, 10);
   Ciphertext c1 = c0 * v1;
   Ciphertext c1_rot_4 = c1 << 4;
   Ciphertext c2 = c1 + c1_rot_4;
@@ -89,9 +89,9 @@ int main(int argc, char **argv)
     Compiler::disable_const_folding();
 
   string func_name = "dot_product";
-  Compiler::create_func(func_name, 8, 16, false, false, false);
+  Compiler::create_func(func_name, 8, 20, false, false, false);
 
-  dot_product_opt();
+  dot_product_synthesized();
 
   ofstream init_ir_os(func_name + "_init_ir.dot");
   util::draw_ir(Compiler::active_func(), init_ir_os);
