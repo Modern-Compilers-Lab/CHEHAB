@@ -32,8 +32,8 @@ void convert_scalar_mul_to_add(const std::shared_ptr<ir::Func> &func, size_t sca
 
   auto const_scalar_cond = [&const1, &func, scalar_threshold](const trs::Subst &subst) {
     auto const_term = subst.get(const1);
-    auto const_val = *func->data_flow().get_const_val(const_term);
-    return abs(const_val[0]) <= scalar_threshold && util::is_scalar(const_val);
+    auto const_info = *func->data_flow().get_const_info(const_term);
+    return const_info.is_scalar_ && abs(const_info.val_[0]) <= scalar_threshold;
   };
 
   vector<trs::Rule> scalar_mul_to_add_rules{

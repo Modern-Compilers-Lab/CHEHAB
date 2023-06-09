@@ -58,5 +58,23 @@ inline bool operator!=(const ParamTermInfo &lhs, const ParamTermInfo &rhs)
 
 using IOTermsInfo = std::unordered_map<const Term *, ParamTermInfo, Term::HashPtr, Term::EqualPtr>;
 
+struct ConstInfo
+{
+  bool is_scalar_;
+  PackedVal val_;
+};
+
+inline bool operator==(const ConstInfo &lhs, const ConstInfo &rhs)
+{
+  return lhs.is_scalar_ == rhs.is_scalar_ && lhs.val_ == rhs.val_;
+}
+
+inline bool operator!=(const ConstInfo &lhs, const ConstInfo &rhs)
+{
+  return !(lhs == rhs);
+}
+
+using ConstTermsValues = std::unordered_map<const Term *, ConstInfo, Term::HashPtr, Term::EqualPtr>;
+
 using TermsValues = std::unordered_map<const Term *, PackedVal, Term::HashPtr, Term::EqualPtr>;
 } // namespace fheco::ir

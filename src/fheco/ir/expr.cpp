@@ -100,22 +100,23 @@ Term *Expr::insert_input(Term::Type type, ParamTermInfo input_info)
   return term;
 }
 
-Term *Expr::insert_const(PackedVal packed_val, bool &inserted)
+Term *Expr::insert_const(ConstInfo const_info, bool &inserted)
 {
   if (Compiler::cse_enabled())
   {
-    auto it = values_to_const_terms_.find(packed_val);
+    auto it = values_to_const_terms_.find(const_info.val_);
     if (it != values_to_const_terms_.end())
     {
       inserted = false;
       return it->second;
     }
   }
-  inserted = false;
+  inserted = true;
   Term *term = new Term(Term::Type::plain);
-  const_terms_values_.emplace(term, packed_val);
+
   if (Compiler::cse_enabled())
-    values_to_const_terms_.emplace(move(packed_val), term);
+    values_to_const_terms_.emplace(const_info.val_, term);
+  const_terms_values_.emplace(term, move(const_info));
   terms_.insert(term);
   return term;
 }
@@ -312,7 +313,7 @@ void Expr::delete_terms_cascade(const Term::PtrSet &terms)
           if (auto it = const_terms_values_.find(term); it != const_terms_values_.end())
           {
             if (Compiler::cse_enabled())
-              values_to_const_terms_.erase(it->second);
+              values_to_const_terms_.erase(it->second.val_);
             const_terms_values_.erase(it);
           }
           else
@@ -370,6 +371,14 @@ const ParamTermInfo *Expr::get_input_info(const Term *term) const
 }
 
 const PackedVal *Expr::get_const_val(const Term *term) const
+{
+  if (auto it = const_terms_values_.find(term); it != const_terms_values_.end())
+    return &it->second.val_;
+
+  return nullptr;
+}
+
+const ConstInfo *Expr::get_const_info(const Term *term) const
 {
   if (auto it = const_terms_values_.find(term); it != const_terms_values_.end())
     return &it->second;

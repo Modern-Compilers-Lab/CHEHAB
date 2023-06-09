@@ -123,14 +123,19 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
     if (can_fold)
     {
       if (op_code.type() == OpCode::Type::encrypt)
-        return data_flow_.insert_const(const_vals[0], inserted);
+        return insert_const_term(const_vals[0], inserted);
 
       PackedVal dest_val;
       clear_data_eval_.operate(op_code, const_vals, dest_val);
-      return data_flow_.insert_const(dest_val, inserted);
+      return insert_const_term(dest_val, inserted);
     }
   }
   return data_flow_.insert_op(move(op_code), move(operands), inserted);
+}
+
+Term *Func::insert_const_term(PackedVal packed_val, bool &inserted)
+{
+  return data_flow_.insert_const({util::is_scalar(packed_val), move(packed_val)}, inserted);
 }
 
 // init_input

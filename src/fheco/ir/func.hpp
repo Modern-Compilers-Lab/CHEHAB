@@ -55,13 +55,10 @@ public:
   inline Term *insert_const_term(PackedVal packed_val)
   {
     bool inserted;
-    return data_flow_.insert_const(std::move(packed_val), inserted);
+    return insert_const_term(std::move(packed_val), inserted);
   }
 
-  inline Term *insert_const_term(PackedVal packed_val, bool inserted)
-  {
-    return data_flow_.insert_const(std::move(packed_val), inserted);
-  }
+  Term *insert_const_term(PackedVal packed_val, bool &inserted);
 
   inline void replace_term_with(Term *term1, Term *term2) { data_flow_.replace(term1, term2); }
 

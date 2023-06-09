@@ -74,6 +74,9 @@ void print_io_terms_values(
 
 void print_io_terms_values(const ir::IOTermsInfo &io_terms_values, std::size_t lead_trail_size, std::ostream &os);
 
+void print_const_terms_values(
+  const ir::ConstTermsValues &const_terms_values, std::size_t lead_trail_size, std::ostream &os);
+
 void print_terms_values(const ir::TermsValues &terms_values, std::size_t lead_trail_size, std::ostream &os);
 
 void print_packed_val(const PackedVal &packed_val, std::size_t lead_trail_size, std::ostream &os);
@@ -167,6 +170,8 @@ inline std::size_t popcount(T x)
 namespace std
 {
 ostream &operator<<(ostream &os, const fheco::ir::IOTermsInfo &io_terms_values);
+
+ostream &operator<<(ostream &os, const fheco::ir::ConstTermsValues &const_terms_values);
 
 ostream &operator<<(ostream &os, const fheco::ir::TermsValues &terms_values);
 

@@ -105,6 +105,19 @@ void print_io_terms_values(const ir::IOTermsInfo &io_terms_values, size_t lead_t
   }
 }
 
+void print_const_terms_values(const ir::ConstTermsValues &const_terms_values, size_t lead_trail_size, ostream &os)
+{
+  for (const auto &term : const_terms_values)
+  {
+    os << '$' << term.first->id() << " ";
+    if (term.second.is_scalar_)
+      os << "scalar " << term.second.val_;
+    else
+      print_packed_val(term.second.val_, lead_trail_size, os);
+    os << '\n';
+  }
+}
+
 void print_terms_values(const ir::TermsValues &terms_values, size_t lead_trail_size, ostream &os)
 {
   for (const auto &term : terms_values)
@@ -143,6 +156,20 @@ ostream &operator<<(ostream &os, const fheco::ir::IOTermsInfo &io_terms_values)
     os << '$' << term.first->id() << " " << term.second.label_;
     if (term.second.example_val_)
       os << " " << *term.second.example_val_;
+    os << '\n';
+  }
+  return os;
+}
+
+ostream &operator<<(ostream &os, const fheco::ir::ConstTermsValues &const_terms_values)
+{
+  for (const auto &term : const_terms_values)
+  {
+    os << '$' << term.first->id() << " ";
+    if (term.second.is_scalar_)
+      os << "scalar " << term.second.val_;
+    else
+      os << term.second.val_;
     os << '\n';
   }
   return os;

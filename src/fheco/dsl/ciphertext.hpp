@@ -68,7 +68,7 @@ private:
 
   std::vector<std::size_t> idx_{};
 
-  std::optional<PackedVal> example_val_;
+  std::optional<PackedVal> example_val_{};
 
   friend class ir::Func;
   friend Ciphertext emulate_subscripted_read(const Ciphertext &arg);

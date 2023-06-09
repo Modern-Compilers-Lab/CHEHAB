@@ -28,7 +28,7 @@ public:
 
   Term *insert_input(Term::Type type, ParamTermInfo input_info);
 
-  Term *insert_const(PackedVal packed_val, bool &inserted);
+  Term *insert_const(ConstInfo const_info, bool &inserted);
 
   Term *get_term(std::size_t id) const;
 
@@ -64,11 +64,13 @@ public:
 
   const PackedVal *get_const_val(const Term *term) const;
 
+  const ConstInfo *get_const_info(const Term *term) const;
+
   const ParamTermInfo *get_output_info(const Term *term) const;
 
   inline const IOTermsInfo &inputs_info() const { return inputs_info_; }
 
-  inline const TermsValues &constants_values() const { return const_terms_values_; }
+  inline const ConstTermsValues &constants_values() const { return const_terms_values_; }
 
   inline const IOTermsInfo &outputs_info() const { return outputs_info_; }
 
@@ -101,7 +103,7 @@ private:
 
   IOTermsInfo inputs_info_{};
 
-  TermsValues const_terms_values_{};
+  ConstTermsValues const_terms_values_{};
 
   std::unordered_map<PackedVal, Term *, HashPackedVal> values_to_const_terms_{};
 

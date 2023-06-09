@@ -7,7 +7,7 @@ using namespace std;
 
 namespace fheco
 {
-Ciphertext::Ciphertext(vector<size_t> shape) : shape_{move(shape)}, example_val_{}
+Ciphertext::Ciphertext(vector<size_t> shape) : shape_{move(shape)}
 {
   validate_shape(shape_);
 }
