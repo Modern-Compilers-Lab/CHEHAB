@@ -73,7 +73,6 @@ using namespace seal;
 )"};
 
 inline const std::unordered_map<OpType, std::string_view, HashOpType, EqualOpType> operation_mapping = {
-  {{ir::OpCode::Type::encrypt, {ir::Term::Type::plain}}, "encrypt"sv},
   {{ir::OpCode::Type::add, {ir::Term::Type::cipher, ir::Term::Type::cipher}}, "add"sv},
   {{ir::OpCode::Type::add, {ir::Term::Type::cipher, ir::Term::Type::plain}}, "add_plain"sv},
   {{ir::OpCode::Type::sub, {ir::Term::Type::cipher, ir::Term::Type::cipher}}, "sub"sv},

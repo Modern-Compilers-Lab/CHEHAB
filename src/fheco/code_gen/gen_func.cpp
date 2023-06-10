@@ -103,6 +103,7 @@ void gen_plain_var_id(size_t term_id, ostream &os)
 
 void gen_const_terms(const ir::ConstTermsValues &const_terms_info, bool signedness, ostream &os)
 {
+  os << "size_t " << slot_count_id << " = " << encoder_id << ".slot_count();\n";
   for (const auto &const_info : const_terms_info)
   {
     auto term = const_info.first;
@@ -145,39 +146,47 @@ void gen_op_terms(const vector<const ir::Term *> &top_sorted_terms, ostream &os)
       term->operands().cbegin(), term->operands().cend(), std::back_inserter(operands_types),
       [](const ir::Term *operand) { return operand->type(); });
 
-    os << evaluator_id << "." << operation_mapping.at(OpType{term->op_code().type(), move(operands_types)}) << "(";
-    for (auto it = term->operands().cbegin();;)
+    if (term->op_code() == ir::OpCode::encrypt)
     {
-      auto operand = *it;
-      if (operand->type() == ir::Term::Type::cipher)
-        gen_cipher_var_id(operand->id(), os);
-      else
-        gen_plain_var_id(operand->id(), os);
-      ++it;
-      if (it == term->operands().cend())
-        break;
-
-      os << ", ";
+      os << encryptor_id << ".encrypt(";
+      gen_plain_var_id(term->operands()[0]->id(), os);
     }
-    if (term->op_code().generators().size())
+    else
     {
-      os << ", ";
-      for (auto it = term->op_code().generators().cbegin();;)
+      os << evaluator_id << "." << operation_mapping.at(OpType{term->op_code().type(), move(operands_types)}) << "(";
+      for (auto it = term->operands().cbegin();;)
       {
-        auto generator = *it;
-        os << generator;
+        auto operand = *it;
+        if (operand->type() == ir::Term::Type::cipher)
+          gen_cipher_var_id(operand->id(), os);
+        else
+          gen_plain_var_id(operand->id(), os);
         ++it;
-        if (it == term->op_code().generators().cend())
+        if (it == term->operands().cend())
           break;
 
         os << ", ";
       }
-    }
-    if (term->op_code().type() == ir::OpCode::Type::relin)
-      os << ", " << relin_keys_id;
+      if (term->op_code().generators().size())
+      {
+        os << ", ";
+        for (auto it = term->op_code().generators().cbegin();;)
+        {
+          auto generator = *it;
+          os << generator;
+          ++it;
+          if (it == term->op_code().generators().cend())
+            break;
 
-    if (term->op_code().type() == ir::OpCode::Type::rotate)
-      os << ", " << galois_keys_id;
+          os << ", ";
+        }
+      }
+      if (term->op_code().type() == ir::OpCode::Type::relin)
+        os << ", " << relin_keys_id;
+
+      if (term->op_code().type() == ir::OpCode::Type::rotate)
+        os << ", " << galois_keys_id;
+    }
 
     os << ", ";
     gen_cipher_var_id(term->id(), os);
