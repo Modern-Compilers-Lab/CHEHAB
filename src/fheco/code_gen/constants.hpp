@@ -81,8 +81,8 @@ inline const std::unordered_map<OpType, std::string_view, HashOpType, EqualOpTyp
   {{ir::OpCode::Type::negate, {ir::Term::Type::cipher}}, "negate"sv},
   {{ir::OpCode::Type::rotate, {ir::Term::Type::cipher}}, "rotate_rows"sv},
   {{ir::OpCode::Type::square, {ir::Term::Type::cipher}}, "square"sv},
-  {{ir::OpCode::Type::mul, {ir::Term::Type::cipher, ir::Term::Type::cipher}}, "mul"sv},
-  {{ir::OpCode::Type::mul, {ir::Term::Type::cipher, ir::Term::Type::plain}}, "mul_plain"sv},
+  {{ir::OpCode::Type::mul, {ir::Term::Type::cipher, ir::Term::Type::cipher}}, "multiply"sv},
+  {{ir::OpCode::Type::mul, {ir::Term::Type::cipher, ir::Term::Type::plain}}, "multiply_plain"sv},
   {{ir::OpCode::Type::mod_switch, {ir::Term::Type::cipher}}, "mod_switch_to_next"sv},
   {{ir::OpCode::Type::relin, {ir::Term::Type::cipher}}, "relinearize"sv},
 };
