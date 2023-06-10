@@ -20,10 +20,10 @@ set_target_properties(utils PROPERTIES CXX_EXTENSIONS OFF)
 target_link_libraries(utils PUBLIC SEAL::seal)
 
 add_executable(main_noopt main_noopt.cpp)
-target_link_libraries(main_noopt PRIVATE gen_he_cryptonets)
+target_link_libraries(main_noopt PRIVATE gen_he_cryptonets_noopt)
 target_link_libraries(main_noopt PRIVATE utils)
 
 add_executable(main_opt main_opt.cpp)
 target_link_libraries(main_opt PRIVATE gen_he_cryptonets)
-target_link_libraries(main_opt PRIVATE gen_he_cryptonets)
+target_link_libraries(main_opt PRIVATE utils)
 
