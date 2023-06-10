@@ -25,11 +25,12 @@ public:
   };
 
   static inline void create_func(
-    std::string name, std::size_t slot_count, integer modulus, bool signedness, bool need_full_cyclic_rotation,
-    bool delayed_reduction = false, bool overflow_warnings = false)
+    std::string name, std::size_t slot_count, bool delayed_reduction, integer modulus, bool signedness,
+    bool need_full_cyclic_rotation, bool overflow_warnings = false)
   {
     add_func(std::make_shared<ir::Func>(
-      std::move(name), slot_count, modulus, signedness, need_full_cyclic_rotation, delayed_reduction));
+      std::move(name), slot_count, delayed_reduction, modulus, signedness, need_full_cyclic_rotation,
+      overflow_warnings));
   }
 
   static inline void create_func(

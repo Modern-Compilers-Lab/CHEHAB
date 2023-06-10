@@ -13,8 +13,8 @@ using namespace std;
 namespace fheco::ir
 {
 Func::Func(
-  string name, size_t slot_count, integer modulus, bool signedness, bool need_full_cyclic_rotation,
-  bool delayed_reduction, bool overflow_warnings)
+  string name, size_t slot_count, bool delayed_reduction, integer modulus, bool signedness,
+  bool need_full_cyclic_rotation, bool overflow_warnings)
   : name_{move(name)}, slot_count_{slot_count}, need_full_cyclic_rotation_{need_full_cyclic_rotation},
     clear_data_eval_{slot_count_, modulus, signedness, delayed_reduction, overflow_warnings}
 {

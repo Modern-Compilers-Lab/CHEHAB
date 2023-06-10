@@ -157,7 +157,7 @@ int main(int argc, char **argv)
     Compiler::disable_const_folding();
 
   string func_name = "cryptonets";
-  Compiler::create_func(func_name, 8192, 17, true, false, false);
+  Compiler::create_func(func_name, 8192, false, 65537, false, false);
 
   cryptonets(
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},

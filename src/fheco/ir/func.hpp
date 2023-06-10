@@ -18,14 +18,14 @@ class Func
 {
 public:
   Func(
-    std::string name, std::size_t slot_count, integer modulus, bool signedness, bool need_full_cyclic_rotation,
-    bool delayed_reduction, bool overflow_warnings);
+    std::string name, std::size_t slot_count, bool delayed_reduction, integer modulus, bool signedness,
+    bool need_full_cyclic_rotation, bool overflow_warnings);
 
   Func(
     std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_full_cyclic_rotation,
     bool overflow_warnings)
     : Func(
-        std::move(name), slot_count, (1 << bit_width) - 1, signedness, need_full_cyclic_rotation, true,
+        std::move(name), slot_count, true, (1 << bit_width) - 1, signedness, need_full_cyclic_rotation,
         overflow_warnings)
   {}
 
