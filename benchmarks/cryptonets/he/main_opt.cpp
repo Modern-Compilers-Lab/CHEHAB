@@ -21,9 +21,10 @@ int main(int argc, char **argv)
   parse_inputs_outputs_file("../" + func_name + "_rand_example.txt", clear_inputs, clear_outputs);
 
   seal::EncryptionParameters params(seal::scheme_type::bfv);
-  params.set_poly_modulus_degree(4096);
-  params.set_plain_modulus(seal::PlainModulus::Batching(4096, 20));
-  params.set_coeff_modulus(seal::CoeffModulus::Create(4096, {54, 55}));
+  size_t n = 8192;
+  params.set_poly_modulus_degree(n);
+  params.set_plain_modulus(65537);
+  params.set_coeff_modulus(CoeffModulus::BFVDefault(n));
   seal::SEALContext context(params, false, seal::sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
