@@ -17,10 +17,10 @@ void cryptonets(
   const vector<size_t> &b8_shape)
 {
   // declare inputs
-  int x_min_val = -40;
-  int x_max_val = 40;
-  int wb_min = -5;
-  int wb_max = 5;
+  int x_min_val = -10;
+  int x_max_val = 10;
+  int wb_min = -10;
+  int wb_max = 10;
   vector<vector<vector<Ciphertext>>> x;
   for (size_t i = 0; i < x_shape[0]; ++i)
   {
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
   if (argc > 3)
     rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
 
-  int64_t max_iter = 400000;
+  int64_t max_iter = 800000;
   if (argc > 4)
     max_iter = stoull(argv[4]);
 
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
     Compiler::disable_const_folding();
 
   string func_name = "cryptonets";
-  Compiler::create_func(func_name, 8192, 20, false, false, false);
+  Compiler::create_func(func_name, 8192, 17, true, false, false);
 
   cryptonets(
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},

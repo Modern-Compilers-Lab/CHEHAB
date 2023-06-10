@@ -37,7 +37,7 @@ void print_io_terms_values(const shared_ptr<ir::Func> &func, ostream &os)
   {
     auto input_term = input_info.first;
     os << input_info.second.label_ << " " << (input_term->type() == ir::Term::Type::cipher) << " "
-       << (func->clear_data_evaluator().signedness() || func->clear_data_evaluator().delayed_reduction());
+       << func->clear_data_evaluator().signedness();
     if (input_info.second.example_val_)
       os << " " << *input_info.second.example_val_;
     os << '\n';
@@ -46,7 +46,7 @@ void print_io_terms_values(const shared_ptr<ir::Func> &func, ostream &os)
   {
     auto output_term = output_info.first;
     os << output_info.second.label_ << " " << (output_term->type() == ir::Term::Type::cipher) << " "
-       << (func->clear_data_evaluator().signedness() || func->clear_data_evaluator().delayed_reduction());
+       << func->clear_data_evaluator().signedness();
     if (output_info.second.example_val_)
       os << " " << *output_info.second.example_val_;
     os << '\n';
@@ -70,7 +70,7 @@ void print_io_terms_values(
       throw invalid_argument("invalid input");
 
     os << input_info.second.label_ << " " << (input_term->type() == ir::Term::Type::cipher) << " "
-       << (func->clear_data_evaluator().signedness() || func->clear_data_evaluator().delayed_reduction());
+       << func->clear_data_evaluator().signedness();
     if (input_info.second.example_val_)
       os << " " << *input_info.second.example_val_;
     os << '\n';
@@ -83,7 +83,7 @@ void print_io_terms_values(
       throw invalid_argument("invalid output");
 
     os << output_info.second.label_ << " " << (output_term->type() == ir::Term::Type::cipher) << " "
-       << (func->clear_data_evaluator().signedness() || func->clear_data_evaluator().delayed_reduction());
+       << func->clear_data_evaluator().signedness();
     if (output_info.second.example_val_)
       os << " " << *output_info.second.example_val_;
     os << '\n';

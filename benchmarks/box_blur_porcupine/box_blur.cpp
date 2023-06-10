@@ -49,7 +49,7 @@ int main(int argc, char **argv)
   if (argc > 3)
     rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
 
-  int64_t max_iter = 400000;
+  int64_t max_iter = 1000;
   if (argc > 4)
     max_iter = stoull(argv[4]);
 
