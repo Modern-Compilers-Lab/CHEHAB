@@ -42,8 +42,6 @@ void print_variables_values(const clear_args_info_map &m, std::size_t print_size
 
 void print_variables_values(const clear_args_info_map &m);
 
-void print_variables_values(const clear_args_info_map &m);
-
 template <typename T>
 inline void print_vector(const std::vector<T> &v, std::ostream &os, std::size_t print_size)
 {
