@@ -116,7 +116,7 @@ Term *Expr::insert_const(ConstInfo const_info, bool &inserted)
 
   if (Compiler::cse_enabled())
     values_to_const_terms_.emplace(const_info.val_, term);
-  const_terms_values_.emplace(term, move(const_info));
+  const_terms_info_.emplace(term, move(const_info));
   terms_.insert(term);
   return term;
 }
@@ -310,11 +310,11 @@ void Expr::delete_terms_cascade(const Term::PtrSet &terms)
       {
         if (!inputs_info_.erase(term))
         {
-          if (auto it = const_terms_values_.find(term); it != const_terms_values_.end())
+          if (auto it = const_terms_info_.find(term); it != const_terms_info_.end())
           {
             if (Compiler::cse_enabled())
               values_to_const_terms_.erase(it->second.val_);
-            const_terms_values_.erase(it);
+            const_terms_info_.erase(it);
           }
           else
             throw logic_error("invalid leaf, non-input and non-const");
@@ -372,7 +372,7 @@ const ParamTermInfo *Expr::get_input_info(const Term *term) const
 
 const PackedVal *Expr::get_const_val(const Term *term) const
 {
-  if (auto it = const_terms_values_.find(term); it != const_terms_values_.end())
+  if (auto it = const_terms_info_.find(term); it != const_terms_info_.end())
     return &it->second.val_;
 
   return nullptr;
@@ -380,7 +380,7 @@ const PackedVal *Expr::get_const_val(const Term *term) const
 
 const ConstInfo *Expr::get_const_info(const Term *term) const
 {
-  if (auto it = const_terms_values_.find(term); it != const_terms_values_.end())
+  if (auto it = const_terms_info_.find(term); it != const_terms_info_.end())
     return &it->second;
 
   return nullptr;

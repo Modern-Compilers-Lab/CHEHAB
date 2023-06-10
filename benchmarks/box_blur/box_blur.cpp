@@ -74,7 +74,7 @@ int main(int argc, char **argv)
   // util::ExprPrinter expr_printer(Compiler::active_func());
   // expr_printer.compute_terms_str_expr(util::ExprPrinter::Mode::infix_explicit_parenthesis);
   // expr_printer.print_outputs_str_expr(cout);
-  // cout << Compiler::active_func()->constants_values();
+  // cout << Compiler::active_func()->constants_info();
 
   // const auto &rand_inputs = Compiler::active_func()->inputs_info();
   // auto outputs = util::evaluate_on_clear(*Compiler::active_func(), rand_inputs);

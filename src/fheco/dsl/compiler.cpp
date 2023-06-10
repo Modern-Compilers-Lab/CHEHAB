@@ -1,3 +1,4 @@
+#include "fheco/code_gen/gen_func.hpp"
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/trs/trs.hpp"
 #include "fheco/passes/passes.hpp"
@@ -25,7 +26,7 @@ bool Compiler::scalar_vector_shape_ = true;
 
 void Compiler::compile(
   shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, int64_t max_iter,
-  bool rewrite_created_sub_terms)
+  bool rewrite_created_sub_terms, ostream &header_os, string_view header_name, ostream &source_os)
 {
   // clog << "remove_dead_code\n";
   // func->remove_dead_code();
@@ -64,13 +65,19 @@ void Compiler::compile(
   // clog << "convert_scalar_mul_to_add\n";
   // passes::convert_scalar_mul_to_add(func, 1 << 30);
 
-  // clog << "reduce_rotation_keys\n";
-  // unordered_set<int> rotation_steps_keys;
-  // rotation_steps_keys =
-  //   passes::reduce_rotation_keys(func, 2 * util::get_power_of_two(util::next_power_of_two(func->slot_count())));
+  clog << "reduce_rotation_keys\n";
+  unordered_set<int> rotation_steps_keys;
+  rotation_steps_keys =
+    passes::reduce_rotation_keys(func, 2 * util::get_power_of_two(util::next_power_of_two(func->slot_count())));
 
-  // clog << "insert_relin_ops\n";
-  // size_t relin_keys_count = passes::lazy_relin_heuristic(func, 3);
+  clog << "insert_relin_ops\n";
+  size_t relin_keys_count = passes::relin_after_each_mul(func);
+
+  clog << "prepare_code_gen\n";
+  passes::prepare_code_gen(func);
+
+  clog << "gen_func\n";
+  code_gen::gen_func(func, rotation_steps_keys, header_os, header_name, source_os);
 }
 
 void Compiler::add_func(shared_ptr<ir::Func> func)

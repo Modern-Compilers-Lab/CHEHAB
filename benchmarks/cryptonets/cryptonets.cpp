@@ -1,6 +1,7 @@
 #include "fheco/fheco.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <ostream>
 #include <string>
@@ -162,7 +163,13 @@ int main(int argc, char **argv)
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
     vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
 
-  Compiler::compile(ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms);
+  string gen_name = "gen_he_" + func_name;
+  string gen_path = "he/" + gen_name;
+  ofstream header_os(gen_path + ".hpp");
+  ofstream source_os(gen_path + ".cpp");
+
+  Compiler::compile(
+    ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms, header_os, gen_name + ".hpp", source_os);
 
   if (call_quantifier)
   {

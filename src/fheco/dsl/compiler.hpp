@@ -8,6 +8,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 
@@ -41,12 +42,15 @@ public:
 
   static void compile(
     std::shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::int64_t max_iter,
-    bool rewrite_created_sub_terms);
+    bool rewrite_created_sub_terms, std::ostream &header_os, std::string_view header_name, std::ostream &source_os);
 
   static inline void compile(
-    Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::int64_t max_iter, bool rewrite_created_sub_terms)
+    Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::int64_t max_iter, bool rewrite_created_sub_terms,
+    std::ostream &header_os, std::string_view header_name, std::ostream &source_os)
   {
-    compile(active_func(), ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms);
+    compile(
+      active_func(), ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms, header_os, header_name,
+      source_os);
   }
 
   static inline const std::shared_ptr<ir::Func> &active_func()

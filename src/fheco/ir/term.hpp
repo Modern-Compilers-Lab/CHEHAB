@@ -2,6 +2,7 @@
 
 #include "fheco/ir/op_code.hpp"
 #include <cstddef>
+#include <ostream>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -119,4 +120,6 @@ struct hash<fheco::ir::Term>
 {
   inline size_t operator()(const fheco::ir::Term &term) const { return hash<size_t>()(term.id()); }
 };
+
+ostream &operator<<(ostream &os, fheco::ir::Term::Type term_type);
 } // namespace std

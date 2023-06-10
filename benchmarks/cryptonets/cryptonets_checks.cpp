@@ -197,7 +197,13 @@ int main(int argc, char **argv)
 
   const auto &rand_inputs = Compiler::active_func()->data_flow().inputs_info();
 
-  Compiler::compile(ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms);
+  string gen_name = "gen_he_" + func_name;
+  string gen_path = "he/" + gen_name;
+  ofstream header_os(gen_path + ".hpp");
+  ofstream source_os(gen_path + ".cpp");
+
+  Compiler::compile(
+    ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms, header_os, gen_name + ".hpp", source_os);
 
   auto outputs = util::evaluate_on_clear(Compiler::active_func(), rand_inputs);
   if (outputs != Compiler::active_func()->data_flow().outputs_info())

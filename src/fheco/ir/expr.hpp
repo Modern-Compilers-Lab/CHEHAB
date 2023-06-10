@@ -56,7 +56,7 @@ public:
 
   inline bool is_input(const Term *term) const { return inputs_info_.find(term) != inputs_info_.end(); }
 
-  inline bool is_const(const Term *term) const { return const_terms_values_.find(term) != const_terms_values_.end(); }
+  inline bool is_const(const Term *term) const { return const_terms_info_.find(term) != const_terms_info_.end(); }
 
   inline bool is_output(const Term *term) const { return outputs_info_.find(term) != outputs_info_.end(); }
 
@@ -70,7 +70,7 @@ public:
 
   inline const IOTermsInfo &inputs_info() const { return inputs_info_; }
 
-  inline const ConstTermsValues &constants_values() const { return const_terms_values_; }
+  inline const ConstTermsValues &constants_info() const { return const_terms_info_; }
 
   inline const IOTermsInfo &outputs_info() const { return outputs_info_; }
 
@@ -103,7 +103,7 @@ private:
 
   IOTermsInfo inputs_info_{};
 
-  ConstTermsValues const_terms_values_{};
+  ConstTermsValues const_terms_info_{};
 
   std::unordered_map<PackedVal, Term *, HashPackedVal> values_to_const_terms_{};
 

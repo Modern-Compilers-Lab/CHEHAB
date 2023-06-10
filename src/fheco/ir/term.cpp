@@ -136,3 +136,25 @@ Term::Type Term::deduce_result_type(const OpCode &op_code, const vector<Type> &o
   }
 }
 } // namespace fheco::ir
+
+namespace std
+{
+
+ostream &operator<<(ostream &os, fheco::ir::Term::Type term_type)
+{
+  switch (term_type)
+  {
+  case fheco::ir::Term::Type::cipher:
+    os << "cipher";
+    break;
+
+  case fheco::ir::Term::Type::plain:
+    os << "plain";
+    break;
+
+  default:
+    throw invalid_argument("invalid term type");
+  }
+  return os;
+}
+} // namespace std
