@@ -90,13 +90,13 @@ void ClearDataEval::reduce(PackedVal &packed_val) const
     {
       for (auto it = packed_val.cbegin(); it != packed_val.cend(); ++it)
       {
-        if (*it > modulus_)
+        if (*it >= modulus_)
           cerr << "detected signed overflow\n";
-        else if (*it > modulus_ >> 1 && *it <= modulus_)
+        else if (*it > modulus_ >> 1 && *it < modulus_)
           cerr << "possible signed overflow later in the homomorphic evaluation\n";
-        else if (*it < -modulus_ >> 1 && *it >= -modulus_)
+        else if (*it < -modulus_ >> 1 && *it > -modulus_)
           cerr << "possible signed underflow later in the homomorphic evaluation\n";
-        else if (*it < -modulus_)
+        else if (*it <= -modulus_)
           cerr << "detected signed underflow\n";
       }
     }
@@ -105,7 +105,7 @@ void ClearDataEval::reduce(PackedVal &packed_val) const
     {
       for (auto it = packed_val.cbegin(); it != packed_val.cend(); ++it)
       {
-        if (*it > modulus_ || *it < 0)
+        if (*it >= modulus_ || *it < 0)
           cerr << "possible manipulation of multiple equivalent values as different\n";
       }
     }
@@ -115,16 +115,9 @@ void ClearDataEval::reduce(PackedVal &packed_val) const
   {
     for (auto it = packed_val.begin(); it != packed_val.end(); ++it)
     {
-      if (overflow_warnings_ && signedness_)
-      {
-        if (*it > modulus_ >> 1)
-          cerr << "detected signed overflow\n";
-        else if (*it < -modulus_ >> 1)
-          cerr << "detected signed underflow\n";
-      }
-      if (*it > modulus_)
+      if (*it >= modulus_)
         *it %= modulus_;
-      else if (*it < -modulus_ >> 1 || (!signedness_ && *it < 0))
+      else if (*it < 0)
       {
         *it %= modulus_;
         *it += modulus_;

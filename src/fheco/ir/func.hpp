@@ -24,9 +24,7 @@ public:
   Func(
     std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_full_cyclic_rotation,
     bool overflow_warnings)
-    : Func(
-        std::move(name), slot_count, true, (1 << bit_width) - 1, signedness, need_full_cyclic_rotation,
-        overflow_warnings)
+    : Func(std::move(name), slot_count, true, 1 << bit_width, signedness, need_full_cyclic_rotation, overflow_warnings)
   {}
 
   template <typename T>
