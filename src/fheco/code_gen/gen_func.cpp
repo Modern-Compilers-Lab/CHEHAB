@@ -182,9 +182,12 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
     }
     terms_objects_info.emplace(term->id(), ObjectInfo{term_object_id, term->parents().size()});
 
-    os << cipher_type << " ";
-    gen_cipher_var_id(term_object_id, os);
-    os << ";\n";
+    if (term_object_id == term->id())
+    {
+      os << cipher_type << " ";
+      gen_cipher_var_id(term_object_id, os);
+      os << ";\n";
+    }
 
     vector<ir::Term::Type> operands_types;
     operands_types.reserve(term->operands().size());
