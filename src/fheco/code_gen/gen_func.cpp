@@ -29,8 +29,9 @@ void gen_func(
 
   gen_input_terms(func->data_flow().inputs_info(), source_os);
   gen_const_terms(func->data_flow().constants_info(), func->clear_data_evaluator().signedness(), source_os);
-  gen_op_terms(func->get_top_sorted_terms(), source_os);
-  gen_output_terms(func->data_flow().outputs_info(), source_os);
+  unordered_map<size_t, size_t> terms_objects;
+  gen_op_terms(func->get_top_sorted_terms(), source_os, terms_objects);
+  gen_output_terms(func->data_flow().outputs_info(), source_os, terms_objects);
 
   source_os << "}\n";
   source_os << '\n';
@@ -129,15 +130,31 @@ void gen_const_terms(const ir::ConstTermsValues &const_terms_info, bool signedne
   }
 }
 
-void gen_op_terms(const vector<const ir::Term *> &top_sorted_terms, ostream &os)
+void gen_op_terms(
+  const vector<const ir::Term *> &top_sorted_terms, ostream &os, unordered_map<size_t, size_t> &terms_objects)
 {
   for (auto term : top_sorted_terms)
   {
     if (!term->is_operation())
       continue;
 
+    size_t term_object_id = term->id();
+    vector<size_t> operands_objects_id(term->operands().size());
+    for (size_t i = 0; i < term->operands().size(); ++i)
+    {
+      auto operand = term->operands()[i];
+      if (operand->is_leaf())
+        operands_objects_id[i] = operand->id();
+      else
+        operands_objects_id[i] = terms_objects.at(operand->id());
+
+      if (term_object_id == term->id() && operand->parents().size() == 1)
+        term_object_id = operands_objects_id[i];
+    }
+    terms_objects.emplace(term->id(), term_object_id);
+
     os << cipher_type << " ";
-    gen_cipher_var_id(term->id(), os);
+    gen_cipher_var_id(term_object_id, os);
     os << ";\n";
 
     vector<ir::Term::Type> operands_types;
@@ -154,15 +171,16 @@ void gen_op_terms(const vector<const ir::Term *> &top_sorted_terms, ostream &os)
     else
     {
       os << evaluator_id << "." << operation_mapping.at(OpType{term->op_code().type(), move(operands_types)}) << "(";
-      for (auto it = term->operands().cbegin();;)
+      for (size_t i = 0; i < operands_objects_id.size(); ++i)
       {
-        auto operand = *it;
+        auto operand = term->operands()[i];
+
         if (operand->type() == ir::Term::Type::cipher)
-          gen_cipher_var_id(operand->id(), os);
+          gen_cipher_var_id(operands_objects_id[i], os);
         else
-          gen_plain_var_id(operand->id(), os);
-        ++it;
-        if (it == term->operands().cend())
+          gen_plain_var_id(operands_objects_id[i], os);
+
+        if (i + 1 == operands_objects_id.size())
           break;
 
         os << ", ";
@@ -189,28 +207,39 @@ void gen_op_terms(const vector<const ir::Term *> &top_sorted_terms, ostream &os)
     }
 
     os << ", ";
-    gen_cipher_var_id(term->id(), os);
+    gen_cipher_var_id(term_object_id, os);
 
     os << ");\n";
   }
+  unordered_set<size_t> objects_ids;
+  for (auto e : terms_objects)
+    objects_ids.insert(e.second);
+  cout << "generated " << objects_ids.size() << '\n';
 }
 
-void gen_output_terms(const ir::IOTermsInfo &output_terms_info, ostream &os)
+void gen_output_terms(
+  const ir::IOTermsInfo &output_terms_info, ostream &os, const unordered_map<size_t, size_t> &terms_objects)
 {
   for (const auto &output_info : output_terms_info)
   {
     auto term = output_info.first;
+    size_t term_object;
+    if (term->is_leaf())
+      term_object = term->id();
+    else
+      term_object = terms_objects.at(term->id());
+
     if (term->type() == ir::Term::Type::cipher)
     {
       os << encrypted_outputs_container_id << ".emplace(\"" << output_info.second.label_ << "\", ";
       os << "move(";
-      gen_cipher_var_id(term->id(), os);
+      gen_cipher_var_id(term_object, os);
     }
     else
     {
       os << encoded_outputs_container_id << ".emplace(\"" << output_info.second.label_ << "\", ";
       os << "move(";
-      gen_plain_var_id(term->id(), os);
+      gen_plain_var_id(term_object, os);
     }
     os << "));\n";
   }

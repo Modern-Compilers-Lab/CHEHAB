@@ -5,6 +5,7 @@
 #include <memory>
 #include <ostream>
 #include <string_view>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -34,9 +35,13 @@ void gen_plain_var_id(std::size_t term_id, std::ostream &os);
 
 void gen_const_terms(const ir::ConstTermsValues &const_terms_info, bool signedness, std::ostream &os);
 
-void gen_op_terms(const std::vector<const ir::Term *> &top_sorted_terms, std::ostream &os);
+void gen_op_terms(
+  const std::vector<const ir::Term *> &top_sorted_terms, std::ostream &os,
+  std::unordered_map<std::size_t, std::size_t> &terms_objects);
 
-void gen_output_terms(const ir::IOTermsInfo &output_terms_info, std::ostream &os);
+void gen_output_terms(
+  const ir::IOTermsInfo &output_terms_info, std::ostream &os,
+  const std::unordered_map<std::size_t, std::size_t> &terms_objects);
 
 void gen_rotation_steps_getter_def(
   const std::string &func_name, const std::unordered_set<int> &steps, std::ostream &os);
