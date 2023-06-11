@@ -149,7 +149,7 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
     for (size_t i = 0; i < operands_objects_id.size(); ++i)
     {
       auto operand = term->operands()[i];
-      if (func->data_flow().is_output(operand))
+      if (func->data_flow().is_output(operand) || operand->type() == ir::Term::Type::plain)
         continue;
 
       auto operand_object_info_it = terms_objects_info.find(operand->id());
