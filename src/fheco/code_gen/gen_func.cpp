@@ -149,9 +149,6 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
     for (size_t i = 0; i < operands_objects_id.size(); ++i)
     {
       auto operand = term->operands()[i];
-      if (func->data_flow().is_output(operand) || operand->type() == ir::Term::Type::plain)
-        continue;
-
       auto operand_object_info_it = terms_objects_info.find(operand->id());
       // operand with multiplicity > 1
       if (operand_object_info_it == terms_objects_info.end())
@@ -159,6 +156,9 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
 
       auto &operand_object_info = operand_object_info_it->second;
       operands_objects_id[i] = operand_object_info.id_;
+      if (func->data_flow().is_output(operand) || operand->type() == ir::Term::Type::plain)
+        continue;
+
       --operand_object_info.dep_count_;
       if (term_object_id == term->id() && operand_object_info.dep_count_ == 0)
       {
@@ -180,7 +180,11 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
         ++it;
       }
     }
-    terms_objects_info.emplace(term->id(), ObjectInfo{term_object_id, term->parents().size()});
+    size_t dep_count = term->parents().size();
+    if (func->data_flow().is_output(term))
+      ++dep_count;
+
+    terms_objects_info.emplace(term->id(), ObjectInfo{term_object_id, dep_count});
 
     if (term_object_id == term->id())
     {
@@ -250,8 +254,7 @@ void gen_output_terms(const ir::IOTermsInfo &output_terms_info, ostream &os, con
   for (const auto &output_info : output_terms_info)
   {
     auto term = output_info.first;
-    size_t term_object;
-    term_object = terms_objects_info.at(term->id()).id_;
+    size_t term_object = terms_objects_info.at(term->id()).id_;
 
     if (term->type() == ir::Term::Type::cipher)
     {
