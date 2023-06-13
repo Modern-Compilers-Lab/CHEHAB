@@ -152,8 +152,10 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
       auto operand_object_info_it = terms_objects_info.find(operand->id());
       // operand with multiplicity > 1
       if (operand_object_info_it == terms_objects_info.end())
+      {
+        operands_objects_id[i] = term_object_id;
         continue;
-
+      }
       auto &operand_object_info = operand_object_info_it->second;
       operands_objects_id[i] = operand_object_info.id_;
       if (func->data_flow().is_output(operand) || operand->type() == ir::Term::Type::plain)
