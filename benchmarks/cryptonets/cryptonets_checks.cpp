@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 
   const auto &rand_inputs = Compiler::active_func()->data_flow().inputs_info();
 
-  string gen_name = "gen_he_" + func_name;
+  string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
   ofstream source_os(gen_path + ".cpp");
