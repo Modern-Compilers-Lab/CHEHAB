@@ -10,13 +10,6 @@ using namespace seal;
 
 int main(int argc, char **argv)
 {
-  int repeat = 30;
-  if (argc > 1)
-    repeat = stoi(argv[1]);
-
-  if (repeat < 1)
-    throw invalid_argument("invalid repeat");
-
   string func_name = "cryptonets";
   clear_args_info_map clear_inputs, clear_outputs;
   ifstream is("../" + func_name + "_rand_example.txt");
@@ -58,8 +51,6 @@ int main(int argc, char **argv)
   time_end = chrono::high_resolution_clock::now();
   time_sum = time_end - time_start;
 
-  cout << time_sum.count() << endl;
-
   clear_args_info_map obtained_clear_outputs;
   get_clear_outputs(
     batch_encoder, decryptor, encrypted_outputs, encoded_outputs, clear_outputs, obtained_clear_outputs);
@@ -67,14 +58,5 @@ int main(int argc, char **argv)
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
-  for (size_t i = 0; i < repeat - 1; ++i)
-  {
-    time_start = chrono::high_resolution_clock::now();
-    cryptonets_noopt(
-      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-      relin_keys, galois_keys);
-    time_end = chrono::high_resolution_clock::now();
-    time_sum = time_end - time_start;
-    cout << time_sum.count() << endl;
-  }
+  cout << time_sum.count() << '\n';
 }
