@@ -111,6 +111,8 @@ inline bool operator>=(const Term &lhs, const Term &rhs)
 {
   return !(lhs < rhs);
 }
+
+std::ostream &operator<<(std::ostream &os, Term::Type term_type);
 } // namespace fheco::ir
 
 namespace std
@@ -120,6 +122,4 @@ struct hash<fheco::ir::Term>
 {
   inline size_t operator()(const fheco::ir::Term &term) const { return hash<size_t>()(term.id()); }
 };
-
-ostream &operator<<(ostream &os, fheco::ir::Term::Type term_type);
 } // namespace std

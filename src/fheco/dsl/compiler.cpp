@@ -110,23 +110,20 @@ void Compiler::delete_func(const string &name)
     active_func_it_ = funcs_table_.end();
   funcs_table_.erase(name);
 }
-} // namespace fheco
 
-namespace std
-{
-ostream &operator<<(ostream &os, fheco::Compiler::Ruleset ruleset)
+ostream &operator<<(ostream &os, Compiler::Ruleset ruleset)
 {
   switch (ruleset)
   {
-  case fheco::Compiler::Ruleset::depth:
+  case Compiler::Ruleset::depth:
     os << "depth";
     break;
 
-  case fheco::Compiler::Ruleset::ops_cost:
+  case Compiler::Ruleset::ops_cost:
     os << "ops_cost";
     break;
 
-  case fheco::Compiler::Ruleset::joined:
+  case Compiler::Ruleset::joined:
     os << "joined";
     break;
 
@@ -137,4 +134,4 @@ ostream &operator<<(ostream &os, fheco::Compiler::Ruleset ruleset)
 
   return os;
 }
-} // namespace std
+} // namespace fheco

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fheco/ir/op_code.hpp"
+#include <cstddef>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -31,9 +32,9 @@ public:
 
   ExprPrinter(std::shared_ptr<ir::Func> func) : func_{move(func)} {}
 
-  void compute_terms_str_expr(Mode mode);
+  void make_terms_str_expr(Mode mode);
 
-  std::string expand_term(const ir::Term *term, size_t depth, Mode mode = Mode::infix_expl_paren) const;
+  std::string expand_term_str_expr(const ir::Term *term, int depth, Mode mode = Mode::infix_expl_paren) const;
 
   void print_outputs_str_expr(std::ostream &os) const;
 
@@ -57,9 +58,6 @@ private:
 
   Mode mode_ = Mode::none;
 };
-} // namespace fheco::util
 
-namespace std
-{
-std::ostream &operator<<(std::ostream &os, const fheco::util::ExprPrinter::TermsStrExpr &terms_str_expr);
-} // namespace std
+std::ostream &operator<<(std::ostream &os, const ExprPrinter::TermsStrExpr &terms_str_expr);
+} // namespace fheco::util

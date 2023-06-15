@@ -223,68 +223,49 @@ private:
 
   std::int64_t ctxt_output_terms_total_size_ = 0;
 };
+
+Quantifier::DepthSummary operator-(const Quantifier::DepthSummary &lhs, const Quantifier::DepthSummary &rhs);
+
+Quantifier::DepthSummary &operator-=(Quantifier::DepthSummary &lhs, const Quantifier::DepthSummary &rhs);
+
+Quantifier::CtxtTermsDepthInfo operator-(
+  const Quantifier::CtxtTermsDepthInfo &lhs, const Quantifier::CtxtTermsDepthInfo &rhs);
+
+Quantifier::CtxtTermsDepthInfo &operator-=(
+  Quantifier::CtxtTermsDepthInfo &lhs, const Quantifier::CtxtTermsDepthInfo &rhs);
+
+Quantifier::CtxtTermDepthInfo operator-(
+  const Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs);
+
+Quantifier::CtxtTermDepthInfo &operator-=(Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs);
+
+Quantifier::CCOpCount operator-(const Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs);
+
+Quantifier::CCOpCount &operator-=(Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs);
+
+Quantifier::CAOpCount operator-(const Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs);
+
+Quantifier::CAOpCount &operator-=(Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs);
+
+Quantifier::CtxtTermsInfo operator-(const Quantifier::CtxtTermsInfo &lhs, const Quantifier::CtxtTermsInfo &rhs);
+
+Quantifier::CtxtTermsInfo &operator-=(Quantifier::CtxtTermsInfo &lhs, const Quantifier::CtxtTermsInfo &rhs);
+
+Quantifier::CtxtTermInfo operator-(const Quantifier::CtxtTermInfo &lhs, const Quantifier::CtxtTermInfo &rhs);
+
+Quantifier::CtxtTermInfo &operator-=(Quantifier::CtxtTermInfo &lhs, const Quantifier::CtxtTermInfo &rhs);
+
+std::ostream &operator<<(std::ostream &os, const Quantifier &quantifier);
+
+std::ostream &operator<<(std::ostream &os, const Quantifier::CtxtTermsDepthInfo &ctxt_terms_depth_info);
+
+std::ostream &operator<<(std::ostream &os, const Quantifier::CtxtTermDepthInfo &ctxt_term_depth_info);
+
+std::ostream &operator<<(std::ostream &os, const Quantifier::CCOpCount &cc_op_count);
+
+std::ostream &operator<<(std::ostream &os, const Quantifier::CAOpCount &ca_op_count);
+
+std::ostream &operator<<(std::ostream &os, const Quantifier::CtxtTermsInfo &ctxt_terms_info);
+
+std::ostream &operator<<(std::ostream &os, const Quantifier::CtxtTermInfo &ctxt_term_info);
 } // namespace fheco::util
-
-inline void print_line_sep(std::ostream &os)
-{
-  os << std::string(100, '-') << '\n';
-}
-
-namespace std
-{
-fheco::util::Quantifier::DepthSummary operator-(
-  const fheco::util::Quantifier::DepthSummary &lhs, const fheco::util::Quantifier::DepthSummary &rhs);
-
-fheco::util::Quantifier::DepthSummary &operator-=(
-  fheco::util::Quantifier::DepthSummary &lhs, const fheco::util::Quantifier::DepthSummary &rhs);
-
-fheco::util::Quantifier::CtxtTermsDepthInfo operator-(
-  const fheco::util::Quantifier::CtxtTermsDepthInfo &lhs, const fheco::util::Quantifier::CtxtTermsDepthInfo &rhs);
-
-fheco::util::Quantifier::CtxtTermsDepthInfo &operator-=(
-  fheco::util::Quantifier::CtxtTermsDepthInfo &lhs, const fheco::util::Quantifier::CtxtTermsDepthInfo &rhs);
-
-fheco::util::Quantifier::CtxtTermDepthInfo operator-(
-  const fheco::util::Quantifier::CtxtTermDepthInfo &lhs, const fheco::util::Quantifier::CtxtTermDepthInfo &rhs);
-
-fheco::util::Quantifier::CtxtTermDepthInfo &operator-=(
-  fheco::util::Quantifier::CtxtTermDepthInfo &lhs, const fheco::util::Quantifier::CtxtTermDepthInfo &rhs);
-
-fheco::util::Quantifier::CCOpCount operator-(
-  const fheco::util::Quantifier::CCOpCount &lhs, const fheco::util::Quantifier::CCOpCount &rhs);
-
-fheco::util::Quantifier::CCOpCount &operator-=(
-  fheco::util::Quantifier::CCOpCount &lhs, const fheco::util::Quantifier::CCOpCount &rhs);
-
-fheco::util::Quantifier::CAOpCount operator-(
-  const fheco::util::Quantifier::CAOpCount &lhs, const fheco::util::Quantifier::CAOpCount &rhs);
-
-fheco::util::Quantifier::CAOpCount &operator-=(
-  fheco::util::Quantifier::CAOpCount &lhs, const fheco::util::Quantifier::CAOpCount &rhs);
-
-fheco::util::Quantifier::CtxtTermsInfo operator-(
-  const fheco::util::Quantifier::CtxtTermsInfo &lhs, const fheco::util::Quantifier::CtxtTermsInfo &rhs);
-
-fheco::util::Quantifier::CtxtTermsInfo &operator-=(
-  fheco::util::Quantifier::CtxtTermsInfo &lhs, const fheco::util::Quantifier::CtxtTermsInfo &rhs);
-
-fheco::util::Quantifier::CtxtTermInfo operator-(
-  const fheco::util::Quantifier::CtxtTermInfo &lhs, const fheco::util::Quantifier::CtxtTermInfo &rhs);
-
-fheco::util::Quantifier::CtxtTermInfo &operator-=(
-  fheco::util::Quantifier::CtxtTermInfo &lhs, const fheco::util::Quantifier::CtxtTermInfo &rhs);
-
-ostream &operator<<(ostream &os, const fheco::util::Quantifier &quantifier);
-
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermsDepthInfo &ctxt_terms_depth_info);
-
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermDepthInfo &ctxt_term_depth_info);
-
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CCOpCount &cc_op_count);
-
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CAOpCount &ca_op_count);
-
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermsInfo &ctxt_terms_info);
-
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermInfo &ctxt_term_info);
-} // namespace std

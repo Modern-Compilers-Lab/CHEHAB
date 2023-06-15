@@ -109,9 +109,6 @@ private:
 
   static bool scalar_vector_shape_;
 };
-} // namespace fheco
 
-namespace std
-{
-ostream &operator<<(ostream &os, fheco::Compiler::Ruleset ruleset);
-} // namespace std
+std::ostream &operator<<(std::ostream &os, Compiler::Ruleset ruleset);
+} // namespace fheco

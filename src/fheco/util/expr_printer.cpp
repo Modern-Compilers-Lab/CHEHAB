@@ -16,7 +16,7 @@ const unordered_map<ir::OpCode::Type, int> ExprPrinter::ops_precedence_ = {
   {ir::OpCode::Type::negate, 1},  {ir::OpCode::Type::mul, 2},        {ir::OpCode::Type::square, 2},
   {ir::OpCode::Type::add, 3},     {ir::OpCode::Type::sub, 3},        {ir::OpCode::Type::rotate, 4}};
 
-void ExprPrinter::compute_terms_str_expr(Mode mode)
+void ExprPrinter::make_terms_str_expr(Mode mode)
 {
   terms_str_exprs_.clear();
   mode_ = mode;
@@ -99,12 +99,12 @@ void ExprPrinter::compute_terms_str_expr(Mode mode)
   }
 }
 
-string ExprPrinter::expand_term(const ir::Term *term, size_t depth, Mode mode) const
+string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode mode) const
 {
   struct Call
   {
     const ir::Term *term_;
-    size_t depth_;
+    int depth_;
     bool children_processed_;
   };
   stack<Call> call_stack;
@@ -148,7 +148,7 @@ string ExprPrinter::expand_term(const ir::Term *term, size_t depth, Mode mode) c
             const auto arg = top_term->operands()[0];
             if (top_term->op_code().type() == ir::OpCode::Type::rotate)
             {
-              if (arg->is_operation() && depth > 1)
+              if (arg->is_operation())
                 result = "(" + dp.at(Call{arg, top_call.depth_ - 1}) + ") " + top_term->op_code().str_repr();
               else
                 result = dp.at(Call{arg, top_call.depth_ - 1}) + " " + top_term->op_code().str_repr();
@@ -156,9 +156,8 @@ string ExprPrinter::expand_term(const ir::Term *term, size_t depth, Mode mode) c
             else
             {
               if (
-                arg->is_operation() && depth > 1 &&
-                (expl_parenth ||
-                 ops_precedence_.at(top_term->op_code().type()) < ops_precedence_.at(arg->op_code().type())))
+                arg->is_operation() && (expl_parenth || ops_precedence_.at(top_term->op_code().type()) <
+                                                          ops_precedence_.at(arg->op_code().type())))
                 result = top_term->op_code().str_repr() + "(" + dp.at(Call{arg, top_call.depth_ - 1}) + ")";
               else
                 result = top_term->op_code().str_repr() + " " + dp.at(Call{arg, top_call.depth_ - 1});
@@ -170,9 +169,8 @@ string ExprPrinter::expand_term(const ir::Term *term, size_t depth, Mode mode) c
             const auto rhs = top_term->operands()[1];
             result = "";
             if (
-              lhs->is_operation() && depth > 1 &&
-              (expl_parenth ||
-               ops_precedence_.at(top_term->op_code().type()) < ops_precedence_.at(lhs->op_code().type())))
+              lhs->is_operation() && (expl_parenth || ops_precedence_.at(top_term->op_code().type()) <
+                                                        ops_precedence_.at(lhs->op_code().type())))
               result += "(" + dp.at(Call{lhs, top_call.depth_ - 1}) + ")";
             else
               result += dp.at(Call{lhs, top_call.depth_ - 1});
@@ -180,9 +178,8 @@ string ExprPrinter::expand_term(const ir::Term *term, size_t depth, Mode mode) c
             result += " " + top_term->op_code().str_repr() + " ";
 
             if (
-              rhs->is_operation() && depth > 1 &&
-              (expl_parenth ||
-               ops_precedence_.at(top_term->op_code().type()) < ops_precedence_.at(rhs->op_code().type())))
+              rhs->is_operation() && (expl_parenth || ops_precedence_.at(top_term->op_code().type()) <
+                                                        ops_precedence_.at(rhs->op_code().type())))
               result += "(" + dp.at(Call{rhs, top_call.depth_ - 1}) + ")";
             else
               result += dp.at(Call{rhs, top_call.depth_ - 1});
@@ -213,7 +210,7 @@ string ExprPrinter::expand_term(const ir::Term *term, size_t depth, Mode mode) c
     if (auto it = dp.find(Call{top_term, top_call.depth_}); it != dp.end())
       continue;
 
-    if (top_call.depth_ == 0)
+    if (top_call.depth_ <= 0)
     {
       if (top_term->is_leaf())
         dp.emplace(Call{top_term, 0}, leaf_str_expr(top_term));
@@ -255,14 +252,11 @@ void ExprPrinter::print_terms_str_expr(ostream &os) const
   os << "term_id: str_expr\n";
   os << terms_str_exprs_;
 }
-} // namespace fheco::util
 
-namespace std
-{
-ostream &operator<<(ostream &os, const fheco::util::ExprPrinter::TermsStrExpr &terms_str_expr)
+ostream &operator<<(ostream &os, const ExprPrinter::TermsStrExpr &terms_str_expr)
 {
   for (const auto &e : terms_str_expr)
     os << '$' << e.first << ": " << e.second << '\n';
   return os;
 }
-} // namespace std
+} // namespace fheco::util

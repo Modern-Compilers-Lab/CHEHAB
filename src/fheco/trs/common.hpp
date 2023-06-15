@@ -39,9 +39,6 @@ ir::OpCode convert_op_code(const TermOpCode &op_code, std::vector<int> generator
 using TermsMetric = std::unordered_map<std::size_t, std::int64_t>;
 
 void count_ctxt_leaves(ir::Term *term, TermsMetric &dp);
-} // namespace fheco::trs
 
-namespace std
-{
-ostream &operator<<(ostream &os, fheco::trs::RewriteHeuristic rewrite_heuristic);
-} // namespace std
+std::ostream &operator<<(std::ostream &os, RewriteHeuristic rewrite_heuristic);
+} // namespace fheco::trs

@@ -1,5 +1,4 @@
 #include "fheco/ir/func.hpp"
-#include "fheco/ir/term.hpp"
 #include "fheco/passes/cse_commut.hpp"
 #include <algorithm>
 #include <unordered_set>

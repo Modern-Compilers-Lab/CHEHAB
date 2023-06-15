@@ -28,7 +28,7 @@ inline constexpr std::string_view encrypted_outputs_container_id{"encrypted_outp
 inline constexpr std::string_view encoded_outputs_container_id{"encoded_outputs"};
 
 inline constexpr std::string_view relin_keys_type{"RelinKeys"};
-inline constexpr std::string_view relin_keys_id{"relin_keys"sv};
+inline constexpr std::string_view relin_keys_id{"relin_keys"};
 
 inline constexpr std::string_view galois_keys_type{"GaloisKeys"};
 inline constexpr std::string_view galois_keys_id{"galois_keys"};
@@ -43,7 +43,7 @@ inline constexpr std::string_view slot_count_id{"slot_count"};
 inline constexpr std::string_view encode{"encode"};
 inline constexpr std::string_view decode{"decode"};
 
-inline constexpr std::string_view encryptor_type = "Encryptor"sv;
+inline constexpr std::string_view encryptor_type{"Encryptor"};
 inline constexpr std::string_view encryptor_id{"encryptor"};
 inline constexpr std::string_view encrypt{"encrypt"};
 inline constexpr std::string_view signed_slot_type{"std::int64_t"};

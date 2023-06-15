@@ -1,6 +1,5 @@
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/func.hpp"
-#include "fheco/ir/term.hpp"
 #include "fheco/util/quantifier.hpp"
 #include <stack>
 #include <stdexcept>
@@ -11,6 +10,8 @@ using namespace std;
 
 namespace fheco::util
 {
+void print_line_sep(std::ostream &os);
+
 void Quantifier::run_all_analysis(const param_select::EncryptionParams &params)
 {
   compute_he_depth_info();
@@ -560,12 +561,8 @@ bool Quantifier::EqualCAOpInfo::operator()(const CAOpInfo &lhs, const CAOpInfo &
   return pair<size_t, size_t>{lhs.opposite_level_, lhs.arg_size_} ==
          pair<size_t, size_t>{rhs.opposite_level_, rhs.arg_size_};
 }
-} // namespace fheco::util
 
-namespace std
-{
-fheco::util::Quantifier::DepthSummary operator-(
-  const fheco::util::Quantifier::DepthSummary &lhs, const fheco::util::Quantifier::DepthSummary &rhs)
+Quantifier::DepthSummary operator-(const Quantifier::DepthSummary &lhs, const Quantifier::DepthSummary &rhs)
 {
   auto result = lhs;
   result.min_xdepth_ -= rhs.min_xdepth_;
@@ -577,15 +574,14 @@ fheco::util::Quantifier::DepthSummary operator-(
   return result;
 }
 
-fheco::util::Quantifier::DepthSummary &operator-=(
-  fheco::util::Quantifier::DepthSummary &lhs, const fheco::util::Quantifier::DepthSummary &rhs)
+Quantifier::DepthSummary &operator-=(Quantifier::DepthSummary &lhs, const Quantifier::DepthSummary &rhs)
 {
   lhs = lhs - rhs;
   return lhs;
 }
 
-fheco::util::Quantifier::CtxtTermsDepthInfo operator-(
-  const fheco::util::Quantifier::CtxtTermsDepthInfo &lhs, const fheco::util::Quantifier::CtxtTermsDepthInfo &rhs)
+Quantifier::CtxtTermsDepthInfo operator-(
+  const Quantifier::CtxtTermsDepthInfo &lhs, const Quantifier::CtxtTermsDepthInfo &rhs)
 {
   auto result = lhs;
   for (auto &e : result)
@@ -597,15 +593,15 @@ fheco::util::Quantifier::CtxtTermsDepthInfo operator-(
   return result;
 }
 
-fheco::util::Quantifier::CtxtTermsDepthInfo &operator-=(
-  fheco::util::Quantifier::CtxtTermsDepthInfo &lhs, const fheco::util::Quantifier::CtxtTermsDepthInfo &rhs)
+Quantifier::CtxtTermsDepthInfo &operator-=(
+  Quantifier::CtxtTermsDepthInfo &lhs, const Quantifier::CtxtTermsDepthInfo &rhs)
 {
   lhs = lhs - rhs;
   return lhs;
 }
 
-fheco::util::Quantifier::CtxtTermDepthInfo operator-(
-  const fheco::util::Quantifier::CtxtTermDepthInfo &lhs, const fheco::util::Quantifier::CtxtTermDepthInfo &rhs)
+Quantifier::CtxtTermDepthInfo operator-(
+  const Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs)
 {
   auto result = lhs;
   result.depth_ -= rhs.depth_;
@@ -613,15 +609,13 @@ fheco::util::Quantifier::CtxtTermDepthInfo operator-(
   return result;
 }
 
-fheco::util::Quantifier::CtxtTermDepthInfo &operator-=(
-  fheco::util::Quantifier::CtxtTermDepthInfo &lhs, const fheco::util::Quantifier::CtxtTermDepthInfo &rhs)
+Quantifier::CtxtTermDepthInfo &operator-=(Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs)
 {
   lhs = lhs - rhs;
   return lhs;
 }
 
-fheco::util::Quantifier::CCOpCount operator-(
-  const fheco::util::Quantifier::CCOpCount &lhs, const fheco::util::Quantifier::CCOpCount &rhs)
+Quantifier::CCOpCount operator-(const Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs)
 {
   auto result = lhs;
   for (auto &e : result)
@@ -637,15 +631,13 @@ fheco::util::Quantifier::CCOpCount operator-(
   return result;
 }
 
-fheco::util::Quantifier::CCOpCount &operator-=(
-  fheco::util::Quantifier::CCOpCount &lhs, const fheco::util::Quantifier::CCOpCount &rhs)
+Quantifier::CCOpCount &operator-=(Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs)
 {
   lhs = lhs - rhs;
   return lhs;
 }
 
-fheco::util::Quantifier::CAOpCount operator-(
-  const fheco::util::Quantifier::CAOpCount &lhs, const fheco::util::Quantifier::CAOpCount &rhs)
+Quantifier::CAOpCount operator-(const Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs)
 {
   auto result = lhs;
   for (auto &e : result)
@@ -661,15 +653,13 @@ fheco::util::Quantifier::CAOpCount operator-(
   return result;
 }
 
-fheco::util::Quantifier::CAOpCount &operator-=(
-  fheco::util::Quantifier::CAOpCount &lhs, const fheco::util::Quantifier::CAOpCount &rhs)
+Quantifier::CAOpCount &operator-=(Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs)
 {
   lhs = lhs - rhs;
   return lhs;
 }
 
-fheco::util::Quantifier::CtxtTermsInfo operator-(
-  const fheco::util::Quantifier::CtxtTermsInfo &lhs, const fheco::util::Quantifier::CtxtTermsInfo &rhs)
+Quantifier::CtxtTermsInfo operator-(const Quantifier::CtxtTermsInfo &lhs, const Quantifier::CtxtTermsInfo &rhs)
 {
   auto result = lhs;
   for (auto &e : result)
@@ -681,15 +671,13 @@ fheco::util::Quantifier::CtxtTermsInfo operator-(
   return result;
 }
 
-fheco::util::Quantifier::CtxtTermsInfo &operator-=(
-  fheco::util::Quantifier::CtxtTermsInfo &lhs, const fheco::util::Quantifier::CtxtTermsInfo &rhs)
+Quantifier::CtxtTermsInfo &operator-=(Quantifier::CtxtTermsInfo &lhs, const Quantifier::CtxtTermsInfo &rhs)
 {
   lhs = lhs - rhs;
   return lhs;
 }
 
-fheco::util::Quantifier::CtxtTermInfo operator-(
-  const fheco::util::Quantifier::CtxtTermInfo &lhs, const fheco::util::Quantifier::CtxtTermInfo &rhs)
+Quantifier::CtxtTermInfo operator-(const Quantifier::CtxtTermInfo &lhs, const Quantifier::CtxtTermInfo &rhs)
 {
   auto result = lhs;
   result.opposite_level_ -= rhs.opposite_level_;
@@ -697,14 +685,13 @@ fheco::util::Quantifier::CtxtTermInfo operator-(
   return result;
 }
 
-fheco::util::Quantifier::CtxtTermInfo &operator-=(
-  fheco::util::Quantifier::CtxtTermInfo &lhs, const fheco::util::Quantifier::CtxtTermInfo &rhs)
+Quantifier::CtxtTermInfo &operator-=(Quantifier::CtxtTermInfo &lhs, const Quantifier::CtxtTermInfo &rhs)
 {
   lhs = lhs - rhs;
   return lhs;
 }
 
-ostream &operator<<(ostream &os, const fheco::util::Quantifier &quantifier)
+ostream &operator<<(ostream &os, const Quantifier &quantifier)
 {
   print_line_sep(os);
   os << "he_depth_info\n";
@@ -715,19 +702,19 @@ ostream &operator<<(ostream &os, const fheco::util::Quantifier &quantifier)
   return os;
 }
 
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermsDepthInfo &ctxt_terms_depth_info)
+ostream &operator<<(ostream &os, const Quantifier::CtxtTermsDepthInfo &ctxt_terms_depth_info)
 {
   for (const auto &e : ctxt_terms_depth_info)
     os << '$' << e.first->id() << ": (" << e.second << ")\n";
   return os;
 }
 
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermDepthInfo &ctxt_term_depth_info)
+ostream &operator<<(ostream &os, const Quantifier::CtxtTermDepthInfo &ctxt_term_depth_info)
 {
   return os << ctxt_term_depth_info.xdepth_ << ", " << ctxt_term_depth_info.depth_;
 }
 
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CCOpCount &cc_op_count)
+ostream &operator<<(ostream &os, const Quantifier::CCOpCount &cc_op_count)
 {
   int64_t total = 0;
   for (const auto &e : cc_op_count)
@@ -739,7 +726,7 @@ ostream &operator<<(ostream &os, const fheco::util::Quantifier::CCOpCount &cc_op
   return os << "total: " << total << '\n';
 }
 
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CAOpCount &ca_op_count)
+ostream &operator<<(ostream &os, const Quantifier::CAOpCount &ca_op_count)
 {
   int64_t total = 0;
   for (const auto &e : ca_op_count)
@@ -750,15 +737,20 @@ ostream &operator<<(ostream &os, const fheco::util::Quantifier::CAOpCount &ca_op
   return os << "total: " << total << '\n';
 }
 
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermsInfo &ctxt_terms_info)
+ostream &operator<<(ostream &os, const Quantifier::CtxtTermsInfo &ctxt_terms_info)
 {
   for (const auto &e : ctxt_terms_info)
     os << '$' << e.first->id() << ": (" << e.second << ")\n";
   return os;
 }
 
-ostream &operator<<(ostream &os, const fheco::util::Quantifier::CtxtTermInfo &ctxt_term_info)
+ostream &operator<<(ostream &os, const Quantifier::CtxtTermInfo &ctxt_term_info)
 {
   return os << ctxt_term_info.opposite_level_ << ", " << ctxt_term_info.size_;
 }
-} // namespace std
+
+void print_line_sep(std::ostream &os)
+{
+  os << std::string(100, '-') << '\n';
+}
+} // namespace fheco::util

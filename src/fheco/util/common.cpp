@@ -1,5 +1,4 @@
 #include "fheco/ir/func.hpp"
-#include "fheco/ir/term.hpp"
 #include "fheco/util/common.hpp"
 #include <stdexcept>
 
@@ -145,11 +144,8 @@ void print_packed_val(const PackedVal &packed_val, size_t lead_trail_size, ostre
     os << packed_val[i] << " ";
   os << packed_val.back();
 }
-} // namespace fheco::util
 
-namespace std
-{
-ostream &operator<<(ostream &os, const fheco::ir::IOTermsInfo &io_terms_values)
+ostream &operator<<(ostream &os, const ir::IOTermsInfo &io_terms_values)
 {
   for (const auto &term : io_terms_values)
   {
@@ -161,7 +157,7 @@ ostream &operator<<(ostream &os, const fheco::ir::IOTermsInfo &io_terms_values)
   return os;
 }
 
-ostream &operator<<(ostream &os, const fheco::ir::ConstTermsValues &const_terms_values)
+ostream &operator<<(ostream &os, const ir::ConstTermsValues &const_terms_values)
 {
   for (const auto &term : const_terms_values)
   {
@@ -175,7 +171,7 @@ ostream &operator<<(ostream &os, const fheco::ir::ConstTermsValues &const_terms_
   return os;
 }
 
-ostream &operator<<(ostream &os, const fheco::ir::TermsValues &terms_values)
+ostream &operator<<(ostream &os, const ir::TermsValues &terms_values)
 {
   for (const auto &term : terms_values)
   {
@@ -186,7 +182,7 @@ ostream &operator<<(ostream &os, const fheco::ir::TermsValues &terms_values)
   return os;
 }
 
-ostream &operator<<(ostream &os, const fheco::PackedVal &packed_val)
+ostream &operator<<(ostream &os, const PackedVal &packed_val)
 {
   if (packed_val.size() == 0)
     return os;
@@ -195,4 +191,4 @@ ostream &operator<<(ostream &os, const fheco::PackedVal &packed_val)
     os << packed_val[i] << " ";
   return os << packed_val.back();
 }
-} // namespace std
+} // namespace fheco::util

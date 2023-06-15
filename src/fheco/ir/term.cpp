@@ -135,20 +135,16 @@ Term::Type Term::deduce_result_type(const OpCode &op_code, const vector<Type> &o
     throw logic_error("unhandled term type deduction for operations with arity > 2");
   }
 }
-} // namespace fheco::ir
 
-namespace std
-{
-
-ostream &operator<<(ostream &os, fheco::ir::Term::Type term_type)
+ostream &operator<<(ostream &os, Term::Type term_type)
 {
   switch (term_type)
   {
-  case fheco::ir::Term::Type::cipher:
+  case Term::Type::cipher:
     os << "cipher";
     break;
 
-  case fheco::ir::Term::Type::plain:
+  case Term::Type::plain:
     os << "plain";
     break;
 
@@ -157,4 +153,4 @@ ostream &operator<<(ostream &os, fheco::ir::Term::Type term_type)
   }
   return os;
 }
-} // namespace std
+} // namespace fheco::ir

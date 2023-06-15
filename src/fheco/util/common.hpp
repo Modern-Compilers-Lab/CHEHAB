@@ -165,15 +165,12 @@ inline std::size_t popcount(T x)
   std::bitset<bitwidth> bs(x);
   return bs.count();
 }
+
+std::ostream &operator<<(std::ostream &os, const ir::IOTermsInfo &io_terms_values);
+
+std::ostream &operator<<(std::ostream &os, const ir::ConstTermsValues &const_terms_values);
+
+std::ostream &operator<<(std::ostream &os, const ir::TermsValues &terms_values);
+
+std::ostream &operator<<(std::ostream &os, const PackedVal &packed_val);
 } // namespace fheco::util
-
-namespace std
-{
-ostream &operator<<(ostream &os, const fheco::ir::IOTermsInfo &io_terms_values);
-
-ostream &operator<<(ostream &os, const fheco::ir::ConstTermsValues &const_terms_values);
-
-ostream &operator<<(ostream &os, const fheco::ir::TermsValues &terms_values);
-
-ostream &operator<<(ostream &os, const fheco::PackedVal &packed_val);
-} // namespace std
