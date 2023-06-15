@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cstddef>
+#include <fstream>
 #include <iostream>
 #include "gen_he_cryptonets_noopt.hpp"
 #include "utils.hpp"
@@ -18,7 +19,11 @@ int main(int argc, char **argv)
 
   string func_name = "cryptonets";
   clear_args_info_map clear_inputs, clear_outputs;
-  parse_inputs_outputs_file("../" + func_name + "_rand_example.txt", clear_inputs, clear_outputs);
+  ifstream is("../" + func_name + "_rand_example.txt");
+  if (!is)
+    throw invalid_argument("failed to open file");
+
+  parse_inputs_outputs_file(is, clear_inputs, clear_outputs);
 
   seal::EncryptionParameters params(seal::scheme_type::bfv);
   size_t n = 8192;
@@ -51,25 +56,25 @@ int main(int argc, char **argv)
     encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
     relin_keys, galois_keys);
   time_end = chrono::high_resolution_clock::now();
-  time_sum += time_end - time_start;
+  time_sum = time_end - time_start;
+
+  cout << time_sum.count() << endl;
 
   clear_args_info_map obtained_clear_outputs;
   get_clear_outputs(
     batch_encoder, decryptor, encrypted_outputs, encoded_outputs, clear_outputs, obtained_clear_outputs);
-  print_encrypted_outputs_info(context, decryptor, encrypted_outputs);
+  print_encrypted_outputs_info(context, decryptor, encrypted_outputs, clog);
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
-  // get peak memory from /proc
-  // getchar();
-
-  time_start = chrono::high_resolution_clock::now();
   for (size_t i = 0; i < repeat - 1; ++i)
+  {
+    time_start = chrono::high_resolution_clock::now();
     cryptonets_noopt(
       encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
       relin_keys, galois_keys);
-  time_end = chrono::high_resolution_clock::now();
-  time_sum += time_end - time_start;
-
-  cout << "time: " << time_sum.count() / repeat << " ms\n";
+    time_end = chrono::high_resolution_clock::now();
+    time_sum = time_end - time_start;
+    cout << time_sum.count() << endl;
+  }
 }

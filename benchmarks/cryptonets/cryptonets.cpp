@@ -1,4 +1,5 @@
 #include "fheco/fheco.hpp"
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -156,6 +157,9 @@ int main(int argc, char **argv)
   else
     Compiler::disable_const_folding();
 
+  chrono::high_resolution_clock::time_point time_start, time_end;
+  chrono::duration<double, milli> time_sum(0);
+  time_start = chrono::high_resolution_clock::now();
   string func_name = "cryptonets";
   Compiler::create_func(func_name, 8192, 17, true, false, false);
 
@@ -163,13 +167,17 @@ int main(int argc, char **argv)
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
     vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
 
-  string gen_name = "gen_he_" + func_name;
+  string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
   ofstream source_os(gen_path + ".cpp");
 
   Compiler::compile(
     ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms, header_os, gen_name + ".hpp", source_os);
+
+  time_end = chrono::high_resolution_clock::now();
+  time_sum = time_end - time_start;
+  cout << time_sum.count() << endl;
 
   if (call_quantifier)
   {
@@ -179,6 +187,5 @@ int main(int argc, char **argv)
     cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().max_depth_ << '\n';
   }
 
-  // getchar();
   return 0;
 }

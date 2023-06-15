@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -185,6 +186,9 @@ int main(int argc, char **argv)
   else
     Compiler::disable_const_folding();
 
+  chrono::high_resolution_clock::time_point time_start, time_end;
+  chrono::duration<double, milli> time_sum(0);
+  time_start = chrono::high_resolution_clock::now();
   string func_name = "cryptonets";
   Compiler::create_func(func_name, 8192, false, 65537, true, false);
 
@@ -221,5 +225,10 @@ int main(int argc, char **argv)
     quantifier1.run_all_analysis();
     quantifier1.print_info(cout);
   }
+
+  time_end = chrono::high_resolution_clock::now();
+  time_sum = time_end - time_start;
+  cout << time_sum.count() << endl;
+
   return 0;
 }
