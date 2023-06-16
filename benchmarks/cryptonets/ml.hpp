@@ -48,7 +48,7 @@ std::vector<fheco::Ciphertext> flatten(const std::vector<std::vector<std::vector
 template <typename T>
 inline void print_vector(const std::vector<T> &v, std::ostream &os)
 {
-  if (v.size() == 0)
+  if (v.empty())
     return;
 
   for (std::size_t i = 0; i < v.size() - 1; ++i)
