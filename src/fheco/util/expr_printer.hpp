@@ -1,6 +1,9 @@
 #pragma once
 
 #include "fheco/ir/op_code.hpp"
+#include "fheco/trs/op_gen_matcher.hpp"
+#include "fheco/trs/rule.hpp"
+#include "fheco/trs/term_matcher.hpp"
 #include <cstddef>
 #include <memory>
 #include <ostream>
@@ -30,6 +33,11 @@ public:
 
   using TermsStrExpr = std::unordered_map<std::size_t, std::string>;
 
+  static std::string make_rule_str_repr(
+    const trs::Rule &rule, bool show_label = false, Mode mode = Mode::infix_expl_paren);
+
+  static std::string make_term_matcher_str_expr(const trs::TermMatcher &term_matcher, Mode mode);
+
   ExprPrinter(std::shared_ptr<ir::Func> func) : func_{move(func)} {}
 
   void make_terms_str_expr(Mode mode);
@@ -49,6 +57,10 @@ public:
 private:
   // for infix representation to reduce unnecessary parenthesis
   static const std::unordered_map<ir::OpCode::Type, int> ops_precedence_;
+
+  static const std::unordered_map<trs::OpGenOpCode::Type, int> op_gen_matcher_ops_precedence_;
+
+  static std::string make_op_gen_matcher_str_expr(const trs::OpGenMatcher &op_gen_matcher, Mode mode);
 
   std::string leaf_str_expr(const ir::Term *term) const;
 

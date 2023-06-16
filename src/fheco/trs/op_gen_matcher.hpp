@@ -38,6 +38,10 @@ public:
 
   inline const std::optional<int> &val() const { return val_; };
 
+  inline bool is_operation() const { return op_code_.type() != OpGenOpCode::Type::nop; }
+
+  inline bool is_leaf() const { return operands_.empty(); }
+
   inline bool is_variable() const { return operands_.empty() && !val_; }
 
 private:

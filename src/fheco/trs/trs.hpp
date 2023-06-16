@@ -34,6 +34,8 @@ public:
     std::size_t id, RewriteHeuristic heuristic, std::int64_t &max_iter, bool global_analysis,
     bool rewrite_created_sub_terms);
 
+  inline const Ruleset &ruleset() const { return ruleset_; }
+
 private:
   bool match(
     const TermMatcher &term_matcher, ir::Term *term, Subst &subst, bool global_analysis, std::int64_t &rel_cost,

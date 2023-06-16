@@ -184,7 +184,7 @@ ostream &operator<<(ostream &os, const ir::TermsValues &terms_values)
 
 ostream &operator<<(ostream &os, const PackedVal &packed_val)
 {
-  if (packed_val.size() == 0)
+  if (packed_val.empty())
     return os;
 
   for (size_t i = 0; i < packed_val.size() - 1; ++i)

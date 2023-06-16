@@ -1,6 +1,7 @@
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
+#include "fheco/util/common.hpp"
 #include "fheco/util/expr_printer.hpp"
 #include <stack>
 #include <stdexcept>
@@ -15,6 +16,189 @@ const unordered_map<ir::OpCode::Type, int> ExprPrinter::ops_precedence_ = {
   {ir::OpCode::Type::encrypt, 1}, {ir::OpCode::Type::mod_switch, 1}, {ir::OpCode::Type::relin, 1},
   {ir::OpCode::Type::negate, 1},  {ir::OpCode::Type::mul, 2},        {ir::OpCode::Type::square, 2},
   {ir::OpCode::Type::add, 3},     {ir::OpCode::Type::sub, 3},        {ir::OpCode::Type::rotate, 4}};
+
+const unordered_map<trs::OpGenOpCode::Type, int> ExprPrinter::op_gen_matcher_ops_precedence_ = {
+  {trs::OpGenOpCode::Type::negate, 1},
+  {trs::OpGenOpCode::Type::mod, 2},
+  {trs::OpGenOpCode::Type::add, 3},
+  {trs::OpGenOpCode::Type::sub, 3}};
+
+string ExprPrinter::make_rule_str_repr(const trs::Rule &rule, bool show_label, Mode mode)
+{
+  string repr{};
+  if (show_label)
+    repr = rule.label() + ": ";
+
+  repr += make_term_matcher_str_expr(rule.lhs(), mode) + " => ";
+  if (rule.has_dynamic_rhs())
+    repr += "$dynamic_rhs";
+  else
+    repr += make_term_matcher_str_expr(rule.get_rhs(), mode);
+  if (rule.has_cond())
+    repr += " [has condition]";
+  return repr;
+}
+
+string ExprPrinter::make_term_matcher_str_expr(const trs::TermMatcher &term_matcher, Mode mode)
+{
+  if (term_matcher.is_leaf())
+  {
+    if (term_matcher.val())
+    {
+      auto val = *term_matcher.val();
+      if (is_scalar(val))
+        return to_string(val[0]);
+
+      return "$val" + to_string(term_matcher.id());
+    }
+    if (!term_matcher.label())
+      throw invalid_argument("variable term_matcher without label");
+
+    return *term_matcher.label();
+  }
+
+  if (mode == Mode::infix || mode == Mode::infix_expl_paren)
+  {
+    bool expl_parenth = mode == Mode::infix_expl_paren;
+    if (term_matcher.op_code().arity() == 1)
+    {
+      const auto &arg = term_matcher.operands()[0];
+      const auto &arg_expr = make_term_matcher_str_expr(arg, mode);
+      if (term_matcher.op_code().type() == ir::OpCode::Type::rotate)
+      {
+        auto steps_expr = make_op_gen_matcher_str_expr(term_matcher.op_code().steps(), mode);
+        if (term_matcher.op_code().steps().is_operation())
+          steps_expr = "(" + steps_expr + ")";
+
+        if (arg.is_operation())
+          return "(" + arg_expr + ") " + term_matcher.op_code().str_repr() + " " + steps_expr;
+        else
+          return arg_expr + " " + term_matcher.op_code().str_repr() + " " + steps_expr;
+      }
+      else
+        return term_matcher.op_code().str_repr() + "(" + arg_expr + ")";
+    }
+    else if (term_matcher.op_code().arity() == 2)
+    {
+      const auto &lhs = term_matcher.operands()[0];
+      const auto &rhs = term_matcher.operands()[1];
+      const auto &lhs_expr = make_term_matcher_str_expr(lhs, mode);
+      const auto &rhs_expr = make_term_matcher_str_expr(rhs, mode);
+      string tmp_str_expr;
+      if (
+        lhs.is_operation() &&
+        (expl_parenth || ops_precedence_.at(term_matcher.op_code().type()) < ops_precedence_.at(lhs.op_code().type())))
+        tmp_str_expr += "(" + lhs_expr + ")";
+      else
+        tmp_str_expr += lhs_expr;
+
+      tmp_str_expr += " " + term_matcher.op_code().str_repr() + " ";
+
+      if (
+        rhs.is_operation() &&
+        (expl_parenth || ops_precedence_.at(term_matcher.op_code().type()) < ops_precedence_.at(rhs.op_code().type())))
+        tmp_str_expr += "(" + rhs_expr + ")";
+      else
+        tmp_str_expr += rhs_expr;
+
+      return tmp_str_expr;
+    }
+    else
+      throw invalid_argument("infix with non binary unary operation");
+  }
+  else if (mode == Mode::prefix)
+  {
+    string tmp_str_expr = term_matcher.op_code().str_repr();
+    for (const auto &op_gen : term_matcher.op_code().generators())
+      tmp_str_expr += " " + make_op_gen_matcher_str_expr(op_gen, Mode::prefix);
+
+    for (const auto &operand : term_matcher.operands())
+      tmp_str_expr += " " + make_term_matcher_str_expr(operand, mode);
+    return tmp_str_expr;
+  }
+  else if (mode == Mode::posfix)
+  {
+    string tmp_str_expr;
+    for (const auto operand : term_matcher.operands())
+      tmp_str_expr += make_term_matcher_str_expr(operand, mode) + " ";
+
+    tmp_str_expr += term_matcher.op_code().str_repr();
+    for (const auto &op_gen : term_matcher.op_code().generators())
+      tmp_str_expr += " " + make_op_gen_matcher_str_expr(op_gen, Mode::posfix);
+    return tmp_str_expr;
+  }
+  else
+    throw invalid_argument("invalid mode");
+}
+
+string ExprPrinter::make_op_gen_matcher_str_expr(const trs::OpGenMatcher &op_gen_matcher, Mode mode)
+{
+  if (op_gen_matcher.is_leaf())
+  {
+    if (op_gen_matcher.val())
+      return to_string(*op_gen_matcher.val());
+
+    if (!op_gen_matcher.label())
+      throw invalid_argument("variable op_gen_matcher without label");
+
+    return *op_gen_matcher.label();
+  }
+
+  if (mode == Mode::infix || mode == Mode::infix_expl_paren)
+  {
+    bool expl_parenth = mode == Mode::infix_expl_paren;
+    if (op_gen_matcher.op_code().arity() == 1)
+    {
+      const auto &arg = op_gen_matcher.operands()[0];
+      const auto &arg_expr = make_op_gen_matcher_str_expr(arg, mode);
+      return op_gen_matcher.op_code().str_repr() + "(" + arg_expr + ")";
+    }
+    else if (op_gen_matcher.op_code().arity() == 2)
+    {
+      const auto &lhs = op_gen_matcher.operands()[0];
+      const auto &rhs = op_gen_matcher.operands()[1];
+      const auto &lhs_expr = make_op_gen_matcher_str_expr(lhs, mode);
+      const auto &rhs_expr = make_op_gen_matcher_str_expr(rhs, mode);
+      string tmp_str_expr;
+      if (
+        lhs.is_operation() && (expl_parenth || op_gen_matcher_ops_precedence_.at(op_gen_matcher.op_code().type()) <
+                                                 op_gen_matcher_ops_precedence_.at(lhs.op_code().type())))
+        tmp_str_expr += "(" + lhs_expr + ")";
+      else
+        tmp_str_expr += lhs_expr;
+
+      tmp_str_expr += " " + op_gen_matcher.op_code().str_repr() + " ";
+
+      if (
+        rhs.is_operation() && (expl_parenth || op_gen_matcher_ops_precedence_.at(op_gen_matcher.op_code().type()) <
+                                                 op_gen_matcher_ops_precedence_.at(rhs.op_code().type())))
+        tmp_str_expr += "(" + rhs_expr + ")";
+      else
+        tmp_str_expr += rhs_expr;
+
+      return tmp_str_expr;
+    }
+    else
+      throw invalid_argument("infix with non binary unary operation");
+  }
+  else if (mode == Mode::prefix)
+  {
+    string tmp_str_expr = op_gen_matcher.op_code().str_repr();
+    for (const auto &operand : op_gen_matcher.operands())
+      tmp_str_expr += " " + make_op_gen_matcher_str_expr(operand, mode);
+    return tmp_str_expr;
+  }
+  else if (mode == Mode::posfix)
+  {
+    string tmp_str_expr;
+    for (const auto operand : op_gen_matcher.operands())
+      tmp_str_expr += make_op_gen_matcher_str_expr(operand, mode) + " ";
+    tmp_str_expr += op_gen_matcher.op_code().str_repr();
+    return tmp_str_expr;
+  }
+  else
+    throw invalid_argument("invalid mode");
+}
 
 void ExprPrinter::make_terms_str_expr(Mode mode)
 {
@@ -41,14 +225,7 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
               terms_str_exprs_.emplace(term->id(), arg_expr + " " + term->op_code().str_repr());
           }
           else
-          {
-            if (
-              arg->is_operation() &&
-              (expl_parenth || ops_precedence_.at(term->op_code().type()) < ops_precedence_.at(arg->op_code().type())))
-              terms_str_exprs_.emplace(term->id(), term->op_code().str_repr() + "(" + arg_expr + ")");
-            else
-              terms_str_exprs_.emplace(term->id(), term->op_code().str_repr() + " " + arg_expr);
-          }
+            terms_str_exprs_.emplace(term->id(), term->op_code().str_repr() + "(" + arg_expr + ")");
         }
         else if (term->op_code().arity() == 2)
         {
@@ -56,7 +233,7 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
           const auto rhs = term->operands()[1];
           const auto &lhs_expr = terms_str_exprs_.at(lhs->id());
           const auto &rhs_expr = terms_str_exprs_.at(rhs->id());
-          string tmp_str_expr = "";
+          string tmp_str_expr{};
           if (
             lhs->is_operation() &&
             (expl_parenth || ops_precedence_.at(term->op_code().type()) < ops_precedence_.at(lhs->op_code().type())))
@@ -87,7 +264,7 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
       }
       else if (mode == Mode::posfix)
       {
-        string tmp_str_expr = "";
+        string tmp_str_expr{};
         for (const auto operand : term->operands())
           tmp_str_expr += terms_str_exprs_.at(operand->id()) + " ";
         tmp_str_expr += term->op_code().str_repr();
@@ -135,7 +312,7 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
     auto top_term = top_call.term_;
     if (top_call.children_processed_)
     {
-      string result;
+      string result{};
       if (top_term->is_leaf())
         result = leaf_str_expr(top_term);
       else
@@ -154,20 +331,12 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
                 result = dp.at(Call{arg, top_call.depth_ - 1}) + " " + top_term->op_code().str_repr();
             }
             else
-            {
-              if (
-                arg->is_operation() && (expl_parenth || ops_precedence_.at(top_term->op_code().type()) <
-                                                          ops_precedence_.at(arg->op_code().type())))
-                result = top_term->op_code().str_repr() + "(" + dp.at(Call{arg, top_call.depth_ - 1}) + ")";
-              else
-                result = top_term->op_code().str_repr() + " " + dp.at(Call{arg, top_call.depth_ - 1});
-            }
+              result = top_term->op_code().str_repr() + "(" + dp.at(Call{arg, top_call.depth_ - 1}) + ")";
           }
           else if (top_term->op_code().arity() == 2)
           {
             const auto lhs = top_term->operands()[0];
             const auto rhs = top_term->operands()[1];
-            result = "";
             if (
               lhs->is_operation() && (expl_parenth || ops_precedence_.at(top_term->op_code().type()) <
                                                         ops_precedence_.at(lhs->op_code().type())))
@@ -195,7 +364,6 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
         }
         else if (mode == Mode::posfix)
         {
-          result = "";
           for (const auto operand : top_term->operands())
             result += dp.at(Call{operand, top_call.depth_ - 1}) + " ";
           result += top_term->op_code().str_repr();
