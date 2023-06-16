@@ -25,8 +25,6 @@ public:
 
   static Ruleset halide_adapted_ruleset(std::shared_ptr<ir::Func> func);
 
-  static Ruleset halide_augmented_ruleset(std::shared_ptr<ir::Func> func);
-
   static Ruleset joined_ruleset(std::shared_ptr<ir::Func> func);
 
   static Ruleset ops_cost_ruleset(std::shared_ptr<ir::Func> func);

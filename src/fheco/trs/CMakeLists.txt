@@ -4,7 +4,6 @@ set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/depth_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/fold_op_gen_matcher.cpp
     ${CMAKE_CURRENT_LIST_DIR}/halide_adapted_ruleset.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/halide_augmented_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/joined_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/op_gen_matcher.cpp
     ${CMAKE_CURRENT_LIST_DIR}/op_gen_op_code.cpp
