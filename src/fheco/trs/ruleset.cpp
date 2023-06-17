@@ -2,6 +2,8 @@
 #include "fheco/trs/ops_overloads.hpp"
 #include "fheco/trs/ruleset.hpp"
 #include "fheco/util/common.hpp"
+#include <stdexcept>
+#include <unordered_set>
 #include <utility>
 
 using namespace std;
@@ -127,6 +129,84 @@ Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, size_t size, const Term
   auto rhs = balanced_op(rhs_elts, op_code);
 
   return Rule{"log-reduct-" + op_code.str_repr() + "-" + to_string(size), lhs, rhs};
+}
+
+bool operator==(const Ruleset &lhs, const Ruleset &rhs)
+{
+  return *lhs.func() == *rhs.func() && lhs.add_rules() == rhs.add_rules() && lhs.sub_rules() == rhs.sub_rules() &&
+         lhs.negate_rules() == rhs.negate_rules() && lhs.rotate_rules() == rhs.rotate_rules() &&
+         lhs.square_rules() == rhs.square_rules() && lhs.mul_rules() == rhs.mul_rules();
+}
+
+Ruleset operator&(const Ruleset &lhs, const Ruleset &rhs)
+{
+  if (*lhs.func() != *rhs.func())
+    throw invalid_argument("lhs and rhs rulesets are associated with different functions (not in the same domain)");
+
+  unordered_set<string> rhs_add_rules;
+  for (const auto &rule : rhs.add_rules())
+    rhs_add_rules.insert(rule.name());
+  vector<Rule> add_rules;
+  for (const auto &rule : lhs.add_rules())
+  {
+    if (rhs_add_rules.find(rule.name()) != rhs_add_rules.end())
+      add_rules.push_back(rule);
+  }
+
+  unordered_set<string> rhs_sub_rules;
+  for (const auto &rule : rhs.sub_rules())
+    rhs_sub_rules.insert(rule.name());
+  vector<Rule> sub_rules;
+  for (const auto &rule : lhs.sub_rules())
+  {
+    if (rhs_sub_rules.find(rule.name()) != rhs_sub_rules.end())
+      sub_rules.push_back(rule);
+  }
+
+  unordered_set<string> rhs_negate_rules;
+  for (const auto &rule : rhs.negate_rules())
+    rhs_negate_rules.insert(rule.name());
+  vector<Rule> negate_rules;
+  for (const auto &rule : lhs.negate_rules())
+  {
+    if (rhs_negate_rules.find(rule.name()) != rhs_negate_rules.end())
+      negate_rules.push_back(rule);
+  }
+
+  unordered_set<string> rhs_rotate_rules;
+  for (const auto &rule : rhs.rotate_rules())
+    rhs_rotate_rules.insert(rule.name());
+  vector<Rule> rotate_rules;
+  for (const auto &rule : lhs.rotate_rules())
+  {
+    if (rhs_rotate_rules.find(rule.name()) != rhs_rotate_rules.end())
+      rotate_rules.push_back(rule);
+  }
+
+  unordered_set<string> rhs_square_rules;
+  for (const auto &rule : rhs.square_rules())
+    rhs_square_rules.insert(rule.name());
+  vector<Rule> square_rules;
+  for (const auto &rule : lhs.square_rules())
+  {
+    if (rhs_square_rules.find(rule.name()) != rhs_square_rules.end())
+      square_rules.push_back(rule);
+  }
+
+  unordered_set<string> rhs_mul_rules;
+  for (const auto &rule : rhs.mul_rules())
+    rhs_mul_rules.insert(rule.name());
+  vector<Rule> mul_rules;
+  for (const auto &rule : lhs.mul_rules())
+  {
+    if (rhs_mul_rules.find(rule.name()) != rhs_mul_rules.end())
+      mul_rules.push_back(rule);
+  }
+
+  return Ruleset{lhs.func(),         lhs.name() + " & " + rhs.name(),
+                 move(add_rules),    move(sub_rules),
+                 move(negate_rules), move(rotate_rules),
+                 move(square_rules), move(mul_rules)};
 }
 
 ostream &operator<<(ostream &os, const Ruleset &ruleset)

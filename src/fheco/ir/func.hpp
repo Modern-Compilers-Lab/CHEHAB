@@ -89,4 +89,14 @@ private:
 
   Expr data_flow_{};
 };
+
+inline bool operator==(const Func &lhs, const Func &rhs)
+{
+  return lhs.name() == rhs.name();
+}
+
+inline bool operator!=(const Func &lhs, const Func &rhs)
+{
+  return !(lhs == rhs);
+}
 } // namespace fheco::ir

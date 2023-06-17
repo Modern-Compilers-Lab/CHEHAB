@@ -90,5 +90,20 @@ private:
   std::unique_ptr<TermsMetric> terms_ctxt_leaves_count_dp_;
 };
 
+bool operator==(const Ruleset &lhs, const Ruleset &rhs);
+
+inline bool operator!=(const Ruleset &lhs, const Ruleset &rhs)
+{
+  return !(lhs == rhs);
+}
+
+Ruleset operator&(const Ruleset &lhs, const Ruleset &rhs);
+
+inline Ruleset &operator&=(Ruleset &lhs, const Ruleset &rhs)
+{
+  lhs = lhs & rhs;
+  return lhs;
+}
+
 std::ostream &operator<<(std::ostream &os, const Ruleset &ruleset);
 } // namespace fheco::trs

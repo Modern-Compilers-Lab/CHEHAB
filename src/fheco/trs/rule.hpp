@@ -90,6 +90,16 @@ private:
   bool has_cond_;
 };
 
+inline bool operator==(const Rule &lhs, const Rule &rhs)
+{
+  return lhs.name() == rhs.name();
+}
+
+inline bool operator!=(const Rule &lhs, const Rule &rhs)
+{
+  return !(lhs == rhs);
+}
+
 inline std::ostream &operator<<(std::ostream &os, const Rule &rule)
 {
   return os << rule.name();
