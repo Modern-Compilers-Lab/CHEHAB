@@ -92,7 +92,7 @@ size_t relin_after_each_mul(const shared_ptr<ir::Func> &func)
   vector<trs::Rule> relin_rules{
     {"relin-mul", c_x * c_y, relin(c_x * c_y)}, {"relin-square", square(c_x), relin(square(c_x))}};
 
-  trs::TRS trs = trs::TRS::make_void_trs(func);
+  trs::TRS trs{func};
   for (auto id : func->get_top_sorted_terms_ids())
   {
     auto term = func->data_flow().get_term(id);

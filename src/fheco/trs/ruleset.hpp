@@ -6,6 +6,8 @@
 #include "fheco/trs/term_matcher.hpp"
 #include <cstddef>
 #include <memory>
+#include <ostream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -32,20 +34,24 @@ public:
   static Ruleset log2_reduct_opt_ruleset(std::shared_ptr<ir::Func> func);
 
   Ruleset(
-    std::shared_ptr<ir::Func> func, std::vector<Rule> add_rules, std::vector<Rule> sub_rules,
+    std::shared_ptr<ir::Func> func, std::string name, std::vector<Rule> add_rules, std::vector<Rule> sub_rules,
     std::vector<Rule> negate_rules, std::vector<Rule> rotate_rules, std::vector<Rule> square_rules,
     std::vector<Rule> mul_rules, std::unique_ptr<TermsMetric> terms_ctxt_leaves_count_dp = nullptr)
-    : func_{std::move(func)}, add_rules_{std::move(add_rules)}, sub_rules_{std::move(sub_rules)},
-      negate_rules_{std::move(negate_rules)}, rotate_rules_{std::move(rotate_rules)},
+    : func_{std::move(func)}, name_{std::move(name)}, add_rules_{std::move(add_rules)},
+      sub_rules_{std::move(sub_rules)}, negate_rules_{std::move(negate_rules)}, rotate_rules_{std::move(rotate_rules)},
       square_rules_{std::move(square_rules)}, mul_rules_{std::move(mul_rules)},
       terms_ctxt_leaves_count_dp_{std::move(terms_ctxt_leaves_count_dp)}
   {}
 
   Ruleset(
-    std::shared_ptr<ir::Func> func, std::vector<Rule> rules,
+    std::shared_ptr<ir::Func> func, std::string name, std::vector<Rule> rules,
     std::unique_ptr<TermsMetric> terms_ctxt_leaves_count_dp = nullptr);
 
   const std::vector<Rule> &pick_rules(const ir::OpCode &op_code) const;
+
+  inline const std::shared_ptr<ir::Func> &func() const { return func_; }
+
+  inline std::string name() const { return name_; }
 
   inline const std::vector<Rule> &add_rules() const { return add_rules_; }
 
@@ -67,6 +73,8 @@ private:
 
   std::shared_ptr<ir::Func> func_;
 
+  std::string name_;
+
   std::vector<Rule> add_rules_;
 
   std::vector<Rule> sub_rules_;
@@ -81,4 +89,6 @@ private:
 
   std::unique_ptr<TermsMetric> terms_ctxt_leaves_count_dp_;
 };
+
+std::ostream &operator<<(std::ostream &os, const Ruleset &ruleset);
 } // namespace fheco::trs

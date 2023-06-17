@@ -27,11 +27,11 @@ string ExprPrinter::make_rule_str_repr(const trs::Rule &rule, bool show_label, M
 {
   string repr{};
   if (show_label)
-    repr = rule.label() + ": ";
+    repr = rule.name() + ": ";
 
   repr += make_term_matcher_str_expr(rule.lhs(), mode) + " => ";
   if (rule.has_dynamic_rhs())
-    repr += "$dynamic_rhs";
+    repr += "dynamic_rhs";
   else
     repr += make_term_matcher_str_expr(rule.get_rhs(), mode);
   if (rule.has_cond())

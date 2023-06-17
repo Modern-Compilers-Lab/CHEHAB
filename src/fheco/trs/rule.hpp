@@ -28,8 +28,8 @@ public:
   static std::function<bool(const Subst &)> has_less_ctxt_leaves(
     TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &dp);
 
-  Rule(std::string label, TermMatcher lhs, TermMatcher static_rhs)
-    : label_{std::move(label)}, lhs_{std::move(lhs)}, rhs_{[static_rhs = std::move(static_rhs)](const Subst &) {
+  Rule(std::string name, TermMatcher lhs, TermMatcher static_rhs)
+    : name_{std::move(name)}, lhs_{std::move(lhs)}, rhs_{[static_rhs = std::move(static_rhs)](const Subst &) {
         return static_rhs;
       }},
       has_dynamic_rhs_{false}, cond_{[](const Subst &) {
@@ -38,15 +38,15 @@ public:
       has_cond_{false}
   {}
 
-  Rule(std::string label, TermMatcher lhs, TermMatcher static_rhs, std::function<bool(const Subst &)> cond)
-    : label_{std::move(label)}, lhs_{std::move(lhs)}, rhs_{[static_rhs = std::move(static_rhs)](const Subst &) {
+  Rule(std::string name, TermMatcher lhs, TermMatcher static_rhs, std::function<bool(const Subst &)> cond)
+    : name_{std::move(name)}, lhs_{std::move(lhs)}, rhs_{[static_rhs = std::move(static_rhs)](const Subst &) {
         return static_rhs;
       }},
       has_dynamic_rhs_{false}, cond_{std::move(cond)}, has_cond_{true}
   {}
 
-  Rule(std::string label, TermMatcher lhs, std::function<TermMatcher(const Subst &)> rhs)
-    : label_{std::move(label)}, lhs_{std::move(lhs)}, rhs_{std::move(rhs)}, has_dynamic_rhs_{true},
+  Rule(std::string name, TermMatcher lhs, std::function<TermMatcher(const Subst &)> rhs)
+    : name_{std::move(name)}, lhs_{std::move(lhs)}, rhs_{std::move(rhs)}, has_dynamic_rhs_{true},
       cond_{[](const Subst &) {
         return true;
       }},
@@ -54,13 +54,13 @@ public:
   {}
 
   Rule(
-    std::string label, TermMatcher lhs, std::function<TermMatcher(const Subst &)> rhs,
+    std::string name, TermMatcher lhs, std::function<TermMatcher(const Subst &)> rhs,
     std::function<bool(const Subst &)> cond)
-    : label_{std::move(label)}, lhs_{std::move(lhs)}, rhs_{std::move(rhs)}, has_dynamic_rhs_{true},
+    : name_{std::move(name)}, lhs_{std::move(lhs)}, rhs_{std::move(rhs)}, has_dynamic_rhs_{true},
       cond_{std::move(cond)}, has_cond_{true}
   {}
 
-  inline const std::string &label() const { return label_; };
+  inline const std::string &name() const { return name_; };
 
   inline const TermMatcher &lhs() const { return lhs_; };
 
@@ -77,7 +77,7 @@ public:
   inline bool has_cond() const { return has_cond_; }
 
 private:
-  std::string label_;
+  std::string name_;
 
   TermMatcher lhs_;
 
@@ -92,6 +92,6 @@ private:
 
 inline std::ostream &operator<<(std::ostream &os, const Rule &rule)
 {
-  return os << rule.label();
+  return os << rule.name();
 }
 } // namespace fheco::trs

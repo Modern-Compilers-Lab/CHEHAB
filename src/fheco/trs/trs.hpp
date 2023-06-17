@@ -22,7 +22,7 @@ namespace fheco::trs
 class TRS
 {
 public:
-  static TRS make_void_trs(std::shared_ptr<ir::Func> func);
+  TRS(std::shared_ptr<ir::Func> func) : func_{func}, ruleset_{std::move(func), "void", {}} {}
 
   TRS(std::shared_ptr<ir::Func> func, Ruleset ruleset) : func_{std::move(func)}, ruleset_{std::move(ruleset)} {}
 

@@ -40,7 +40,7 @@ void convert_scalar_mul_to_add(const std::shared_ptr<ir::Func> &func, size_t sca
     {"ctxt-mul-scalar", c_x * const1, gen_balan_add, const_scalar_cond},
     {"scalar-ctxt-mul", const1 * c_x, gen_balan_add, const_scalar_cond}};
 
-  trs::TRS trs = trs::TRS::make_void_trs(func);
+  trs::TRS trs{func};
   for (auto id : func->get_top_sorted_terms_ids())
   {
     auto term = func->data_flow().get_term(id);

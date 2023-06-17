@@ -17,6 +17,7 @@ namespace fheco::util
 void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool id_as_label, bool show_key, bool impose_operands_order)
 {
   os << "digraph \"" << func->name() << "\" {\n";
+  os << "graph [label=\"" << func->name() << R"(" labelloc="b"])" << '\n';
   os << "node [shape=circle width=1 margin=0]\n";
   os << "edge [dir=back]\n";
 
@@ -49,7 +50,7 @@ void draw_term(
   const std::shared_ptr<ir::Func> &func, const ir::Term *term, int depth, ostream &os, bool id_as_label, bool show_key,
   bool impose_operands_order)
 {
-  os << "digraph \"" << func->name() << "\" {\n";
+  os << "digraph \"" << term->id() << "\" {\n";
   os << "node [shape=circle width=1 margin=0]\n";
   os << "edge [dir=back]\n";
 
@@ -109,9 +110,51 @@ void draw_term(
   os << "}\n";
 }
 
+void draw_rule(const trs::Rule &rule, ostream &os, bool show_key, bool impose_operands_order)
+{
+  os << "digraph \"" << rule.name() << "\" {\n";
+  os << "graph [label=\"" << rule.name() << R"(" labelloc="b"])" << '\n';
+  os << "node [shape=circle width=1 margin=0]\n";
+  os << "edge [dir=none]\n";
+
+  os << "subgraph cluster" << rule.lhs().id() << " {\n";
+  os << R"(graph [label="LHS" labelloc="b"])" << '\n';
+  int leaf_occ_id = 0;
+  draw_term_matcher_util(rule.lhs(), os, impose_operands_order, leaf_occ_id);
+  os << "}\n";
+
+  if (rule.has_dynamic_rhs())
+  {
+    os << "subgraph cluster_dynamic_rhs_" << rule.lhs().id() << " {\n";
+    os << R"(graph [label="RHS" labelloc="b"])" << '\n';
+    os << "dynamic_rhs\n";
+    os << "}\n";
+  }
+  else
+  {
+    os << "subgraph cluster" << rule.get_rhs().id() << " {\n";
+    os << R"(graph [label="RHS" labelloc="b"])" << '\n';
+    draw_term_matcher_util(rule.get_rhs(), os, impose_operands_order, leaf_occ_id);
+    os << "}\n";
+  }
+
+  if (rule.has_cond())
+  {
+    os << "subgraph cluster_condition" << rule.lhs().id() << " {\n";
+    os << R"(graph [label="condition" labelloc="b"])" << '\n';
+    os << "has_condition\n";
+    os << "}\n";
+  }
+
+  if (show_key)
+    os << term_matchers_key;
+
+  os << "}\n";
+}
+
 void draw_term_matcher(const trs::TermMatcher &term_matcher, ostream &os, bool show_key, bool impose_operands_order)
 {
-  os << "digraph \"$" << term_matcher.id() << "\" {\n";
+  os << "digraph \"" << term_matcher.id() << "\" {\n";
   os << "node [shape=circle width=1 margin=0]\n";
   os << "edge [dir=none]\n";
 

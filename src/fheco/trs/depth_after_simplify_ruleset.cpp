@@ -94,6 +94,14 @@ Ruleset Ruleset::depth_after_simplify_ruleset(shared_ptr<ir::Func> func)
     {"assoc-balan-mul-3", x * (y * (z * t)), (x * y) * (z * t), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
     {"assoc-balan-mul-4", x * ((z * t) * y), (x * z) * (t * y), Rule::has_less_ctxt_leaves(x, z, t, *dp)}};
 
-  return Ruleset{func, move(add_rules), move(sub_rules), {}, move(rotate_rules), {}, move(mul_rules), move(dp)};
+  return Ruleset{func,
+                 "depth_after_simplify_ruleset",
+                 move(add_rules),
+                 move(sub_rules),
+                 {},
+                 move(rotate_rules),
+                 {},
+                 move(mul_rules),
+                 move(dp)};
 }
 } // namespace fheco::trs

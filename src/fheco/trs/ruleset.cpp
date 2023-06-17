@@ -15,11 +15,12 @@ Ruleset Ruleset::log2_reduct_opt_ruleset(shared_ptr<ir::Func> func)
   vector<Rule> add_rules = get_log_reduct_rules(func->slot_count(), x, TermOpCode::add);
   vector<Rule> sub_rules = get_log_reduct_rules(func->slot_count(), x, TermOpCode::sub);
   vector<Rule> mul_rules = get_log_reduct_rules(func->slot_count(), x, TermOpCode::mul);
-  return Ruleset{move(func), move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
+  return Ruleset{move(func), "log2_reduct_opt_ruleset", move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
 }
 
-Ruleset::Ruleset(shared_ptr<ir::Func> func, vector<Rule> rules, unique_ptr<TermsMetric> terms_ctxt_leaves_count_dp)
-  : func_{move(func)}, terms_ctxt_leaves_count_dp_{move(terms_ctxt_leaves_count_dp)}
+Ruleset::Ruleset(
+  shared_ptr<ir::Func> func, string name, vector<Rule> rules, unique_ptr<TermsMetric> terms_ctxt_leaves_count_dp)
+  : func_{move(func)}, name_{move(name)}, terms_ctxt_leaves_count_dp_{move(terms_ctxt_leaves_count_dp)}
 {
   for (auto &rule : rules)
   {
@@ -126,5 +127,20 @@ Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, size_t size, const Term
   auto rhs = balanced_op(rhs_elts, op_code);
 
   return Rule{"log-reduct-" + op_code.str_repr() + "-" + to_string(size), lhs, rhs};
+}
+
+ostream &operator<<(ostream &os, const Ruleset &ruleset)
+{
+  os << ruleset.name() << '\n';
+  os << "add: " << ruleset.add_rules().size() << '\n';
+  os << "sub: " << ruleset.sub_rules().size() << '\n';
+  os << "negate: " << ruleset.negate_rules().size() << '\n';
+  os << "rotate: " << ruleset.rotate_rules().size() << '\n';
+  os << "square: " << ruleset.square_rules().size() << '\n';
+  os << "mul: " << ruleset.mul_rules().size() << '\n';
+  size_t total = ruleset.add_rules().size() + ruleset.sub_rules().size() + ruleset.negate_rules().size() +
+                 ruleset.rotate_rules().size() + ruleset.square_rules().size() + ruleset.mul_rules().size();
+  os << "total: " << total << '\n';
+  return os;
 }
 } // namespace fheco::trs
