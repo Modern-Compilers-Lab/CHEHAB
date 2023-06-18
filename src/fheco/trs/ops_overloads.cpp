@@ -11,9 +11,21 @@ TermMatcher operator+(TermMatcher lhs, TermMatcher rhs)
   return TermMatcher{TermOpCode::add, vector<TermMatcher>{move(lhs), move(rhs)}};
 }
 
+TermMatcher &operator+=(TermMatcher &lhs, TermMatcher rhs)
+{
+  lhs = lhs + rhs;
+  return lhs;
+}
+
 OpGenMatcher operator+(OpGenMatcher lhs, OpGenMatcher rhs)
 {
   return OpGenMatcher{OpGenOpCode::add, vector<OpGenMatcher>{move(lhs), move(rhs)}};
+}
+
+OpGenMatcher &operator+=(OpGenMatcher &lhs, OpGenMatcher rhs)
+{
+  lhs = lhs + rhs;
+  return lhs;
 }
 
 // subtraction
@@ -22,15 +34,33 @@ TermMatcher operator-(TermMatcher lhs, TermMatcher rhs)
   return TermMatcher{TermOpCode::sub, vector<TermMatcher>{move(lhs), move(rhs)}};
 }
 
+TermMatcher &operator-=(TermMatcher &lhs, TermMatcher rhs)
+{
+  lhs = lhs - rhs;
+  return lhs;
+}
+
 OpGenMatcher operator-(OpGenMatcher lhs, OpGenMatcher rhs)
 {
   return OpGenMatcher{OpGenOpCode::sub, vector<OpGenMatcher>{move(lhs), move(rhs)}};
+}
+
+OpGenMatcher &operator-=(OpGenMatcher &lhs, OpGenMatcher rhs)
+{
+  lhs = lhs - rhs;
+  return lhs;
 }
 
 // multiplication
 TermMatcher operator*(TermMatcher lhs, TermMatcher rhs)
 {
   return TermMatcher{TermOpCode::mul, vector<TermMatcher>{move(lhs), move(rhs)}};
+}
+
+TermMatcher &operator*=(TermMatcher &lhs, TermMatcher rhs)
+{
+  lhs = lhs * rhs;
+  return lhs;
 }
 
 // negation
@@ -50,15 +80,21 @@ TermMatcher operator<<(TermMatcher arg, OpGenMatcher steps)
   return TermMatcher{TermOpCode::rotate(move(steps)), vector<TermMatcher>{move(arg)}};
 }
 
+TermMatcher &operator<<=(TermMatcher &arg, OpGenMatcher steps)
+{
+  arg = arg << steps;
+  return arg;
+}
+
 TermMatcher operator>>(TermMatcher arg, OpGenMatcher steps)
 {
   return TermMatcher{TermOpCode::rotate(-move(steps)), vector<TermMatcher>{move(arg)}};
 }
 
-// encryption
-TermMatcher encrypt(TermMatcher arg)
+TermMatcher &operator>>=(TermMatcher &arg, OpGenMatcher steps)
 {
-  return TermMatcher{TermOpCode::encrypt, vector<TermMatcher>{move(arg)}};
+  arg = arg >> steps;
+  return arg;
 }
 
 // square
@@ -71,6 +107,12 @@ TermMatcher square(TermMatcher arg)
 OpGenMatcher operator%(OpGenMatcher lhs, OpGenMatcher rhs)
 {
   return OpGenMatcher{OpGenOpCode::mod, vector<OpGenMatcher>{move(lhs), move(rhs)}};
+}
+
+OpGenMatcher &operator%=(OpGenMatcher &lhs, OpGenMatcher rhs)
+{
+  lhs = lhs % rhs;
+  return lhs;
 }
 
 // other

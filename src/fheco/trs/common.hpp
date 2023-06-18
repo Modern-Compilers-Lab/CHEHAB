@@ -40,5 +40,7 @@ using TermsMetric = std::unordered_map<std::size_t, std::int64_t>;
 
 void count_ctxt_leaves(ir::Term *term, TermsMetric &dp);
 
+std::ostream &operator<<(std::ostream &os, TermMatcherType term_matcher_type);
+
 std::ostream &operator<<(std::ostream &os, RewriteHeuristic rewrite_heuristic);
 } // namespace fheco::trs

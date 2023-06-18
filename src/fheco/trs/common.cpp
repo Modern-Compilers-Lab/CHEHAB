@@ -93,6 +93,32 @@ void count_ctxt_leaves(ir::Term *term, TermsMetric &dp)
     dp.emplace(e.first, e.second);
 }
 
+ostream &operator<<(ostream &os, TermMatcherType term_matcher_type)
+{
+  switch (term_matcher_type)
+  {
+  case TermMatcherType::cipher:
+    os << "cipher";
+    break;
+
+  case TermMatcherType::term:
+    os << "term (any)";
+    break;
+
+  case TermMatcherType::plain:
+    os << "plain";
+    break;
+
+  case TermMatcherType::const_:
+    os << "const";
+    break;
+
+  default:
+    throw invalid_argument("invalid term_matcher_type");
+  }
+  return os;
+}
+
 ostream &operator<<(ostream &os, RewriteHeuristic rewrite_heuristic)
 {
   switch (rewrite_heuristic)
@@ -107,7 +133,6 @@ ostream &operator<<(ostream &os, RewriteHeuristic rewrite_heuristic)
 
   default:
     throw invalid_argument("invalid rewrite_heuristic selector");
-    break;
   }
   return os;
 }

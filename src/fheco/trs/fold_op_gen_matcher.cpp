@@ -1,5 +1,6 @@
 #include "fheco/trs/fold_op_gen_matcher.hpp"
-#include <functional>
+#include "fheco/trs/ops_overloads.hpp"
+#include <cstdlib>
 #include <stack>
 #include <unordered_map>
 
@@ -7,6 +8,17 @@ using namespace std;
 
 namespace fheco::trs
 {
+size_t HashOpGenMatcherRef::operator()(const reference_wrapper<const OpGenMatcher> &matcher_ref) const
+{
+  return hash<OpGenMatcher>()(matcher_ref.get());
+}
+
+bool EqualOpGenMatcherRef::operator()(
+  const reference_wrapper<const OpGenMatcher> &lhs, const reference_wrapper<const OpGenMatcher> &rhs) const
+{
+  return lhs.get() == rhs.get();
+}
+
 int fold_op_gen_matcher(const OpGenMatcher &matcher, const Subst &subst)
 {
   struct Call
@@ -16,22 +28,7 @@ int fold_op_gen_matcher(const OpGenMatcher &matcher, const Subst &subst)
   };
   stack<Call> call_stack;
 
-  struct HashRef
-  {
-    size_t operator()(const reference_wrapper<const OpGenMatcher> &matcher_ref) const
-    {
-      return hash<OpGenMatcher>()(matcher_ref.get());
-    }
-  };
-  struct EqualRef
-  {
-    bool operator()(
-      const reference_wrapper<const OpGenMatcher> &lhs, const reference_wrapper<const OpGenMatcher> &rhs) const
-    {
-      return lhs.get() == rhs.get();
-    }
-  };
-  unordered_map<reference_wrapper<const OpGenMatcher>, int, HashRef, EqualRef> matchers_values;
+  unordered_map<reference_wrapper<const OpGenMatcher>, int, HashOpGenMatcherRef, EqualOpGenMatcherRef> matchers_values;
 
   call_stack.push(Call{matcher, false});
   while (!call_stack.empty())
@@ -127,5 +124,93 @@ void operate_binary(const OpGenOpCode &op_code, int arg1, int arg2, int &dest)
   default:
     throw logic_error("unhandled op_gen_matcher folding for binary operation");
   }
+}
+
+OpGenMatcher fold_symbolic_op_gen_matcher(const OpGenMatcher &op_gen_matcher)
+{
+  auto blocks_coeffs = compute_blocks_coeffs(op_gen_matcher);
+  OpGenMatcher result{};
+  for (const auto &e : blocks_coeffs)
+  {
+    const OpGenMatcher &block = e.first;
+    auto coeff = e.second;
+    if (coeff > 0)
+    {
+      for (int i = 0; i < coeff; ++i)
+      {
+        if (result.id())
+          result += block;
+        else
+          result = block;
+      }
+    }
+    else if (coeff < 0)
+    {
+      for (int i = 0; i < abs(coeff); ++i)
+      {
+        if (result.id())
+          result -= block;
+        else
+          result = -block;
+      }
+    }
+  }
+  return result;
+}
+
+OpGenMatcherBlocksCoeffs compute_blocks_coeffs(const OpGenMatcher &op_gen_matcher)
+{
+  OpGenMatcherBlocksCoeffs blocks_coeffs;
+  compute_blocks_coeffs_util(op_gen_matcher, true, blocks_coeffs);
+  return blocks_coeffs;
+}
+
+void compute_blocks_coeffs_util(
+  const OpGenMatcher &op_gen_matcher, bool pos_neg, OpGenMatcherBlocksCoeffs &blocks_coeffs)
+{
+  if (op_gen_matcher.is_leaf())
+  {
+    if (auto it = blocks_coeffs.find(op_gen_matcher); it != blocks_coeffs.end())
+    {
+      if (pos_neg)
+        ++it->second;
+      else
+        --it->second;
+    }
+    else
+    {
+      if (pos_neg)
+        blocks_coeffs.emplace(op_gen_matcher, 1);
+      else
+        blocks_coeffs.emplace(op_gen_matcher, -1);
+    }
+    return;
+  }
+  if (op_gen_matcher.op_code().type() == OpGenOpCode::Type::add)
+  {
+    compute_blocks_coeffs_util(op_gen_matcher.operands()[0], pos_neg, blocks_coeffs);
+    compute_blocks_coeffs_util(op_gen_matcher.operands()[1], pos_neg, blocks_coeffs);
+  }
+  else if (op_gen_matcher.op_code().type() == OpGenOpCode::Type::sub)
+  {
+    compute_blocks_coeffs_util(op_gen_matcher.operands()[0], pos_neg, blocks_coeffs);
+    compute_blocks_coeffs_util(op_gen_matcher.operands()[1], !pos_neg, blocks_coeffs);
+  }
+  else if (op_gen_matcher.op_code().type() == OpGenOpCode::Type::negate)
+    compute_blocks_coeffs_util(op_gen_matcher.operands()[0], !pos_neg, blocks_coeffs);
+  else
+  {
+    if (pos_neg)
+      blocks_coeffs.emplace(op_gen_matcher, 1);
+    else
+      blocks_coeffs.emplace(op_gen_matcher, -1);
+  }
+}
+
+ostream &operator<<(ostream &os, const OpGenMatcherBlocksCoeffs &blocks_coeffs)
+{
+  for (const auto &e : blocks_coeffs)
+    os << "$" << e.first.get().id() << ": " << e.second << '\n';
+  return os;
 }
 } // namespace fheco::trs

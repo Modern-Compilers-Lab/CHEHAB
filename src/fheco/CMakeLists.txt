@@ -6,6 +6,7 @@ add_subdirectory(ir)
 add_subdirectory(param_select)
 add_subdirectory(passes)
 add_subdirectory(trs)
+add_subdirectory(trs/reduct_order)
 add_subdirectory(util)
 
 install(
