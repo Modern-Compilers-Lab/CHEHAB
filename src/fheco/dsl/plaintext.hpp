@@ -65,13 +65,13 @@ public:
 
 private:
   // terms ids start from 1
-  std::size_t id_ = 0;
+  std::size_t id_;
 
   std::vector<std::size_t> shape_;
 
-  std::vector<std::size_t> idx_{};
+  std::vector<std::size_t> idx_;
 
-  std::optional<PackedVal> example_val_{};
+  std::optional<PackedVal> example_val_;
 
   friend class ir::Func;
   friend Ciphertext emulate_subscripted_read(const Ciphertext &arg);

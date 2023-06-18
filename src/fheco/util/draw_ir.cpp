@@ -230,10 +230,8 @@ void draw_term_matcher_util(
       else
         os << "$val" << term_matcher.id();
     }
-    else if (term_matcher.label())
-      os << *term_matcher.label();
     else
-      throw invalid_argument("variable term_matcher without label");
+      os << *term_matcher.label();
 
     os << "\" " << term_matcher_type_to_attrs.at(term_matcher.type()) << "]\n";
     return;
@@ -316,10 +314,8 @@ void draw_op_gen_matcher_util(
     ++leaf_occ_id;
     if (op_gen_matcher.val())
       os << *op_gen_matcher.val();
-    else if (op_gen_matcher.label())
-      os << *op_gen_matcher.label();
     else
-      throw invalid_argument("variable op_gen_matcher without label");
+      os << *op_gen_matcher.label();
 
     os << "\"]\n";
     return;

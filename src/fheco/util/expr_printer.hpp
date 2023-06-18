@@ -38,6 +38,8 @@ public:
 
   static std::string make_term_matcher_str_expr(const trs::TermMatcher &term_matcher, Mode mode);
 
+  static std::string make_op_gen_matcher_str_expr(const trs::OpGenMatcher &op_gen_matcher, Mode mode);
+
   ExprPrinter(std::shared_ptr<ir::Func> func) : func_{move(func)} {}
 
   void make_terms_str_expr(Mode mode);
@@ -59,8 +61,6 @@ private:
   static const std::unordered_map<ir::OpCode::Type, int> ops_precedence_;
 
   static const std::unordered_map<trs::OpGenOpCode::Type, int> op_gen_matcher_ops_precedence_;
-
-  static std::string make_op_gen_matcher_str_expr(const trs::OpGenMatcher &op_gen_matcher, Mode mode);
 
   std::string leaf_str_expr(const ir::Term *term) const;
 

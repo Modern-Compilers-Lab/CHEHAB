@@ -46,20 +46,10 @@ ostream &operator<<(ostream &os, const Subst &subst)
 {
   os << "Terms substitution:\n";
   for (const auto &v : subst.terms_matching())
-  {
-    if (!v.first.label())
-      throw invalid_argument("variable term_matcher without label");
-
     os << *v.first.label() << ": $" << v.second->id() << '\n';
-  }
   os << "Operation generators substitution:\n";
   for (const auto &v : subst.op_gen_matching())
-  {
-    if (!v.first.label())
-      throw invalid_argument("variable op_gen_matcher without label");
-
     os << *v.first.label() << ": " << v.second << '\n';
-  }
   return os;
 }
 } // namespace fheco::trs

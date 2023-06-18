@@ -14,14 +14,13 @@ class TermOpCode
 {
 public:
   static const TermOpCode nop;
-  static const TermOpCode encrypt;
   static const TermOpCode add;
   static const TermOpCode sub;
   static const TermOpCode negate;
   static TermOpCode rotate(OpGenMatcher steps);
   static const TermOpCode square;
   static const TermOpCode mul;
-  static const TermOpCode mod_switch;
+
   static const TermOpCode relin;
 
   inline ir::OpCode::Type type() const { return type_; }

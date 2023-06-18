@@ -51,9 +51,6 @@ string ExprPrinter::make_term_matcher_str_expr(const trs::TermMatcher &term_matc
 
       return "$val" + to_string(term_matcher.id());
     }
-    if (!term_matcher.label())
-      throw invalid_argument("variable term_matcher without label");
-
     return *term_matcher.label();
   }
 
@@ -137,9 +134,6 @@ string ExprPrinter::make_op_gen_matcher_str_expr(const trs::OpGenMatcher &op_gen
   {
     if (op_gen_matcher.val())
       return to_string(*op_gen_matcher.val());
-
-    if (!op_gen_matcher.label())
-      throw invalid_argument("variable op_gen_matcher without label");
 
     return *op_gen_matcher.label();
   }

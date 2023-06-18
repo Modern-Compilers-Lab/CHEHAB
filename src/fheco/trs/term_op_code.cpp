@@ -10,8 +10,6 @@ namespace fheco::trs
 {
 const TermOpCode TermOpCode::nop{ir::OpCode::Type::nop, {}, 0, false, "_"};
 
-const TermOpCode TermOpCode::encrypt{ir::OpCode::Type::encrypt, {}, 1, false, "encrypt"};
-
 const TermOpCode TermOpCode::add{ir::OpCode::Type::add, {}, 2, true, "+"};
 
 const TermOpCode TermOpCode::sub{ir::OpCode::Type::sub, {}, 2, false, "-"};
@@ -26,8 +24,6 @@ TermOpCode TermOpCode::rotate(OpGenMatcher steps)
 const TermOpCode TermOpCode::square{ir::OpCode::Type::square, {}, 1, false, "square"};
 
 const TermOpCode TermOpCode::mul{ir::OpCode::Type::mul, {}, 2, true, "*"};
-
-const TermOpCode TermOpCode::mod_switch{ir::OpCode::Type::mod_switch, {}, 1, false, "mod_switch"};
 
 const TermOpCode TermOpCode::relin{ir::OpCode::Type::relin, {}, 1, false, "relin"};
 

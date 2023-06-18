@@ -28,6 +28,8 @@ public:
     : id_{++count_}, op_code_{OpGenOpCode::nop}, operands_{}, label_{std::move(label)}, val_{val}
   {}
 
+  OpGenMatcher() : id_{0}, op_code_{OpGenOpCode::nop}, operands_{}, label_{}, val_{} {}
+
   inline std::size_t id() const { return id_; }
 
   inline const OpGenOpCode &op_code() const { return op_code_; };

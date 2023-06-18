@@ -34,6 +34,8 @@ public:
       val_{std::move(val)}
   {}
 
+  TermMatcher() : id_{0}, op_code_{TermOpCode::nop}, operands_{}, type_{TermMatcherType::term}, label_{}, val_{} {}
+
   inline std::size_t id() const { return id_; }
 
   inline const TermOpCode &op_code() const { return op_code_; };

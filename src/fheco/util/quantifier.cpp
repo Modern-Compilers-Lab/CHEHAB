@@ -4,6 +4,7 @@
 #include <limits>
 #include <stack>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <unordered_set>
 
@@ -11,7 +12,7 @@ using namespace std;
 
 namespace fheco::util
 {
-void print_line_sep(std::ostream &os);
+void print_line_sep(ostream &os);
 
 void Quantifier::run_all_analysis(const param_select::EncryptionParams &params)
 {
@@ -1045,12 +1046,14 @@ Quantifier::CtxtTermInfo operator*(const Quantifier::CtxtTermInfo &lhs, int coef
   return result;
 }
 
-Quantifier::CtxtTermInfo operator*(int coeff, const Quantifier::CtxtTermInfo &rhs) {
+Quantifier::CtxtTermInfo operator*(int coeff, const Quantifier::CtxtTermInfo &rhs)
+{
   return rhs * coeff;
 }
 
-Quantifier::CtxtTermInfo operator*=(Quantifier::CtxtTermInfo &lhs, int coeff) {
-    lhs = lhs * coeff;
+Quantifier::CtxtTermInfo operator*=(Quantifier::CtxtTermInfo &lhs, int coeff)
+{
+  lhs = lhs * coeff;
   return lhs;
 }
 
@@ -1112,8 +1115,8 @@ ostream &operator<<(ostream &os, const Quantifier::CtxtTermInfo &ctxt_term_info)
   return os << ctxt_term_info.opposite_level_ << ", " << ctxt_term_info.size_;
 }
 
-void print_line_sep(std::ostream &os)
+void print_line_sep(ostream &os)
 {
-  os << std::string(100, '-') << '\n';
+  os << string(100, '-') << '\n';
 }
 } // namespace fheco::util
