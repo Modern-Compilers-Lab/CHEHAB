@@ -6,7 +6,6 @@
 #include "fheco/trs/fold_op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
 #include "fheco/trs/trs.hpp"
-#include <functional>
 #include <iostream>
 #include <stack>
 #include <stdexcept>
@@ -152,7 +151,7 @@ bool TRS::match(
   ir::Term::PtrSet visited_terms;
   ir::Term::PtrSet subst_terms;
   vector<ir::Term *> sorted_terms;
-  stack<reference_wrapper<const TermMatcher>> term_matchers;
+  stack<TermMatcher::RefWrapp> term_matchers;
 
   term_matchers.push(term_matcher);
   call_stack.push(Call{term, false});
@@ -278,27 +277,12 @@ ir::Term *TRS::construct_term(
 {
   struct Call
   {
-    reference_wrapper<const TermMatcher> matcher_;
+    TermMatcher::RefWrapp matcher_;
     bool children_processed_;
   };
   stack<Call> call_stack;
 
-  struct HashRef
-  {
-    size_t operator()(const reference_wrapper<const TermMatcher> &matcher_ref) const
-    {
-      return hash<TermMatcher>()(matcher_ref.get());
-    }
-  };
-  struct EqualRef
-  {
-    bool operator()(
-      const reference_wrapper<const TermMatcher> &lhs, const reference_wrapper<const TermMatcher> &rhs) const
-    {
-      return lhs.get() == rhs.get();
-    }
-  };
-  unordered_map<reference_wrapper<const TermMatcher>, ir::Term *, HashRef, EqualRef> matching;
+  unordered_map<TermMatcher::RefWrapp, ir::Term *, TermMatcher::HashRefWrapp, TermMatcher::EqualRefWrapp> matching;
 
   call_stack.push(Call{matcher, false});
   while (!call_stack.empty())

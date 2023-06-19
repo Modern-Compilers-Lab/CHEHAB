@@ -7,6 +7,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_set>
+#include <utility>
 
 using namespace std;
 
@@ -473,7 +474,7 @@ void Quantifier::print_terms_classes_info(ostream &os) const
   os << ctxt_output_terms_info_;
 }
 
-void Quantifier::print_global_metrics(std::ostream &os) const
+void Quantifier::print_global_metrics(ostream &os) const
 {
   if (!global_metrics_)
   {

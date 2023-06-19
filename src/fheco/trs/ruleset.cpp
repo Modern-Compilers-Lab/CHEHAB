@@ -10,7 +10,6 @@ using namespace std;
 
 namespace fheco::trs
 {
-
 Ruleset Ruleset::log2_reduct_opt_ruleset(shared_ptr<ir::Func> func)
 {
   TermMatcher x{TermMatcherType::term, "x"};
@@ -18,6 +17,86 @@ Ruleset Ruleset::log2_reduct_opt_ruleset(shared_ptr<ir::Func> func)
   vector<Rule> sub_rules = get_log_reduct_rules(func->slot_count(), x, TermOpCode::sub);
   vector<Rule> mul_rules = get_log_reduct_rules(func->slot_count(), x, TermOpCode::mul);
   return Ruleset{move(func), "log2_reduct_opt_ruleset", move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
+}
+
+Ruleset Ruleset::customize_generic_rules(const Ruleset &ruleset)
+{
+  vector<Rule> add_rules;
+  for (const auto &rule : ruleset.add_rules())
+  {
+    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
+    {
+      for (auto &variant : rule.generate_customized_terms_variants())
+        add_rules.push_back(move(variant));
+    }
+    else
+      add_rules.push_back(move(rule));
+  }
+
+  vector<Rule> sub_rules;
+  for (const auto &rule : ruleset.sub_rules())
+  {
+    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
+    {
+      for (auto &variant : rule.generate_customized_terms_variants())
+        sub_rules.push_back(move(variant));
+    }
+    else
+      sub_rules.push_back(move(rule));
+  }
+
+  vector<Rule> negate_rules;
+  for (const auto &rule : ruleset.negate_rules())
+  {
+    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
+    {
+      for (auto &variant : rule.generate_customized_terms_variants())
+        negate_rules.push_back(move(variant));
+    }
+    else
+      negate_rules.push_back(move(rule));
+  }
+
+  vector<Rule> rotate_rules;
+  for (const auto &rule : ruleset.rotate_rules())
+  {
+    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
+    {
+      for (auto &variant : rule.generate_customized_terms_variants())
+        rotate_rules.push_back(move(variant));
+    }
+    else
+      rotate_rules.push_back(move(rule));
+  }
+
+  vector<Rule> square_rules;
+  for (const auto &rule : ruleset.square_rules())
+  {
+    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
+    {
+      for (auto &variant : rule.generate_customized_terms_variants())
+        square_rules.push_back(move(variant));
+    }
+    else
+      square_rules.push_back(move(rule));
+  }
+
+  vector<Rule> mul_rules;
+  for (const auto &rule : ruleset.mul_rules())
+  {
+    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
+    {
+      for (auto &variant : rule.generate_customized_terms_variants())
+        mul_rules.push_back(move(variant));
+    }
+    else
+      mul_rules.push_back(move(rule));
+  }
+
+  return Ruleset{ruleset.func(),     ruleset.name() + "_customized_generic_rules",
+                 move(add_rules),    move(sub_rules),
+                 move(negate_rules), move(rotate_rules),
+                 move(square_rules), move(mul_rules)};
 }
 
 Ruleset::Ruleset(

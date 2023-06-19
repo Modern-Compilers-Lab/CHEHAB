@@ -9,45 +9,48 @@ using namespace std;
 namespace fheco::trs
 {
 
-const LexicoProductOrder depth_order{{"sum_xdepth"sv, &sum_xdepth_order}, {"sum_depth"sv, &sum_depth_order}};
+const LexicoProductOrder depth_order{
+  {"sum_xdepth"sv, &sum_xdepth_order},
+  {"sum_depth"sv, &sum_depth_order},
+  {"sum_total_depth"sv, &sum_total_depth_order}};
 
 const LexicoProductOrder ops_cost_order{
   {"mul_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_mul);
+     return class_subterms_count_order(lhs, rhs, &is_mul, &is_cipher);
    }},
   {"square_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_square);
+     return class_subterms_count_order(lhs, rhs, &is_square, &is_cipher);
    }},
   {"rotate_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_rotate);
+     return class_subterms_count_order(lhs, rhs, &is_rotate, &is_cipher);
    }},
   {"mul_plain_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_mul_plain);
+     return class_subterms_count_order(lhs, rhs, &is_mul_plain, &is_cipher);
    }},
   {"he_add_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_he_add);
+     return class_subterms_count_order(lhs, rhs, &is_he_add, &is_cipher);
    }},
   {"sum_rotation_steps"sv, &sum_rotation_steps_order},
   {"cipher_cipher_op_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_cipher_cipher_op);
+     return class_subterms_count_order(lhs, rhs, &is_cipher_cipher_op, &is_cipher);
    }},
   {"plain_plain_op_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_plain_plain_op);
+     return class_subterms_count_order(lhs, rhs, &is_plain_plain_op, &is_plain);
    }},
   {"const_op_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(rhs, lhs, &is_const_op);
+     return class_subterms_count_order(rhs, lhs, &is_const_op, &is_plain);
    }},
   {"leaves_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_leaf);
+     return class_subterms_count_order(lhs, rhs, &is_leaf, &is_var);
    }},
   {"rotate_phi_str"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
@@ -61,42 +64,43 @@ const LexicoProductOrder ops_cost_order{
 const LexicoProductOrder joined_order{
   {"sum_xdepth"sv, &sum_xdepth_order},
   {"sum_depth"sv, &sum_depth_order},
+  {"sum_total_depth"sv, &sum_total_depth_order},
   {"mul_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_mul);
+     return class_subterms_count_order(lhs, rhs, &is_mul, &is_cipher);
    }},
   {"square_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_square);
+     return class_subterms_count_order(lhs, rhs, &is_square, &is_cipher);
    }},
   {"rotate_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_rotate);
+     return class_subterms_count_order(lhs, rhs, &is_rotate, &is_cipher);
    }},
   {"mul_plain_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_mul_plain);
+     return class_subterms_count_order(lhs, rhs, &is_mul_plain, &is_cipher);
    }},
   {"he_add_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_he_add);
+     return class_subterms_count_order(lhs, rhs, &is_he_add, &is_cipher);
    }},
   {"sum_rotation_steps"sv, &sum_rotation_steps_order},
   {"cipher_cipher_op_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_cipher_cipher_op);
+     return class_subterms_count_order(lhs, rhs, &is_cipher_cipher_op, &is_cipher);
    }},
   {"plain_plain_op_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_plain_plain_op);
+     return class_subterms_count_order(lhs, rhs, &is_plain_plain_op, &is_plain);
    }},
   {"const_op_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(rhs, lhs, &is_const_op);
+     return class_subterms_count_order(rhs, lhs, &is_const_op, &is_plain);
    }},
   {"leaves_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_leaf);
+     return class_subterms_count_order(lhs, rhs, &is_leaf, &is_var);
    }},
   {"rotate_phi_str"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {

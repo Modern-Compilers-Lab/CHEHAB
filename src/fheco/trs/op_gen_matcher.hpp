@@ -2,6 +2,7 @@
 
 #include "fheco/trs/op_gen_op_code.hpp"
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <string>
 #include <utility>
@@ -14,6 +15,18 @@ class OpCode;
 class OpGenMatcher
 {
 public:
+  using RefWrapp = std::reference_wrapper<const OpGenMatcher>;
+
+  struct HashRefWrapp
+  {
+    std::size_t operator()(const RefWrapp &matcher_ref) const;
+  };
+
+  struct EqualrRefWrapp
+  {
+    bool operator()(const RefWrapp &lhs, const RefWrapp &rhs) const;
+  };
+
   OpGenMatcher(OpGenOpCode op_code, std::vector<OpGenMatcher> operands)
     : id_{++count_}, op_code_{std::move(op_code)}, operands_{std::move(operands)}, label_{}, val_{}
   {}

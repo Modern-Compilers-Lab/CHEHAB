@@ -33,6 +33,12 @@ TermsFeatureValues compute_cipher_vars_xdepths(const TermMatcher &term);
 
 TermsFeatureValues compute_cipher_vars_depths(const TermMatcher &term);
 
+int sum_leaves_depths(const TermMatcher &term);
+
+void sum_leaves_depths_util(const TermMatcher &term, int init_depth, int &result);
+
+TermsFeatureValues compute_vars_depths(const TermMatcher &term);
+
 TermsFeatureValues count_class_vars_occ(const TermMatcher &term, const TermClassChecker &class_checker);
 
 void count_class_vars_occ_util(

@@ -3,16 +3,35 @@
 #include "fheco/trs/common.hpp"
 #include "fheco/trs/term_op_code.hpp"
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace fheco::trs
 {
+class Rule;
+
 class TermMatcher
 {
 public:
+  using RefWrapp = std::reference_wrapper<const TermMatcher>;
+
+  struct HashRefWrapp
+  {
+    std::size_t operator()(const RefWrapp &matcher_ref) const;
+  };
+
+  struct EqualRefWrapp
+  {
+    bool operator()(const RefWrapp &lhs, const RefWrapp &rhs) const;
+  };
+
+  using RefWrappSet = std::unordered_set<RefWrapp, HashRefWrapp, EqualRefWrapp>;
+
   static TermMatcherType deduce_result_type(const TermOpCode &op_code, const std::vector<TermMatcher> &operands);
 
   TermMatcher(TermOpCode op_code, std::vector<TermMatcher> operands)
@@ -36,6 +55,12 @@ public:
 
   TermMatcher() : id_{0}, op_code_{TermOpCode::nop}, operands_{}, type_{TermMatcherType::term}, label_{}, val_{} {}
 
+  void customize_generic_subterms(const std::unordered_map<std::size_t, TermMatcherType> &vars_types);
+
+  RefWrappSet get_variables() const;
+
+  RefWrappSet get_generic_variables() const;
+
   inline std::size_t id() const { return id_; }
 
   inline const TermOpCode &op_code() const { return op_code_; };
@@ -55,6 +80,10 @@ public:
   inline bool is_variable() const { return operands_.empty() && !val_; }
 
 private:
+  void get_variables_util(RefWrappSet &result) const;
+
+  void get_generic_variables_util(RefWrappSet &result) const;
+
   static std::size_t count_;
 
   std::size_t id_;

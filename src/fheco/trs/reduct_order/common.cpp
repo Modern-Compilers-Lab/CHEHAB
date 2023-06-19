@@ -99,8 +99,57 @@ TermsFeatureValues compute_cipher_vars_depths(const TermMatcher &term)
     for (const auto &e : compute_cipher_vars_depths(operand))
     {
       auto depth = e.second;
-      if (is_cipher)
+      if (is_cipher_op)
         ++depth;
+      auto it = result.find(e.first);
+      if (it == result.end())
+        result.emplace(e.first, depth);
+      else
+      {
+        if (depth > it->second)
+          it->second = depth;
+      }
+    }
+  }
+  return result;
+}
+
+int sum_leaves_depths(const TermMatcher &term)
+{
+  int result = 0;
+  sum_leaves_depths_util(term, 0, result);
+  return result;
+}
+
+void sum_leaves_depths_util(const TermMatcher &term, int init_depth, int &result)
+{
+  if (term.is_leaf())
+  {
+    result += init_depth;
+    return;
+  }
+
+  ++init_depth;
+  for (const auto &operand : term.operands())
+    sum_leaves_depths_util(operand, init_depth, result);
+}
+
+TermsFeatureValues compute_vars_depths(const TermMatcher &term)
+{
+  if (term.is_leaf())
+  {
+    return {{*term.label(), 0}};
+
+    return {{}};
+  }
+
+  TermsFeatureValues result;
+  for (auto const &operand : term.operands())
+  {
+    for (const auto &e : compute_vars_depths(operand))
+    {
+      auto depth = e.second;
+      ++depth;
       auto it = result.find(e.first);
       if (it == result.end())
         result.emplace(e.first, depth);
@@ -231,7 +280,7 @@ ostream &operator<<(ostream &os, const TermsFeatureValues &terms_feature_values)
 
 bool is_cipher(const TermMatcher &term)
 {
-  return term.type() == TermMatcherType::cipher || term.type() == TermMatcherType::term;
+  return term.type() == TermMatcherType::cipher;
 }
 
 bool is_plain(const TermMatcher &term)

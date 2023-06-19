@@ -10,6 +10,7 @@
 #include <random>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 static_assert(sizeof(std::size_t) == 8, "require sizeof(std::size_t) == 8");
@@ -164,6 +165,27 @@ inline std::size_t popcount(T x)
   constexpr int bitwidth = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
   std::bitset<bitwidth> bs(x);
   return bs.count();
+}
+
+// from https://stackoverflow.com/a/17050528
+template <typename T>
+std::vector<std::vector<T>> cart_product(const std::vector<std::vector<T>> &v)
+{
+  std::vector<std::vector<T>> s = {{}};
+  for (const auto &u : v)
+  {
+    std::vector<std::vector<T>> r;
+    for (const auto &x : s)
+    {
+      for (const auto y : u)
+      {
+        r.push_back(x);
+        r.back().push_back(y);
+      }
+    }
+    s = std::move(r);
+  }
+  return s;
 }
 
 std::ostream &operator<<(std::ostream &os, const ir::IOTermsInfo &io_terms_values);

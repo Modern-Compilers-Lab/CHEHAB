@@ -8,6 +8,7 @@
 #include <ostream>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace fheco::ir
 {
@@ -38,6 +39,8 @@ public:
       has_cond_{false}
   {}
 
+  Rule() : Rule("", TermMatcher{}, TermMatcher{}) {}
+
   Rule(std::string name, TermMatcher lhs, TermMatcher static_rhs, std::function<bool(const Subst &)> cond)
     : name_{std::move(name)}, lhs_{std::move(lhs)}, rhs_{[static_rhs = std::move(static_rhs)](const Subst &) {
         return static_rhs;
@@ -59,6 +62,12 @@ public:
     : name_{std::move(name)}, lhs_{std::move(lhs)}, rhs_{std::move(rhs)}, has_dynamic_rhs_{true},
       cond_{std::move(cond)}, has_cond_{true}
   {}
+
+  std::vector<Rule> generate_customized_terms_variants() const;
+
+  inline TermMatcher::RefWrappSet get_variables() const { return lhs_.get_variables(); }
+
+  inline TermMatcher::RefWrappSet get_generic_variables() const { return lhs_.get_generic_variables(); }
 
   inline const std::string &name() const { return name_; };
 

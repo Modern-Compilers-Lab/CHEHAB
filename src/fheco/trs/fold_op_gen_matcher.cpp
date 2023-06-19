@@ -8,27 +8,16 @@ using namespace std;
 
 namespace fheco::trs
 {
-size_t HashOpGenMatcherRef::operator()(const reference_wrapper<const OpGenMatcher> &matcher_ref) const
-{
-  return hash<OpGenMatcher>()(matcher_ref.get());
-}
-
-bool EqualOpGenMatcherRef::operator()(
-  const reference_wrapper<const OpGenMatcher> &lhs, const reference_wrapper<const OpGenMatcher> &rhs) const
-{
-  return lhs.get() == rhs.get();
-}
-
 int fold_op_gen_matcher(const OpGenMatcher &matcher, const Subst &subst)
 {
   struct Call
   {
-    reference_wrapper<const OpGenMatcher> matcher_;
+    OpGenMatcher::RefWrapp matcher_;
     bool children_processed_;
   };
   stack<Call> call_stack;
 
-  unordered_map<reference_wrapper<const OpGenMatcher>, int, HashOpGenMatcherRef, EqualOpGenMatcherRef> matchers_values;
+  unordered_map<OpGenMatcher::RefWrapp, int, OpGenMatcher::HashRefWrapp, OpGenMatcher::EqualrRefWrapp> matchers_values;
 
   call_stack.push(Call{matcher, false});
   while (!call_stack.empty())

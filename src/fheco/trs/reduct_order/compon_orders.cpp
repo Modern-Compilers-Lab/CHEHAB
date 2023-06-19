@@ -49,16 +49,37 @@ CompResult sum_depth_order(const TermMatcher &lhs, const TermMatcher &rhs)
   return lhs_sum_depths > rhs_sum_depths ? CompResult::greater : CompResult::equal;
 }
 
+CompResult sum_total_depth_order(const TermMatcher &lhs, const TermMatcher &rhs)
+{
+  auto lhs_sum_depths = sum_leaves_depths(lhs);
+  auto rhs_sum_depths = sum_leaves_depths(rhs);
+  if (lhs_sum_depths < rhs_sum_depths)
+    return CompResult::less;
+
+  auto lhs_vars_depths = compute_vars_depths(lhs);
+  auto rhs_vars_depths = compute_vars_depths(rhs);
+  if (terms_feature_values_order(lhs_vars_depths, rhs_vars_depths) == CompResult::less)
+    return CompResult::not_generalizable;
+
+  auto lhs_vars_occ = count_class_vars_occ(lhs, &is_var);
+  auto rhs_vars_occ = count_class_vars_occ(rhs, &is_var);
+  if (terms_feature_values_order(lhs_vars_occ, rhs_vars_occ) == CompResult::less)
+    return CompResult::not_generalizable;
+
+  return lhs_sum_depths > rhs_sum_depths ? CompResult::greater : CompResult::equal;
+}
+
 CompResult class_subterms_count_order(
-  const TermMatcher &lhs, const TermMatcher &rhs, const TermClassChecker &class_checker)
+  const TermMatcher &lhs, const TermMatcher &rhs, const TermClassChecker &class_checker,
+  const TermClassChecker &vars_class_checker)
 {
   auto lhs_count = count_class_subterms(lhs, class_checker);
   auto rhs_count = count_class_subterms(rhs, class_checker);
   if (lhs_count < rhs_count)
     return CompResult::less;
 
-  auto lhs_cipher_vars_occ = count_class_vars_occ(lhs, &is_cipher);
-  auto rhs_cipher_vars_occ = count_class_vars_occ(rhs, &is_cipher);
+  auto lhs_cipher_vars_occ = count_class_vars_occ(lhs, vars_class_checker);
+  auto rhs_cipher_vars_occ = count_class_vars_occ(rhs, vars_class_checker);
   if (terms_feature_values_order(lhs_cipher_vars_occ, rhs_cipher_vars_occ) == CompResult::less)
     return CompResult::not_generalizable;
 

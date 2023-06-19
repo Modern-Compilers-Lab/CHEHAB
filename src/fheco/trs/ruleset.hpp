@@ -33,6 +33,8 @@ public:
 
   static Ruleset log2_reduct_opt_ruleset(std::shared_ptr<ir::Func> func);
 
+  static Ruleset customize_generic_rules(const Ruleset &ruleset);
+
   Ruleset(
     std::shared_ptr<ir::Func> func, std::string name, std::vector<Rule> add_rules, std::vector<Rule> sub_rules,
     std::vector<Rule> negate_rules, std::vector<Rule> rotate_rules, std::vector<Rule> square_rules,

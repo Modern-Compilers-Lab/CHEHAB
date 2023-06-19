@@ -1,5 +1,7 @@
 #include "fheco/ir/func.hpp"
 #include "fheco/trs/rule.hpp"
+#include "fheco/util/common.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <utility>
 
@@ -44,7 +46,7 @@ function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatc
 
     return x_ctxt_leaves_count < y_ctxt_leaves_count;
   };
-};
+}
 
 function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &dp)
 {
@@ -76,5 +78,52 @@ function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatc
 
     return x_ctxt_leaves_count < (y1_ctxt_leaves_count + y2_ctxt_leaves_count);
   };
-};
+}
+
+vector<Rule> Rule::generate_customized_terms_variants() const
+{
+  if (lhs_.type() != TermMatcherType::term)
+    return {};
+
+  if (has_dynamic_rhs_)
+    throw invalid_argument("cannot customize rule with dynamic rhs");
+
+  auto vars = get_generic_variables();
+  vector<vector<pair<size_t, TermMatcherType>>> vars_possible_types(vars.size());
+  size_t i = 0;
+  for (const TermMatcher &var : vars)
+  {
+    vars_possible_types[i] = {{var.id(), TermMatcherType::cipher}, {var.id(), TermMatcherType::plain}};
+    ++i;
+  }
+  auto combinations = util::cart_product(vars_possible_types);
+  vector<unordered_map<size_t, TermMatcherType>> indexed_combinations(combinations.size());
+  i = 0;
+  for (const auto &comb : combinations)
+  {
+    unordered_map<size_t, TermMatcherType> indexed_comb;
+    for (const auto &var_type : comb)
+      indexed_comb.emplace(var_type.first, var_type.second);
+
+    indexed_combinations[i] = move(indexed_comb);
+    ++i;
+  }
+
+  vector<Rule> result(indexed_combinations.size());
+  i = 0;
+  for (const auto &indexed_comb : indexed_combinations)
+  {
+    auto variant = *this;
+    variant.name_ += "-" + to_string(i + 1);
+    variant.lhs_.customize_generic_subterms(indexed_comb);
+    auto rhs = get_rhs();
+    rhs.customize_generic_subterms(indexed_comb);
+    variant.rhs_ = [static_rhs = move(rhs)](const Subst &) {
+      return static_rhs;
+    };
+    result[i] = move(variant);
+    ++i;
+  }
+  return result;
+}
 } // namespace fheco::trs

@@ -4,7 +4,7 @@
 #include "fheco/trs/ruleset.hpp"
 #include <functional>
 #include <string_view>
-#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace fheco::trs

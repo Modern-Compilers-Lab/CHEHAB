@@ -3,26 +3,14 @@
 #include "fheco/trs/op_gen_matcher.hpp"
 #include "fheco/trs/subst.hpp"
 #include <cstddef>
-#include <functional>
 #include <ostream>
 #include <unordered_map>
 #include <vector>
 
 namespace fheco::trs
 {
-struct HashOpGenMatcherRef
-{
-  std::size_t operator()(const std::reference_wrapper<const OpGenMatcher> &matcher_ref) const;
-};
-
-struct EqualOpGenMatcherRef
-{
-  bool operator()(
-    const std::reference_wrapper<const OpGenMatcher> &lhs, const std::reference_wrapper<const OpGenMatcher> &rhs) const;
-};
-
 using OpGenMatcherBlocksCoeffs =
-  std::unordered_map<std::reference_wrapper<const OpGenMatcher>, int, HashOpGenMatcherRef, EqualOpGenMatcherRef>;
+  std::unordered_map<OpGenMatcher::RefWrapp, int, OpGenMatcher::HashRefWrapp, OpGenMatcher::EqualrRefWrapp>;
 
 int fold_op_gen_matcher(const OpGenMatcher &op_gen_matcher, const Subst &subst);
 
