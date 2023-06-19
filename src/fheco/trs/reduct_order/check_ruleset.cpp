@@ -116,29 +116,12 @@ void print_line_sep();
 void check_ruleset(const Ruleset &ruleset, const LexicoProductOrder &reduct_order, bool throw_on_failure)
 {
   clog << "checking ruleset " << ruleset.name() << '\n';
-  clog << "add_rules:\n";
-  for (const auto &rule : ruleset.add_rules())
-    check_rule(rule, reduct_order, throw_on_failure);
-
-  clog << "sub_rules:\n";
-  for (const auto &rule : ruleset.sub_rules())
-    check_rule(rule, reduct_order, throw_on_failure);
-
-  clog << "negate_rules:\n";
-  for (const auto &rule : ruleset.negate_rules())
-    check_rule(rule, reduct_order, throw_on_failure);
-
-  clog << "rotate_rules:\n";
-  for (const auto &rule : ruleset.rotate_rules())
-    check_rule(rule, reduct_order, throw_on_failure);
-
-  clog << "square_rules:\n";
-  for (const auto &rule : ruleset.square_rules())
-    check_rule(rule, reduct_order, throw_on_failure);
-
-  clog << "mul_rules:\n";
-  for (const auto &rule : ruleset.mul_rules())
-    check_rule(rule, reduct_order, throw_on_failure);
+  for (const auto &[root_op_type, rules] : ruleset.rules_by_root_op())
+  {
+    clog << root_op_type << "_rules:\n";
+    for (const auto &rule : rules)
+      check_rule(rule, reduct_order, throw_on_failure);
+  }
 }
 
 void check_rule(const Rule &rule, const LexicoProductOrder &reduct_order, bool throw_on_failure)

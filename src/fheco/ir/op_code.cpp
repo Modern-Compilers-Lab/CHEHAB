@@ -68,6 +68,56 @@ bool operator<(const OpCode &lhs, const OpCode &rhs)
   }
   return lhs.type() < rhs.type();
 }
+
+ostream &operator<<(ostream &os, OpCode::Type op_code_type)
+{
+  switch (op_code_type)
+  {
+  case OpCode::Type::nop:
+    os << "nop";
+    break;
+
+  case OpCode::Type::encrypt:
+    os << "encrypt";
+    break;
+
+  case OpCode::Type::add:
+    os << "add";
+    break;
+
+  case OpCode::Type::sub:
+    os << "sub";
+    break;
+
+  case OpCode::Type::negate:
+    os << "negate";
+    break;
+
+  case OpCode::Type::rotate:
+    os << "rotate";
+    break;
+
+  case OpCode::Type::square:
+    os << "square";
+    break;
+
+  case OpCode::Type::mul:
+    os << "mul";
+    break;
+
+  case OpCode::Type::mod_switch:
+    os << "mod_switch";
+    break;
+
+  case OpCode::Type::relin:
+    os << "relin";
+    break;
+
+  default:
+    throw invalid_argument("invalid op_code type");
+  }
+  return os;
+}
 } // namespace fheco::ir
 
 namespace std

@@ -259,6 +259,11 @@ Ruleset Ruleset::halide_adapted_ruleset(shared_ptr<ir::Func> func)
     {"const-up-assoc-mul-1", (x * c0) * y, (x * y) * c0, Rule::is_not_const(y, func)},
     {"const-up-assoc-mul-2", x * (y * c0), (x * y) * c0}};
 
-  return Ruleset{move(func), "halide_adapted_ruleset", move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
+  return Ruleset{
+    move(func),
+    "halide_adapted_ruleset",
+    {{ir::OpCode::Type::add, move(add_rules)},
+     {ir::OpCode::Type::sub, move(sub_rules)},
+     {ir::OpCode::Type::mul, move(mul_rules)}}};
 }
 } // namespace fheco::trs

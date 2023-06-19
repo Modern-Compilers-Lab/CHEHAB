@@ -12,161 +12,47 @@ namespace fheco::trs
 {
 Ruleset Ruleset::log2_reduct_opt_ruleset(shared_ptr<ir::Func> func)
 {
+  vector<TermOpCode> binary_ops{TermOpCode::add, TermOpCode::sub, TermOpCode::mul};
   TermMatcher x{TermMatcherType::term, "x"};
-  vector<Rule> add_rules = get_log_reduct_rules(func->slot_count(), x, TermOpCode::add);
-  vector<Rule> sub_rules = get_log_reduct_rules(func->slot_count(), x, TermOpCode::sub);
-  vector<Rule> mul_rules = get_log_reduct_rules(func->slot_count(), x, TermOpCode::mul);
-  return Ruleset{move(func), "log2_reduct_opt_ruleset", move(add_rules), move(sub_rules), {}, {}, {}, move(mul_rules)};
+  RulesByRootOp rules_by_root_op;
+  for (const auto &op : binary_ops)
+    rules_by_root_op.emplace(op.type(), get_log_reduct_rules(func->slot_count(), x, op));
+  return Ruleset{move(func), "log2_reduct_opt_ruleset", move(rules_by_root_op)};
 }
 
 Ruleset Ruleset::customize_generic_rules(const Ruleset &ruleset)
 {
-  vector<Rule> add_rules;
-  for (const auto &rule : ruleset.add_rules())
+  RulesByRootOp rules_by_root_op;
+  for (const auto &[root_op_type, rules] : ruleset.rules_by_root_op())
   {
-    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
+    vector<Rule> customized_op_rules;
+    for (const auto &rule : rules)
     {
-      for (auto &variant : rule.generate_customized_terms_variants())
-        add_rules.push_back(move(variant));
+      if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
+      {
+        for (auto &variant : rule.generate_customized_terms_variants())
+          customized_op_rules.push_back(move(variant));
+      }
+      else
+        customized_op_rules.push_back(rule);
     }
-    else
-      add_rules.push_back(move(rule));
+    rules_by_root_op.emplace(root_op_type, move(customized_op_rules));
   }
-
-  vector<Rule> sub_rules;
-  for (const auto &rule : ruleset.sub_rules())
-  {
-    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
-    {
-      for (auto &variant : rule.generate_customized_terms_variants())
-        sub_rules.push_back(move(variant));
-    }
-    else
-      sub_rules.push_back(move(rule));
-  }
-
-  vector<Rule> negate_rules;
-  for (const auto &rule : ruleset.negate_rules())
-  {
-    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
-    {
-      for (auto &variant : rule.generate_customized_terms_variants())
-        negate_rules.push_back(move(variant));
-    }
-    else
-      negate_rules.push_back(move(rule));
-  }
-
-  vector<Rule> rotate_rules;
-  for (const auto &rule : ruleset.rotate_rules())
-  {
-    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
-    {
-      for (auto &variant : rule.generate_customized_terms_variants())
-        rotate_rules.push_back(move(variant));
-    }
-    else
-      rotate_rules.push_back(move(rule));
-  }
-
-  vector<Rule> square_rules;
-  for (const auto &rule : ruleset.square_rules())
-  {
-    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
-    {
-      for (auto &variant : rule.generate_customized_terms_variants())
-        square_rules.push_back(move(variant));
-    }
-    else
-      square_rules.push_back(move(rule));
-  }
-
-  vector<Rule> mul_rules;
-  for (const auto &rule : ruleset.mul_rules())
-  {
-    if (rule.lhs().type() == TermMatcherType::term && !rule.has_dynamic_rhs())
-    {
-      for (auto &variant : rule.generate_customized_terms_variants())
-        mul_rules.push_back(move(variant));
-    }
-    else
-      mul_rules.push_back(move(rule));
-  }
-
-  return Ruleset{ruleset.func(),     ruleset.name() + "_customized_generic_rules",
-                 move(add_rules),    move(sub_rules),
-                 move(negate_rules), move(rotate_rules),
-                 move(square_rules), move(mul_rules)};
+  return Ruleset{ruleset.func(), ruleset.name() + "_customized_generic_rules", move(rules_by_root_op)};
 }
 
 Ruleset::Ruleset(
   shared_ptr<ir::Func> func, string name, vector<Rule> rules, unique_ptr<TermsMetric> terms_ctxt_leaves_count_dp)
-  : func_{move(func)}, name_{move(name)}, terms_ctxt_leaves_count_dp_{move(terms_ctxt_leaves_count_dp)}
+  : func_{move(func)}, name_{move(name)}, rules_by_root_op_{},
+    terms_ctxt_leaves_count_dp_{move(terms_ctxt_leaves_count_dp)}
 {
   for (auto &rule : rules)
   {
-    switch (rule.lhs().op_code().type())
-    {
-    case ir::OpCode::Type::nop:
-      throw invalid_argument("rule lhs is a leaf, no context!");
-
-    case ir::OpCode::Type::add:
-      add_rules_.push_back(move(rule));
-      break;
-
-    case ir::OpCode::Type::sub:
-      sub_rules_.push_back(move(rule));
-      break;
-
-    case ir::OpCode::Type::negate:
-      negate_rules_.push_back(move(rule));
-      break;
-
-    case ir::OpCode::Type::rotate:
-      rotate_rules_.push_back(move(rule));
-      break;
-
-    case ir::OpCode::Type::square:
-      square_rules_.push_back(move(rule));
-      break;
-
-    case ir::OpCode::Type::mul:
-      mul_rules_.push_back(move(rule));
-      break;
-
-    default:
-      throw logic_error("unhandled operation of rule lhs");
-    }
-  }
-}
-
-const vector<Rule> &Ruleset::pick_rules(const ir::OpCode &op_code) const
-{
-  switch (op_code.type())
-  {
-  case ir::OpCode::Type::nop:
-    throw invalid_argument("cannot pick rules for nop");
-
-  case ir::OpCode::Type::add:
-    return add_rules_;
-
-  case ir::OpCode::Type::sub:
-    return sub_rules_;
-
-  case ir::OpCode::Type::negate:
-    return negate_rules_;
-
-  case ir::OpCode::Type::rotate:
-    return rotate_rules_;
-
-  case ir::OpCode::Type::square:
-    return square_rules_;
-
-  case ir::OpCode::Type::mul:
-    return mul_rules_;
-
-  default:
-    throw logic_error("unhandled pick_rules for op_code");
+    auto root_op_type = rule.lhs().op_code().type();
+    if (auto it = rules_by_root_op_.find(root_op_type); it != rules_by_root_op_.end())
+      it->second.push_back(move(rule));
+    else
+      rules_by_root_op_.emplace(root_op_type, vector<Rule>{move(rule)});
   }
 }
 
@@ -212,9 +98,7 @@ Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, size_t size, const Term
 
 bool operator==(const Ruleset &lhs, const Ruleset &rhs)
 {
-  return *lhs.func() == *rhs.func() && lhs.add_rules() == rhs.add_rules() && lhs.sub_rules() == rhs.sub_rules() &&
-         lhs.negate_rules() == rhs.negate_rules() && lhs.rotate_rules() == rhs.rotate_rules() &&
-         lhs.square_rules() == rhs.square_rules() && lhs.mul_rules() == rhs.mul_rules();
+  return *lhs.func() == *rhs.func() && lhs.rules_by_root_op() == rhs.rules_by_root_op();
 }
 
 Ruleset operator&(const Ruleset &lhs, const Ruleset &rhs)
@@ -222,83 +106,41 @@ Ruleset operator&(const Ruleset &lhs, const Ruleset &rhs)
   if (*lhs.func() != *rhs.func())
     throw invalid_argument("lhs and rhs rulesets are associated with different functions (not in the same domain)");
 
-  unordered_set<string> rhs_add_rules;
-  for (const auto &rule : rhs.add_rules())
-    rhs_add_rules.insert(rule.name());
-  vector<Rule> add_rules;
-  for (const auto &rule : lhs.add_rules())
+  unordered_map<ir::OpCode::Type, unordered_set<string>> rhs_rules_names_by_root_op;
+  for (const auto &[root_op_type, rules] : rhs.rules_by_root_op())
   {
-    if (rhs_add_rules.find(rule.name()) != rhs_add_rules.end())
-      add_rules.push_back(rule);
+    auto it = rhs_rules_names_by_root_op.emplace(root_op_type, unordered_set<string>{}).first;
+    for (const auto &rule : rules)
+      it->second.emplace(rule.name());
   }
 
-  unordered_set<string> rhs_sub_rules;
-  for (const auto &rule : rhs.sub_rules())
-    rhs_sub_rules.insert(rule.name());
-  vector<Rule> sub_rules;
-  for (const auto &rule : lhs.sub_rules())
+  Ruleset::RulesByRootOp rules_by_root_op;
+  for (const auto &[root_op_type, rules] : lhs.rules_by_root_op())
   {
-    if (rhs_sub_rules.find(rule.name()) != rhs_sub_rules.end())
-      sub_rules.push_back(rule);
-  }
+    auto rhs_op_rules_names_it = rhs_rules_names_by_root_op.find(root_op_type);
+    if (rhs_op_rules_names_it == rhs_rules_names_by_root_op.end())
+      continue;
 
-  unordered_set<string> rhs_negate_rules;
-  for (const auto &rule : rhs.negate_rules())
-    rhs_negate_rules.insert(rule.name());
-  vector<Rule> negate_rules;
-  for (const auto &rule : lhs.negate_rules())
-  {
-    if (rhs_negate_rules.find(rule.name()) != rhs_negate_rules.end())
-      negate_rules.push_back(rule);
+    vector<Rule> op_common_rules;
+    for (const auto &rule : rules)
+    {
+      if (rhs_op_rules_names_it->second.find(rule.name()) != rhs_op_rules_names_it->second.end())
+        op_common_rules.push_back(rule);
+    }
+    rules_by_root_op.emplace(root_op_type, move(op_common_rules));
   }
-
-  unordered_set<string> rhs_rotate_rules;
-  for (const auto &rule : rhs.rotate_rules())
-    rhs_rotate_rules.insert(rule.name());
-  vector<Rule> rotate_rules;
-  for (const auto &rule : lhs.rotate_rules())
-  {
-    if (rhs_rotate_rules.find(rule.name()) != rhs_rotate_rules.end())
-      rotate_rules.push_back(rule);
-  }
-
-  unordered_set<string> rhs_square_rules;
-  for (const auto &rule : rhs.square_rules())
-    rhs_square_rules.insert(rule.name());
-  vector<Rule> square_rules;
-  for (const auto &rule : lhs.square_rules())
-  {
-    if (rhs_square_rules.find(rule.name()) != rhs_square_rules.end())
-      square_rules.push_back(rule);
-  }
-
-  unordered_set<string> rhs_mul_rules;
-  for (const auto &rule : rhs.mul_rules())
-    rhs_mul_rules.insert(rule.name());
-  vector<Rule> mul_rules;
-  for (const auto &rule : lhs.mul_rules())
-  {
-    if (rhs_mul_rules.find(rule.name()) != rhs_mul_rules.end())
-      mul_rules.push_back(rule);
-  }
-
-  return Ruleset{lhs.func(),         lhs.name() + " & " + rhs.name(),
-                 move(add_rules),    move(sub_rules),
-                 move(negate_rules), move(rotate_rules),
-                 move(square_rules), move(mul_rules)};
+  return Ruleset{lhs.func(), lhs.name() + " & " + rhs.name(), move(rules_by_root_op)};
 }
 
 ostream &operator<<(ostream &os, const Ruleset &ruleset)
 {
   os << ruleset.name() << '\n';
-  os << "add: " << ruleset.add_rules().size() << '\n';
-  os << "sub: " << ruleset.sub_rules().size() << '\n';
-  os << "negate: " << ruleset.negate_rules().size() << '\n';
-  os << "rotate: " << ruleset.rotate_rules().size() << '\n';
-  os << "square: " << ruleset.square_rules().size() << '\n';
-  os << "mul: " << ruleset.mul_rules().size() << '\n';
-  size_t total = ruleset.add_rules().size() + ruleset.sub_rules().size() + ruleset.negate_rules().size() +
-                 ruleset.rotate_rules().size() + ruleset.square_rules().size() + ruleset.mul_rules().size();
+  size_t total = 0;
+  for (const auto &[root_op_type, rules] : ruleset.rules_by_root_op())
+  {
+    os << root_op_type << ": " << rules.size() << '\n';
+    total += rules.size();
+  }
   os << "total: " << total << '\n';
   return os;
 }

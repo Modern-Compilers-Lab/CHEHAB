@@ -460,7 +460,12 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"rotation-up-assoc-mul-2", x * (y * (z << n)), (x * y) * (z << n), Rule::is_not_rotation(x)}};
 
   return Ruleset{
-    move(func), "ops_cost_ruleset", move(add_rules), move(sub_rules), move(negate_rules), move(rotate_rules),
-    {},         move(mul_rules)};
+    move(func),
+    "ops_cost_ruleset",
+    {{ir::OpCode::Type::add, move(add_rules)},
+     {ir::OpCode::Type::sub, move(sub_rules)},
+     {ir::OpCode::Type::negate, move(negate_rules)},
+     {ir::OpCode::Type::rotate, move(rotate_rules)},
+     {ir::OpCode::Type::mul, move(mul_rules)}}};
 }
 } // namespace fheco::trs

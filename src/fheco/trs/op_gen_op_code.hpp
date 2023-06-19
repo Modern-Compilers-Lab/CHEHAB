@@ -47,4 +47,6 @@ inline std::ostream &operator<<(std::ostream &os, const OpGenOpCode &op_code)
 {
   return os << op_code.str_repr();
 }
+
+std::ostream &operator<<(std::ostream &os, OpGenOpCode::Type op_code_type);
 } // namespace fheco::trs

@@ -81,7 +81,7 @@ bool TRS::rewrite_term(
     if (top_term->is_leaf())
       continue;
 
-    for (const auto &rule : ruleset_.pick_rules(top_term->op_code()))
+    for (const auto &rule : ruleset_.pick_rules(top_term->op_code().type()))
     {
       Subst subst;
       int64_t rel_cost = 0;
