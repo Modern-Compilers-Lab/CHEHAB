@@ -2,12 +2,12 @@
 
 repeat=30
 
-for ((i = 0; i < $repeat; i++))
+for ((i = 0; i < repeat; i++))
 do
-./clang-O0.build/main_opt  >> exec_times_opt.txt
+    ./clang-O0.build/main_opt  >> exec_times_opt.txt
 done
 
-for ((i = 0; i < $repeat; i++))
+for ((i = 0; i < repeat; i++))
 do
-./clang-O0.build/main_opt_noopt  >> exec_times_noopt.txt
+    ./clang-O0.build/main_noopt  >> exec_times_noopt.txt
 done

@@ -49,19 +49,16 @@ public:
     std::shared_ptr<ir::Func> func, std::string name, std::vector<Rule> rules,
     std::unique_ptr<TermsMetric> terms_ctxt_leaves_count_dp = nullptr);
 
-  inline const std::vector<Rule> &pick_rules(const ir::OpCode::Type &op_code_type) const
+  inline const std::vector<Rule> &pick_rules(const ir::OpCode::Type &op_code_type)
   {
-    return rules_by_root_op_.at(op_code_type);
+    return rules_by_root_op_[op_code_type];
   }
 
   inline const std::shared_ptr<ir::Func> &func() const { return func_; }
 
   inline std::string name() const { return name_; }
 
-  inline const RulesByRootOp &rules_by_root_op() const
-  {
-    return rules_by_root_op_;
-  }
+  inline const RulesByRootOp &rules_by_root_op() const { return rules_by_root_op_; }
 
 private:
   static std::vector<Rule> get_log_reduct_rules(
