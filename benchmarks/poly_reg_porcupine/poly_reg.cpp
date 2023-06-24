@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 
   poly_reg_baseline();
 
-  string gen_name = "_gen_he_" + func_name;
+  string gen_name = "gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
   ofstream source_os(gen_path + ".cpp");
