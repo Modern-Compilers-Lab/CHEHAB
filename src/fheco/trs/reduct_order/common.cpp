@@ -280,7 +280,7 @@ ostream &operator<<(ostream &os, const TermsFeatureValues &terms_feature_values)
 
 bool is_cipher(const TermMatcher &term)
 {
-  return term.type() == TermMatcherType::cipher;
+  return term.type() == TermMatcherType::cipher || term.type() == TermMatcherType::term;
 }
 
 bool is_plain(const TermMatcher &term)

@@ -200,8 +200,6 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"part-fold-assoc-sub-4", (c0 - x) - (c1 - y), (y - x) + (c0 - c1)},
     {"part-fold-assoc-sub-5", (c0 - x) - (y + c1), (c0 - c1) - (x + y)},
 
-    {"part-fold-assoc-sub-negate", x - (y - z), x + (z - y)},
-
     {"const-up-assoc-sub-2", x - (y + c0), (x - y) - c0},
 
     {"rotation-up-assoc-sub-2", x - (y + (y << n)), (x - y) - (y << n), Rule::is_not_rotation(x)},
@@ -223,7 +221,7 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"fact-sub-1-1-2-2", ct_x * square(pt_y) - ct_z * pt_y, (ct_x * pt_y - ct_z) * pt_y},
     {"fact-sub-1-1-2-3", ct_x * pt_y - ct_z * square(pt_y), (ct_x - ct_z * pt_y) * pt_y},
     {"fact-sub-1-1-2-4", ct_x * (-pt_y) - ct_z * pt_y, -(ct_x + ct_z) * pt_y},
-    {"fact-sub-1-1-2-5", ct_x * (-pt_y) - ct_z * square(pt_y), -(ct_x + ct_z * pt_y) * pt_y},
+    {"fact-sub-1-1-2-5", ct_x * (-pt_y) - ct_z * square(pt_y), (ct_x + ct_z * pt_y) * (-pt_y)},
 
     {"fact-sub-1-2-1-1", x * ct_y - ct_y * z, (x - z) * ct_y},
     {"fact-sub-1-2-1-2", x * square(ct_y) - ct_y * z, (x * ct_y - z) * ct_y},
@@ -235,7 +233,7 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"fact-sub-1-2-2-2", ct_x * square(pt_y) - pt_y * ct_z, (ct_x * pt_y - ct_z) * pt_y},
     {"fact-sub-1-2-2-3", ct_x * pt_y - square(pt_y) * ct_z, (ct_x - pt_y * ct_z) * pt_y},
     {"fact-sub-1-2-2-4", ct_x * (-pt_y) - pt_y * ct_z, -(ct_x + ct_z) * pt_y},
-    {"fact-sub-1-2-2-5", ct_x * (-pt_y) - square(pt_y) * ct_z, -(ct_x + pt_y * ct_z) * pt_y},
+    {"fact-sub-1-2-2-5", ct_x * (-pt_y) - square(pt_y) * ct_z, (ct_x + pt_y * ct_z) * (-pt_y)},
 
     {"fact-sub-1-3-1-1", ct_y * x - z * ct_y, ct_y * (x - z)},
     {"fact-sub-1-3-1-2", square(ct_y) * x - z * ct_y, ct_y * (ct_y * x - z)},
@@ -439,17 +437,14 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
        return n_steps > 0 && m_steps > n_steps;
      }},
 
-    {"part-fold-dist-add-1-1", (ct_x + c0) * (ct_x + c1), ct_x * (ct_x + (c0 + c1)) + (c0 * c1)},
-    {"part-fold-dist-add-1-2", (ct_x * c0 + c1) * (ct_x + c2), ct_x * (ct_x * c0 + (c1 + c0 * c2)) + (c1 * c2)},
-    {"part-fold-dist-add-1-3", (ct_x + c2) * (ct_x * c0 + c1), ct_x * (ct_x * c0 + (c1 + c0 * c2)) + (c1 * c2)},
     {"part-fold-dist-add-1-4", (ct_x * c0 + c1) * (ct_x * c2 + c3),
      ct_x * (ct_x * (c0 * c2) + (c0 * c3 + c1 * c2)) + (c1 * c3)},
 
     {"part-fold-dist-add-2", (ct_x + c0) * c1, ct_x * c1 + (c0 * c1)},
     {"part-fold-dist-sub", (c0 - ct_x) * c1, ct_x * (-c1) + (c0 * c1)},
 
-    {"part-fold-dist-zero_m-1", (zero - x) * y, zero - x * y},
-    {"part-fold-dist-zero_m-2", x * (zero - y), zero - x * y},
+    {"part-fold-dist-zero_m-1", (zero - x) * y, -x * y},
+    {"part-fold-dist-zero_m-2", x * (zero - y), -x * y},
 
     {"part-fold-assoc-mul", (x * c0) * c1, x * (c0 * c1)},
 

@@ -1,6 +1,7 @@
 #include "fheco/trs/reduct_order/check_ruleset.hpp"
 #include "fheco/trs/reduct_order/compon_orders.hpp"
 #include "fheco/util/expr_printer.hpp"
+#include <cstddef>
 #include <iostream>
 #include <stdexcept>
 
@@ -9,10 +10,7 @@ using namespace std;
 namespace fheco::trs
 {
 
-const LexicoProductOrder depth_order{
-  {"sum_xdepth"sv, &sum_xdepth_order},
-  {"sum_depth"sv, &sum_depth_order},
-  {"sum_total_depth"sv, &sum_total_depth_order}};
+const LexicoProductOrder depth_order{{"sum_xdepth"sv, &sum_xdepth_order}, {"sum_depth"sv, &sum_depth_order}};
 
 const LexicoProductOrder ops_cost_order{
   {"mul_count"sv,
@@ -36,14 +34,6 @@ const LexicoProductOrder ops_cost_order{
      return class_subterms_count_order(lhs, rhs, &is_he_add, &is_cipher);
    }},
   {"sum_rotation_steps"sv, &sum_rotation_steps_order},
-  {"cipher_cipher_op_count"sv,
-   [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_cipher_cipher_op, &is_cipher);
-   }},
-  {"plain_plain_op_count"sv,
-   [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_plain_plain_op, &is_plain);
-   }},
   {"const_op_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
      return class_subterms_count_order(rhs, lhs, &is_const_op, &is_plain);
@@ -51,6 +41,14 @@ const LexicoProductOrder ops_cost_order{
   {"leaves_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
      return class_subterms_count_order(lhs, rhs, &is_leaf, &is_var);
+   }},
+  {"cipher_cipher_op_count"sv,
+   [](const TermMatcher &lhs, const TermMatcher &rhs) {
+     return class_subterms_count_order(lhs, rhs, &is_cipher_cipher_op, &is_cipher);
+   }},
+  {"plain_plain_op_count"sv,
+   [](const TermMatcher &lhs, const TermMatcher &rhs) {
+     return class_subterms_count_order(lhs, rhs, &is_plain_plain_op, &is_plain);
    }},
   {"rotate_phi_str"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
@@ -64,7 +62,6 @@ const LexicoProductOrder ops_cost_order{
 const LexicoProductOrder joined_order{
   {"sum_xdepth"sv, &sum_xdepth_order},
   {"sum_depth"sv, &sum_depth_order},
-  {"sum_total_depth"sv, &sum_total_depth_order},
   {"mul_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
      return class_subterms_count_order(lhs, rhs, &is_mul, &is_cipher);
@@ -86,14 +83,6 @@ const LexicoProductOrder joined_order{
      return class_subterms_count_order(lhs, rhs, &is_he_add, &is_cipher);
    }},
   {"sum_rotation_steps"sv, &sum_rotation_steps_order},
-  {"cipher_cipher_op_count"sv,
-   [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_cipher_cipher_op, &is_cipher);
-   }},
-  {"plain_plain_op_count"sv,
-   [](const TermMatcher &lhs, const TermMatcher &rhs) {
-     return class_subterms_count_order(lhs, rhs, &is_plain_plain_op, &is_plain);
-   }},
   {"const_op_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
      return class_subterms_count_order(rhs, lhs, &is_const_op, &is_plain);
@@ -101,6 +90,14 @@ const LexicoProductOrder joined_order{
   {"leaves_count"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
      return class_subterms_count_order(lhs, rhs, &is_leaf, &is_var);
+   }},
+  {"cipher_cipher_op_count"sv,
+   [](const TermMatcher &lhs, const TermMatcher &rhs) {
+     return class_subterms_count_order(lhs, rhs, &is_cipher_cipher_op, &is_cipher);
+   }},
+  {"plain_plain_op_count"sv,
+   [](const TermMatcher &lhs, const TermMatcher &rhs) {
+     return class_subterms_count_order(lhs, rhs, &is_plain_plain_op, &is_plain);
    }},
   {"rotate_phi_str"sv,
    [](const TermMatcher &lhs, const TermMatcher &rhs) {
@@ -116,11 +113,17 @@ void print_line_sep();
 void check_ruleset(const Ruleset &ruleset, const LexicoProductOrder &reduct_order, bool throw_on_failure)
 {
   clog << "checking ruleset " << ruleset.name() << '\n';
+  size_t i;
   for (const auto &[root_op_type, rules] : ruleset.rules_by_root_op())
   {
+    i = 0;
     clog << root_op_type << "_rules:\n";
     for (const auto &rule : rules)
+    {
+      clog << i << ". ";
       check_rule(rule, reduct_order, throw_on_failure);
+      ++i;
+    }
   }
 }
 
@@ -155,7 +158,7 @@ void check_rule(const Rule &rule, const LexicoProductOrder &reduct_order, bool t
     }
     else if (comp_result == CompResult::equal)
     {
-      clog << "undefined order\n";
+      clog << "undefined order (equal)\n";
       continue;
     }
     else
@@ -164,9 +167,9 @@ void check_rule(const Rule &rule, const LexicoProductOrder &reduct_order, bool t
     print_line_sep();
     return;
   }
-  clog << "unordered\n";
+  clog << "could not be ordered\n";
   if (throw_on_failure)
-    throw logic_error("unordered rule");
+    throw logic_error("rule could not be ordered");
 }
 
 void print_line_sep()
