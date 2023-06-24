@@ -67,8 +67,7 @@ void Compiler::compile(
 
   clog << "reduce_rotation_keys\n";
   unordered_set<int> rotation_steps_keys;
-  rotation_steps_keys =
-    passes::reduce_rotation_keys(func, 2 * util::get_power_of_two(util::next_power_of_two(func->slot_count())));
+  rotation_steps_keys = passes::reduce_rotation_keys(func, 29);
 
   clog << "insert_relin_ops\n";
   size_t relin_keys_count = passes::relin_after_each_mul(func);

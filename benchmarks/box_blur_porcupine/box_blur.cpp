@@ -1,4 +1,5 @@
 #include "fheco/fheco.hpp"
+#include <chrono>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -10,7 +11,7 @@ using namespace fheco;
 
 void box_blur_baseline()
 {
-  Ciphertext c0("c0", 0, 255);
+  Ciphertext c0("c0");
   Ciphertext c1 = c0 << 1;
   Ciphertext c2 = c0 << 5;
   Ciphertext c3 = c0 << 6;
@@ -22,7 +23,7 @@ void box_blur_baseline()
 
 void box_blur_synthesized()
 {
-  Ciphertext c0("c0", 0, 255);
+  Ciphertext c0("c0");
   Ciphertext c1 = c0 << 1;
   Ciphertext c2 = c0 + c1;
   Ciphertext c3 = c2 << 5;
@@ -96,18 +97,16 @@ int main(int argc, char **argv)
   else
     Compiler::disable_const_folding();
 
+  chrono::high_resolution_clock::time_point time_start, time_end;
+  chrono::duration<double, milli> time_sum(0);
+  time_start = chrono::high_resolution_clock::now();
   string func_name = "box_blur";
-  // Compiler::create_func(func_name, 13, 20, false, true, false);
-  Compiler::create_func(func_name, 16, 20, false, true, false);
+  // Compiler::create_func(func_name, 13, 20, false, true);
+  Compiler::create_func(func_name, 16, 20, false, true);
 
   box_blur_baseline();
 
-  ofstream init_ir_os(func_name + "_init_ir.dot");
-  util::draw_ir(Compiler::active_func(), init_ir_os);
-
-  const auto &rand_inputs = Compiler::active_func()->data_flow().inputs_info();
-
-  string gen_name = "gen_he_" + func_name;
+  string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
   ofstream source_os(gen_path + ".cpp");
@@ -115,21 +114,17 @@ int main(int argc, char **argv)
   Compiler::compile(
     ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms, header_os, gen_name + ".hpp", source_os);
 
-  auto outputs = util::evaluate_on_clear(Compiler::active_func(), rand_inputs);
-  if (outputs != Compiler::active_func()->data_flow().outputs_info())
-    throw logic_error("compilation correctness-test failed");
-
-  ofstream rand_example_os(func_name + "_rand_example.txt");
-  util::print_io_terms_values(Compiler::active_func(), rand_example_os);
-
-  ofstream final_ir_os(func_name + "_final_ir.dot");
-  util::draw_ir(Compiler::active_func(), final_ir_os);
+  time_end = chrono::high_resolution_clock::now();
+  time_sum = time_end - time_start;
+  cout << time_sum.count() << '\n';
 
   if (call_quantifier)
   {
     util::Quantifier quantifier1(Compiler::active_func());
     quantifier1.run_all_analysis();
-    quantifier1.print_info(cout);
+    cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().max_depth_ << " ";
+    cout << quantifier1.circuit_static_cost() << '\n';
   }
+
   return 0;
 }

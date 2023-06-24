@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <istream>
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -24,7 +26,7 @@ struct ClearArgInfo
 
 using clear_args_info_map = std::unordered_map<std::string, ClearArgInfo>;
 
-void parse_inputs_outputs_file(const std::string &file_name, clear_args_info_map &inputs, clear_args_info_map &outputs);
+void parse_inputs_outputs_file(std::istream &is, clear_args_info_map &inputs, clear_args_info_map &outputs);
 
 void prepare_he_inputs(
   const seal::BatchEncoder &encoder, const seal::Encryptor &encryptor, const clear_args_info_map &clear_inputs,
@@ -36,13 +38,12 @@ void get_clear_outputs(
   clear_args_info_map &clear_outputs);
 
 void print_encrypted_outputs_info(
-  const seal::SEALContext &context, seal::Decryptor &decryptor, const encrypted_args_map &encrypted_outputs);
+  const seal::SEALContext &context, seal::Decryptor &decryptor, const encrypted_args_map &encrypted_outputs,
+  std::ostream &os);
 
-void print_variables_values(const clear_args_info_map &m, std::size_t print_size);
+void print_variables_values(const clear_args_info_map &m, std::size_t print_size, std::ostream &os);
 
-void print_variables_values(const clear_args_info_map &m);
-
-void print_variables_values(const clear_args_info_map &m);
+void print_variables_values(const clear_args_info_map &m, std::ostream &os);
 
 template <typename T>
 inline void print_vector(const std::vector<T> &v, std::ostream &os, std::size_t print_size)

@@ -1,4 +1,5 @@
 digraph "box_blur" {
+graph [label="box_blur" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
 1 [label="c0" style=solid color=red fontcolor=red]
@@ -9,7 +10,7 @@ edge [dir=back]
 5 -> 2
 8 [label="<< 5" style=solid color=black fontcolor=black]
 8 -> 5
-7 [label="+ (c6)" style=solid color=blue fontcolor=black]
+7 [label="+ (c6)" style=solid color=blue fontcolor=blue]
 7 -> 5
 7 -> 8
 }

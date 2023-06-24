@@ -1,4 +1,5 @@
 digraph "poly_reg" {
+graph [label="poly_reg" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
 2 [label="c1" style=solid color=red fontcolor=red]
@@ -20,7 +21,7 @@ edge [dir=back]
 10 [label="+" style=solid color=black fontcolor=black]
 10 -> 3
 10 -> 9
-11 [label="- (c_result)" style=solid color=blue fontcolor=black]
+11 [label="- (c_result)" style=solid color=blue fontcolor=blue]
 11 -> 2
 11 -> 10
 }

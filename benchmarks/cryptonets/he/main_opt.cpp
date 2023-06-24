@@ -18,12 +18,12 @@ int main(int argc, char **argv)
 
   parse_inputs_outputs_file(is, clear_inputs, clear_outputs);
 
-  seal::EncryptionParameters params(seal::scheme_type::bfv);
+  EncryptionParameters params(scheme_type::bfv);
   size_t n = 8192;
   params.set_poly_modulus_degree(n);
   params.set_plain_modulus(65537);
   params.set_coeff_modulus(CoeffModulus::BFVDefault(n));
-  seal::SEALContext context(params, false, seal::sec_level_type::tc128);
+  SEALContext context(params, false, sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
   const SecretKey &secret_key = keygen.secret_key();

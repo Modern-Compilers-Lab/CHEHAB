@@ -1,4 +1,5 @@
 digraph "hamming_distance" {
+graph [label="hamming_distance" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
 3 [label="c1" style=solid color=red fontcolor=red]
@@ -17,7 +18,7 @@ edge [dir=back]
 8 [label="-" style=solid color=black fontcolor=black]
 8 -> 6
 8 -> 7
-1 [label="const_$1" style=dashed color=darkgreen fontcolor=darkgreen]
+1 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
 9 [label="*" style=solid color=black fontcolor=black]
 9 -> 1
 9 -> 4
@@ -31,7 +32,7 @@ edge [dir=back]
 12 -> 11
 13 [label="<< 1" style=solid color=black fontcolor=black]
 13 -> 12
-14 [label="+ (c_result)" style=solid color=blue fontcolor=black]
+14 [label="+ (c_result)" style=solid color=blue fontcolor=blue]
 14 -> 12
 14 -> 13
 }

@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <fstream>
 #include <iostream>
-#include "gen_he_cryptonets_noopt.hpp"
+#include "gen_he_box_blur_noopt.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -10,7 +10,7 @@ using namespace seal;
 
 int main(int argc, char **argv)
 {
-  string func_name = "cryptonets";
+  string func_name = "box_blur";
   clear_args_info_map clear_inputs, clear_outputs;
   ifstream is("../" + func_name + "_rand_example.txt");
   if (!is)
@@ -18,12 +18,12 @@ int main(int argc, char **argv)
 
   parse_inputs_outputs_file(is, clear_inputs, clear_outputs);
 
-  EncryptionParameters params(scheme_type::bfv);
-  size_t n = 8192;
+  seal::EncryptionParameters params(seal::scheme_type::bfv);
+  size_t n = 4096;
   params.set_poly_modulus_degree(n);
-  params.set_plain_modulus(65537);
-  params.set_coeff_modulus(CoeffModulus::BFVDefault(n));
-  SEALContext context(params, false, sec_level_type::tc128);
+  params.set_plain_modulus(seal::PlainModulus::Batching(n, 20));
+  params.set_coeff_modulus(seal::CoeffModulus::Create(n, {54, 55}));
+  seal::SEALContext context(params, false, seal::sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
   const SecretKey &secret_key = keygen.secret_key();
@@ -32,6 +32,7 @@ int main(int argc, char **argv)
   RelinKeys relin_keys;
   keygen.create_relin_keys(relin_keys);
   GaloisKeys galois_keys;
+  keygen.create_galois_keys(get_rotation_steps_box_blur_noopt(), galois_keys);
   Encryptor encryptor(context, public_key);
   Evaluator evaluator(context);
   Decryptor decryptor(context, secret_key);
@@ -45,7 +46,7 @@ int main(int argc, char **argv)
   chrono::high_resolution_clock::time_point time_start, time_end;
   chrono::duration<double, milli> time_sum(0);
   time_start = chrono::high_resolution_clock::now();
-  cryptonets_noopt(
+  box_blur_noopt(
     encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
     relin_keys, galois_keys);
   time_end = chrono::high_resolution_clock::now();

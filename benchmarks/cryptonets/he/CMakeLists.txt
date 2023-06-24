@@ -26,4 +26,3 @@ target_link_libraries(main_noopt PRIVATE utils)
 add_executable(main_opt main_opt.cpp)
 target_link_libraries(main_opt PRIVATE gen_he_cryptonets)
 target_link_libraries(main_opt PRIVATE utils)
-

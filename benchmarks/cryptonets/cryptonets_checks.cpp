@@ -1,3 +1,4 @@
+#include "fheco/fheco.hpp"
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -131,11 +132,11 @@ int main(int argc, char **argv)
   if (argc > 1)
     call_quantifier = stoi(argv[1]);
 
-  Compiler::Ruleset ruleset = Compiler::Ruleset::joined;
+  auto ruleset = Compiler::Ruleset::joined;
   if (argc > 2)
     ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
 
-  trs::RewriteHeuristic rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+  auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
   if (argc > 3)
     rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
 
@@ -159,17 +160,17 @@ int main(int argc, char **argv)
   if (argc > 8)
     const_folding = stoi(argv[8]);
 
-  print_bool_arg(call_quantifier, "call_quantifier", cout);
-  cout << " ";
-  cout << ruleset << " " << rewrite_heuristic << " " << max_iter << " ";
-  print_bool_arg(rewrite_created_sub_terms, "rewrite_created_sub_terms", cout);
-  cout << " ";
-  print_bool_arg(cse, "cse", cout);
-  cout << " ";
-  print_bool_arg(cse_order_operands, "cse_order_operands", cout);
-  cout << " ";
-  print_bool_arg(const_folding, "const_folding", cout);
-  cout << '\n';
+  print_bool_arg(call_quantifier, "call_quantifier", clog);
+  clog << " ";
+  clog << ruleset << " " << rewrite_heuristic << " " << max_iter << " ";
+  print_bool_arg(rewrite_created_sub_terms, "rewrite_created_sub_terms", clog);
+  clog << " ";
+  print_bool_arg(cse, "cse", clog);
+  clog << " ";
+  print_bool_arg(cse_order_operands, "cse_order_operands", clog);
+  clog << " ";
+  print_bool_arg(const_folding, "const_folding", clog);
+  clog << '\n';
 
   if (cse)
     Compiler::enable_cse();
@@ -201,7 +202,7 @@ int main(int argc, char **argv)
 
   const auto &rand_inputs = Compiler::active_func()->data_flow().inputs_info();
 
-  string gen_name = "_gen_he_" + func_name;
+  string gen_name = "gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
   ofstream source_os(gen_path + ".cpp");
@@ -228,7 +229,7 @@ int main(int argc, char **argv)
 
   time_end = chrono::high_resolution_clock::now();
   time_sum = time_end - time_start;
-  cout << time_sum.count() << endl;
+  cout << time_sum.count() << '\n';
 
   return 0;
 }

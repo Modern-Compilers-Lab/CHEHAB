@@ -5,7 +5,7 @@
 #include <vector>
 #include "seal/seal.h"
 
-void box_blur(
+void box_blur_noopt(
   const std::unordered_map<std::string, seal::Ciphertext> &encrypted_inputs,
   const std::unordered_map<std::string, seal::Plaintext> &encoded_inputs,
   std::unordered_map<std::string, seal::Ciphertext> &encrypted_outputs,
@@ -13,4 +13,4 @@ void box_blur(
   const seal::Encryptor &encryptor, const seal::Evaluator &evaluator, const seal::RelinKeys &relin_keys,
   const seal::GaloisKeys &galois_keys);
 
-std::vector<int> get_rotation_steps_box_blur();
+std::vector<int> get_rotation_steps_box_blur_noopt();

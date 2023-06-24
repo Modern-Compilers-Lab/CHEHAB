@@ -161,13 +161,13 @@ int main(int argc, char **argv)
   chrono::duration<double, milli> time_sum(0);
   time_start = chrono::high_resolution_clock::now();
   string func_name = "cryptonets";
-  Compiler::create_func(func_name, 8192, 17, true, false, false);
+  Compiler::create_func(func_name, 8192, 17, true, false);
 
   cryptonets(
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
     vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
 
-  string gen_name = "_gen_he_" + func_name;
+  string gen_name = "gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
   ofstream source_os(gen_path + ".cpp");
@@ -177,14 +177,14 @@ int main(int argc, char **argv)
 
   time_end = chrono::high_resolution_clock::now();
   time_sum = time_end - time_start;
-  cout << time_sum.count() << endl;
+  cout << time_sum.count() << '\n';
 
   if (call_quantifier)
   {
     util::Quantifier quantifier1(Compiler::active_func());
     quantifier1.run_all_analysis();
-    cout << quantifier1.circuit_static_cost() << " ";
-    cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().max_depth_ << '\n';
+    cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().max_depth_ << " ";
+    cout << quantifier1.circuit_static_cost() << '\n';
   }
 
   return 0;
