@@ -89,28 +89,26 @@ vector<Rule> Rule::generate_customized_terms_variants() const
     throw invalid_argument("cannot customize rule with dynamic rhs");
 
   auto vars = get_generic_variables();
-  vector<vector<pair<size_t, TermMatcherType>>> vars_possible_types(vars.size());
-  size_t i = 0;
+  vector<vector<pair<size_t, TermMatcherType>>> vars_possible_types;
+  vars_possible_types.reserve(vars.size());
   for (const TermMatcher &var : vars)
-  {
-    vars_possible_types[i] = {{var.id(), TermMatcherType::cipher}, {var.id(), TermMatcherType::plain}};
-    ++i;
-  }
+    vars_possible_types.push_back({{var.id(), TermMatcherType::cipher}, {var.id(), TermMatcherType::plain}});
+
   auto combinations = util::cart_product(vars_possible_types);
-  vector<unordered_map<size_t, TermMatcherType>> indexed_combinations(combinations.size());
-  i = 0;
+  vector<unordered_map<size_t, TermMatcherType>> indexed_combinations;
+  indexed_combinations.reserve(combinations.size());
   for (const auto &comb : combinations)
   {
     unordered_map<size_t, TermMatcherType> indexed_comb;
     for (const auto &var_type : comb)
       indexed_comb.emplace(var_type.first, var_type.second);
 
-    indexed_combinations[i] = move(indexed_comb);
-    ++i;
+    indexed_combinations.push_back(move(indexed_comb));
   }
 
-  vector<Rule> result(indexed_combinations.size());
-  i = 0;
+  vector<Rule> result;
+  result.reserve(indexed_combinations.size());
+  size_t i = 0;
   for (const auto &indexed_comb : indexed_combinations)
   {
     auto variant = *this;
@@ -121,7 +119,7 @@ vector<Rule> Rule::generate_customized_terms_variants() const
     variant.rhs_ = [static_rhs = move(rhs)](const Subst &) {
       return static_rhs;
     };
-    result[i] = move(variant);
+    result.push_back(move(variant));
     ++i;
   }
   return result;

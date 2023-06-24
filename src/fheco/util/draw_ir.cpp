@@ -17,7 +17,7 @@ namespace fheco::util
 void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool id_as_label, bool show_key, bool impose_operands_order)
 {
   os << "digraph \"" << func->name() << "\" {\n";
-  os << "graph [label=\"" << func->name() << R"(" labelloc="b"])" << '\n';
+  os << "graph [label=\"" << func->name() << R"(" labelloc="t"])" << '\n';
   os << "node [shape=circle width=1 margin=0]\n";
   os << "edge [dir=back]\n";
 
@@ -113,7 +113,7 @@ void draw_term(
 void draw_rule(const trs::Rule &rule, ostream &os, bool show_key, bool impose_operands_order)
 {
   os << "digraph \"" << rule.name() << "\" {\n";
-  os << "graph [label=\"" << rule.name() << R"(" labelloc="b"])" << '\n';
+  os << "graph [label=\"" << rule.name() << R"(" labelloc="t"])" << '\n';
   os << "node [shape=circle width=1 margin=0]\n";
   os << "edge [dir=none]\n";
 
