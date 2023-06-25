@@ -24,15 +24,17 @@ class Ruleset
 public:
   using RulesByRootOp = std::unordered_map<ir::OpCode::Type, std::vector<Rule>>;
 
-  static Ruleset depth_after_simplify_ruleset(std::shared_ptr<ir::Func> func);
-
   static Ruleset depth_ruleset(std::shared_ptr<ir::Func> func);
 
-  static Ruleset halide_adapted_ruleset(std::shared_ptr<ir::Func> func);
+  static Ruleset ops_cost_ruleset(std::shared_ptr<ir::Func> func);
 
   static Ruleset joined_ruleset(std::shared_ptr<ir::Func> func);
 
-  static Ruleset ops_cost_ruleset(std::shared_ptr<ir::Func> func);
+  static Ruleset toy_ruleset(std::shared_ptr<ir::Func> func);
+
+  static Ruleset depth_after_simplify_ruleset(std::shared_ptr<ir::Func> func);
+
+  static Ruleset halide_adapted_ruleset(std::shared_ptr<ir::Func> func);
 
   static Ruleset log2_reduct_opt_ruleset(std::shared_ptr<ir::Func> func);
 

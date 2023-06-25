@@ -14,6 +14,7 @@ set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/subst.cpp
     ${CMAKE_CURRENT_LIST_DIR}/term_matcher.cpp
     ${CMAKE_CURRENT_LIST_DIR}/term_op_code.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/toy_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/trs.cpp    
 )
 
