@@ -46,6 +46,8 @@ public:
 
   std::string expand_term_str_expr(const ir::Term *term, int depth = 3, Mode mode = Mode::infix_expl_paren) const;
 
+  std::string make_leaf_str_expr(const ir::Term *term) const;
+
   void print_outputs_str_expr(std::ostream &os) const;
 
   void print_terms_str_expr(std::ostream &os) const;
@@ -61,8 +63,6 @@ private:
   static const std::unordered_map<ir::OpCode::Type, int> ops_precedence_;
 
   static const std::unordered_map<trs::OpGenOpCode::Type, int> op_gen_matcher_ops_precedence_;
-
-  std::string leaf_str_expr(const ir::Term *term) const;
 
   std::shared_ptr<ir::Func> func_;
 

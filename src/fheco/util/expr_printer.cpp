@@ -201,7 +201,7 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
   for (auto term : func_->get_top_sorted_terms())
   {
     if (term->is_leaf())
-      terms_str_exprs_.emplace(term->id(), leaf_str_expr(term));
+      terms_str_exprs_.emplace(term->id(), make_leaf_str_expr(term));
     else
     {
       if (mode_ == Mode::infix || mode_ == Mode::infix_expl_paren)
@@ -308,7 +308,7 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
     {
       string result{};
       if (top_term->is_leaf())
-        result = leaf_str_expr(top_term);
+        result = make_leaf_str_expr(top_term);
       else
       {
         if (mode == Mode::infix || mode == Mode::infix_expl_paren)
@@ -375,7 +375,7 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
     if (top_call.depth_ <= 0)
     {
       if (top_term->is_leaf())
-        dp.emplace(Call{top_term, 0}, leaf_str_expr(top_term));
+        dp.emplace(Call{top_term, 0}, make_leaf_str_expr(top_term));
       else
         dp.emplace(Call{top_term, 0}, "$" + to_string(top_term->id()));
 
@@ -389,12 +389,17 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
   return dp.at(Call{term, depth});
 }
 
-string ExprPrinter::leaf_str_expr(const ir::Term *term) const
+string ExprPrinter::make_leaf_str_expr(const ir::Term *term) const
 {
   if (auto input_info = func_->data_flow().get_input_info(term); input_info)
     return input_info->label_;
-  else if (auto const_val = func_->data_flow().get_const_val(term); const_val)
+  else if (auto const_info = func_->data_flow().get_const_info(term); const_info)
+  {
+    if (const_info->is_scalar_)
+      return to_string(const_info->val_[0]);
+
     return "const_$" + to_string(term->id());
+  }
   else
     throw logic_error("invalid leaf term, non-input and non-const");
 }

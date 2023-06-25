@@ -3,6 +3,8 @@
 #include "fheco/dsl/plaintext.hpp"
 #include "fheco/ir/func.hpp"
 #include "fheco/util/common.hpp"
+#include "fheco/util/expr_printer.hpp"
+#include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
@@ -122,6 +124,15 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
     }
     if (can_fold)
     {
+      util::ExprPrinter expr_printer{Compiler::active_func()};
+      clog << "élimination du calcul constant : ";
+      if (operands.size() == 1)
+        clog << op_code << " " << expr_printer.make_leaf_str_expr(operands[0]);
+      else if (operands.size() == 2)
+        clog << expr_printer.make_leaf_str_expr(operands[0]) << " " << op_code << " "
+             << expr_printer.make_leaf_str_expr(operands[1]);
+      clog << '\n';
+
       if (op_code.type() == OpCode::Type::encrypt)
         return insert_const_term(const_vals[0], inserted);
 
