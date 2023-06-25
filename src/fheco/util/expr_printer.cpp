@@ -406,17 +406,17 @@ string ExprPrinter::make_leaf_str_expr(const ir::Term *term) const
 
 void ExprPrinter::print_outputs_str_expr(ostream &os) const
 {
-  os << "term_label: str_expr\n";
+  os << "nom_sortie : expression\n";
   for (const auto output_info : func_->data_flow().outputs_info())
   {
     if (auto it = terms_str_exprs_.find(output_info.first->id()); it != terms_str_exprs_.end())
-      os << output_info.second.label_ << ": " << it->second << '\n';
+      os << output_info.second.label_ << " : " << it->second << '\n';
   }
 }
 
 void ExprPrinter::print_terms_str_expr(ostream &os) const
 {
-  os << "term_id: str_expr\n";
+  os << "id_terme : expression\n";
   os << terms_str_exprs_;
 }
 

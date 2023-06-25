@@ -32,11 +32,11 @@ public:
       overflow_warnings));
   }
 
-  static inline void create_func(
+  static inline const std::shared_ptr<ir::Func> &create_func(
     std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_full_cyclic_rotation,
     bool overflow_warnings = false)
   {
-    add_func(std::make_shared<ir::Func>(
+    return add_func(std::make_shared<ir::Func>(
       std::move(name), slot_count, bit_width, signedness, need_full_cyclic_rotation, overflow_warnings));
   }
 
@@ -101,7 +101,7 @@ public:
 private:
   using FuncsTable = std::unordered_map<std::string, std::shared_ptr<ir::Func>>;
 
-  static void add_func(std::shared_ptr<ir::Func> func);
+  static const std::shared_ptr<ir::Func> &add_func(std::shared_ptr<ir::Func> func);
 
   static FuncsTable funcs_table_;
 

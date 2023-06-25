@@ -6,6 +6,7 @@
 #include "fheco/trs/subst.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -24,15 +25,17 @@ class TRS
 public:
   TRS(std::shared_ptr<ir::Func> func) : func_{func}, ruleset_{std::move(func), "void", Ruleset::RulesByRootOp{}} {}
 
-  TRS(std::shared_ptr<ir::Func> func, Ruleset ruleset) : func_{std::move(func)}, ruleset_{std::move(ruleset)} {}
+  TRS(Ruleset ruleset) : func_{ruleset.func()}, ruleset_{std::move(ruleset)} {}
 
-  bool run(RewriteHeuristic heuristic, std::int64_t max_iter, bool global_analysis, bool rewrite_created_sub_terms);
+  bool run(
+    RewriteHeuristic heuristic, std::int64_t max_iter = std::numeric_limits<std::int64_t>::max(),
+    bool rewrite_created_sub_terms = true, bool global_analysis = false);
 
   bool apply_rule(ir::Term *term, const Rule &rule);
 
   bool rewrite_term(
-    std::size_t id, RewriteHeuristic heuristic, std::int64_t &max_iter, bool global_analysis,
-    bool rewrite_created_sub_terms);
+    std::size_t id, RewriteHeuristic heuristic, std::int64_t &max_iter, bool rewrite_created_sub_terms,
+    bool global_analysis);
 
   inline const Ruleset &ruleset() const { return ruleset_; }
 

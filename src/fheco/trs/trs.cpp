@@ -17,15 +17,20 @@ using namespace std;
 
 namespace fheco::trs
 {
-bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool global_analysis, bool rewrite_created_sub_terms)
+bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created_sub_terms, bool global_analysis)
 {
+  util::ExprPrinter expr_printer{func_};
+  expr_printer.make_terms_str_expr();
+  clog << "RI initiale, ";
+  expr_printer.print_outputs_str_expr(clog);
+
   int64_t iter = max_iter;
   bool did_rewrite = false;
   switch (heuristic)
   {
   case RewriteHeuristic::bottom_up:
     for (auto id : func_->get_top_sorted_terms_ids())
-      did_rewrite = rewrite_term(id, RewriteHeuristic::bottom_up, iter, global_analysis, rewrite_created_sub_terms);
+      did_rewrite = rewrite_term(id, RewriteHeuristic::bottom_up, iter, rewrite_created_sub_terms, global_analysis);
 
     break;
 
@@ -33,7 +38,7 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool global_analysis
   {
     const auto &sorted_terms_ids = func_->get_top_sorted_terms_ids();
     for (auto id_it = sorted_terms_ids.crbegin(); id_it != sorted_terms_ids.crend(); ++id_it)
-      did_rewrite = rewrite_term(*id_it, RewriteHeuristic::top_down, iter, global_analysis, rewrite_created_sub_terms);
+      did_rewrite = rewrite_term(*id_it, RewriteHeuristic::top_down, iter, rewrite_created_sub_terms, global_analysis);
 
     break;
   }
@@ -41,6 +46,13 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool global_analysis
   default:
     throw logic_error("unhandled RewriteHeuristic");
   }
+
+  clog << '\n';
+  expr_printer.make_terms_str_expr();
+  clog << "RI finale, ";
+  expr_printer.print_outputs_str_expr(clog);
+  clog << '\n';
+
   clog << max_iter - iter << " tentatives de réécriture\n";
   return did_rewrite;
 }
@@ -65,7 +77,7 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
 }
 
 bool TRS::rewrite_term(
-  size_t id, RewriteHeuristic heuristic, int64_t &max_iter, bool global_analysis, bool rewrite_created_sub_terms)
+  size_t id, RewriteHeuristic heuristic, int64_t &max_iter, bool rewrite_created_sub_terms, bool global_analysis)
 {
   util::ExprPrinter expr_printer{func_};
   bool did_rewrite = false;

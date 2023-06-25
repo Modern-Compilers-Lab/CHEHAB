@@ -40,9 +40,9 @@ public:
 
   static std::string make_op_gen_matcher_str_expr(const trs::OpGenMatcher &op_gen_matcher, Mode mode = Mode::infix);
 
-  ExprPrinter(std::shared_ptr<ir::Func> func) : func_{move(func)} {}
+  ExprPrinter(std::shared_ptr<ir::Func> func) : func_{std::move(func)}, mode_{Mode::none} {}
 
-  void make_terms_str_expr(Mode mode);
+  void make_terms_str_expr(Mode mode = Mode::infix);
 
   std::string expand_term_str_expr(const ir::Term *term, int depth = 3, Mode mode = Mode::infix_expl_paren) const;
 
@@ -68,7 +68,7 @@ private:
 
   TermsStrExpr terms_str_exprs_{};
 
-  Mode mode_ = Mode::none;
+  Mode mode_;
 };
 
 std::ostream &operator<<(std::ostream &os, const ExprPrinter::TermsStrExpr &terms_str_expr);
