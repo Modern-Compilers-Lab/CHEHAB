@@ -14,7 +14,7 @@ using namespace std;
 
 namespace fheco::util
 {
-void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool id_as_label, bool show_key, bool impose_operands_order)
+void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool show_key, bool impose_operands_order, bool id_as_label)
 {
   os << "digraph \"" << func->name() << "\" {\n";
   os << "graph [label=\"" << func->name() << R"(" labelloc="t"])" << '\n';
@@ -47,8 +47,8 @@ void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool id_as_label, bo
 }
 
 void draw_term(
-  const std::shared_ptr<ir::Func> &func, const ir::Term *term, int depth, ostream &os, bool id_as_label, bool show_key,
-  bool impose_operands_order)
+  const std::shared_ptr<ir::Func> &func, const ir::Term *term, int depth, ostream &os, bool show_key,
+  bool impose_operands_order, bool id_as_label)
 {
   os << "digraph \"" << term->id() << "\" {\n";
   os << "node [shape=circle width=1 margin=0]\n";

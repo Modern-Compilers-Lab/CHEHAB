@@ -14,12 +14,12 @@ class Term;
 namespace fheco::util
 {
 void draw_ir(
-  const std::shared_ptr<ir::Func> &func, std::ostream &os, bool id_as_label = false, bool show_key = false,
-  bool impose_operands_order = false);
+  const std::shared_ptr<ir::Func> &func, std::ostream &os, bool show_key = false, bool impose_operands_order = false,
+  bool id_as_label = false);
 
 void draw_term(
-  const std::shared_ptr<ir::Func> &func, const ir::Term *term, int depth, std::ostream &os, bool id_as_label = false,
-  bool show_key = false, bool impose_operands_order = false);
+  const std::shared_ptr<ir::Func> &func, const ir::Term *term, int depth, std::ostream &os, bool show_key = false,
+  bool impose_operands_order = false, bool id_as_label = false);
 
 void draw_rule(const trs::Rule &rule, std::ostream &os, bool show_key = false, bool impose_operands_order = false);
 
