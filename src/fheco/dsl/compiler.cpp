@@ -3,6 +3,7 @@
 #include "fheco/trs/trs.hpp"
 #include "fheco/passes/passes.hpp"
 #include "fheco/util/common.hpp"
+#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 #include <unordered_set>
@@ -25,11 +26,10 @@ bool Compiler::const_folding_enabled_ = true;
 bool Compiler::scalar_vector_shape_ = true;
 
 void Compiler::compile(
-  shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, int64_t max_iter,
-  bool rewrite_created_sub_terms, ostream &header_os, string_view header_name, ostream &source_os)
+  shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, ostream &header_os,
+  string_view header_name, ostream &source_os)
 {
-  // clog << "remove_dead_code\n";
-  // func->remove_dead_code();
+  int64_t max_iter = 800000;
 
   switch (ruleset)
   {
@@ -37,7 +37,7 @@ void Compiler::compile(
   {
     clog << "depth_trs\n";
     trs::TRS depth_trs{func, trs::Ruleset::depth_ruleset(func)};
-    depth_trs.run(rewrite_heuristic, max_iter, false, rewrite_created_sub_terms);
+    depth_trs.run(rewrite_heuristic, max_iter, false, true);
     break;
   }
 
@@ -45,7 +45,7 @@ void Compiler::compile(
   {
     clog << "ops_cost_trs\n";
     trs::TRS ops_cost_trs{func, trs::Ruleset::ops_cost_ruleset(func)};
-    ops_cost_trs.run(rewrite_heuristic, max_iter, false, rewrite_created_sub_terms);
+    ops_cost_trs.run(rewrite_heuristic, max_iter, false, true);
     break;
   }
 
@@ -53,7 +53,7 @@ void Compiler::compile(
   {
     clog << "joined_trs\n";
     trs::TRS joined_trs{func, trs::Ruleset::joined_ruleset(func)};
-    joined_trs.run(rewrite_heuristic, max_iter, false, rewrite_created_sub_terms);
+    joined_trs.run(rewrite_heuristic, max_iter, false, true);
     break;
   }
 
@@ -62,9 +62,12 @@ void Compiler::compile(
     break;
   }
 
-  // clog << "convert_scalar_mul_to_add\n";
-  // passes::convert_scalar_mul_to_add(func, 1 << 30);
+  gen_he_code(func, header_os, header_name, source_os);
+}
 
+void Compiler::gen_he_code(
+  const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name, std::ostream &source_os)
+{
   clog << "reduce_rotation_keys\n";
   unordered_set<int> rotation_steps_keys;
   rotation_steps_keys = passes::reduce_rotation_keys(func, 29);

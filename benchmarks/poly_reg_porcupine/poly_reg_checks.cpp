@@ -54,30 +54,19 @@ int main(int argc, char **argv)
   if (argc > 3)
     rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
 
-  int64_t max_iter = 1000;
-  if (argc > 4)
-    max_iter = stoull(argv[4]);
-
-  bool rewrite_created_sub_terms = true;
-  if (argc > 5)
-    rewrite_created_sub_terms = stoi(argv[5]);
-
   bool cse = true;
-  if (argc > 6)
-    cse = stoi(argv[6]);
+  if (argc > 4)
+    cse = stoi(argv[4]);
 
   bool cse_order_operands = true;
-  if (argc > 7)
-    cse_order_operands = stoi(argv[7]);
+  if (argc > 5)
+    cse_order_operands = stoi(argv[5]);
 
   bool const_folding = true;
-  if (argc > 8)
-    const_folding = stoi(argv[8]);
+  if (argc > 6)
+    const_folding = stoi(argv[6]);
 
   print_bool_arg(call_quantifier, "call_quantifier", clog);
-  clog << " ";
-  clog << ruleset << " " << rewrite_heuristic << " " << max_iter << " ";
-  print_bool_arg(rewrite_created_sub_terms, "rewrite_created_sub_terms", clog);
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
@@ -119,8 +108,7 @@ int main(int argc, char **argv)
   ofstream header_os(gen_path + ".hpp");
   ofstream source_os(gen_path + ".cpp");
 
-  Compiler::compile(
-    ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms, header_os, gen_name + ".hpp", source_os);
+  Compiler::compile(ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
 
   auto outputs = util::evaluate_on_clear(Compiler::active_func(), rand_inputs);
   if (outputs != Compiler::active_func()->data_flow().outputs_info())
