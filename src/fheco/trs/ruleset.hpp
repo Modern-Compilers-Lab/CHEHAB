@@ -32,6 +32,10 @@ public:
 
   static Ruleset toy_ruleset(std::shared_ptr<ir::Func> func);
 
+  static Ruleset incorrect_toy_ruleset(std::shared_ptr<ir::Func> func);
+
+  static Ruleset non_terminating_toy_ruleset(std::shared_ptr<ir::Func> func);
+
   static Ruleset depth_after_simplify_ruleset(std::shared_ptr<ir::Func> func);
 
   static Ruleset halide_adapted_ruleset(std::shared_ptr<ir::Func> func);

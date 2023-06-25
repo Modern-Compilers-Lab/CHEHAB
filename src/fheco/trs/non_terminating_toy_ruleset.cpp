@@ -8,7 +8,7 @@ using namespace std;
 
 namespace fheco::trs
 {
-Ruleset Ruleset::toy_ruleset(shared_ptr<ir::Func> func)
+Ruleset Ruleset::non_terminating_toy_ruleset(shared_ptr<ir::Func> func)
 {
   TermMatcher x{TermMatcherType::term, "x"};
   TermMatcher y{TermMatcherType::term, "y"};
@@ -16,9 +16,13 @@ Ruleset Ruleset::toy_ruleset(shared_ptr<ir::Func> func)
 
   TermMatcher zero{"zero", PackedVal(func->slot_count(), 0)};
 
-  vector<Rule> add_rules{
-    {"add_0-2", zero + x, x}, {"simplify-add-sub-1-1", (x - y) + y, x}, {"fact-add", x * y + x * z, x * (y + z)}};
+  vector<Rule> add_rules{{"add_0-2", zero + x, x}, {"fact-add", x * y + x * z, x * (y + z)}};
 
-  return Ruleset{func, "toy_ruleset", {{ir::OpCode::Type::add, move(add_rules)}}};
+  vector<Rule> mul_rules{{"dist-add", x * (y + z), x * y + x * z}};
+
+  return Ruleset{
+    func,
+    "non_terminating_toy_ruleset",
+    {{ir::OpCode::Type::add, move(add_rules)}, {ir::OpCode::Type::mul, move(mul_rules)}}};
 }
 } // namespace fheco::trs
