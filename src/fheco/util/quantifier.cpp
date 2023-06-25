@@ -246,7 +246,10 @@ void Quantifier::count_terms_classes()
         ++pp_ops_count_;
       }
 
-      circuit_static_cost_ += ir::evaluate_raw_op_code(term->op_code(), term->operands());
+      if (
+        term->op_code().type() != ir::OpCode::Type::encrypt && term->op_code().type() != ir::OpCode::Type::relin &&
+        term->op_code().type() != ir::OpCode::Type::mod_switch)
+        circuit_static_cost_ += ir::evaluate_raw_op_code(term->op_code(), term->operands());
     }
     else
     {
@@ -373,13 +376,10 @@ void Quantifier::compute_global_metrics(const param_select::EncryptionParams &pa
 void Quantifier::print_info(ostream &os, bool depth_details)
 {
   print_line_sep(os);
-  os << "global_metrics\n";
-  print_global_metrics(os);
-  print_line_sep(os);
-  os << "he_depth_info\n";
+  os << "métriques_profondeur\n";
   print_he_depth_info(os, depth_details);
   print_line_sep(os);
-  os << "terms_classes_info\n";
+  os << "métriques_classes_termes\n";
   print_terms_classes_info(os);
 }
 
@@ -387,17 +387,18 @@ void Quantifier::print_he_depth_info(ostream &os, bool details) const
 {
   if (!depth_metrics_)
   {
-    os << "depth_metrics not computed\n";
+    os << "métriques_profondeur non calculées\n";
     return;
   }
 
-  os << "ctxt_leaves_*: (xdepth, depth)\n";
-  os << "min: (" << he_depth_summary_.min_xdepth_ << ", " << he_depth_summary_.min_depth_ << ")\n";
-  os << "avg: (" << he_depth_summary_.avg_xdepth_ << ", " << he_depth_summary_.avg_depth_ << ")\n";
-  os << "max: (" << he_depth_summary_.max_xdepth_ << ", " << he_depth_summary_.max_depth_ << ")\n";
+  os << "feuilles_ctxt_*: (profondeur_mul, profondeur)\n";
+  os << "max : (" << he_depth_summary_.max_xdepth_ << ", " << he_depth_summary_.max_depth_ << ")\n";
+  os << "moy : (" << he_depth_summary_.avg_xdepth_ << ", " << he_depth_summary_.avg_depth_ << ")\n";
+  os << "min : (" << he_depth_summary_.min_xdepth_ << ", " << he_depth_summary_.min_depth_ << ")\n";
+
   if (details && ctxt_leaves_depth_info_.size())
   {
-    os << "depth per ctxt term, $id: (xdepth, depth)\n";
+    os << "profondeur par terme ctxt, $id : (profondeur_mul, profondeur)\n";
     os << ctxt_leaves_depth_info_;
   }
 }
@@ -406,90 +407,41 @@ void Quantifier::print_terms_classes_info(ostream &os) const
 {
   if (!terms_classes_metrics_)
   {
-    os << "terms_classes_metrics not computed\n";
+    os << "métriques_classes_termes non calculées\n";
     return;
   }
 
-  os << "circuit_static_cost: " << circuit_static_cost_ << '\n';
-  os << "all_terms: " << all_terms_count_ << '\n';
-  os << "captured_terms: " << captured_terms_count_ << " ("
-     << static_cast<double>(captured_terms_count_) / all_terms_count_ * 100 << "%)\n";
-  os << "ptxt_leaves: " << ptxt_leaves_count_ << '\n';
-  os << "ptxt_ptxt_ops: " << pp_ops_count_ << '\n';
-  os << "relin_keys: " << relin_keys_count_ << '\n';
-  os << "rotation_keys: " << rotation_keys_count_ << '\n';
-  os << "ctxt_leaves: " << ctxt_leaves_count_ << '\n';
-
+  os << "coût_opérations : " << circuit_static_cost_ << '\n';
+  os << "|mul| : " << cc_mul_count_ << '\n';
+  os << "|carre| : " << he_square_count_ << '\n';
+  os << "|rotation| : " << he_rotate_count_ << '\n';
+  os << "|mul_plain| : " << cp_mul_count_ << '\n';
+  os << "|he_add| : " << he_add_sub_negate_count_ << '\n';
   print_line_sep(os);
-
-  if (cc_mul_count_.size())
-  {
-    os << "ctxt_ctxt_mul (level, arg1_size, arg2_size): count\n" << cc_mul_count_;
-    print_line_sep(os);
-  }
-
-  if (he_square_count_.size())
-  {
-    os << "he_square (level, arg_size): count\n" << he_square_count_;
-    print_line_sep(os);
-  }
-
-  if (encrypt_count_)
-  {
-    os << "encrypt: " << encrypt_count_ << '\n';
-    print_line_sep(os);
-  }
-
-  if (relin_count_.size())
-  {
-    os << "relin (level, arg_size): count\n" << relin_count_;
-    print_line_sep(os);
-  }
-
-  if (he_rotate_count_.size())
-  {
-    os << "he_rotate (level, arg_size): count\n" << he_rotate_count_;
-    print_line_sep(os);
-  }
-
-  if (cp_mul_count_.size())
-  {
-    os << "ctxt_ptxt_mul (level, ctxt_arg_size): count\n" << cp_mul_count_;
-    print_line_sep(os);
-  }
-
-  if (mod_switch_count_.size())
-  {
-    os << "mod_switch (level, arg_size): count\n" << mod_switch_count_;
-    print_line_sep(os);
-  }
-
-  if (he_add_sub_negate_count_.size())
-  {
-    os << "he_add_sub_negate (level, max_args_size): count\n" << he_add_sub_negate_count_;
-    print_line_sep(os);
-  }
-
-  os << "ctxt_outputs_info, $id: (level, size)\n";
-  os << ctxt_output_terms_info_;
+  os << "|termes| : " << all_terms_count_ << '\n';
+  os << "|termes_capturés| : " << captured_terms_count_ << " ("
+     << static_cast<double>(captured_terms_count_) / all_terms_count_ * 100 << "%)\n";
+  os << "|ops_ptxt_ptxt| : " << pp_ops_count_ << '\n';
+  os << "|feuilles_ctxt| : " << ctxt_leaves_count_ << '\n';
+  os << "|feuilles_ptxt| : " << ptxt_leaves_count_ << '\n';
+  os << "|clés_rotation| : " << rotation_keys_count_ << '\n';
 }
 
 void Quantifier::print_global_metrics(ostream &os) const
 {
   if (!global_metrics_)
   {
-    os << "global_metrics not computed\n";
+    os << "métriques_globales non calculées\n";
     return;
   }
 
-  os << "circuit_cost: " << circuit_cost_ << '\n';
-  os << "rotation_keys_total_size_: " << rotation_keys_total_size_ / 1024.0 << " MB (" << rotation_keys_count_
-     << " keys)\n";
-  os << "relin_keys_total_size_: " << relin_keys_total_size_ / 1024.0 << " MB (" << relin_keys_count_ << " keys)\n";
-  os << "ctxt_input_terms_total_size_: " << ctxt_input_terms_total_size_ / 1024.0 << " MB (" << ctxt_input_terms_count_
-     << " ctxt input)\n";
-  os << "ctxt_output_terms_total_size_: " << ctxt_output_terms_total_size_ / 1024.0 << " MB ("
-     << ctxt_output_terms_info_.size() << " ctxt output)\n";
+  os << "coût_circuit : " << circuit_cost_ << '\n';
+  os << "taille_clés_rotation : " << rotation_keys_total_size_ / 1024.0 << " MB (" << rotation_keys_count_
+     << " clés)\n";
+  os << "taille_entrées_ctxt : " << ctxt_input_terms_total_size_ / 1024.0 << " MB (" << ctxt_input_terms_count_
+     << " entrées ctxt)\n";
+  os << "taille_sorties_ctxt : " << ctxt_output_terms_total_size_ / 1024.0 << " MB (" << ctxt_output_terms_info_.size()
+     << " sorties ctxt)\n";
 }
 
 size_t Quantifier::HashCCOpInfo::operator()(const CCOpInfo &cc_op_info) const
@@ -1072,7 +1024,7 @@ ostream &operator<<(ostream &os, const Quantifier &quantifier)
 ostream &operator<<(ostream &os, const Quantifier::CtxtTermsDepthInfo &ctxt_terms_depth_info)
 {
   for (const auto &e : ctxt_terms_depth_info)
-    os << '$' << e.first->id() << ": (" << e.second << ")\n";
+    os << '$' << e.first->id() << " : (" << e.second << ")\n";
   return os;
 }
 
@@ -1085,29 +1037,22 @@ ostream &operator<<(ostream &os, const Quantifier::CCOpCount &cc_op_count)
 {
   double total = 0;
   for (const auto &e : cc_op_count)
-  {
     total += e.second;
-    os << "(L-" << e.first.opposite_level_ << ", " << e.first.arg1_size_ << ", " << e.first.arg2_size_
-       << "): " << e.second << '\n';
-  }
-  return os << "total: " << total << '\n';
+  return os << total;
 }
 
 ostream &operator<<(ostream &os, const Quantifier::CAOpCount &ca_op_count)
 {
   double total = 0;
   for (const auto &e : ca_op_count)
-  {
     total += e.second;
-    os << "(L-" << e.first.opposite_level_ << ", " << e.first.arg_size_ << "): " << e.second << '\n';
-  }
-  return os << "total: " << total << '\n';
+  return os << total;
 }
 
 ostream &operator<<(ostream &os, const Quantifier::CtxtTermsInfo &ctxt_terms_info)
 {
   for (const auto &e : ctxt_terms_info)
-    os << '$' << e.first->id() << ": (" << e.second << ")\n";
+    os << '$' << e.first->id() << " : (" << e.second << ")\n";
   return os;
 }
 
