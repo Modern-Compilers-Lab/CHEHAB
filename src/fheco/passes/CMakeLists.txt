@@ -15,10 +15,10 @@ install(
     ${CMAKE_CURRENT_LIST_DIR}/passes.hpp
     ${CMAKE_CURRENT_LIST_DIR}/prepare_code_gen.hpp
     ${CMAKE_CURRENT_LIST_DIR}/reduce_rotation_keys.hpp
-    ${CMAKE_CURRENT_LIST_DIR}/scalar_mul_to_add.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/scalar_mul_to_add.hpp
 
     DESTINATION
-        ${FHECO_INCLUDES_INSTALL_DIR}/pass
+        ${FHECO_INCLUDES_INSTALL_DIR}/passes
 )
 
 set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES} PARENT_SCOPE)
