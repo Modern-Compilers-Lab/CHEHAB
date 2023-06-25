@@ -6,6 +6,7 @@
 #include "fheco/trs/fold_op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
 #include "fheco/trs/trs.hpp"
+#include "fheco/util/expr_printer.hpp"
 #include <iostream>
 #include <stack>
 #include <stdexcept>
@@ -40,7 +41,7 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool global_analysis
   default:
     throw logic_error("unhandled RewriteHeuristic");
   }
-  clog << "performed " << max_iter - iter << " iter\n";
+  clog << max_iter - iter << " tentatives de réécriture\n";
   return did_rewrite;
 }
 
@@ -66,6 +67,7 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
 bool TRS::rewrite_term(
   size_t id, RewriteHeuristic heuristic, int64_t &max_iter, bool global_analysis, bool rewrite_created_sub_terms)
 {
+  util::ExprPrinter expr_printer{func_};
   bool did_rewrite = false;
   stack<size_t> call_stack;
   call_stack.push(id);
@@ -81,18 +83,33 @@ bool TRS::rewrite_term(
     if (top_term->is_leaf())
       continue;
 
+    auto top_term_str_expr = expr_printer.expand_term_str_expr(top_term);
+    clog << "\nréécriture du terme \"" << top_term_str_expr << "\"\n";
+
     for (const auto &rule : ruleset_.pick_rules(top_term->op_code().type()))
     {
+      clog << "essayant la règle \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\", ";
       Subst subst;
       int64_t rel_cost = 0;
       ir::Term::PtrSet to_delete;
       bool matched = match(rule.lhs(), top_term, subst, global_analysis, rel_cost, to_delete);
 
       if (!matched)
+      {
+        clog << "échec de la mise en correspondance\n";
         continue;
+      }
+
+      clog << "substitution trouvée :\n";
+      clog << "σ = ";
+      pprint_substitution(func_, subst, clog);
+      clog << '\n';
 
       if (!rule.check_cond(subst))
+      {
+        clog << "condition non satisfaite\n";
         continue;
+      }
 
       vector<size_t> created_terms_ids;
       auto equiv_term =
@@ -100,6 +117,9 @@ bool TRS::rewrite_term(
 
       if (!global_analysis || rel_cost <= 0)
       {
+        clog << "remplacer le terme \"" << top_term_str_expr << "\" par \""
+             << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
+
         func_->replace_term_with(top_term, equiv_term);
         did_rewrite = true;
 

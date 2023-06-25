@@ -1,5 +1,7 @@
+#include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
 #include "fheco/trs/subst.hpp"
+#include "fheco/util/expr_printer.hpp"
 #include <stdexcept>
 #include <utility>
 
@@ -40,6 +42,38 @@ int Subst::get(const OpGenMatcher &op_gen_matcher) const
     return it->second;
 
   throw invalid_argument("substitution for op_gen_matcher not provided");
+}
+
+void pprint_substitution(const shared_ptr<ir::Func> &func, const Subst &subst, ostream &os)
+{
+  util::ExprPrinter expr_printer{func};
+  os << "{";
+  const auto &terms_matching = subst.terms_matching();
+  for (auto it = terms_matching.cbegin(); it != terms_matching.cend();)
+  {
+    const auto &v = *it;
+    os << *v.first.label() << ": " << expr_printer.expand_term_str_expr(v.second);
+    ++it;
+    if (it != terms_matching.cend())
+      os << ", ";
+    else
+      break;
+  }
+
+  const auto &op_gen_matching = subst.op_gen_matching();
+  if (op_gen_matching.size())
+    os << ", ";
+  for (auto it = op_gen_matching.cbegin(); it != op_gen_matching.cend();)
+  {
+    const auto &v = *it;
+    os << *v.first.label() << ": " << util::ExprPrinter::make_op_gen_matcher_str_expr(v.second);
+    ++it;
+    if (it != op_gen_matching.cend())
+      os << ", ";
+    else
+      break;
+  }
+  os << "}";
 }
 
 ostream &operator<<(ostream &os, const Subst &subst)

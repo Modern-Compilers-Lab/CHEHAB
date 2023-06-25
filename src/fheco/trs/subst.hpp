@@ -2,11 +2,13 @@
 
 #include "fheco/trs/op_gen_matcher.hpp"
 #include "fheco/trs/term_matcher.hpp"
+#include <memory>
 #include <ostream>
 #include <unordered_map>
 
 namespace fheco::ir
 {
+class Func;
 class Term;
 } // namespace fheco::ir
 
@@ -34,6 +36,8 @@ private:
 
   std::unordered_map<OpGenMatcher, int> op_gen_matching_{};
 };
+
+void pprint_substitution(const std::shared_ptr<ir::Func> &func, const Subst &subst, std::ostream &os);
 
 std::ostream &operator<<(std::ostream &os, const Subst &subst);
 } // namespace fheco::trs

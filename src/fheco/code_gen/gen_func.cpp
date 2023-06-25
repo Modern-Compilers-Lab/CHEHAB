@@ -1,6 +1,7 @@
 #include "fheco/code_gen/constants.hpp"
 #include "fheco/code_gen/gen_func.hpp"
 #include "fheco/ir/func.hpp"
+#include "fheco/passes/prepare_code_gen.hpp"
 #include <algorithm>
 #include <iterator>
 
@@ -12,6 +13,7 @@ void gen_func(
   const shared_ptr<ir::Func> &func, const unordered_set<int> &rotataion_steps, ostream &header_os,
   string_view header_name, ostream &source_os)
 {
+  passes::prepare_code_gen(func);
   header_os << header_includes;
   header_os << '\n';
   gen_func_decl(func->name(), header_os);

@@ -35,7 +35,7 @@ void Compiler::compile(
   {
   case Ruleset::depth:
   {
-    clog << "depth_trs\n";
+    clog << "trs_" << ruleset << '\n';
     trs::TRS depth_trs{func, trs::Ruleset::depth_ruleset(func)};
     depth_trs.run(rewrite_heuristic, max_iter, false, true);
     break;
@@ -43,7 +43,7 @@ void Compiler::compile(
 
   case Ruleset::ops_cost:
   {
-    clog << "ops_cost_trs\n";
+    clog << "trs_" << ruleset << '\n';
     trs::TRS ops_cost_trs{func, trs::Ruleset::ops_cost_ruleset(func)};
     ops_cost_trs.run(rewrite_heuristic, max_iter, false, true);
     break;
@@ -51,7 +51,7 @@ void Compiler::compile(
 
   case Ruleset::joined:
   {
-    clog << "joined_trs\n";
+    clog << "trs_" << ruleset << '\n';
     trs::TRS joined_trs{func, trs::Ruleset::joined_ruleset(func)};
     joined_trs.run(rewrite_heuristic, max_iter, false, true);
     break;
@@ -68,17 +68,14 @@ void Compiler::compile(
 void Compiler::gen_he_code(
   const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name, std::ostream &source_os)
 {
-  clog << "reduce_rotation_keys\n";
+  clog << "\nréduction_clés_rotation\n";
   unordered_set<int> rotation_steps_keys;
   rotation_steps_keys = passes::reduce_rotation_keys(func, 29);
 
-  clog << "insert_relin_ops\n";
+  clog << "\ninsertion_relin\n";
   size_t relin_keys_count = passes::relin_after_each_mul(func);
 
-  clog << "prepare_code_gen\n";
-  passes::prepare_code_gen(func);
-
-  clog << "gen_func\n";
+  clog << "\ngénération_code\n";
   code_gen::gen_func(func, rotation_steps_keys, header_os, header_name, source_os);
 }
 
@@ -118,15 +115,15 @@ ostream &operator<<(ostream &os, Compiler::Ruleset ruleset)
   switch (ruleset)
   {
   case Compiler::Ruleset::depth:
-    os << "depth";
+    os << "profondeur";
     break;
 
   case Compiler::Ruleset::ops_cost:
-    os << "ops_cost";
+    os << "coût_opérations";
     break;
 
   case Compiler::Ruleset::joined:
-    os << "joined";
+    os << "combinée";
     break;
 
   default:

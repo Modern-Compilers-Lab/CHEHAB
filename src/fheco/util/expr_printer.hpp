@@ -36,15 +36,15 @@ public:
   static std::string make_rule_str_repr(
     const trs::Rule &rule, bool show_label = false, Mode mode = Mode::infix_expl_paren);
 
-  static std::string make_term_matcher_str_expr(const trs::TermMatcher &term_matcher, Mode mode);
+  static std::string make_term_matcher_str_expr(const trs::TermMatcher &term_matcher, Mode mode = Mode::infix);
 
-  static std::string make_op_gen_matcher_str_expr(const trs::OpGenMatcher &op_gen_matcher, Mode mode);
+  static std::string make_op_gen_matcher_str_expr(const trs::OpGenMatcher &op_gen_matcher, Mode mode = Mode::infix);
 
   ExprPrinter(std::shared_ptr<ir::Func> func) : func_{move(func)} {}
 
   void make_terms_str_expr(Mode mode);
 
-  std::string expand_term_str_expr(const ir::Term *term, int depth, Mode mode = Mode::infix_expl_paren) const;
+  std::string expand_term_str_expr(const ir::Term *term, int depth = 3, Mode mode = Mode::infix_expl_paren) const;
 
   void print_outputs_str_expr(std::ostream &os) const;
 
