@@ -51,9 +51,14 @@ void Quantifier::compute_he_depth_info()
         continue;
       }
       double operands_xdepth = top_ctxt_info.xdepth_;
-      double operands_depth = top_ctxt_info.depth_ + 1;
       if (top_term->op_code().type() == ir::OpCode::Type::mul || top_term->op_code().type() == ir::OpCode::Type::square)
         ++operands_xdepth;
+      double operands_depth = top_ctxt_info.depth_;
+      if (
+        top_term->op_code().type() != ir::OpCode::Type::mod_switch ||
+        top_term->op_code().type() != ir::OpCode::Type::relin)
+        ++operands_depth;
+
       for (const auto operand : top_term->operands())
       {
         if (operand->type() == ir::Term::Type::cipher)
