@@ -26,7 +26,8 @@ struct ClearArgInfo
 
 using clear_args_info_map = std::unordered_map<std::string, ClearArgInfo>;
 
-void parse_inputs_outputs_file(std::istream &is, clear_args_info_map &inputs, clear_args_info_map &outputs);
+void parse_inputs_outputs_file(
+  const seal::Modulus &plain_modulus, std::istream &is, clear_args_info_map &inputs, clear_args_info_map &outputs);
 
 void prepare_he_inputs(
   const seal::BatchEncoder &encoder, const seal::Encryptor &encryptor, const clear_args_info_map &clear_inputs,

@@ -5,7 +5,8 @@
 using namespace std;
 using namespace seal;
 
-void parse_inputs_outputs_file(istream &is, clear_args_info_map &inputs, clear_args_info_map &outputs)
+void parse_inputs_outputs_file(
+  const Modulus &plain_modulus, istream &is, clear_args_info_map &inputs, clear_args_info_map &outputs)
 {
   is >> boolalpha;
 
@@ -52,34 +53,30 @@ void parse_inputs_outputs_file(istream &is, clear_args_info_map &inputs, clear_a
   for (size_t i = 0; i < nb_outputs; ++i)
   {
     string var_name;
-    bool is_cipher, is_signed;
-    if (!(is >> var_name >> is_cipher >> is_signed))
+    bool is_cipher;
+    if (!(is >> var_name >> is_cipher))
       throw invalid_argument("could not parse output information");
 
-    if (is_signed)
+    vector<uint64_t> var_value(vector_size);
+    for (size_t j = 0; j < vector_size; ++j)
     {
-      vector<int64_t> var_value(vector_size);
-      for (size_t j = 0; j < vector_size; ++j)
+      int64_t slot_value;
+      if (!(is >> slot_value))
+        throw invalid_argument("could not parse input slot");
+
+      auto signed_plain_modulus = static_cast<int64_t>(plain_modulus.value());
+      if (slot_value >= signed_plain_modulus)
+        slot_value %= signed_plain_modulus;
+      else if (slot_value < 0)
       {
-        if (!(is >> var_value[j]))
-          throw invalid_argument("could not parse input slot");
+        slot_value %= signed_plain_modulus;
+        slot_value += signed_plain_modulus;
       }
-      auto [output_it, inserted] = outputs.insert({var_name, {var_value, is_cipher, true}});
-      if (!inserted)
-        throw logic_error("repeated output");
+      var_value[j] = static_cast<uint64_t>(slot_value);
     }
-    else
-    {
-      vector<uint64_t> var_value(vector_size);
-      for (size_t j = 0; j < vector_size; ++j)
-      {
-        if (!(is >> var_value[j]))
-          throw invalid_argument("could not parse output slot");
-      }
-      auto [output_it, inserted] = outputs.insert({var_name, {var_value, is_cipher, false}});
-      if (!inserted)
-        throw logic_error("repeated output");
-    }
+    auto [output_it, inserted] = outputs.insert({var_name, {var_value, is_cipher, true}});
+    if (!inserted)
+      throw logic_error("repeated output");
   }
 }
 

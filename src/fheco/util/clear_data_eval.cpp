@@ -1,6 +1,7 @@
 #include "fheco/util/clear_data_eval.hpp"
 #include "fheco/util/common.hpp"
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
 
@@ -90,14 +91,11 @@ void ClearDataEval::reduce(PackedVal &packed_val) const
     {
       for (auto it = packed_val.cbegin(); it != packed_val.cend(); ++it)
       {
-        if (*it >= modulus_)
-          cerr << "detected signed overflow\n";
-        else if (*it > modulus_ >> 1 && *it < modulus_)
-          cerr << "possible signed overflow later in the homomorphic evaluation\n";
-        else if (*it < -modulus_ >> 1 && *it > -modulus_)
-          cerr << "possible signed underflow later in the homomorphic evaluation\n";
-        else if (*it <= -modulus_)
-          cerr << "detected signed underflow\n";
+        auto val = *it;
+        if (val > modulus_ >> 1)
+          cerr << "detected signed overflow in FHE computation\n";
+        else if (val + modulus_ < modulus_ >> 1)
+          cerr << "detected signed underflow in FHE computation\n";
       }
     }
     // !signedness_
@@ -105,7 +103,8 @@ void ClearDataEval::reduce(PackedVal &packed_val) const
     {
       for (auto it = packed_val.cbegin(); it != packed_val.cend(); ++it)
       {
-        if (*it >= modulus_ || *it < 0)
+        auto val = *it;
+        if (val >= modulus_ || val < 0)
           cerr << "possible manipulation of multiple equivalent values as different\n";
       }
     }
@@ -115,12 +114,23 @@ void ClearDataEval::reduce(PackedVal &packed_val) const
   {
     for (auto it = packed_val.begin(); it != packed_val.end(); ++it)
     {
-      if (*it >= modulus_)
-        *it %= modulus_;
-      else if (*it < 0)
+      auto &val = *it;
+      if (signedness_)
       {
-        *it %= modulus_;
-        *it += modulus_;
+        if (val > modulus_ >> 1)
+          throw logic_error("detected signed overflow in FHE computation\n");
+        else if (val + modulus_ < modulus_ >> 1)
+          throw logic_error("detected signed underflow in FHE computation\n");
+      }
+      else
+      {
+        if (val >= modulus_)
+          val %= modulus_;
+        else if (val < 0)
+        {
+          val %= modulus_;
+          val += modulus_;
+        }
       }
     }
   }

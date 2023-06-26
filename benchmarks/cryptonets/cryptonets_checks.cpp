@@ -180,7 +180,7 @@ int main(int argc, char **argv)
   chrono::duration<double, milli> time_sum(0);
   time_start = chrono::high_resolution_clock::now();
   string func_name = "cryptonets";
-  Compiler::create_func(func_name, 8192, false, 65537, true, false);
+  Compiler::create_func(func_name, 8192, 17, true, false);
 
   cryptonets(
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},

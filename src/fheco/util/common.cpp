@@ -44,8 +44,7 @@ void print_io_terms_values(const shared_ptr<ir::Func> &func, ostream &os)
   for (const auto &output_info : func->data_flow().outputs_info())
   {
     auto output_term = output_info.first;
-    os << output_info.second.label_ << " " << (output_term->type() == ir::Term::Type::cipher) << " "
-       << (func->clear_data_evaluator().signedness() && func->clear_data_evaluator().delayed_reduction());
+    os << output_info.second.label_ << " " << (output_term->type() == ir::Term::Type::cipher);
     if (output_info.second.example_val_)
       os << " " << *output_info.second.example_val_;
     os << '\n';
@@ -81,8 +80,7 @@ void print_io_terms_values(
         output_info_it == func->data_flow().outputs_info().end())
       throw invalid_argument("invalid output");
 
-    os << output_info.second.label_ << " " << (output_term->type() == ir::Term::Type::cipher) << " "
-       << (func->clear_data_evaluator().signedness() && func->clear_data_evaluator().delayed_reduction());
+    os << output_info.second.label_ << " " << (output_term->type() == ir::Term::Type::cipher);
     if (output_info.second.example_val_)
       os << " " << *output_info.second.example_val_;
     os << '\n';

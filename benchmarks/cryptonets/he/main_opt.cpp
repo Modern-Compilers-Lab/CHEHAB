@@ -16,12 +16,11 @@ int main(int argc, char **argv)
   if (!is)
     throw invalid_argument("failed to open file");
 
-  parse_inputs_outputs_file(is, clear_inputs, clear_outputs);
-
   EncryptionParameters params(scheme_type::bfv);
   size_t n = 8192;
   params.set_poly_modulus_degree(n);
   params.set_plain_modulus(65537);
+  parse_inputs_outputs_file(params.plain_modulus(), is, clear_inputs, clear_outputs);
   params.set_coeff_modulus(CoeffModulus::BFVDefault(n));
   SEALContext context(params, false, sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
