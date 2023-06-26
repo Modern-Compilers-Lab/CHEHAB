@@ -14,15 +14,15 @@ using EncodedArgs = std::unordered_map<std::string, seal::Plaintext>;
 
 struct ClearArgInfo
 {
-  std::variant<std::vector<std::int64_t>, std::vector<std::uint64_t>> value;
-  bool is_cipher;
-  bool is_signed;
-
-  inline bool operator==(const ClearArgInfo &e) const
-  {
-    return (is_cipher == e.is_cipher) && (is_signed == e.is_signed) && (value == e.value);
-  }
+  std::variant<std::vector<std::int64_t>, std::vector<std::uint64_t>> value_;
+  bool is_cipher_;
+  bool is_signed_;
 };
+
+inline bool operator==(const ClearArgInfo &lhs, const ClearArgInfo &rhs)
+{
+  return lhs.value_ == rhs.value_;
+}
 
 using ClearArgsInfo = std::unordered_map<std::string, ClearArgInfo>;
 
