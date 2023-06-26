@@ -44,7 +44,7 @@ public:
 
   void make_terms_str_expr(Mode mode = Mode::infix);
 
-  std::string expand_outputs_str_expr(std::ostream &os, int depth = 3, Mode mode = Mode::infix_expl_paren) const;
+  void print_expand_outputs_str_expr(std::ostream &os, int depth = 3, Mode mode = Mode::infix_expl_paren) const;
 
   std::string expand_term_str_expr(const ir::Term *term, int depth = 3, Mode mode = Mode::infix_expl_paren) const;
 

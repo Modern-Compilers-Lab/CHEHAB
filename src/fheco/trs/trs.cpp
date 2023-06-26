@@ -21,7 +21,7 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created
 {
   util::ExprPrinter expr_printer{func_};
   clog << "RI initiale, ";
-  expr_printer.expand_outputs_str_expr(clog);
+  expr_printer.print_expand_outputs_str_expr(clog);
 
   int64_t iter = max_iter;
   bool did_rewrite = false;
@@ -48,7 +48,7 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created
 
   clog << '\n';
   clog << "RI finale, ";
-  expr_printer.expand_outputs_str_expr(clog);
+  expr_printer.print_expand_outputs_str_expr(clog);
   clog << '\n';
 
   clog << max_iter - iter << " tentatives de réécriture\n";
