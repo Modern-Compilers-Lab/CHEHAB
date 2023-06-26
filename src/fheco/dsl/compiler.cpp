@@ -70,7 +70,7 @@ void Compiler::gen_he_code(
   rotation_steps_keys = passes::reduce_rotation_keys(func, 29);
 
   clog << "\ninsertion_relin\n";
-  size_t relin_keys_count = passes::relin_after_each_mul(func);
+  size_t relin_keys_count = passes::relin_after_ctxt_ctxt_mul(func);
 
   clog << "\ngénération_code\n";
   code_gen::gen_func(func, rotation_steps_keys, header_os, header_name, source_os);

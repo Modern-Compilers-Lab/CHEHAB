@@ -1,6 +1,5 @@
 #include "fheco/ir/func.hpp"
-#include "fheco/trs/ops_overloads.hpp"
-#include "fheco/trs/trs.hpp"
+#include "fheco/ir/term.hpp"
 #include "fheco/passes/insert_relin.hpp"
 #include <algorithm>
 #include <stdexcept>
@@ -59,7 +58,7 @@ size_t lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_t
           size_t i = 0;
           while (ctxt_result_size > ctxt_size_threshold)
           {
-            ir::Term *relin_operand = func->insert_op_term(ir::OpCode::relin, {ctxt_terms_with_size[i].first});
+            auto relin_operand = func->insert_op_term(ir::OpCode::relin, {ctxt_terms_with_size[i].first});
             keys_count = max(keys_count, ctxt_terms_with_size[i].second - 2);
             func->replace_term_with(ctxt_terms_with_size[i].first, relin_operand);
             ctxt_terms_sizes.erase(ctxt_terms_with_size[i].first);
@@ -84,27 +83,21 @@ size_t lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_t
   return keys_count;
 }
 
-size_t relin_after_each_mul(const shared_ptr<ir::Func> &func)
+size_t relin_after_ctxt_ctxt_mul(const shared_ptr<ir::Func> &func)
 {
-  trs::TermMatcher c_x{trs::TermMatcherType::cipher, "ctxt_x"};
-  trs::TermMatcher c_y{trs::TermMatcherType::cipher, "ctxt_y"};
-
-  vector<trs::Rule> relin_rules{
-    {"relin-mul", c_x * c_y, relin(c_x * c_y)}, {"relin-square", square(c_x), relin(square(c_x))}};
-
-  trs::TRS trs{func};
   for (auto id : func->get_top_sorted_terms_ids())
   {
     auto term = func->data_flow().get_term(id);
     if (!term)
       continue;
 
-    for (const auto &rule : relin_rules)
+    if (is_ctxt_ctxt_mul(term))
     {
-      if (trs.apply_rule(term, rule))
-        break;
+      auto relin_term = func->insert_op_term(ir::OpCode::relin, {term});
+      func->replace_term_with(term, relin_term);
     }
   }
+
   return 1;
 }
 
@@ -160,5 +153,29 @@ size_t get_ctxt_result_size(ir::OpCode::Type op_code_type, const vector<size_t> 
   default:
     throw invalid_argument("unhandled get ctxt size for operation");
   }
+}
+
+bool is_ctxt_ctxt_mul(const ir::Term *term)
+{
+  if (term->op_code().type() == ir::OpCode::Type::mul)
+  {
+    auto arg1 = term->operands()[0];
+    auto arg2 = term->operands()[1];
+    if (arg1->type() == ir::Term::Type::cipher && arg2->type() == ir::Term::Type::cipher)
+      return true;
+
+    return false;
+  }
+
+  if (term->op_code().type() == ir::OpCode::Type::square)
+  {
+    auto arg = term->operands()[0];
+    if (arg->type() == ir::Term::Type::cipher)
+      return true;
+
+    return false;
+  }
+
+  return false;
 }
 } // namespace fheco::passes
