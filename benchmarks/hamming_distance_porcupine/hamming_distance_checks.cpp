@@ -96,10 +96,19 @@ int main(int argc, char **argv)
 
   hamming_distance_baseline();
 
-  ofstream init_ir_os(func_name + "_init_ir.dot");
-  util::draw_ir(Compiler::active_func(), init_ir_os);
+  util::Quantifier init_quantifier(func);
+  if (call_quantifier)
+  {
+    cout << "\ncaractéristiques du circuit initial\n";
+    init_quantifier.run_all_analysis();
+    init_quantifier.print_info(cout);
+    cout << endl;
+  }
 
-  const auto &rand_inputs = Compiler::active_func()->data_flow().inputs_info();
+  ofstream init_ir_os(func_name + "_init_ir.dot");
+  util::draw_ir(func, init_ir_os);
+
+  const auto &rand_inputs = func->data_flow().inputs_info();
 
   string gen_name = "gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
@@ -108,21 +117,26 @@ int main(int argc, char **argv)
 
   Compiler::compile(ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
 
-  auto outputs = util::evaluate_on_clear(Compiler::active_func(), rand_inputs);
-  if (outputs != Compiler::active_func()->data_flow().outputs_info())
+  auto outputs = util::evaluate_on_clear(func, rand_inputs);
+  if (outputs != func->data_flow().outputs_info())
     throw logic_error("compilation correctness-test failed");
 
   ofstream rand_example_os(func_name + "_rand_example.txt");
-  util::print_io_terms_values(Compiler::active_func(), rand_example_os);
+  util::print_io_terms_values(func, rand_example_os);
 
   ofstream final_ir_os(func_name + "_final_ir.dot");
-  util::draw_ir(Compiler::active_func(), final_ir_os);
+  util::draw_ir(func, final_ir_os);
 
   if (call_quantifier)
   {
-    util::Quantifier quantifier1(Compiler::active_func());
-    quantifier1.run_all_analysis();
-    quantifier1.print_info(cout);
+    cout << "\ncaractéristiques du circuit final\n";
+    util::Quantifier final_quantifier(func);
+    final_quantifier.run_all_analysis();
+    final_quantifier.print_info(cout);
+
+    cout << "\ntaux d'amélioration\n";
+    auto diff_quantifier = (init_quantifier - final_quantifier) / init_quantifier * 100;
+    diff_quantifier.print_info(cout);
   }
 
   return 0;

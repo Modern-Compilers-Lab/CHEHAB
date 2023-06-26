@@ -185,6 +185,7 @@ int main(int argc, char **argv)
     cout << "\ncaractéristiques du circuit initial\n";
     init_quantifier.run_all_analysis();
     init_quantifier.print_info(cout);
+    cout << endl;
   }
 
   ofstream init_ir_os(func_name + "_init_ir.dot");
