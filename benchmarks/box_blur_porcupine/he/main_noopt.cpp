@@ -11,7 +11,6 @@ using namespace seal;
 int main(int argc, char **argv)
 {
   string func_name = "box_blur";
-  clear_args_info_map clear_inputs, clear_outputs;
   ifstream is("../" + func_name + "_rand_example.txt");
   if (!is)
     throw invalid_argument("failed to open file");
@@ -20,6 +19,7 @@ int main(int argc, char **argv)
   size_t n = 4096;
   params.set_poly_modulus_degree(n);
   params.set_plain_modulus(seal::PlainModulus::Batching(n, 20));
+  ClearArgsInfo clear_inputs, clear_outputs;
   parse_inputs_outputs_file(params.plain_modulus(), is, clear_inputs, clear_outputs);
   params.set_coeff_modulus(seal::CoeffModulus::Create(n, {54, 55}));
   seal::SEALContext context(params, false, seal::sec_level_type::tc128);
@@ -36,11 +36,11 @@ int main(int argc, char **argv)
   Evaluator evaluator(context);
   Decryptor decryptor(context, secret_key);
 
-  encrypted_args_map encrypted_inputs;
-  encoded_args_map encoded_inputs;
+  EncryptedArgs encrypted_inputs;
+  EncodedArgs encoded_inputs;
   prepare_he_inputs(batch_encoder, encryptor, clear_inputs, encrypted_inputs, encoded_inputs);
-  encrypted_args_map encrypted_outputs;
-  encoded_args_map encoded_outputs;
+  EncryptedArgs encrypted_outputs;
+  EncodedArgs encoded_outputs;
 
   chrono::high_resolution_clock::time_point time_start, time_end;
   chrono::duration<double, milli> time_sum(0);
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
   time_end = chrono::high_resolution_clock::now();
   time_sum = time_end - time_start;
 
-  clear_args_info_map obtained_clear_outputs;
+  ClearArgsInfo obtained_clear_outputs;
   get_clear_outputs(
     batch_encoder, decryptor, encrypted_outputs, encoded_outputs, clear_outputs, obtained_clear_outputs);
   print_encrypted_outputs_info(context, decryptor, encrypted_outputs, clog);
