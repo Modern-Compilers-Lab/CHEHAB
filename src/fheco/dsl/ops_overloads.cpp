@@ -217,13 +217,12 @@ Ciphertext rotate(const Ciphertext &arg, int steps)
   if (arg.idx().size())
     throw invalid_argument("subscript read must be performed on const variables");
 
-  auto slot_count = static_cast<int64_t>(Compiler::active_func()->slot_count());
-  if (steps >= slot_count)
-    steps %= slot_count;
-  else if (steps < 0)
+  auto signed_slot_count = static_cast<int64_t>(Compiler::active_func()->slot_count());
+  if (steps >= signed_slot_count || steps < 0)
   {
-    steps %= slot_count;
-    steps += slot_count;
+    steps %= signed_slot_count;
+    if (steps < 0)
+      steps += signed_slot_count;
   }
   Ciphertext dest{};
   Compiler::active_func()->operate_unary(ir::OpCode::rotate(steps), arg, dest);
@@ -235,13 +234,12 @@ Plaintext rotate(const Plaintext &arg, int steps)
   if (arg.idx().size())
     throw invalid_argument("subscript read must be performed on const variables");
 
-  auto slot_count = static_cast<int64_t>(Compiler::active_func()->slot_count());
-  if (steps >= slot_count)
-    steps %= slot_count;
-  else if (steps < 0)
+  auto signed_slot_count = static_cast<int64_t>(Compiler::active_func()->slot_count());
+  if (steps >= signed_slot_count || steps < 0)
   {
-    steps %= slot_count;
-    steps += slot_count;
+    steps %= signed_slot_count;
+    if (steps < 0)
+      steps += signed_slot_count;
   }
   Plaintext dest{};
   Compiler::active_func()->operate_unary(ir::OpCode::rotate(steps), arg, dest);

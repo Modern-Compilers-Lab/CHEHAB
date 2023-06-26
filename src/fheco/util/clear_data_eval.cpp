@@ -124,12 +124,11 @@ void ClearDataEval::reduce(PackedVal &packed_val) const
       }
       else
       {
-        if (val >= modulus_)
-          val %= modulus_;
-        else if (val < 0)
+        if (val >= modulus_ || val < 0)
         {
           val %= modulus_;
-          val += modulus_;
+          if (val < 0)
+            val += modulus_;
         }
       }
     }
@@ -166,10 +165,13 @@ void ClearDataEval::negate(const PackedVal &arg, PackedVal &dest) const
 void ClearDataEval::rotate(const PackedVal &arg, int steps, PackedVal &dest) const
 {
   dest.resize(slot_count_);
-  int64_t slot_count = static_cast<int64_t>(slot_count_);
-  steps %= slot_count;
-  if (steps < 0)
-    steps += slot_count;
+  int64_t signed_slot_count = static_cast<int64_t>(slot_count_);
+  if (steps >= signed_slot_count || steps < 0)
+  {
+    steps %= signed_slot_count;
+    if (steps < 0)
+      steps += signed_slot_count;
+  }
   for (size_t i = 0; i < slot_count_; ++i)
     dest[i] = arg[(i + steps) % slot_count_];
 }
