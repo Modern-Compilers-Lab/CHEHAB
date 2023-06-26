@@ -5,8 +5,7 @@
 using namespace std;
 using namespace seal;
 
-void parse_inputs_outputs_file(
-  const Modulus &plain_modulus, istream &is, clear_args_info_map &inputs, clear_args_info_map &outputs)
+void parse_inputs_outputs_file(const Modulus &plain_modulus, istream &is, ClearArgsInfo &inputs, ClearArgsInfo &outputs)
 {
   is >> boolalpha;
 
@@ -31,7 +30,7 @@ void parse_inputs_outputs_file(
         if (!(is >> var_value[j]))
           throw invalid_argument("could not parse input slot");
       }
-      auto [input_it, inserted] = inputs.insert({var_name, {var_value, is_cipher, true}});
+      auto [input_it, inserted] = inputs.emplace(var_name, ClearArgInfo{var_value, is_cipher, true});
       if (!inserted)
         throw logic_error("repeated input");
     }
@@ -43,7 +42,7 @@ void parse_inputs_outputs_file(
         if (!(is >> var_value[j]))
           throw invalid_argument("could not parse input slot");
       }
-      auto [input_it, inserted] = inputs.insert({var_name, {var_value, is_cipher, false}});
+      auto [input_it, inserted] = inputs.emplace(var_name, ClearArgInfo{var_value, is_cipher, false});
       if (!inserted)
         throw logic_error("repeated input");
     }
@@ -74,15 +73,15 @@ void parse_inputs_outputs_file(
       }
       var_value[j] = static_cast<uint64_t>(slot_value);
     }
-    auto [output_it, inserted] = outputs.insert({var_name, {var_value, is_cipher, true}});
+    auto [output_it, inserted] = outputs.emplace(var_name, ClearArgInfo{var_value, is_cipher, false});
     if (!inserted)
       throw logic_error("repeated output");
   }
 }
 
 void prepare_he_inputs(
-  const BatchEncoder &encoder, const Encryptor &encryptor, const clear_args_info_map &clear_inputs,
-  encrypted_args_map &encrypted_inputs, encoded_args_map &encoded_inputs)
+  const BatchEncoder &encoder, const Encryptor &encryptor, const ClearArgsInfo &clear_inputs,
+  EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs)
 {
   for (const auto &clear_input : clear_inputs)
   {
@@ -108,13 +107,13 @@ void prepare_he_inputs(
     {
       Ciphertext encrypted_input;
       encryptor.encrypt(encoded_input, encrypted_input);
-      auto [encrypted_input_it, inserted] = encrypted_inputs.insert({clear_input.first, encrypted_input});
+      auto [encrypted_input_it, inserted] = encrypted_inputs.emplace(clear_input.first, encrypted_input);
       if (!inserted)
         throw logic_error("ciphertext input already there");
     }
     else
     {
-      auto [encoded_input_it, inserted] = encoded_inputs.insert({clear_input.first, encoded_input});
+      auto [encoded_input_it, inserted] = encoded_inputs.emplace(clear_input.first, encoded_input);
       if (!inserted)
         throw logic_error("plaintext input already there");
     }
@@ -122,9 +121,8 @@ void prepare_he_inputs(
 }
 
 void get_clear_outputs(
-  const BatchEncoder &encoder, Decryptor &decryptor, const encrypted_args_map &encrypted_outputs,
-  const encoded_args_map &encoded_outputs, const clear_args_info_map &ref_clear_outputs,
-  clear_args_info_map &clear_outputs)
+  const BatchEncoder &encoder, Decryptor &decryptor, const EncryptedArgs &encrypted_outputs,
+  const EncodedArgs &encoded_outputs, const ClearArgsInfo &ref_clear_outputs, ClearArgsInfo &clear_outputs)
 {
   for (const auto &encrypted_output : encrypted_outputs)
   {
@@ -139,7 +137,8 @@ void get_clear_outputs(
       vector<int64_t> clear_output;
       encoder.decode(encoded_output, clear_output);
       clear_output.resize(get<vector<int64_t>>(clear_output_info_it->second.value).size());
-      auto [clear_output_it, inserted] = clear_outputs.insert({encrypted_output.first, {clear_output, true, true}});
+      auto [clear_output_it, inserted] =
+        clear_outputs.emplace(encrypted_output.first, ClearArgInfo{clear_output, true, true});
       if (!inserted)
         throw invalid_argument("clear output already there");
     }
@@ -148,7 +147,8 @@ void get_clear_outputs(
       vector<uint64_t> clear_output;
       encoder.decode(encoded_output, clear_output);
       clear_output.resize(get<vector<uint64_t>>(clear_output_info_it->second.value).size());
-      auto [clear_output_it, inserted] = clear_outputs.insert({encrypted_output.first, {clear_output, true, false}});
+      auto [clear_output_it, inserted] =
+        clear_outputs.emplace(encrypted_output.first, ClearArgInfo{clear_output, true, false});
       if (!inserted)
         throw invalid_argument("clear output already there");
     }
@@ -165,7 +165,8 @@ void get_clear_outputs(
       vector<int64_t> clear_output;
       encoder.decode(encoded_output.second, clear_output);
       clear_output.resize(get<vector<int64_t>>(clear_output_info_it->second.value).size());
-      auto [clear_output_it, inserted] = clear_outputs.insert({encoded_output.first, {clear_output, true, true}});
+      auto [clear_output_it, inserted] =
+        clear_outputs.emplace(encoded_output.first, ClearArgInfo{clear_output, false, true});
       if (!inserted)
         throw invalid_argument("clear output already there");
     }
@@ -174,7 +175,8 @@ void get_clear_outputs(
       vector<uint64_t> clear_output;
       encoder.decode(encoded_output.second, clear_output);
       clear_output.resize(get<vector<uint64_t>>(clear_output_info_it->second.value).size());
-      auto [clear_output_it, inserted] = clear_outputs.insert({encoded_output.first, {clear_output, true, false}});
+      auto [clear_output_it, inserted] =
+        clear_outputs.emplace(encoded_output.first, ClearArgInfo{clear_output, false, false});
       if (!inserted)
         throw invalid_argument("clear output already there");
     }
@@ -182,7 +184,7 @@ void get_clear_outputs(
 }
 
 void print_encrypted_outputs_info(
-  const SEALContext &context, Decryptor &decryptor, const encrypted_args_map &encrypted_outputs, ostream &os)
+  const SEALContext &context, Decryptor &decryptor, const EncryptedArgs &encrypted_outputs, ostream &os)
 {
   int L = context.first_context_data()->parms().coeff_modulus().size();
   os << "output ciphertexts info (L=" << L - 1 << ")\n";
@@ -199,7 +201,7 @@ void print_encrypted_outputs_info(
   }
 }
 
-void print_variables_values(const clear_args_info_map &m, size_t print_size, ostream &os)
+void print_variables_values(const ClearArgsInfo &m, size_t print_size, ostream &os)
 {
   ios_base::fmtflags f(os.flags());
   os << boolalpha;
@@ -215,7 +217,7 @@ void print_variables_values(const clear_args_info_map &m, size_t print_size, ost
   os.flags(f);
 }
 
-void print_variables_values(const clear_args_info_map &m, ostream &os)
+void print_variables_values(const ClearArgsInfo &m, ostream &os)
 {
   ios_base::fmtflags f(os.flags());
   os << boolalpha;

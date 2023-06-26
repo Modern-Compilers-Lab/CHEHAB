@@ -9,14 +9,14 @@
 #include <vector>
 #include "seal/seal.h"
 
-using encrypted_args_map = std::unordered_map<std::string, seal::Ciphertext>;
-using encoded_args_map = std::unordered_map<std::string, seal::Plaintext>;
+using EncryptedArgs = std::unordered_map<std::string, seal::Ciphertext>;
+using EncodedArgs = std::unordered_map<std::string, seal::Plaintext>;
 
 struct ClearArgInfo
 {
   std::variant<std::vector<std::int64_t>, std::vector<std::uint64_t>> value;
-  bool is_cipher = false;
-  bool is_signed = true;
+  bool is_cipher;
+  bool is_signed;
 
   inline bool operator==(const ClearArgInfo &e) const
   {
@@ -24,27 +24,26 @@ struct ClearArgInfo
   }
 };
 
-using clear_args_info_map = std::unordered_map<std::string, ClearArgInfo>;
+using ClearArgsInfo = std::unordered_map<std::string, ClearArgInfo>;
 
 void parse_inputs_outputs_file(
-  const seal::Modulus &plain_modulus, std::istream &is, clear_args_info_map &inputs, clear_args_info_map &outputs);
+  const seal::Modulus &plain_modulus, std::istream &is, ClearArgsInfo &inputs, ClearArgsInfo &outputs);
 
 void prepare_he_inputs(
-  const seal::BatchEncoder &encoder, const seal::Encryptor &encryptor, const clear_args_info_map &clear_inputs,
-  encrypted_args_map &encrypted_inputs, encoded_args_map &encoded_inputs);
+  const seal::BatchEncoder &encoder, const seal::Encryptor &encryptor, const ClearArgsInfo &clear_inputs,
+  EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
 
 void get_clear_outputs(
-  const seal::BatchEncoder &encoder, seal::Decryptor &decryptor, const encrypted_args_map &encrypted_outputs,
-  const encoded_args_map &encoded_outputs, const clear_args_info_map &ref_clear_outputs,
-  clear_args_info_map &clear_outputs);
+  const seal::BatchEncoder &encoder, seal::Decryptor &decryptor, const EncryptedArgs &encrypted_outputs,
+  const EncodedArgs &encoded_outputs, const ClearArgsInfo &ref_clear_outputs, ClearArgsInfo &clear_outputs);
 
 void print_encrypted_outputs_info(
-  const seal::SEALContext &context, seal::Decryptor &decryptor, const encrypted_args_map &encrypted_outputs,
+  const seal::SEALContext &context, seal::Decryptor &decryptor, const EncryptedArgs &encrypted_outputs,
   std::ostream &os);
 
-void print_variables_values(const clear_args_info_map &m, std::size_t print_size, std::ostream &os);
+void print_variables_values(const ClearArgsInfo &m, std::size_t print_size, std::ostream &os);
 
-void print_variables_values(const clear_args_info_map &m, std::ostream &os);
+void print_variables_values(const ClearArgsInfo &m, std::ostream &os);
 
 template <typename T>
 inline void print_vector(const std::vector<T> &v, std::ostream &os, std::size_t print_size)
