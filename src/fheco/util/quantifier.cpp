@@ -424,8 +424,6 @@ void Quantifier::print_terms_classes_info(ostream &os) const
   os << "|he_add| : " << he_add_sub_negate_count_ << '\n';
   print_line_sep(os);
   os << "|termes| : " << all_terms_count_ << '\n';
-  os << "|termes_capturés| : " << captured_terms_count_ << " ("
-     << static_cast<double>(captured_terms_count_) / all_terms_count_ * 100 << "%)\n";
   os << "|ops_ptxt_ptxt| : " << pp_ops_count_ << '\n';
   os << "|feuilles_ctxt| : " << ctxt_leaves_count_ << '\n';
   os << "|feuilles_ptxt| : " << ptxt_leaves_count_ << '\n';
