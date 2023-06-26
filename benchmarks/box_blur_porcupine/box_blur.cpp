@@ -33,7 +33,7 @@ void box_blur_synthesized()
 
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
-  os << (arg ? name : "no_" + name);
+  os << (arg ? name : "non_" + name);
 }
 
 int main(int argc, char **argv)
@@ -54,34 +54,29 @@ int main(int argc, char **argv)
   if (argc > 4)
     cse = stoi(argv[4]);
 
-  bool cse_order_operands = true;
-  if (argc > 5)
-    cse_order_operands = stoi(argv[5]);
-
   bool const_folding = true;
-  if (argc > 6)
-    const_folding = stoi(argv[6]);
+  if (argc > 5)
+    const_folding = stoi(argv[5]);
 
-  print_bool_arg(call_quantifier, "call_quantifier", clog);
+  print_bool_arg(call_quantifier, "quantificateur", clog);
   clog << " ";
   clog << "trs_" << ruleset << " " << rewrite_heuristic;
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
-  print_bool_arg(cse_order_operands, "cse_order_operands", clog);
-  clog << " ";
   print_bool_arg(const_folding, "const_folding", clog);
   clog << '\n';
 
   if (cse)
+  {
     Compiler::enable_cse();
-  else
-    Compiler::disable_cse();
-
-  if (cse_order_operands)
     Compiler::enable_order_operands();
+  }
   else
+  {
+    Compiler::disable_cse();
     Compiler::disable_order_operands();
+  }
 
   if (const_folding)
     Compiler::enable_const_folding();
@@ -93,7 +88,7 @@ int main(int argc, char **argv)
   time_start = chrono::high_resolution_clock::now();
   string func_name = "box_blur";
   // Compiler::create_func(func_name, 13, 20, false, true);
-  Compiler::create_func(func_name, 16, 20, false, true);
+  const auto &func = Compiler::create_func(func_name, 16, 20, false, true);
 
   box_blur_baseline();
 
@@ -110,7 +105,7 @@ int main(int argc, char **argv)
 
   if (call_quantifier)
   {
-    util::Quantifier quantifier1(Compiler::active_func());
+    util::Quantifier quantifier1(func);
     quantifier1.run_all_analysis();
     cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().max_depth_ << " ";
     cout << quantifier1.circuit_static_cost() << '\n';

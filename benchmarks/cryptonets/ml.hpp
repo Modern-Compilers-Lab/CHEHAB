@@ -1,7 +1,6 @@
 #pragma once
 
 #include "fheco/fheco.hpp"
-#include <chrono>
 #include <cstddef>
 #include <iostream>
 #include <ostream>
@@ -73,12 +72,9 @@ inline std::vector<size_t> shape(const std::vector<T> &v)
 }
 
 template <class Tensor>
-inline void show_info(
-  const std::string &title, const std::chrono::high_resolution_clock::time_point &t, const Tensor &tensor,
-  const std::string &var_name)
+inline void show_info(const std::string &title, const Tensor &tensor, const std::string &var_name)
 {
-  std::chrono::duration<double, std::ratio<1>> elapsed = std::chrono::high_resolution_clock::now() - t;
-  std::cout << title << " (" << (elapsed.count()) << " s) " << var_name << " ";
+  std::cout << title << " " << var_name << " ";
   print_vector(shape(tensor), std::cout);
   std::cout << '\n';
 }

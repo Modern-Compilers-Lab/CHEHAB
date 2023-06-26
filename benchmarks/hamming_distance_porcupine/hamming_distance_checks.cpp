@@ -1,5 +1,4 @@
 #include "fheco/fheco.hpp"
-#include <chrono>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -42,7 +41,7 @@ void hamming_distance_synthesized()
 
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
-  os << (arg ? name : "no_" + name);
+  os << (arg ? name : "non_" + name);
 }
 
 int main(int argc, char **argv)
@@ -63,45 +62,37 @@ int main(int argc, char **argv)
   if (argc > 4)
     cse = stoi(argv[4]);
 
-  bool cse_order_operands = true;
-  if (argc > 5)
-    cse_order_operands = stoi(argv[5]);
-
   bool const_folding = true;
-  if (argc > 6)
-    const_folding = stoi(argv[6]);
+  if (argc > 5)
+    const_folding = stoi(argv[5]);
 
-  print_bool_arg(call_quantifier, "call_quantifier", clog);
+  print_bool_arg(call_quantifier, "quantificateur", clog);
   clog << " ";
   clog << "trs_" << ruleset << " " << rewrite_heuristic;
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
-  print_bool_arg(cse_order_operands, "cse_order_operands", clog);
-  clog << " ";
   print_bool_arg(const_folding, "const_folding", clog);
   clog << '\n';
 
   if (cse)
+  {
     Compiler::enable_cse();
-  else
-    Compiler::disable_cse();
-
-  if (cse_order_operands)
     Compiler::enable_order_operands();
+  }
   else
+  {
+    Compiler::disable_cse();
     Compiler::disable_order_operands();
+  }
 
   if (const_folding)
     Compiler::enable_const_folding();
   else
     Compiler::disable_const_folding();
 
-  chrono::high_resolution_clock::time_point time_start, time_end;
-  chrono::duration<double, milli> time_sum(0);
-  time_start = chrono::high_resolution_clock::now();
   string func_name = "hamming_distance";
-  Compiler::create_func(func_name, 1024, 16, true, false);
+  const auto &func = Compiler::create_func(func_name, 1024, 16, true, false);
 
   hamming_distance_baseline();
 
@@ -133,10 +124,6 @@ int main(int argc, char **argv)
     quantifier1.run_all_analysis();
     quantifier1.print_info(cout);
   }
-
-  time_end = chrono::high_resolution_clock::now();
-  time_sum = time_end - time_start;
-  cout << time_sum.count() << '\n';
 
   return 0;
 }

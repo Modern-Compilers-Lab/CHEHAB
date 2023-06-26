@@ -53,7 +53,6 @@ int main(int argc, char **argv)
   ClearArgsInfo obtained_clear_outputs;
   get_clear_outputs(
     batch_encoder, decryptor, encrypted_outputs, encoded_outputs, clear_outputs, obtained_clear_outputs);
-  print_encrypted_outputs_info(context, decryptor, encrypted_outputs, clog);
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 

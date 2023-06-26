@@ -12,29 +12,29 @@ vector<Ciphertext> predict(
   vector<size_t> conv_strides = {2, 2};
   vector<size_t> mean_pool_kernel_size = {2, 2};
 
-  chrono::high_resolution_clock::time_point t = chrono::high_resolution_clock::now();
   auto h1 = add(conv_2d(x, w1, conv_strides), b1);
+  show_info("convadd", h1, "h1");
 
-  t = chrono::high_resolution_clock::now();
   auto h2 = square(h1);
+  show_info("square", h2, "h2");
 
-  t = chrono::high_resolution_clock::now();
   auto h3 = scaled_mean_pool_2d(h2, mean_pool_kernel_size, mean_pool_kernel_size);
+  show_info("meanpool", h3, "h3");
 
-  t = chrono::high_resolution_clock::now();
   auto h4 = add(conv_2d(h3, w4, conv_strides), b4);
+  show_info("convadd", h4, "h4");
 
-  t = chrono::high_resolution_clock::now();
   auto h5 = scaled_mean_pool_2d(h4, mean_pool_kernel_size, mean_pool_kernel_size);
+  show_info("meanpool", h5, "h5");
 
-  t = chrono::high_resolution_clock::now();
   auto h6 = flatten(h5);
+  show_info("reshape", h6, "h6");
 
-  t = chrono::high_resolution_clock::now();
   auto h7 = square(h6);
+  show_info("square  ", h7, "h7");
 
-  t = chrono::high_resolution_clock::now();
   auto h8 = add(dot(h7, w8), b8);
+  show_info("dotadd  ", h8, "h8");
   return h8;
 }
 
