@@ -55,7 +55,7 @@ void Quantifier::compute_he_depth_info()
         ++operands_xdepth;
       double operands_depth = top_ctxt_info.depth_;
       if (
-        top_term->op_code().type() != ir::OpCode::Type::mod_switch ||
+        top_term->op_code().type() != ir::OpCode::Type::mod_switch &&
         top_term->op_code().type() != ir::OpCode::Type::relin)
         ++operands_depth;
 
