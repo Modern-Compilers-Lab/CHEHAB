@@ -73,6 +73,8 @@ int main(int argc, char **argv)
 
   print_bool_arg(call_quantifier, "call_quantifier", clog);
   clog << " ";
+  clog << "trs_" << ruleset << " " << rewrite_heuristic;
+  clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
   print_bool_arg(cse_order_operands, "cse_order_operands", clog);

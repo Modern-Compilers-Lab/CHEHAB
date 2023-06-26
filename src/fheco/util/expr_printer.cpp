@@ -270,6 +270,13 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
   }
 }
 
+string ExprPrinter::expand_outputs_str_expr(ostream &os, int depth, Mode mode) const
+{
+  os << "nom_sortie : expression\n";
+  for (const auto output_info : func_->data_flow().outputs_info())
+    os << output_info.second.label_ << " : " << expand_term_str_expr(output_info.first, depth, mode) << '\n';
+}
+
 string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode mode) const
 {
   struct Call
