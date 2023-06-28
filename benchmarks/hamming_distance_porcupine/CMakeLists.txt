@@ -1,5 +1,0 @@
-add_executable(hamming_distance_porcupine_checks hamming_distance_checks.cpp)
-target_link_libraries(hamming_distance_porcupine_checks PRIVATE fheco)
-
-add_executable(hamming_distance_porcupine hamming_distance.cpp)
-target_link_libraries(hamming_distance_porcupine PRIVATE fheco)

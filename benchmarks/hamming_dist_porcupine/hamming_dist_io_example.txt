@@ -1,0 +1,4 @@
+4 2 1
+c1 true true 1 0 0 1
+c0 true true 1 0 0 0
+c_result true 1 1 1 1

@@ -79,7 +79,7 @@ int main(int argc, char **argv)
   chrono::high_resolution_clock::time_point time_start, time_end;
   chrono::duration<double, milli> time_sum(0);
   time_start = chrono::high_resolution_clock::now();
-  string func_name = "hamming_distance";
+  string func_name = "hamming_dist";
   const auto &func = Compiler::create_func(func_name, 4, 20, true, false);
 
   hamming_distance_baseline();

@@ -75,7 +75,7 @@ int main(int argc, char **argv)
   print_bool_arg(const_folding, "élimination_calculs_constants", clog);
   clog << '\n';
 
-  string app_name = "hamming_distance";
+  string app_name = "hamming_dist";
   size_t slot_count = 4;
   int bit_width = 20;
   bool signdness = true;

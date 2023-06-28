@@ -1,5 +1,5 @@
-digraph "hamming_distance_opt" {
-graph [label="hamming_distance_opt" labelloc="t"]
+digraph "hamming_dist_opt" {
+graph [label="hamming_dist_opt" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
 18 [label="c0" style=solid color=red fontcolor=red]

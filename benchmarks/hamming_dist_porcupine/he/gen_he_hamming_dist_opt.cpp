@@ -1,4 +1,4 @@
-#include "gen_he_hamming_distance_opt.hpp"
+#include "gen_he_hamming_dist_opt.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <utility>
@@ -6,7 +6,7 @@
 using namespace std;
 using namespace seal;
 
-void hamming_distance_opt(
+void hamming_dist_opt(
   const unordered_map<string, Ciphertext> &encrypted_inputs, const unordered_map<string, Plaintext> &encoded_inputs,
   unordered_map<string, Ciphertext> &encrypted_outputs, unordered_map<string, Plaintext> &encoded_outputs,
   const BatchEncoder &encoder, const Encryptor &encryptor, const Evaluator &evaluator, const RelinKeys &relin_keys,
@@ -29,7 +29,7 @@ void hamming_distance_opt(
   encrypted_outputs.emplace("c_result", move(c18));
 }
 
-vector<int> get_rotation_steps_hamming_distance_opt()
+vector<int> get_rotation_steps_hamming_dist_opt()
 {
   return vector<int>{2, 1};
 }
