@@ -118,7 +118,7 @@ CompResult sum_rotation_steps_order(const TermMatcher &lhs, const TermMatcher &r
     auto diff = fold_symbolic_op_gen_matcher(lhs_sum - rhs_sum);
     if (diff.id())
     {
-      clog << "under " << util::ExprPrinter::make_op_gen_matcher_str_expr(diff) << " > 0\n";
+      clog << "sous la condition " << util::ExprPrinter::make_op_gen_matcher_str_expr(diff) << " > 0\n";
       return CompResult::greater;
     }
     return CompResult::equal;
@@ -126,7 +126,7 @@ CompResult sum_rotation_steps_order(const TermMatcher &lhs, const TermMatcher &r
 
   if (lhs_sum.id() || rhs_sum.id())
   {
-    clog << "under ";
+    clog << "sous la condition ";
     if (lhs_sum.id())
       clog << util::ExprPrinter::make_op_gen_matcher_str_expr(fold_symbolic_op_gen_matcher(lhs_sum));
     else

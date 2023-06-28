@@ -112,12 +112,12 @@ void print_line_sep();
 
 void check_ruleset(const Ruleset &ruleset, const LexicoProductOrder &reduct_order, bool throw_on_failure)
 {
-  clog << "checking ruleset " << ruleset.name() << '\n';
+  clog << "vérification de l'ensemble de règles \"" << ruleset.name() << "\n\n";
   size_t i;
   for (const auto &[root_op_type, rules] : ruleset.rules_by_root_op())
   {
     i = 0;
-    clog << root_op_type << "_rules:\n";
+    clog << "règles_" << root_op_type << '\n';
     for (const auto &rule : rules)
     {
       clog << i << ". ";
@@ -132,7 +132,7 @@ void check_rule(const Rule &rule, const LexicoProductOrder &reduct_order, bool t
   clog << util::ExprPrinter::make_rule_str_repr(rule, true, util::ExprPrinter::Mode::infix_expl_paren) << '\n';
   if (rule.has_dynamic_rhs())
   {
-    clog << "dynamic rhs, invariants needed\n";
+    clog << "rhs dynamique, invariants requis\n";
     return;
   }
 
@@ -140,36 +140,36 @@ void check_rule(const Rule &rule, const LexicoProductOrder &reduct_order, bool t
   auto rhs = rule.get_rhs();
   for (const auto &[name, order] : reduct_order)
   {
-    clog << "trying order " << name << ": ";
+    clog << "essayant l'ordre \"" << name << "\": ";
     auto comp_result = order(lhs, rhs);
     if (comp_result == CompResult::less)
     {
-      clog << "rejected\n";
+      clog << "rejetée\n";
       if (throw_on_failure)
-        throw logic_error("rejected rule");
+        throw logic_error("régle rejetée");
     }
     else if (comp_result == CompResult::not_generalizable)
     {
-      clog << "order cannot be generalized, needs condition of application\n";
+      clog << "ordre non généralisable, nécessite une condition d'application\n";
       if (rule.has_cond())
-        clog << "checking the correctness of the existing condition is not supported\n";
+        clog << "vérification de la justesse de la condition existante n'est pas supportée\n";
       else
-        clog << "condition is not provided\n";
+        clog << "condition non fournie\n";
     }
     else if (comp_result == CompResult::equal)
     {
-      clog << "undefined order (equal)\n";
+      clog << "ordre indéfini (égalité)\n";
       continue;
     }
     else
-      clog << "accepted\n";
+      clog << "acceptée\n";
 
     print_line_sep();
     return;
   }
-  clog << "could not be ordered\n";
+  clog << "ordre indécidable\n";
   if (throw_on_failure)
-    throw logic_error("rule could not be ordered");
+    throw logic_error("règle n'a pas pu être ordonnée");
 }
 
 void print_line_sep()
