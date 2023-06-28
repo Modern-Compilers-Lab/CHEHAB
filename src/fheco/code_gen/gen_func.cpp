@@ -21,7 +21,7 @@ void gen_func(
   }
   catch (const logic_error &e)
   {
-    cerr << e.what();
+    cerr << e.what() << '\n';
     return;
   }
 

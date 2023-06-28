@@ -86,8 +86,8 @@ void Compiler::gen_he_code(
 
 #ifdef FHECO_LOGGING
   clog << "\ngénération_code\n";
-  code_gen::gen_func(func, rotation_steps_keys, header_os, header_name, source_os);
 #endif
+  code_gen::gen_func(func, rotation_steps_keys, header_os, header_name, source_os);
 }
 
 const shared_ptr<ir::Func> &Compiler::add_func(shared_ptr<ir::Func> func)
