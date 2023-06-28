@@ -4,15 +4,18 @@ project(FHECo VERSION 1.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    option(FHECO_DEBUG "FHECO_DEBUG" ON)
-endif()
+option(FHECO_LOGGING "FHECO_LOGGING" OFF)
+message(STATUS "FHECO_LOGGING: ${FHECO_LOGGING}")
+
 
 set(FHECO_INCLUDES_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR}/FHECO/fheco)
 set(FHECO_SOURCE_FILES "")
 add_subdirectory(src/fheco)
 add_library(fheco STATIC ${FHECO_SOURCE_FILES})
 target_include_directories(fheco PUBLIC src)
+if(FHECO_LOGGING)
+    target_compile_definitions(fheco PRIVATE FHECO_LOGGING)
+endif()
 target_compile_features(fheco PUBLIC cxx_std_17)
 set_target_properties(fheco PROPERTIES CXX_EXTENSIONS OFF)
 install(TARGETS fheco ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})

@@ -1,6 +1,8 @@
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/ir/expr.hpp"
+#ifdef FHECO_LOGGING
 #include "fheco/util/expr_printer.hpp"
+#endif
 #include <algorithm>
 #include <iostream>
 #include <stack>
@@ -79,9 +81,10 @@ Term *Expr::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
 
     if (auto term = find_op(&op_code, &operands); term)
     {
+#ifdef FHECO_LOGGING
       util::ExprPrinter expr_printer{Compiler::active_func()};
       clog << "terme \"" << expr_printer.expand_term_str_expr(term) << "\" déjà existant (CSE)\n";
-
+#endif
       inserted = false;
       return term;
     }
@@ -111,9 +114,10 @@ Term *Expr::insert_const(ConstInfo const_info, bool &inserted)
     auto it = values_to_const_terms_.find(const_info.val_);
     if (it != values_to_const_terms_.end())
     {
+#ifdef FHECO_LOGGING
       util::ExprPrinter expr_printer{Compiler::active_func()};
       clog << "constante \"" << expr_printer.make_leaf_str_expr(it->second) << "\" déjà existante (CSE)\n";
-
+#endif
       inserted = false;
       return it->second;
     }
