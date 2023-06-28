@@ -60,6 +60,10 @@ public:
     return rules_by_root_op_[op_code_type];
   }
 
+  const Rule &get_rule(const std::string &name) const;
+
+  const Rule &get_rule(const std::string &name, ir::OpCode::Type op_code_type) const;
+
   inline const std::shared_ptr<ir::Func> &func() const { return func_; }
 
   inline std::string name() const { return name_; }

@@ -69,6 +69,30 @@ vector<Rule> Ruleset::get_log_reduct_rules(size_t slot_count, const TermMatcher 
   return rules;
 }
 
+const Rule &Ruleset::get_rule(const string &name) const
+{
+  for (const auto &[op_code_type, rules] : rules_by_root_op_)
+  {
+    try
+    {
+      return get_rule(name, op_code_type);
+    }
+    catch (const invalid_argument &e)
+    {}
+  }
+  throw invalid_argument("no rule with name was found");
+}
+
+const Rule &Ruleset::get_rule(const string &name, ir::OpCode::Type op_code_type) const
+{
+  for (const auto &rule : rules_by_root_op_.at(op_code_type))
+  {
+    if (rule.name() == name)
+      return rule;
+  }
+  throw invalid_argument("no rule with name was found");
+}
+
 Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, size_t size, const TermOpCode &op_code)
 {
   if (!util::is_power_of_two(size))
