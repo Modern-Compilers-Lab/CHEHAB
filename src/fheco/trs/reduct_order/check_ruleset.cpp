@@ -9,7 +9,6 @@ using namespace std;
 
 namespace fheco::trs
 {
-
 const LexicoProductOrder depth_order{{"sum_xdepth"sv, &sum_xdepth_order}, {"sum_depth"sv, &sum_depth_order}};
 
 const LexicoProductOrder ops_cost_order{
@@ -112,7 +111,7 @@ void print_line_sep();
 
 void check_ruleset(const Ruleset &ruleset, const LexicoProductOrder &reduct_order, bool throw_on_failure)
 {
-  clog << "vérification de l'ensemble de règles \"" << ruleset.name() << "\n\n";
+  clog << "\nvérification de l'ensemble de règles \"" << ruleset.name() << "\n\n";
   size_t i;
   for (const auto &[root_op_type, rules] : ruleset.rules_by_root_op())
   {
