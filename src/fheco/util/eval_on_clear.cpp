@@ -9,26 +9,25 @@ using namespace std;
 
 namespace fheco::util
 {
-ir::IOTermsInfo evaluate_on_clear(const shared_ptr<ir::Func> &func, const ir::IOTermsInfo &inputs_info)
+ir::IOValues evaluate_on_clear(const shared_ptr<ir::Func> &func, const ir::IOValues &inputs_values)
 {
   const auto &evaluator = func->clear_data_evaluator();
   ir::TermsValues temps_values;
-  ir::IOTermsInfo outputs_values;
+  ir::IOValues outputs_values;
   for (auto term : func->get_top_sorted_terms())
   {
     if (term->is_leaf())
     {
       if (auto input_info = func->data_flow().get_input_info(term); input_info)
       {
-        if (auto input_info_it = inputs_info.find(term);
-            input_info_it != inputs_info.end() && input_info_it->second.example_val_)
+        if (auto input_value_it = inputs_values.find(input_info->label_); input_value_it != inputs_values.end())
         {
-          PackedVal input_val = *input_info_it->second.example_val_;
+          PackedVal input_val = input_value_it->second;
           evaluator.adjust_packed_val(input_val);
           if (auto output_info = func->data_flow().get_output_info(term); output_info)
           {
             temps_values.emplace(term, input_val);
-            outputs_values.emplace(term, ir::ParamTermInfo{output_info->label_, move(input_val)});
+            outputs_values.emplace(output_info->label_, move(input_val));
           }
           else
             temps_values.emplace(term, move(input_val));
@@ -90,7 +89,7 @@ ir::IOTermsInfo evaluate_on_clear(const shared_ptr<ir::Func> &func, const ir::IO
     if (auto output_info = func->data_flow().get_output_info(term); output_info)
     {
       if (auto term_val_it = temps_values.find(term); term_val_it != temps_values.end())
-        outputs_values.emplace(term, ir::ParamTermInfo{output_info->label_, term_val_it->second});
+        outputs_values.emplace(output_info->label_, term_val_it->second);
       else
         cerr << "could not compute output term (output id=" << term->id() << ")\n";
     }

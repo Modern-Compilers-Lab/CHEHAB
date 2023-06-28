@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <fstream>
 #include <iostream>
-#include "gen_he_hamming_distance.hpp"
+#include "gen_he_hamming_distance_opt.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -10,8 +10,8 @@ using namespace seal;
 
 int main(int argc, char **argv)
 {
-  string func_name = "hamming_distance";
-  ifstream is("../" + func_name + "_rand_example.txt");
+  string app_name = "hamming_distance";
+  ifstream is("../" + app_name + "_io_example.txt");
   if (!is)
     throw invalid_argument("failed to open file");
 
@@ -31,7 +31,7 @@ int main(int argc, char **argv)
   RelinKeys relin_keys;
   keygen.create_relin_keys(relin_keys);
   GaloisKeys galois_keys;
-  keygen.create_galois_keys(get_rotation_steps_hamming_distance(), galois_keys);
+  keygen.create_galois_keys(get_rotation_steps_hamming_distance_opt(), galois_keys);
   Encryptor encryptor(context, public_key);
   Evaluator evaluator(context);
   Decryptor decryptor(context, secret_key);
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   chrono::high_resolution_clock::time_point time_start, time_end;
   chrono::duration<double, milli> time_sum(0);
   time_start = chrono::high_resolution_clock::now();
-  hamming_distance(
+  hamming_distance_opt(
     encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
     relin_keys, galois_keys);
   time_end = chrono::high_resolution_clock::now();

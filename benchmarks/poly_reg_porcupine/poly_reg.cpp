@@ -20,21 +20,6 @@ void poly_reg_baseline()
   c_result.set_output("c_result");
 }
 
-void poly_reg_synthesized()
-{
-  Ciphertext c0("c0");
-  Ciphertext c1("c1");
-  Ciphertext c2("c2");
-  Ciphertext c3("c3");
-  Ciphertext c4("c4");
-  Ciphertext c5 = c0 * c4;
-  Ciphertext c6 = c5 + c3;
-  Ciphertext c7 = c0 * c6;
-  Ciphertext c8 = c7 + c2;
-  Ciphertext c_result = c1 - c8;
-  c_result.set_output("c_result");
-}
-
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
   os << (arg ? name : "non_" + name);
@@ -68,7 +53,7 @@ int main(int argc, char **argv)
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
-  print_bool_arg(const_folding, "const_folding", clog);
+  print_bool_arg(const_folding, "élimination_calculs_constants", clog);
   clog << '\n';
 
   if (cse)
@@ -95,12 +80,12 @@ int main(int argc, char **argv)
 
   poly_reg_baseline();
 
-  string gen_name = "gen_he_" + func_name;
+  string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
   ofstream source_os(gen_path + ".cpp");
 
-  Compiler::compile(ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+  Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
 
   time_end = chrono::high_resolution_clock::now();
   time_sum = time_end - time_start;
@@ -108,10 +93,10 @@ int main(int argc, char **argv)
 
   if (call_quantifier)
   {
-    util::Quantifier quantifier1(func);
-    quantifier1.run_all_analysis();
-    cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().max_depth_ << " ";
-    cout << quantifier1.circuit_static_cost() << '\n';
+    util::Quantifier quantifier{func};
+    quantifier.run_all_analysis();
+    cout << quantifier.he_depth_summary().max_xdepth_ << " " << quantifier.he_depth_summary().max_depth_ << " ";
+    cout << quantifier.circuit_static_cost() << '\n';
   }
 
   return 0;

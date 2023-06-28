@@ -32,7 +32,7 @@ void Compiler::compile(
   {
   case Ruleset::depth:
   {
-    clog << "trs_" << ruleset << '\n';
+    clog << "\ntrs_" << ruleset << '\n';
     trs::TRS depth_trs{trs::Ruleset::depth_ruleset(func)};
     depth_trs.run(rewrite_heuristic);
     break;
@@ -40,7 +40,7 @@ void Compiler::compile(
 
   case Ruleset::ops_cost:
   {
-    clog << "trs_" << ruleset << '\n';
+    clog << "\ntrs_" << ruleset << '\n';
     trs::TRS ops_cost_trs{trs::Ruleset::ops_cost_ruleset(func)};
     ops_cost_trs.run(rewrite_heuristic);
     break;
@@ -48,7 +48,7 @@ void Compiler::compile(
 
   case Ruleset::joined:
   {
-    clog << "trs_" << ruleset << '\n';
+    clog << "\ntrs_" << ruleset << '\n';
     trs::TRS joined_trs{trs::Ruleset::joined_ruleset(func)};
     joined_trs.run(rewrite_heuristic);
     break;

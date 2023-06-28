@@ -18,16 +18,16 @@ void poly_reg_noopt(
   Ciphertext c2 = encrypted_inputs.at("c1");
   Ciphertext c1 = encrypted_inputs.at("c0");
   size_t slot_count = encoder.slot_count();
-  Ciphertext c12;
-  evaluator.square(c1, c12);
-  evaluator.relinearize(c12, relin_keys, c12);
-  evaluator.multiply(c12, c5, c12);
-  evaluator.relinearize(c12, relin_keys, c12);
+  Ciphertext c6;
+  evaluator.square(c1, c6);
+  evaluator.relinearize(c6, relin_keys, c6);
+  evaluator.multiply(c6, c5, c6);
+  evaluator.relinearize(c6, relin_keys, c6);
   evaluator.multiply(c1, c4, c1);
   evaluator.relinearize(c1, relin_keys, c1);
-  evaluator.add(c12, c1, c12);
-  evaluator.add(c12, c3, c12);
-  evaluator.sub(c2, c12, c2);
+  evaluator.add(c6, c1, c6);
+  evaluator.add(c6, c3, c6);
+  evaluator.sub(c2, c6, c2);
   encrypted_outputs.emplace("c_result", move(c2));
 }
 

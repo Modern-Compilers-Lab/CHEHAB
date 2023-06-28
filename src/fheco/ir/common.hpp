@@ -77,4 +77,8 @@ inline bool operator!=(const ConstInfo &lhs, const ConstInfo &rhs)
 using ConstTermsValues = std::unordered_map<const Term *, ConstInfo, Term::HashPtr, Term::EqualPtr>;
 
 using TermsValues = std::unordered_map<const Term *, PackedVal, Term::HashPtr, Term::EqualPtr>;
+
+using IOValues = std::unordered_map<std::string, PackedVal>;
+
+IOValues convert_to_io_values(const IOTermsInfo &io_terms_info);
 } // namespace fheco::ir

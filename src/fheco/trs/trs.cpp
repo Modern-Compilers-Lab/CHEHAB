@@ -20,7 +20,7 @@ namespace fheco::trs
 bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created_sub_terms, bool global_analysis)
 {
   util::ExprPrinter expr_printer{func_};
-  clog << "RI initiale, ";
+  clog << "\nRI initiale, ";
   expr_printer.print_expand_outputs_str_expr(clog);
 
   int64_t iter = max_iter;
@@ -46,8 +46,7 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created
     throw logic_error("unhandled RewriteHeuristic");
   }
 
-  clog << '\n';
-  clog << "RI finale, ";
+  clog << "\nRI finale, ";
   expr_printer.print_expand_outputs_str_expr(clog);
   clog << '\n';
 

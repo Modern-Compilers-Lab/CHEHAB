@@ -1,38 +1,42 @@
-digraph "hamming_distance" {
-graph [label="hamming_distance" labelloc="t"]
+digraph "hamming_distance_noopt" {
+graph [label="hamming_distance_noopt" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
 3 [label="c1" style=solid color=red fontcolor=red]
 2 [label="c0" style=solid color=red fontcolor=red]
 4 [label="+" style=solid color=black fontcolor=black]
-4 -> 2
 4 -> 3
+4 -> 2
 5 [label="negate" style=solid color=black fontcolor=black]
 5 -> 4
 6 [label="*" style=solid color=black fontcolor=black]
-6 -> 3
 6 -> 5
+6 -> 3
+15 [label="relin" style=solid color=black fontcolor=black]
+15 -> 6
 7 [label="*" style=solid color=black fontcolor=black]
-7 -> 2
 7 -> 4
+7 -> 2
+16 [label="relin" style=solid color=black fontcolor=black]
+16 -> 7
 8 [label="-" style=solid color=black fontcolor=black]
-8 -> 6
-8 -> 7
+8 -> 15
+8 -> 16
 1 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
 9 [label="*" style=solid color=black fontcolor=black]
-9 -> 1
 9 -> 4
+9 -> 1
 10 [label="+" style=solid color=black fontcolor=black]
 10 -> 8
 10 -> 9
 11 [label="<< 2" style=solid color=black fontcolor=black]
 11 -> 10
 12 [label="+" style=solid color=black fontcolor=black]
-12 -> 10
 12 -> 11
+12 -> 10
 13 [label="<< 1" style=solid color=black fontcolor=black]
 13 -> 12
 14 [label="+ (c_result)" style=solid color=blue fontcolor=blue]
-14 -> 12
 14 -> 13
+14 -> 12
 }

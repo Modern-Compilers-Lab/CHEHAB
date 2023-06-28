@@ -68,6 +68,10 @@ public:
 
   inline const std::vector<std::size_t> &get_top_sorted_terms_ids() { return data_flow_.get_top_sorted_terms_ids(); }
 
+  inline IOValues get_inputs_example_values() const { return convert_to_io_values(data_flow_.inputs_info()); }
+
+  inline IOValues get_outputs_example_values() const { return convert_to_io_values(data_flow_.outputs_info()); }
+
   inline const std::string &name() const { return name_; }
 
   inline const std::size_t &slot_count() const { return slot_count_; }

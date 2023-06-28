@@ -10,8 +10,8 @@ using namespace seal;
 
 int main(int argc, char **argv)
 {
-  string func_name = "hamming_distance";
-  ifstream is("../" + func_name + "_rand_example.txt");
+  string app_name = "hamming_distance";
+  ifstream is("../" + app_name + "_io_example.txt");
   if (!is)
     throw invalid_argument("failed to open file");
 

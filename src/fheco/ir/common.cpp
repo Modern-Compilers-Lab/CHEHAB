@@ -97,4 +97,15 @@ int64_t evaluate_raw_op_code(const OpCode &op_code, const vector<Term::Type> &op
     throw invalid_argument("unhandled op_code raw cost resulting in a ciphertext");
   }
 }
+
+IOValues convert_to_io_values(const IOTermsInfo &io_terms_info)
+{
+  IOValues io_values;
+  for (const auto &[term, io_info] : io_terms_info)
+  {
+    if (io_info.example_val_)
+      io_values.emplace(io_info.label_, *io_info.example_val_);
+  }
+  return io_values;
+}
 } // namespace fheco::ir

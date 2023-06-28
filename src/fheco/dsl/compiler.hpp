@@ -44,21 +44,9 @@ public:
     std::shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::ostream &header_os,
     std::string_view header_name, std::ostream &source_os);
 
-  static inline void compile(
-    Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::ostream &header_os, std::string_view header_name,
-    std::ostream &source_os)
-  {
-    compile(active_func(), ruleset, rewrite_heuristic, header_os, header_name, source_os);
-  }
-
   static void gen_he_code(
     const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name,
     std::ostream &source_os);
-
-  static inline void gen_he_code(std::ostream &header_os, std::string_view header_name, std::ostream &source_os)
-  {
-    gen_he_code(active_func(), header_os, header_name, source_os);
-  }
 
   static inline const std::shared_ptr<ir::Func> &active_func()
   {

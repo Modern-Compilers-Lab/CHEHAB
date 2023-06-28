@@ -21,16 +21,6 @@ void box_blur_baseline()
   c6.set_output("c6");
 }
 
-void box_blur_synthesized()
-{
-  Ciphertext c0("c0");
-  Ciphertext c1 = c0 << 1;
-  Ciphertext c2 = c0 + c1;
-  Ciphertext c3 = c2 << 5;
-  Ciphertext c4 = c2 + c3;
-  c4.set_output("c4");
-}
-
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
   os << (arg ? name : "non_" + name);
@@ -64,7 +54,7 @@ int main(int argc, char **argv)
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
-  print_bool_arg(const_folding, "const_folding", clog);
+  print_bool_arg(const_folding, "élimination_calculs_constants", clog);
   clog << '\n';
 
   if (cse)
@@ -92,12 +82,12 @@ int main(int argc, char **argv)
 
   box_blur_baseline();
 
-  string gen_name = "gen_he_" + func_name;
+  string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
   ofstream source_os(gen_path + ".cpp");
 
-  Compiler::compile(ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+  Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
 
   time_end = chrono::high_resolution_clock::now();
   time_sum = time_end - time_start;
@@ -105,10 +95,10 @@ int main(int argc, char **argv)
 
   if (call_quantifier)
   {
-    util::Quantifier quantifier1(func);
-    quantifier1.run_all_analysis();
-    cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().max_depth_ << " ";
-    cout << quantifier1.circuit_static_cost() << '\n';
+    util::Quantifier quantifier{func};
+    quantifier.run_all_analysis();
+    cout << quantifier.he_depth_summary().max_xdepth_ << " " << quantifier.he_depth_summary().max_depth_ << " ";
+    cout << quantifier.circuit_static_cost() << '\n';
   }
 
   return 0;

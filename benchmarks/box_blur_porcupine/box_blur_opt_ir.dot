@@ -1,0 +1,16 @@
+digraph "box_blur_opt" {
+graph [label="box_blur_opt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+8 [label="c0" style=solid color=red fontcolor=red]
+9 [label="<< 1" style=solid color=black fontcolor=black]
+9 -> 8
+12 [label="+" style=solid color=black fontcolor=black]
+12 -> 8
+12 -> 9
+15 [label="<< 5" style=solid color=black fontcolor=black]
+15 -> 12
+14 [label="+ (c6)" style=solid color=blue fontcolor=blue]
+14 -> 12
+14 -> 15
+}
