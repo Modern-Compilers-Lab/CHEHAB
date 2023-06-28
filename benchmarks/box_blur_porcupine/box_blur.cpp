@@ -97,8 +97,7 @@ int main(int argc, char **argv)
   {
     util::Quantifier quantifier{func};
     quantifier.run_all_analysis();
-    cout << quantifier.he_depth_summary().max_xdepth_ << " " << quantifier.he_depth_summary().max_depth_ << " ";
-    cout << quantifier.circuit_static_cost() << '\n';
+    quantifier.print_info(cout);
   }
 
   return 0;
