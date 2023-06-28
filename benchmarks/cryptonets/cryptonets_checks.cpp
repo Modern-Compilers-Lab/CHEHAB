@@ -153,8 +153,44 @@ int main(int argc, char **argv)
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
-  print_bool_arg(const_folding, "const_folding", clog);
+  print_bool_arg(const_folding, "élimination_calculs_constants", clog);
   clog << '\n';
+
+  string app_name = "cryptonets";
+  size_t slot_count = 8192;
+  int bit_width = 17;
+  bool signdness = true;
+  bool need_cyclic_rotation = false;
+
+  clog << "\nfonction non optimisée\n";
+
+  string noopt_func_name = app_name + "_noopt";
+  const auto &noopt_func =
+    Compiler::create_func(noopt_func_name, slot_count, bit_width, signdness, need_cyclic_rotation);
+
+  cryptonets(
+    vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
+    vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
+
+  string noopt_gen_name = "gen_he_" + noopt_func_name;
+  string noopt_gen_path = "he/" + noopt_gen_name;
+  ofstream noopt_header_os(noopt_gen_path + ".hpp");
+  ofstream noopt_source_os(noopt_gen_path + ".cpp");
+  Compiler::gen_he_code(noopt_func, noopt_header_os, noopt_gen_name + ".hpp", noopt_source_os);
+
+  util::Quantifier noopt_quantifier(noopt_func);
+  if (call_quantifier)
+  {
+    cout << "\ncaractéristiques du circuit initial\n";
+    noopt_quantifier.run_all_analysis();
+    noopt_quantifier.print_info(cout);
+    cout << endl;
+  }
+
+  ofstream noopt_ir_os(noopt_func_name + "_ir.dot");
+  util::draw_ir(noopt_func, noopt_ir_os);
+
+  clog << "\nfonction optimisée\n";
 
   if (cse)
   {
@@ -172,53 +208,42 @@ int main(int argc, char **argv)
   else
     Compiler::disable_const_folding();
 
-  string func_name = "cryptonets";
-  const auto &func = Compiler::create_func(func_name, 8192, 17, true, false);
+  string opt_func_name = app_name + "_opt";
+  const auto &opt_func = Compiler::create_func(opt_func_name, slot_count, bit_width, signdness, need_cyclic_rotation);
 
   cryptonets(
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
     vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
 
-  util::Quantifier init_quantifier(func);
-  if (call_quantifier)
-  {
-    cout << "\ncaractéristiques du circuit initial\n";
-    init_quantifier.run_all_analysis();
-    init_quantifier.print_info(cout);
-    cout << endl;
-  }
+  string opt_gen_name = "gen_he_" + opt_func_name;
+  string opt_gen_path = "he/" + opt_gen_name;
+  ofstream opt_header_os(opt_gen_path + ".hpp");
+  ofstream opt_source_os(opt_gen_path + ".cpp");
 
-  ofstream init_ir_os(func_name + "_init_ir.dot");
-  util::draw_ir(func, init_ir_os);
+  Compiler::compile(opt_func, ruleset, rewrite_heuristic, opt_header_os, opt_gen_name + ".hpp", opt_source_os);
 
-  const auto &rand_inputs = func->data_flow().inputs_info();
-
-  string gen_name = "gen_he_" + func_name;
-  string gen_path = "he/" + gen_name;
-  ofstream header_os(gen_path + ".hpp");
-  ofstream source_os(gen_path + ".cpp");
-
-  Compiler::compile(ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
-
-  auto outputs = util::evaluate_on_clear(func, rand_inputs);
-  if (outputs != func->data_flow().outputs_info())
+  auto noopt_obtained_outputs = util::evaluate_on_clear(noopt_func, opt_func->get_inputs_example_values());
+  auto opt_obtained_outputs = util::evaluate_on_clear(opt_func, noopt_func->get_inputs_example_values());
+  if (
+    noopt_obtained_outputs != opt_func->get_outputs_example_values() ||
+    opt_obtained_outputs != noopt_func->get_outputs_example_values())
     throw logic_error("compilation correctness-test failed");
 
-  ofstream rand_example_os(func_name + "_rand_example.txt");
-  util::print_io_terms_values(func, rand_example_os);
+  ofstream io_example_os(app_name + "_io_example.txt");
+  util::print_io_terms_values(opt_func, io_example_os);
 
-  ofstream final_ir_os(func_name + "_final_ir.dot");
-  util::draw_ir(func, final_ir_os);
+  ofstream opt_ir_os(opt_func_name + "_ir.dot");
+  util::draw_ir(opt_func, opt_ir_os);
 
   if (call_quantifier)
   {
     cout << "\ncaractéristiques du circuit final\n";
-    util::Quantifier final_quantifier(func);
-    final_quantifier.run_all_analysis();
-    final_quantifier.print_info(cout);
+    util::Quantifier opt_quantifier(opt_func);
+    opt_quantifier.run_all_analysis();
+    opt_quantifier.print_info(cout);
 
     cout << "\ntaux d'amélioration\n";
-    auto diff_quantifier = (init_quantifier - final_quantifier) / init_quantifier * 100;
+    auto diff_quantifier = (noopt_quantifier - opt_quantifier) / noopt_quantifier * 100;
     diff_quantifier.print_info(cout);
   }
 

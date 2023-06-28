@@ -124,7 +124,7 @@ int main(int argc, char **argv)
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
-  print_bool_arg(const_folding, "const_folding", clog);
+  print_bool_arg(const_folding, "élimination_calculs_constants", clog);
   clog << '\n';
 
   if (cse)
@@ -153,12 +153,12 @@ int main(int argc, char **argv)
     vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
     vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
 
-  string gen_name = "gen_he_" + func_name;
+  string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
   ofstream source_os(gen_path + ".cpp");
 
-  Compiler::compile(ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+  Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
 
   time_end = chrono::high_resolution_clock::now();
   time_sum = time_end - time_start;
@@ -166,10 +166,9 @@ int main(int argc, char **argv)
 
   if (call_quantifier)
   {
-    util::Quantifier quantifier1(func);
-    quantifier1.run_all_analysis();
-    cout << quantifier1.he_depth_summary().max_xdepth_ << " " << quantifier1.he_depth_summary().max_depth_ << " ";
-    cout << quantifier1.circuit_static_cost() << '\n';
+    util::Quantifier quantifier{func};
+    quantifier.run_all_analysis();
+    quantifier.print_info(cout);
   }
 
   return 0;
