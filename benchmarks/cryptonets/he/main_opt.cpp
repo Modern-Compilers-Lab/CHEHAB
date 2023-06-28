@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <fstream>
 #include <iostream>
-#include "gen_he_cryptonets.hpp"
+#include "gen_he_cryptonets_opt.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -10,8 +10,8 @@ using namespace seal;
 
 int main(int argc, char **argv)
 {
-  string func_name = "cryptonets";
-  ifstream is("../" + func_name + "_rand_example.txt");
+  string app_name = "cryptonets";
+  ifstream is("../" + app_name + "_io_example.txt");
   if (!is)
     throw invalid_argument("failed to open file");
 
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   chrono::high_resolution_clock::time_point time_start, time_end;
   chrono::duration<double, milli> time_sum(0);
   time_start = chrono::high_resolution_clock::now();
-  cryptonets(
+  cryptonets_opt(
     encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
     relin_keys, galois_keys);
   time_end = chrono::high_resolution_clock::now();
