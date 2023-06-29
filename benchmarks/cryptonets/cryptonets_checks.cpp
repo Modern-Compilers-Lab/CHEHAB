@@ -230,7 +230,7 @@ int main(int argc, char **argv)
     throw logic_error("compilation correctness-test failed");
 
   ofstream io_example_os(app_name + "_io_example.txt");
-  util::print_io_terms_values(opt_func, io_example_os);
+  util::print_io_terms_values(noopt_func, io_example_os);
 
   ofstream opt_ir_os(opt_func_name + "_ir.dot");
   util::draw_ir(opt_func, opt_ir_os);
