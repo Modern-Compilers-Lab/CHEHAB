@@ -111,17 +111,17 @@ void print_line_sep();
 
 void check_ruleset(const Ruleset &ruleset, const LexicoProductOrder &reduct_order, bool throw_on_failure)
 {
-  clog << "\nvérification de l'ensemble de règles \"" << ruleset.name() << "\n\n";
+  clog << "\nvérification de l'ensemble de règles \"" << ruleset.name() << "\" :\n";
   size_t i;
   for (const auto &[root_op_type, rules] : ruleset.rules_by_root_op())
   {
     i = 0;
-    clog << "règles_" << root_op_type << '\n';
+    clog << "règles_" << root_op_type << " :\n";
     for (const auto &rule : rules)
     {
+      ++i;
       clog << i << ". ";
       check_rule(rule, reduct_order, throw_on_failure);
-      ++i;
     }
   }
 }
