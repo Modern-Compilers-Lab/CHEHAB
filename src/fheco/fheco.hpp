@@ -8,6 +8,7 @@
 #include "fheco/dsl/ops_overloads.hpp"
 #include "fheco/dsl/plaintext.hpp"
 #include "fheco/trs/common.hpp"
+#include "fheco/trs/reduct_order/check_ruleset.hpp"
 #include "fheco/trs/trs.hpp"
 #include "fheco/passes/passes.hpp"
 #include "fheco/util/common.hpp"

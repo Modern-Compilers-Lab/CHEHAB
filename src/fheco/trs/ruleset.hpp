@@ -100,5 +100,7 @@ inline Ruleset &operator&=(Ruleset &lhs, const Ruleset &rhs)
   return lhs;
 }
 
+void print_ruleset(const Ruleset &ruleset, std::ostream &os);
+
 std::ostream &operator<<(std::ostream &os, const Ruleset &ruleset);
 } // namespace fheco::trs

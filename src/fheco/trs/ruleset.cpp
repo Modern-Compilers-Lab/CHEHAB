@@ -2,6 +2,7 @@
 #include "fheco/trs/ops_overloads.hpp"
 #include "fheco/trs/ruleset.hpp"
 #include "fheco/util/common.hpp"
+#include "fheco/util/expr_printer.hpp"
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -154,6 +155,17 @@ Ruleset operator&(const Ruleset &lhs, const Ruleset &rhs)
     rules_by_root_op.emplace(root_op_type, move(op_common_rules));
   }
   return Ruleset{lhs.func(), lhs.name() + " & " + rhs.name(), move(rules_by_root_op)};
+}
+
+void print_ruleset(const Ruleset &ruleset, ostream &os)
+{
+  os << ruleset.name() << ":\n";
+  for (const auto &[root_op_type, rules] : ruleset.rules_by_root_op())
+  {
+    os << "règles de l'opération \"" << root_op_type << "\":\n";
+    for (const auto &rule : rules)
+      os << util::ExprPrinter::make_rule_str_repr(rule) << '\n';
+  }
 }
 
 ostream &operator<<(ostream &os, const Ruleset &ruleset)
