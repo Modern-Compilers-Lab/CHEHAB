@@ -16,37 +16,17 @@ int main(int argc, char **argv)
 
   const auto &fonc = Compiler::create_func(nom_app, nb_pos, l_bits, arith_signe, rotation_cycl);
 
-  Ciphertext a("a", -10, 10);
-  Ciphertext b("b", -10, 10);
-  Ciphertext c("c", -10, 10);
+  Ciphertext a("a");
+  Ciphertext b("b");
+  Ciphertext c("c");
   Ciphertext resultat = a * (b - c) + a * (0 + c);
   resultat.set_output("résultat");
 
-  trs::TRS trs_non_termin{trs::Ruleset::non_terminating_toy_ruleset(fonc)};
-  trs::print_ruleset(trs_non_termin.ruleset(), clog);
-  trs::check_ruleset(trs_non_termin.ruleset(), trs::ops_cost_order);
-  trs_non_termin.run(trs::RewriteHeuristic::bottom_up);
-
-  string nom_gen = "gen_he_" + nom_app;
-  string chemin_gen = "he/" + nom_gen;
-  ofstream flux_entete(chemin_gen + ".hpp");
-  ofstream flux_source(chemin_gen + ".cpp");
-  Compiler::gen_he_code(fonc, flux_entete, nom_gen + ".hpp", flux_source);
-
-  auto sorties_obtenues = util::evaluate_on_clear(fonc, fonc->get_inputs_example_values());
-  if (sorties_obtenues != fonc->get_outputs_example_values())
-    throw logic_error("compilation correctness-test failed");
-
-  ofstream flux_exemple_es(nom_app + "_io_example.txt");
-  util::print_io_terms_values(fonc, flux_exemple_es);
-
-  ofstream flux_ri(nom_app + "_opt_ir.dot");
-  util::draw_ir(fonc, flux_ri, true);
-
-  util::Quantifier quantif(fonc);
-  cout << "\ncaractéristiques du circuit optimisé\n";
-  quantif.run_all_analysis();
-  quantif.print_info(cout);
+  trs::check_ruleset(trs::Ruleset::depth_ruleset(fonc), trs::depth_order);
+  clog << '\n';
+  trs::check_ruleset(trs::Ruleset::ops_cost_ruleset(fonc), trs::ops_cost_order);
+  clog << '\n';
+  trs::check_ruleset(trs::Ruleset::joined_ruleset(fonc), trs::joined_order);
 
   return 0;
 }
