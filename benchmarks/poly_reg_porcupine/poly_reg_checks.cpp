@@ -91,6 +91,9 @@ int main(int argc, char **argv)
 
   Compiler::gen_he_code(noopt_func, noopt_header_os, noopt_gen_name + ".hpp", noopt_source_os);
 
+  ofstream noopt_ir_os(noopt_func_name + "_ir.dot");
+  util::draw_ir(noopt_func, noopt_ir_os);
+
   util::Quantifier noopt_quantifier(noopt_func);
   if (call_quantifier)
   {
@@ -99,9 +102,6 @@ int main(int argc, char **argv)
     noopt_quantifier.print_info(cout);
     cout << endl;
   }
-
-  ofstream noopt_ir_os(noopt_func_name + "_ir.dot");
-  util::draw_ir(noopt_func, noopt_ir_os);
 
   clog << "\nfonction optimisée\n";
 
