@@ -24,6 +24,7 @@ int main(int argc, char **argv)
 
   trs::TRS trs_non_termin{trs::Ruleset::non_terminating_toy_ruleset(fonc)};
   trs::print_ruleset(trs_non_termin.ruleset(), clog);
+  trs::check_ruleset(trs_non_termin.ruleset(), trs::ops_cost_order);
   trs_non_termin.run(trs::RewriteHeuristic::bottom_up);
 
   string nom_gen = "gen_he_" + nom_app;
