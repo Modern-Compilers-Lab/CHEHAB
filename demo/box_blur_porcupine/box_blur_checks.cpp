@@ -67,7 +67,6 @@ int main(int argc, char **argv)
   clog << '\n';
 
   string app_name = "box_blur";
-  // 13
   size_t slot_count = 16;
   int bit_width = 20;
   bool signdness = false;

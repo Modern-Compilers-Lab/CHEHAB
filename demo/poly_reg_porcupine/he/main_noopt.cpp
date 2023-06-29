@@ -20,7 +20,8 @@ int main(int argc, char **argv)
   params.set_poly_modulus_degree(n);
   params.set_plain_modulus(PlainModulus::Batching(n, 20));
   ClearArgsInfo clear_inputs, clear_outputs;
-  parse_inputs_outputs_file(params.plain_modulus(), is, clear_inputs, clear_outputs);
+  size_t slot_count;
+  parse_inputs_outputs_file(is, params.plain_modulus(), clear_inputs, clear_outputs, slot_count);
   params.set_coeff_modulus(CoeffModulus::Create(n, {60, 60, 60}));
   SEALContext context(params, false, sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
@@ -52,8 +53,7 @@ int main(int argc, char **argv)
   time_sum = time_end - time_start;
 
   ClearArgsInfo obtained_clear_outputs;
-  get_clear_outputs(
-    batch_encoder, decryptor, encrypted_outputs, encoded_outputs, clear_outputs, obtained_clear_outputs);
+  get_clear_outputs(batch_encoder, decryptor, encrypted_outputs, encoded_outputs, slot_count, obtained_clear_outputs);
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 

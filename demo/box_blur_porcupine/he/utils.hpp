@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <istream>
 #include <ostream>
@@ -27,7 +28,8 @@ inline bool operator==(const ClearArgInfo &lhs, const ClearArgInfo &rhs)
 using ClearArgsInfo = std::unordered_map<std::string, ClearArgInfo>;
 
 void parse_inputs_outputs_file(
-  const seal::Modulus &plain_modulus, std::istream &is, ClearArgsInfo &inputs, ClearArgsInfo &outputs);
+  std::istream &is, const seal::Modulus &plain_modulus, ClearArgsInfo &inputs, ClearArgsInfo &outputs,
+  std::size_t &slot_count);
 
 void prepare_he_inputs(
   const seal::BatchEncoder &encoder, const seal::Encryptor &encryptor, const ClearArgsInfo &clear_inputs,
@@ -35,7 +37,7 @@ void prepare_he_inputs(
 
 void get_clear_outputs(
   const seal::BatchEncoder &encoder, seal::Decryptor &decryptor, const EncryptedArgs &encrypted_outputs,
-  const EncodedArgs &encoded_outputs, const ClearArgsInfo &ref_clear_outputs, ClearArgsInfo &clear_outputs);
+  const EncodedArgs &encoded_outputs, std::size_t slot_count, ClearArgsInfo &clear_outputs);
 
 void print_encrypted_outputs_info(
   const seal::SEALContext &context, seal::Decryptor &decryptor, const EncryptedArgs &encrypted_outputs,

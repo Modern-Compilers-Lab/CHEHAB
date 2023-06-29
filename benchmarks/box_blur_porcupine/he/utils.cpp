@@ -1,18 +1,18 @@
 #include "utils.hpp"
-#include <cstddef>
 #include <stdexcept>
 #include <utility>
 
 using namespace std;
 using namespace seal;
 
-void parse_inputs_outputs_file(const Modulus &plain_modulus, istream &is, ClearArgsInfo &inputs, ClearArgsInfo &outputs)
+void parse_inputs_outputs_file(
+  istream &is, const Modulus &plain_modulus, ClearArgsInfo &inputs, ClearArgsInfo &outputs, size_t &slot_count)
 {
+  ios_base::fmtflags f(is.flags());
   is >> boolalpha;
 
-  size_t vector_size;
   size_t nb_inputs, nb_outputs;
-  if (!(is >> vector_size >> nb_inputs >> nb_outputs))
+  if (!(is >> slot_count >> nb_inputs >> nb_outputs))
     throw invalid_argument("could not parse function general information");
 
   // parse inputs
@@ -25,27 +25,23 @@ void parse_inputs_outputs_file(const Modulus &plain_modulus, istream &is, ClearA
 
     if (is_signed)
     {
-      vector<int64_t> var_value(vector_size);
-      for (size_t j = 0; j < vector_size; ++j)
+      vector<int64_t> var_value(slot_count);
+      for (size_t j = 0; j < slot_count; ++j)
       {
         if (!(is >> var_value[j]))
           throw invalid_argument("could not parse input slot");
       }
-      auto [input_it, inserted] = inputs.emplace(var_name, ClearArgInfo{move(var_value), is_cipher, true});
-      if (!inserted)
-        throw logic_error("repeated input");
+      inputs.emplace(var_name, ClearArgInfo{move(var_value), is_cipher, true});
     }
     else
     {
-      vector<uint64_t> var_value(vector_size);
-      for (size_t j = 0; j < vector_size; ++j)
+      vector<uint64_t> var_value(slot_count);
+      for (size_t j = 0; j < slot_count; ++j)
       {
         if (!(is >> var_value[j]))
           throw invalid_argument("could not parse input slot");
       }
-      auto [input_it, inserted] = inputs.emplace(var_name, ClearArgInfo{move(var_value), is_cipher, false});
-      if (!inserted)
-        throw logic_error("repeated input");
+      inputs.emplace(var_name, ClearArgInfo{move(var_value), is_cipher, false});
     }
   }
 
@@ -57,8 +53,8 @@ void parse_inputs_outputs_file(const Modulus &plain_modulus, istream &is, ClearA
     if (!(is >> var_name >> is_cipher))
       throw invalid_argument("could not parse output information");
 
-    vector<uint64_t> var_value(vector_size);
-    for (size_t j = 0; j < vector_size; ++j)
+    vector<uint64_t> var_value(slot_count);
+    for (size_t j = 0; j < slot_count; ++j)
     {
       int64_t slot_value;
       if (!(is >> slot_value))
@@ -73,10 +69,9 @@ void parse_inputs_outputs_file(const Modulus &plain_modulus, istream &is, ClearA
       }
       var_value[j] = static_cast<uint64_t>(slot_value);
     }
-    auto [output_it, inserted] = outputs.emplace(var_name, ClearArgInfo{move(var_value), is_cipher, false});
-    if (!inserted)
-      throw logic_error("repeated output");
+    outputs.emplace(var_name, ClearArgInfo{move(var_value), is_cipher, false});
   }
+  is.flags(f);
 }
 
 void prepare_he_inputs(
@@ -88,7 +83,7 @@ void prepare_he_inputs(
     Plaintext encoded_input;
     if (clear_input.second.is_signed_)
     {
-      const vector<int64_t> &clear_input_value = get<vector<int64_t>>(clear_input.second.value_);
+      const auto &clear_input_value = get<vector<int64_t>>(clear_input.second.value_);
       vector<int64_t> prepared_value(encoder.slot_count());
       for (size_t i = 0; i < prepared_value.size(); ++i)
         prepared_value[i] = clear_input_value[i % clear_input_value.size()];
@@ -96,7 +91,7 @@ void prepare_he_inputs(
     }
     else
     {
-      const vector<uint64_t> &clear_input_value = get<vector<uint64_t>>(clear_input.second.value_);
+      const auto &clear_input_value = get<vector<uint64_t>>(clear_input.second.value_);
       vector<uint64_t> prepared_value(encoder.slot_count());
       for (size_t i = 0; i < prepared_value.size(); ++i)
         prepared_value[i] = clear_input_value[i % clear_input_value.size()];
@@ -107,79 +102,33 @@ void prepare_he_inputs(
     {
       Ciphertext encrypted_input;
       encryptor.encrypt(encoded_input, encrypted_input);
-      auto [encrypted_input_it, inserted] = encrypted_inputs.emplace(clear_input.first, encrypted_input);
-      if (!inserted)
-        throw logic_error("ciphertext input already there");
+      encrypted_inputs.emplace(clear_input.first, encrypted_input);
     }
     else
-    {
-      auto [encoded_input_it, inserted] = encoded_inputs.emplace(clear_input.first, encoded_input);
-      if (!inserted)
-        throw logic_error("plaintext input already there");
-    }
+      encoded_inputs.emplace(clear_input.first, encoded_input);
   }
 }
 
 void get_clear_outputs(
   const BatchEncoder &encoder, Decryptor &decryptor, const EncryptedArgs &encrypted_outputs,
-  const EncodedArgs &encoded_outputs, const ClearArgsInfo &ref_clear_outputs, ClearArgsInfo &clear_outputs)
+  const EncodedArgs &encoded_outputs, size_t slot_count, ClearArgsInfo &clear_outputs)
 {
   for (const auto &encrypted_output : encrypted_outputs)
   {
     Plaintext encoded_output;
     decryptor.decrypt(encrypted_output.second, encoded_output);
-    auto clear_output_info_it = ref_clear_outputs.find(encrypted_output.first);
-    if (clear_output_info_it == ref_clear_outputs.end())
-      throw invalid_argument("encrypted output without clear info (is_signed)");
-
-    if (clear_output_info_it->second.is_signed_)
-    {
-      vector<int64_t> clear_output;
-      encoder.decode(encoded_output, clear_output);
-      clear_output.resize(get<vector<int64_t>>(clear_output_info_it->second.value_).size());
-      auto [clear_output_it, inserted] =
-        clear_outputs.emplace(encrypted_output.first, ClearArgInfo{move(clear_output), true, true});
-      if (!inserted)
-        throw invalid_argument("clear output already there");
-    }
-    else
-    {
-      vector<uint64_t> clear_output;
-      encoder.decode(encoded_output, clear_output);
-      clear_output.resize(get<vector<uint64_t>>(clear_output_info_it->second.value_).size());
-      auto [clear_output_it, inserted] =
-        clear_outputs.emplace(encrypted_output.first, ClearArgInfo{move(clear_output), true, false});
-      if (!inserted)
-        throw invalid_argument("clear output already there");
-    }
+    vector<uint64_t> clear_output(encoder.slot_count());
+    encoder.decode(encoded_output, clear_output);
+    clear_output.resize(slot_count);
+    clear_outputs.emplace(encrypted_output.first, ClearArgInfo{move(clear_output), true, false});
   }
 
   for (const auto &encoded_output : encoded_outputs)
   {
-    auto clear_output_info_it = ref_clear_outputs.find(encoded_output.first);
-    if (clear_output_info_it == ref_clear_outputs.end())
-      throw invalid_argument("encoded output without clear info (is_signed)");
-
-    if (clear_output_info_it->second.is_signed_)
-    {
-      vector<int64_t> clear_output;
-      encoder.decode(encoded_output.second, clear_output);
-      clear_output.resize(get<vector<int64_t>>(clear_output_info_it->second.value_).size());
-      auto [clear_output_it, inserted] =
-        clear_outputs.emplace(encoded_output.first, ClearArgInfo{move(clear_output), false, true});
-      if (!inserted)
-        throw invalid_argument("clear output already there");
-    }
-    else
-    {
-      vector<uint64_t> clear_output;
-      encoder.decode(encoded_output.second, clear_output);
-      clear_output.resize(get<vector<uint64_t>>(clear_output_info_it->second.value_).size());
-      auto [clear_output_it, inserted] =
-        clear_outputs.emplace(encoded_output.first, ClearArgInfo{move(clear_output), false, false});
-      if (!inserted)
-        throw invalid_argument("clear output already there");
-    }
+    vector<uint64_t> clear_output(encoder.slot_count());
+    encoder.decode(encoded_output.second, clear_output);
+    clear_output.resize(slot_count);
+    clear_outputs.emplace(encoded_output.first, ClearArgInfo{move(clear_output), false, false});
   }
 }
 

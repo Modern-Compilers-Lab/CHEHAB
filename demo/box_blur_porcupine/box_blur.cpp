@@ -77,7 +77,6 @@ int main(int argc, char **argv)
   chrono::duration<double, milli> time_sum(0);
   time_start = chrono::high_resolution_clock::now();
   string func_name = "box_blur";
-  // Compiler::create_func(func_name, 13, 20, false, true);
   const auto &func = Compiler::create_func(func_name, 16, 20, false, true);
 
   box_blur_baseline();
