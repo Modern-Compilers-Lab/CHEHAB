@@ -34,5 +34,10 @@ int main(int argc, char **argv)
   ofstream flux_ri(nom_app + "_noopt_ir.dot");
   util::draw_ir(fonc, flux_ri, true);
 
+  util::Quantifier quantif(fonc);
+  cout << "\ncaractéristiques du circuit non optimisé\n";
+  quantif.run_all_analysis();
+  quantif.print_info(cout);
+
   return 0;
 }
