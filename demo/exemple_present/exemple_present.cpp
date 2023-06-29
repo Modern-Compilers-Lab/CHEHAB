@@ -22,9 +22,9 @@ int main(int argc, char **argv)
   Ciphertext resultat = a * (b - c) + a * (0 + c);
   resultat.set_output("résultat");
 
-  trs::TRS trs_exemple{trs::Ruleset::toy_ruleset(fonc)};
-  trs::print_ruleset(trs_exemple.ruleset(), clog);
-  trs_exemple.run(trs::RewriteHeuristic::bottom_up);
+  trs::TRS trs_errone{trs::Ruleset::incorrect_toy_ruleset(fonc)};
+  trs::print_ruleset(trs_errone.ruleset(), clog);
+  trs_errone.run(trs::RewriteHeuristic::bottom_up);
 
   string nom_gen = "gen_he_" + nom_app;
   string chemin_gen = "he/" + nom_gen;
