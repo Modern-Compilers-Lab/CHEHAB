@@ -32,6 +32,10 @@ int main(int argc, char **argv)
   ofstream flux_source(chemin_gen + ".cpp");
   Compiler::gen_he_code(fonc, flux_entete, nom_gen + ".hpp", flux_source);
 
+  auto sorties_obtenues = util::evaluate_on_clear(fonc, fonc->get_inputs_example_values());
+  if (sorties_obtenues != fonc->get_outputs_example_values())
+    throw logic_error("compilation correctness-test failed");
+
   ofstream flux_exemple_es(nom_app + "_io_example.txt");
   util::print_io_terms_values(fonc, flux_exemple_es);
 
