@@ -97,6 +97,8 @@ bool TRS::rewrite_term(
     if (top_term->is_leaf())
       continue;
 
+    --max_iter;
+
 #ifdef FHECO_LOGGING
     auto top_term_str_expr = expr_printer.expand_term_str_expr(top_term);
     clog << "\nréécriture du terme \"" << top_term_str_expr << "\"\n";
@@ -175,7 +177,6 @@ bool TRS::rewrite_term(
       else if (func_->data_flow().can_delete(equiv_term))
         func_->delete_term_cascade(equiv_term);
     }
-    --max_iter;
   }
   return did_rewrite;
 }
