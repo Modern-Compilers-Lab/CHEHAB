@@ -68,6 +68,10 @@ public:
 
   const ParamTermInfo *get_output_info(const Term *term) const;
 
+  const Term *get_input_term(const std::string &label) const;
+
+  const Term *get_output_term(const std::string &label) const;
+
   inline const IOTermsInfo &inputs_info() const { return inputs_info_; }
 
   inline const ConstTermsValues &constants_info() const { return const_terms_info_; }

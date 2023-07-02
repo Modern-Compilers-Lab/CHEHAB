@@ -405,6 +405,26 @@ const ParamTermInfo *Expr::get_output_info(const Term *term) const
   return nullptr;
 }
 
+const Term *Expr::get_input_term(const string &label) const
+{
+  for (const auto &[term, input_info] : inputs_info_)
+  {
+    if (input_info.label_ == label)
+      return term;
+  }
+  throw invalid_argument("no input with label was found");
+}
+
+const Term *Expr::get_output_term(const string &label) const
+{
+  for (const auto &[term, output_info] : outputs_info_)
+  {
+    if (output_info.label_ == label)
+      return term;
+  }
+  throw invalid_argument("no output_info with label was found");
+}
+
 const vector<const Term *> &Expr::get_top_sorted_terms()
 {
   if (valid_top_sort_)
