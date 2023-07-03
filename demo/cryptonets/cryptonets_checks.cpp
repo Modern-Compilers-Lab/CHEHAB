@@ -181,6 +181,11 @@ int main(int argc, char **argv)
   ofstream noopt_ir_os(noopt_func_name + "_ir.dot");
   util::draw_ir(noopt_func, noopt_ir_os);
 
+  util::ExprPrinter noopt_expr_printer{noopt_func};
+  noopt_expr_printer.make_terms_str_expr();
+  ofstream noopt_outputs_exprs_os(noopt_func_name + "_outputs_exprs.dot");
+  noopt_expr_printer.print_outputs_str_expr(noopt_outputs_exprs_os);
+
   util::Quantifier noopt_quantifier(noopt_func);
   if (call_quantifier)
   {
@@ -234,6 +239,11 @@ int main(int argc, char **argv)
 
   ofstream opt_ir_os(opt_func_name + "_ir.dot");
   util::draw_ir(opt_func, opt_ir_os);
+
+  util::ExprPrinter opt_expr_printer{opt_func};
+  opt_expr_printer.make_terms_str_expr();
+  ofstream opt_outputs_exprs_os(opt_func_name + "_outputs_exprs.dot");
+  opt_expr_printer.print_outputs_str_expr(opt_outputs_exprs_os);
 
   if (call_quantifier)
   {
