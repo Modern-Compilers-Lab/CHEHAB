@@ -96,4 +96,6 @@ Program::Ptr get_rotation_node_operand(const Program::Ptr &node);
 
 Program::Ptr get_rotation_step_node(const Program::Ptr &node);
 
+void print_program_depth(Program *program);
+
 } // namespace ir

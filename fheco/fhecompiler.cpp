@@ -8,7 +8,7 @@
 #include "trs.hpp"
 #include "trs_util_functions.hpp"
 
-#define NB_TRS_CSE_PASS 30
+#define NB_TRS_CSE_PASS 6
 #define ENABLE_OPTIMIZATION true
 
 using namespace fhecompiler;
@@ -44,7 +44,23 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   params_selector::EncryptionParameters params = parameters_selector.select_parameters();
   */
 
-  std::cout << "compilation...\n";
+  std::cout << "La représentation intermédiare a été construite \n \n";
+
+  fheco_passes::CSE cse_pass(program);
+
+  // if (ENABLE_OPTIMIZATION == true)
+
+  std::cout << "Calcul de l'état initial du circuit ...\n \n";
+
+  cse_pass.apply_cse2();
+
+  ir::print_program_depth(program);
+
+  ir::print_ops_counters(program);
+
+  std::cout << std::string(50, '-') << "\n \n";
+
+  std::cout << "compilation...\n \n";
 
   params_selector::ParameterSelector parameters_selector(program);
 
@@ -62,14 +78,7 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   // utils::draw_ir(program, output_filename + "0.dot");
 
-  fheco_passes::CSE cse_pass(program);
-
-  // if (ENABLE_OPTIMIZATION == true)
-  cse_pass.apply_cse2();
-
-  std::cout << "cse passed...\n";
-
-  utils::draw_ir(program, output_filename + "1.dot");
+  // utils::draw_ir(program, output_filename + "1.dot");
 
   // fheco_passes::Normalizer normalizer(program);
   // normalizer.normalize();
@@ -92,16 +101,17 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   // fheco_passes::optimize_SOR_pass2(program, ir::OpCode::add);
   // /cse_pass.apply_cse2();
-
   if (ENABLE_OPTIMIZATION)
   {
+    std::cout << "TRS et CSE ...\n";
     for (size_t i = NB_TRS_CSE_PASS; i > 0; i--)
     {
       // utils::draw_ir(program, output_filename + std::to_string(i) + ".dot");
       trs.apply_rewrite_rules_on_program_from_static_ruleset();
       cse_pass.apply_cse2();
-      std::cout << "pass# " << i << "\n";
     }
+    std::cout << "TRS et CSE ... termine \n";
+    std::cout << std::string(50, '-') << "\n \n";
   }
   else
     std::cout << "optimization is disabled\n";
@@ -112,17 +122,31 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
 
   // be careful, not rewrite rules should applied after calling this pass otherwise you will have to call it again
 
-  // fheco_passes::RotationKeySelctionPass rs_pass(program, params);
-  // rs_pass.collect_program_rotations_steps();
+  std::string sep("-");
+  size_t llength = 50;
+  for (size_t i = 0; i < llength; i++)
+  {
+    sep += "-";
+  }
+
+  if (ENABLE_OPTIMIZATION)
+  {
+    fheco_passes::RotationKeySelctionPass rs_pass(program, params);
+    rs_pass.collect_program_rotations_steps();
+    std::cout << "nombre des etapes de rotation apres la decomposition : " << program->get_rotations_steps().size()
+              << "\n";
+    std::cout << sep << "\n \n";
+  }
 
   if (ENABLE_OPTIMIZATION)
     cse_pass.apply_cse2();
 
-  ir::print_ops_counters(program);
-
+  std::cout << "insertion de l'operation de relinearization ... \n";
   fheco_passes::RelinPass relin_pass(program);
   relin_pass.simple_relinearize();
+  std::cout << sep << "\n \n";
 
+  std::cout << "generation du code ... \n";
   translator::Translator tr(program, params);
   {
     std::ofstream translation_os(output_filename);
@@ -130,10 +154,18 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
     if (!translation_os)
       throw("couldn't open file for translation.\n");
 
-    tr.translate_program(translation_os);
+    tr.translate_program(translation_os, 20000);
 
     translation_os.close();
   }
+  std::cout << sep << "\n \n";
+
+  ir::print_program_depth(program);
+
+  ir::print_ops_counters(program);
+
+  std::cout << sep << "\n \n";
+
   delete program;
   program = nullptr;
 }

@@ -2,6 +2,7 @@
 #include "ir_utils.hpp"
 #include "passes_const.hpp"
 #include <algorithm>
+#include <ostream>
 
 namespace fheco_passes
 {
@@ -86,6 +87,8 @@ void RotationKeySelctionPass::collect_program_rotations_steps()
       targeted_rotation_nodes.push_back(node);
   }
 
+  std::cout << "le nombre initial des etapes : " << rotation_steps.size() << "\n";
+
   std::vector<int> rotations_steps_vec;
   for (auto &e : rotation_steps)
     rotations_steps_vec.push_back(e.first);
@@ -145,6 +148,7 @@ void RotationKeySelctionPass::collect_program_rotations_steps()
       rotations_steps_vec.push_back(step);
 
     // we do a rewrite pass for rotation steps in steps_to_rewrite
+
     for (auto &node : targeted_rotation_nodes)
     {
       auto &operands = node->get_operands();
@@ -152,10 +156,6 @@ void RotationKeySelctionPass::collect_program_rotations_steps()
 
       if (steps_to_rewrite.find(rotation_step) != steps_to_rewrite.end())
       {
-        /*
-          this rotation step needs to be written in naf because it doesn't exists in rotations_step_vec while its naf
-          components are there
-        */
         std::vector<int32_t> naf_components = naf_cache[rotation_step];
         rewrite_rotation_node_with_naf(node, naf_components);
       }

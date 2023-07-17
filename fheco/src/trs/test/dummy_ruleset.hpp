@@ -253,7 +253,6 @@ namespace ruleset
     {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q > p) && (p > 0) && (q > 0), CIRCUIT_SAVE_FLAG},
     {(x << p) + (y << q), ((x << T::fold(p - q)) + y) << q, (p < q) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG},
     {(x << p) + (y << q), ((y << T::fold(q - p)) + x) << p, (q < p) && (p < 0) && (q < 0), CIRCUIT_SAVE_FLAG}
-
     /*
     {(x + (y << p)) + (z << q), x + (((y << T::fold(p - q)) + z) << q),
      (p < q) && (p < 0) && (q < 0) && T::opcode_of(x) != static_cast<int>(ir::OpCode::rotate), CIRCUIT_SAVE_FLAG},

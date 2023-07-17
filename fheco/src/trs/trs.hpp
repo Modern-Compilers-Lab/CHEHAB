@@ -11,6 +11,7 @@ namespace fheco_trs
 class TRS
 {
 private:
+  static size_t rewrites_count;
   ir::Program *program;
   static core::FunctionTable functions_table;
 
@@ -24,6 +25,8 @@ public:
   void apply_rewrite_rules_on_program_from_static_ruleset();
 
   void apply_rewrite_rules_on_program(const std::vector<RewriteRule> &ruleset);
+
+  size_t get_rewrites_count() { return rewrites_count; }
 };
 
 } // namespace fheco_trs

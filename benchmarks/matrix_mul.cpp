@@ -10,6 +10,7 @@ inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int vec
   step--;
   for (; step > 0;)
   {
+
     rots_sum += (x << (step--));
   }
   // result of sum will be in the first slot
@@ -143,6 +144,7 @@ int main()
       {
         std::vector<int64_t> mask(A[0].size(), 0);
         mask[0] = 1;
+
         fhecompiler::Ciphertext simd_product = A_encrypted[i] * B_encrypted[j];
         fhecompiler::Ciphertext temp_cipher = sum_all_slots(simd_product, A[0].size()) * mask;
         if (j > 0)

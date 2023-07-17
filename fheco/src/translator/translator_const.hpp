@@ -18,9 +18,15 @@ namespace translator
 /* return types map, it maps IR types with corresponding literal for code generation that targets the API */
 INLINE std::unordered_map<ir::TermType, const char *> types_map = {
 
-  {ir::ciphertextType, "ufhe::Ciphertext"}, {ir::plaintextType, "ufhe::Plaintext"}
+  {ir::ciphertextType, "seal::Ciphertext"}, {ir::plaintextType, "seal::Plaintext"}
 
 };
+
+INLINE std::string shared_ciphers_map_id = "shared_ciphers";
+INLINE std::string shared_plains_map_id = "shared_plains";
+INLINE std::string generated_class_name = "Computation";
+INLINE const char *rotation_steps_type_literal = "std::vector<int32_t>";
+INLINE const char *rotation_steps_identifier = "rot_steps\n";
 
 /* ops_map maps IR operation code with corresponding literal for code generation that targets the API */
 INLINE std::unordered_map<ir::OpCode, const char *> ops_map = {
@@ -75,7 +81,7 @@ INLINE std::unordered_set<ir::OpCode> inplace_instructions = {
   ir::OpCode::exponentiate, ir::OpCode::square};
 
 /* literals related to api/backend */
-INLINE const char *params_type_literal = "ufhe::EncryptionParams";
+INLINE const char *params_type_literal = "seal::EncryptionParams";
 INLINE const char *params_identifier_literal = "params";
 INLINE const char *scalar_int = "int64_t";
 INLINE const char *scalar_float = "double";
@@ -83,35 +89,35 @@ INLINE const char *encode_literal = "encode";
 INLINE const char *decode_literal = "decode";
 INLINE const char *encrypt_literal = "encrypt";
 INLINE const char *decrypt_literal = "decrypt";
-INLINE const char *context_type_literal = "ufhe::EncryptionContext";
+INLINE const char *context_type_literal = "seal::SEALContext";
 INLINE const char *context_identifier = "context";
-INLINE const char *public_key_literal = "ufhe::PublicKey";
+INLINE const char *public_key_literal = "seal::PublicKey";
 INLINE const char *public_key_identifier = "public_key";
-INLINE const char *secret_key_literal = "ufhe::SecretKey";
+INLINE const char *secret_key_literal = "seal::SecretKey";
 INLINE const char *secret_key_identifier = "secret_key";
-INLINE const char *relin_keys_type_literal = "ufhe::RelinKeys";
+INLINE const char *relin_keys_type_literal = "seal::RelinKeys";
 INLINE const char *relin_keys_identifier = "relin_keys";
-INLINE const char *galois_keys_type_literal = "ufhe::GaloisKeys";
+INLINE const char *galois_keys_type_literal = "seal::GaloisKeys";
 INLINE const char *galois_keys_identifier = "galois_keys";
-INLINE const char *key_generator_type_literal = "ufhe::KeyGenerator";
+INLINE const char *key_generator_type_literal = "seal::KeyGenerator";
 INLINE const char *key_generator_identifier = "key_gen";
-INLINE const char *evaluator_type_literal = "ufhe::Evaluator";
+INLINE const char *evaluator_type_literal = "seal::Evaluator";
 INLINE const char *evaluator_identifier = "evaluator";
-INLINE const char *bv_encoder_type_literal = "ufhe::BatchEncoder";
-INLINE const char *ckks_encoder_type_literal = "ufhe::CKKSEncoder";
+INLINE const char *bv_encoder_type_literal = "seal::BatchEncoder";
+INLINE const char *ckks_encoder_type_literal = "seal::CKKSEncoder";
 INLINE const char *encoder_type_identifier = "encoder";
-INLINE const char *encryptor_type_literal = "ufhe::Encryptor";
+INLINE const char *encryptor_type_literal = "seal::Encryptor";
 INLINE const char *encryptor_type_identifier = "encryptor";
 INLINE const char *insert_object_instruction = "insert"; // instruction to insert inputs/outputs
 INLINE const char *context_function_name = "create_context";
 INLINE const char *set_plain_modulus_intruction = "set_plain_modulus";
 INLINE const char *set_coef_modulus_instruction = "set_coeff_modulus";
 INLINE const char *set_poly_modulus_degree_instruction = "set_poly_modulus_degree";
-INLINE const char *encrypted_inputs_class_literal = "std::unordered_map<std::string, ufhe::Ciphertext>";
-INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::string, ufhe::Plaintext>";
-INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, ufhe::Plaintext>";
-INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, ufhe::Ciphertext>";
-INLINE const char *headers_include = "#include\"ufhe/ufhe.hpp\"\n#include<vector>\n#include<unordered_map>\n";
+INLINE const char *encrypted_inputs_class_literal = "std::unordered_map<std::string, seal::Ciphertext>";
+INLINE const char *encoded_inputs_class_literal = "std::unordered_map<std::string, seal::Plaintext>";
+INLINE const char *encoded_outputs_class_literal = "std::unordered_map<std::string, seal::Plaintext>";
+INLINE const char *encrypted_outputs_class_literal = "std::unordered_map<std::string, seal::Ciphertext>";
+INLINE const char *headers_include = "#include\"seal/seal.hpp\"\n#include<vector>\n#include<unordered_map>\n";
 INLINE const char *rotation_step_type_literal = "int32_t";
 INLINE const char *gen_steps_function_signature = "std::vector<int32_t> get_rotations_steps()";
 
@@ -206,9 +212,12 @@ public:
        << public_key_identifier << ");" << '\n';
   }
 
-  void write_encryption(std::ostream &os, const std::string &plaintext_id, const std::string &destination_cipher) const
+  void write_encryption(
+    std::ostream &os, const std::string &plaintext_id, const std::string &destination_cipher, bool is_new_object) const
   {
-    os << types_map[ir::ciphertextType] << " " << destination_cipher << ";" << '\n';
+    if (is_new_object)
+      os << types_map[ir::ciphertextType] << " " << destination_cipher << ";" << '\n';
+
     os << encryptor_identifier << "." << encrypt_instruction_literal << "(" << plaintext_id << "," << destination_cipher
        << ");" << '\n';
   }
@@ -241,62 +250,43 @@ public:
 
   void write_unary_operation(
     std::ostream &os, ir::OpCode opcode, const std::string &destination_id, const std::string &lhs_id,
-    ir::TermType type)
+    ir::TermType type, bool is_new_object)
   {
-    if (is_init == false)
-      init(os);
-
-    // if destination_id == lhs_id then the instruction is inplace
-
-    bool is_inplace = destination_id == lhs_id;
-
     std::string other_args("");
     auto it = get_other_args_by_opcode.find(opcode);
 
-    std::string instruction_code = (is_inplace ? ops_map_inplace[opcode] : ops_map[opcode]);
+    std::string instruction_code = ops_map[opcode];
 
     if (it != get_other_args_by_opcode.end())
     {
       other_args = it->second;
     }
 
-    if (!is_inplace)
+    if (is_new_object)
       os << types_map[type] << " " << destination_id << ";";
 
     if (other_args.length() == 0)
     {
       os << evaluator_identifier << "." << instruction_code << "(" << lhs_id;
-      if (!is_inplace)
-      {
-        os << "," << destination_id << ");";
-      }
-      else
-        os << ");";
+
+      os << "," << destination_id << ");";
     }
     else
     {
       os << evaluator_identifier << "." << instruction_code << "(" << lhs_id << "," << other_args;
-      if (!is_inplace)
-        os << "," << destination_id << ");";
-      else
-        os << ");";
+      os << "," << destination_id << ");";
     }
   }
 
   void write_binary_operation(
     std::ostream &os, ir::OpCode opcode, const std::string &destination_id, const std::string &lhs_id,
-    const std::string &rhs_id, ir::TermType type)
+    const std::string &rhs_id, ir::TermType type, bool new_object = true)
   {
     // if destination_id == lhs_id then it is an inplace instruction
-    if (is_init == false)
-      init(os);
-
-    bool is_inplace = destination_id == lhs_id;
-
-    if (!is_inplace)
+    if (new_object)
       os << types_map[type] << " " << destination_id << ";" << '\n';
 
-    std::string instruction_code = (is_inplace ? ops_map_inplace[opcode] : ops_map[opcode]);
+    std::string instruction_code = ops_map[opcode];
     std::string other_args("");
     auto it = get_other_args_by_opcode.find(opcode);
 
@@ -309,10 +299,7 @@ public:
     {
       os << ", " << other_args;
     }
-    if (!is_inplace)
-      os << "," << destination_id << ");" << '\n';
-    else
-      os << ");";
+    os << "," << destination_id << ");" << '\n';
   }
 
   bool is_initialized() const { return this->is_init; }
@@ -345,36 +332,36 @@ public:
   }
 
   void write_scalar_encoding(
-    std::ostream &os, const std::string &plaintext_id, const std::string &scalar_value, const std::string &scalar_type,
-    const std::string &number_of_slots, double scale = 0.0) const
+    std::ostream &os, const std::string &plaintext_id, const std::string &vector_id, const std::string &scalar_value,
+    const std::string &scalar_type, const std::string &number_of_slots, double scale = 0.0) const
   {
     // create a vector
-    const std::string vector_id = plaintext_id + "_clear";
+    const std::string _vector_id = vector_id + "_clear";
     os << "std::vector<" << scalar_type << ">"
-       << " " << vector_id << "(" << number_of_slots << ");" << '\n';
+       << " " << _vector_id << "(" << number_of_slots << ");" << '\n';
 
     os << "for(size_t i = 0; i < " << number_of_slots << "; i++)" << '\n'
        << "{" << '\n'
-       << vector_id << "[i] = " << scalar_value << ";" << '\n'
+       << _vector_id << "[i] = " << scalar_value << ";" << '\n'
        << "}" << '\n';
 
     os << types_map[ir::plaintextType] << " " << plaintext_id << ";" << '\n';
     if (scale > 0.0)
     {
-      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << scale << ","
+      os << encoder_identifier << "." << encoder_instruction_literal << "(" << _vector_id << "," << scale << ","
          << plaintext_id << ");" << '\n';
     }
     else
     {
-      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
+      os << encoder_identifier << "." << encoder_instruction_literal << "(" << _vector_id << "," << plaintext_id << ");"
          << '\n';
     }
   }
 
   template <typename T>
   void write_vector_encoding(
-    std::ostream &os, const std::string &plaintext_id, const std::vector<T> &vector_value,
-    const std::string &vector_type, double scale = 0.0) const
+    std::ostream &os, const std::string &plaintext_id, const std::string &vector_id, const std::vector<T> &vector_value,
+    const std::string &vector_type, double scale = 0.0, bool is_new_object = true) const
   {
     // dump the vector
     size_t vector_size = vector_value.size();
@@ -386,20 +373,21 @@ public:
         vector_value_str += ",";
     }
     vector_value_str += "}";
-    const std::string vector_id = plaintext_id + "_clear";
-    os << "std::vector<" << vector_type << ">"
-       << " " << vector_id << " = " << vector_value_str << ";" << '\n';
+    const std::string _vector_id = vector_id + "_clear";
+    os << "std::vector<" << vector_type << "> " << _vector_id << " = " << vector_value_str << ";" << '\n';
 
     // encoding
-    os << types_map[ir::plaintextType] << " " << plaintext_id << ";" << '\n';
+    if (is_new_object)
+      os << types_map[ir::plaintextType] << " " << plaintext_id << ";" << '\n';
+
     if (scale > 0.0)
     {
-      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << scale << ","
+      os << encoder_identifier << "." << encoder_instruction_literal << "(" << _vector_id << "," << scale << ","
          << plaintext_id << ");" << '\n';
     }
     else
     {
-      os << encoder_identifier << "." << encoder_instruction_literal << "(" << vector_id << "," << plaintext_id << ");"
+      os << encoder_identifier << "." << encoder_instruction_literal << "(" << _vector_id << "," << plaintext_id << ");"
          << '\n';
     }
   }
@@ -415,7 +403,7 @@ private:
 
   const std::vector<std::string> scheme_type_str = {"bfv", "bgv", "ckks"};
   const std::vector<std::string> security_level_str = {
-    "ufhe::sec_level_type::tc128", "ufhe::sec_level_type::tc192", "ufhe::sec_level_type::tc256"};
+    "seal::sec_level_type::tc128", "seal::sec_level_type::tc192", "seal::sec_level_type::tc256"};
 
 public:
   bool is_defined = false;
@@ -435,7 +423,7 @@ public:
     if (params->poly_modulus_degree == 0)
       throw("invalid plynomial modulus degree in write_plaintext_modulus_bit_length \n");
 
-    os << params_identifier_literal << "." << set_plain_modulus_intruction << "(ufhe::PlainModulus::Batching("
+    os << params_identifier_literal << "." << set_plain_modulus_intruction << "(seal::PlainModulus::Batching("
        << params->poly_modulus_degree << "," << params->plaintext_modulus_bit_length << "));" << '\n';
   }
 
@@ -456,7 +444,7 @@ public:
         }
       }
       os << "};" << '\n';
-      os << params_identifier_literal << "." << set_coef_modulus_instruction << "(ufhe::CoeffModulus::Create("
+      os << params_identifier_literal << "." << set_coef_modulus_instruction << "(seal::CoeffModulus::Create("
          << params->poly_modulus_degree << "," << coef_modulus_identifier << "));" << '\n';
     }
     else
@@ -469,7 +457,7 @@ public:
     {
       throw("default coef modulus is supported only for BFV\n");
     }
-    os << params_identifier_literal << "." << set_coef_modulus_instruction << "(ufhe::CoeffModulus::BFVDefault("
+    os << params_identifier_literal << "." << set_coef_modulus_instruction << "(seal::CoeffModulus::BFVDefault("
        << params->poly_modulus_degree << "," << security_level_str[(static_cast<int>(params->security_level)) - 1]
        << "));" << '\n';
   }
@@ -484,7 +472,7 @@ public:
   {
 
     os << params_type_literal << " " << params_identifier_literal
-       << "(ufhe::scheme_type::" << scheme_type_str[static_cast<int>(scheme_type)] << ");" << '\n';
+       << "(seal::scheme_type::" << scheme_type_str[static_cast<int>(scheme_type)] << ");" << '\n';
 
     write_polynomial_modulus_degree(os);
     if (!params->coef_modulus.empty())

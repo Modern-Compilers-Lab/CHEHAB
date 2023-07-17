@@ -11,6 +11,8 @@ namespace fheco_trs
 
 core::FunctionTable TRS::functions_table = util_functions::functions_table;
 
+size_t TRS::rewrites_count = 0;
+
 void TRS::apply_rule_on_ir_node(
   const std::shared_ptr<ir::Term> &ir_node, const RewriteRule &rule, bool &is_rule_applied)
 {
@@ -28,11 +30,13 @@ void TRS::apply_rule_on_ir_node(
       if (rule.evaluate_rewrite_condition(*matching_map, program, functions_table))
       {
         is_rule_applied = rule.substitute_in_ir(ir_node, *matching_map, program, functions_table);
+        rewrites_count++;
       }
     }
     else
     {
       is_rule_applied = rule.substitute_in_ir(ir_node, *matching_map, program, functions_table);
+      rewrites_count++;
     }
   }
 }

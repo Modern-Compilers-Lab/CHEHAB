@@ -230,6 +230,7 @@ void CSE::apply_cse2(bool allow_assign_insertion)
   auto nodes = program->get_dataflow_sorted_nodes(true);
   for (size_t i = 0; i < nodes.size(); i++)
   {
+    // std::cout << "node " << i << " / " << nodes.size() << "\n";
     auto node = nodes[i];
     auto parents_labels = node->get_parents_labels();
     bool cse_applied = false;

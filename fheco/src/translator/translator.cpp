@@ -6,89 +6,90 @@
 #include "rotationkeys_select_pass.hpp"
 #include <fstream>
 
+/*
+  All objects are associated global with possibility of re-use
+  Sort objects to increase cache hits
+*/
+
 namespace translator
 {
 
-std::string Translator::get_identifier(const Ptr &term_ptr) const
+size_t Translator::scope_id = 0;
+
+std::string Translator::get_identifier(const Ptr &term_ptr)
 {
-  if (program->get_entry_form_constants_table(term_ptr->get_label()) != std::nullopt)
+
+  if (program->type_of(term_ptr->get_label()) == ir::ConstantTableEntryType::input)
   {
-    ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(term_ptr->get_label()));
+    return get_input_identifier(term_ptr);
+  }
+
+  bool is_output = program->get_outputs_nodes().find(term_ptr->get_label()) != program->get_outputs_nodes().end();
+
+  is_output = is_output || program->type_of(term_ptr->get_label()) == ir::ConstantTableEntryType::output;
+
+  if (is_output)
+  {
+    return get_output_identifier(term_ptr->get_label(), term_ptr->get_term_type());
+  }
+
+  auto curr_term_ptr = program->find_node_in_dataflow(current_label[term_ptr]);
+
+  if (generated_shareds.find(curr_term_ptr) != generated_shareds.end())
+    return get_shared_identifier(curr_term_ptr);
+
+  if (program->get_entry_form_constants_table(current_label[term_ptr]) != std::nullopt)
+  {
+    ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(current_label[term_ptr]));
     ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
-    return entry_value.get_tag();
+    return (entry_value.get_tag().length() == 0 ? term_ptr->get_label() : entry_value.get_tag());
   }
   else
-    return term_ptr->get_label();
+    return current_label[term_ptr];
 }
 
-std::string Translator::get_output_identifier(const std::string &output_label)
+std::string Translator::get_identifier(const std::string &label)
 {
+  if (program->get_entry_form_constants_table(label) != std::nullopt)
+  {
+    ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(label));
+    ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
+    return (entry_value.get_tag().length() == 0 ? label : entry_value.get_tag());
+  }
+  else
+    return label;
+}
+
+std::string Translator::get_shared_identifier(const Ptr &term)
+{
+  std::string ident = get_identifier(current_label[term]);
+
+  if (term->get_term_type() == ir::TermType::ciphertextType)
+  {
+    return shared_ciphers_map_id + "[\"" + ident + "\"]";
+  }
+  else
+  {
+    return shared_plains_map_id + "[\"" + ident + "\"]";
+  }
+}
+
+std::string Translator::get_output_identifier(const std::string &output_label, ir::TermType term_type)
+{
+  std::string tag;
   if (program->get_entry_form_constants_table(output_label) != std::nullopt)
   {
     ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(output_label));
     ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
-    return entry_value.get_tag();
+    tag = entry_value.get_tag();
   }
   else
-    return output_label;
+    tag = output_label;
+
+  return std::string(outputs_class_identifier[term_type]) + "[\"" + tag + "\"]";
 }
 
 /*
-void Translator::compact_assignement(const ir::Term::Ptr &node_ptr)
-{
-  if (!node_ptr->is_operation_node())
-    return;
-
-  if (node_ptr->get_opcode() != ir::OpCode::assign)
-    return;
-
-  auto operand = node_ptr->get_operands()[0];
-
-  if (operand->is_operation_node() && operand->get_opcode() == ir::OpCode::assign)
-  {
-    node_ptr->delete_operand_at_index(0);
-    node_ptr->add_operand(operand->get_operands()[0]);
-    std::optional<std::string> new_tag =
-      program->get_tag_value_in_constants_table_entry_if_exists(operand->get_label());
-
-    if (new_tag != std::nullopt)
-    {
-      program->update_tag_value_in_constants_table_entry(node_ptr->get_label(), *new_tag);
-    }
-  }
-}
-*/
-
-void Translator::convert_to_square(const ir::Term::Ptr &node_ptr)
-{
-  /* this function converts mul operation to square operation when it is possible */
-  if (!node_ptr->is_operation_node())
-    return;
-
-  ir::OpCode opcode = node_ptr->get_opcode();
-
-  if (opcode == ir::OpCode::mul)
-  {
-    auto &operands = node_ptr->get_operands();
-    if (operands.size() != 2)
-    {
-      throw("got an unexpcted number of operands, expected number is 2 in covert_to_square");
-    }
-
-    auto &lhs_ptr = operands[0];
-    auto &rhs_ptr = operands[1];
-    if (lhs_ptr->get_label() == rhs_ptr->get_label())
-    {
-      // convert to square
-      node_ptr->set_opcode(ir::OpCode::square);
-      node_ptr->clear_operands();
-      node_ptr->add_operand(lhs_ptr);
-      lhs_ptr->delete_parent(node_ptr->get_label()); /* remove a parent once, it doesn't matter whether to remove from
-                                                        rhs or lhs since they point to the same object */
-    }
-  }
-}
-
 void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
 {
   if (!node_ptr->is_operation_node())
@@ -123,7 +124,7 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
       if (program->type_of(operand_ptr->get_label()) == ir::ConstantTableEntryType::input && !node_ptr->is_inplace())
         return;
 
-      if (is_an_output_operand /*&& !conversion_condition*/)
+      if (is_an_output_operand)
         return;
 
       // an additional condition to convert to inplace implicitly
@@ -176,27 +177,29 @@ void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
       return;
 
     if (
-      program->is_output_node(operands[0]->get_label())/*&&
-      !conversion_condition*/) // in this case no need to check dependency condition since the lhs is an output, checking
+      program->is_output_node(operands[0]->get_label())) // in this case no need to check dependency condition since the
+lhs is an output, checking
                              // !conversion_condition is enough
       return;
 
-    bool dependency_condition = lhs_ptr->get_parents_labels().size() == 0;
+bool dependency_condition = lhs_ptr->get_parents_labels().size() == 0;
 
-    conversion_condition = conversion_condition || dependency_condition;
+conversion_condition = conversion_condition || dependency_condition;
 
-    if (conversion_condition)
-    {
-      program->insert_new_entry_from_existing_with_delete(lhs_ptr->get_label(), node_ptr->get_label());
-      node_ptr->set_label(lhs_ptr->get_label());
-    }
-  }
-  else
-    throw("unexpected size of operands, more than 2");
+if (conversion_condition)
+{
+  program->insert_new_entry_from_existing_with_delete(lhs_ptr->get_label(), node_ptr->get_label());
+  node_ptr->set_label(lhs_ptr->get_label());
+}
+}
+else throw("unexpected size of operands, more than 2");
 }
 
+*/
+
 void Translator::translate_constant_table_entry(
-  ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os)
+  const ir::Program::Ptr &term, ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os,
+  bool is_new_object)
 {
   /*
     basically in this function we need to generate a decalartion or a definition in C++ for a given entry.
@@ -207,7 +210,7 @@ void Translator::translate_constant_table_entry(
   // Retrieving needed information
   ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
   ir::ConstantTableEntryType entry_type = table_entry.get_entry_type();
-  std::string tag = entry_value.get_tag();
+  std::string tag = get_identifier(term);
   // getting type
   std::string type_str;
 
@@ -234,16 +237,8 @@ void Translator::translate_constant_table_entry(
   else
     type_str = types_map[term_type];
 
-  if (entry_type == ir::ConstantTableEntryType::input)
+  if (entry_type == ir::ConstantTableEntryType::constant || entry_value.value != std::nullopt)
   {
-    write_input(tag, term_type, os);
-  }
-  else if (entry_type == ir::ConstantTableEntryType::constant || entry_value.value != std::nullopt)
-  {
-    if (!encoding_writer.is_initialized())
-    {
-      encoding_writer.init(os);
-    }
     if (term_type == ir::plaintextType)
     {
       // encoding
@@ -256,10 +251,11 @@ void Translator::translate_constant_table_entry(
 
       if (auto _vector_value = std::get_if<VectorInt>(&vector_value))
         encoding_writer.write_vector_encoding(
-          os, tag, *_vector_value, type_str,
-          program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
+          os, tag, term->get_label(), *_vector_value, type_str,
+          program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0, is_new_object);
       else if (auto vector_literal = std::get_if<VectorFloat>(&vector_value))
-        encoding_writer.write_vector_encoding(os, tag, *_vector_value, type_str, program->get_scale());
+        encoding_writer.write_vector_encoding(
+          os, tag, term->get_label(), *_vector_value, type_str, program->get_scale(), is_new_object);
       else
         throw("unsupported data type by schemes\n");
     }
@@ -274,14 +270,16 @@ void Translator::translate_constant_table_entry(
       {
         int64_t casted_value = static_cast<int64_t>(*value);
         encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(casted_value), type_str, std::to_string(program->get_vector_size()),
+          os, tag, term->get_label(), std::to_string(casted_value), type_str,
+          std::to_string(program->get_vector_size()),
           program->get_encryption_scheme() == fhecompiler::Scheme::ckks ? program->get_scale() : 0.0);
       }
       else
       {
         double e_value = std::get<double>(scalar_value);
         encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(e_value), type_str, std::to_string(program->get_vector_size()), program->get_scale());
+          os, tag, term->get_label(), std::to_string(e_value), type_str, std::to_string(program->get_vector_size()),
+          program->get_scale());
       }
       /*
       if (type_str == scalar_int)
@@ -307,7 +305,7 @@ void Translator::translate_constant_table_entry(
   }
 }
 
-void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &os)
+void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &os, size_t scope_id, bool is_new_object)
 {
   std::string other_args(""); // this depends on the operation
   auto it = get_other_args_by_opcode.find(term_ptr->get_opcode());
@@ -317,6 +315,8 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
 
   std::string op_identifier = get_identifier(term_ptr);
   auto &operands = term_ptr->get_operands();
+  // bool is_lhs_shared = generated_shareds.find(operands[0]) != generated_shareds.end();
+  // bool is_rhs_shared = generated_shareds.find(operands[1]) != generated_shareds.end();
   std::string lhs_identifier = get_identifier(operands[0]);
   std::string rhs_identifier = get_identifier(operands[1]);
 
@@ -324,17 +324,19 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
     throw("empty label operand");
 
   evaluation_writer.write_binary_operation(
-    os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type());
+    os, deduce_opcode_to_generate(term_ptr), op_identifier, lhs_identifier, rhs_identifier, term_ptr->get_term_type(),
+    is_new_object);
 }
 
-void Translator::translate_nary_operation(const Ptr &term_ptr, std::ofstream &os)
+void Translator::translate_nary_operation(const Ptr &term_ptr, std::ofstream &os, size_t scope_id)
 {
   std::cout << "translation of nary \n";
 }
 
-void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &os)
+void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &os, size_t scope_id, bool is_new_object)
 {
   std::string op_identifier = get_identifier(term_ptr);
+
   std::string rhs_identifier = get_identifier(term_ptr->get_operands()[0]);
   // os << op_type << " " << op_identifier << ops_map[term_ptr->get_opcode()] << rhs_identifier << end_of_command <<
   // '\n';
@@ -345,20 +347,48 @@ void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &o
   else
   {
     evaluation_writer.write_unary_operation(
-      os, term_ptr->get_opcode(), op_identifier, rhs_identifier, term_ptr->get_term_type());
+      os, term_ptr->get_opcode(), op_identifier, rhs_identifier, term_ptr->get_term_type(), is_new_object);
   }
 }
 
-void Translator::translate_term(const Ptr &term, std::ofstream &os)
+void Translator::translate_term(const Ptr &term, std::ofstream &os, size_t term_scope_id)
 {
+  bool is_new_object(true);
 
   auto constant_table_entry_opt = program->get_entry_form_constants_table(term->get_label());
+
+  bool is_input = program->type_of(term->get_label()) == ir::ConstantTableEntryType::input;
+
+  bool is_output = program->get_outputs_nodes().find(term->get_label()) != program->get_outputs_nodes().end();
+
+  if (is_input == false && is_output == false)
+  {
+    if (is_shared_obj(term, term_scope_id))
+    {
+      if (free_global_objs[term->get_term_type()].size() > 0)
+      {
+        current_label[term] = free_global_objs[term->get_term_type()].back();
+        free_global_objs[term->get_term_type()].pop_back();
+        is_new_object = false;
+      }
+    }
+    else
+    {
+      if (free_local_objs[term->get_term_type()][term_scope_id].size() > 0)
+      {
+        current_label[term] = free_local_objs[term->get_term_type()][term_scope_id].back();
+        free_local_objs[term->get_term_type()][term_scope_id].pop_back();
+        is_new_object = false;
+      }
+    }
+  }
+  else
+    is_new_object = false;
 
   // we need to tranlsate the operation node
   if (term->is_operation_node())
   {
     auto &operands = term->get_operands();
-
     if (operands.size() == 0)
     {
       throw("unexpected size of operands, 0 operands");
@@ -368,70 +398,63 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os)
     {
       if (term->get_opcode() == ir::OpCode::encrypt)
       {
-        if (!encryption_writer.is_initialized())
-        {
-          encryption_writer.init(os);
-        }
         const std::string &plaintext_id = get_identifier(term->get_operands()[0]);
+
         const std::string &destination_cipher = get_identifier(term);
-        encryption_writer.write_encryption(os, plaintext_id, destination_cipher);
+
+        encryption_writer.write_encryption(os, plaintext_id, destination_cipher, is_new_object);
       }
       else
       {
-        translate_unary_operation(term, os);
+        translate_unary_operation(term, os, term_scope_id, is_new_object);
       }
     }
     else if (operands.size() == 2)
     {
-      translate_binary_operation(term, os);
+      translate_binary_operation(term, os, term_scope_id, is_new_object);
     }
     else
     {
-      translate_nary_operation(term, os);
+      translate_nary_operation(term, os, term_scope_id);
     }
   }
   else if (constant_table_entry_opt != std::nullopt)
   {
     ir::ConstantTableEntry &constant_table_entry = *constant_table_entry_opt;
-    translate_constant_table_entry(constant_table_entry, term->get_term_type(), os);
+    translate_constant_table_entry(term, constant_table_entry, term->get_term_type(), os, is_new_object);
+  }
+  if (is_new_object && is_shared_obj(term, term_scope_id))
+  {
+    generated_shareds.insert(term);
+    write_as_shared_object(term, os);
   }
 }
 
-void Translator::translate_program(std::ofstream &os)
+void Translator::translate_program(std::ofstream &os, size_t threshold)
 {
-
-  os << headers_include;
-
-  context_writer.write_context(os);
-
-  os << "\n";
+  auto &nodes = program->get_dataflow_sorted_nodes(true);
+  for (auto &node : nodes)
+  {
+    current_label[node] = node->get_label();
+    parents_copy[node] = node->get_parents_labels();
+  }
 
   if (program->get_rotations_steps().size())
     write_rotations_steps_getter(program->get_rotations_steps(), os);
 
-  generate_function_signature(os);
-  os << "{" << '\n';
+  make_scopes_graph(threshold);
 
   fix_ir_instructions_pass();
-  convert_to_inplace_pass();
 
-  {
-    auto &nodes_ptr = program->get_dataflow_sorted_nodes(false);
+  std::ofstream os_header("Computation.hpp");
+  std::ofstream os_source("Computation.cpp");
 
-    // after doing all passes, now we do the last pass to translate and generate the code
-    for (auto &node_ptr : nodes_ptr)
-    {
-      translate_term(node_ptr, os);
-    }
-  }
-  for (auto &output_node : program->get_outputs_nodes())
-  {
-    // if (program->type_of(output_node.second->get_label()) == ir::ConstantTableEntryType::output)
-    write_output(
-      get_output_identifier(output_node.first), get_identifier(output_node.second),
-      (output_node.second)->get_term_type(), os);
-  }
-  os << "}" << '\n';
+  generate_computation_class(os_header, os_source);
+}
+
+void Translator::write_scope_function_call(size_t scope_id, std::ofstream &os) const
+{
+  generate_function_call_class(os, "func_" + std::to_string(scope_id));
 }
 
 void Translator::generate_function_signature(std::ofstream &os) const
@@ -448,6 +471,21 @@ void Translator::generate_function_signature(std::ofstream &os) const
            {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
            {public_key_literal, public_key_identifier, AccessType::readOnly}})
      << '\n';
+}
+
+void Translator::generate_function_signature_without_type(std::ofstream &os, const std::string &func_name) const
+{
+  ArgumentList argument_list;
+  os << func_name
+     << argument_list(
+          {{encrypted_inputs_class_literal, inputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
+           {encoded_inputs_class_literal, inputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
+           {encrypted_outputs_class_literal, outputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
+           {encoded_outputs_class_literal, outputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
+           {context_type_literal, context_identifier, AccessType::readOnly},
+           {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
+           {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly},
+           {public_key_literal, public_key_identifier, AccessType::readOnly}});
 }
 
 void Translator::write_input(const std::string &input_identifier, ir::TermType type, std::ostream &os)
@@ -470,15 +508,6 @@ void Translator::write_assign_operation(
   std::ofstream &os, const std::string &lhs_id, const std::string &rhs_id, ir::TermType type)
 {
   os << types_map[type] << " " << lhs_id << " = " << rhs_id << ";" << '\n';
-}
-
-void Translator::convert_to_inplace_pass()
-{
-  auto &sorted_nodes = program->get_dataflow_sorted_nodes(true);
-  for (auto &node_ptr : sorted_nodes)
-  {
-    convert_to_inplace(node_ptr);
-  }
 }
 
 void Translator::generate_key_generator(std::ofstream &os) const
@@ -612,6 +641,318 @@ void Translator::fix_ir_instructions_pass()
     */
     fix_ir_instruction(node);
   }
+}
+
+void Translator::make_scopes_graph(size_t nodes_count_threshold)
+{
+  // CFG
+  auto &nodes = program->get_dataflow_sorted_nodes(true);
+  size_t nodes_count(0);
+  for (auto &node : nodes)
+  {
+
+    if (node->get_term_type() == ir::TermType::rawDataType)
+      continue;
+
+    nodes_count++;
+    created_in[node] = scope_id;
+    scope_nodes_by_id[scope_id].push_back(node);
+
+    if (node->is_operation_node())
+    {
+      for (auto &operand : node->get_operands())
+        accessed_in[operand].insert(scope_id);
+    }
+    if (nodes_count >= nodes_count_threshold)
+    {
+      nodes_count = 0;
+      scope_id++;
+    }
+  }
+  // building scopes dependency graph
+  for (auto &node : nodes)
+  {
+    for (auto &acc_scope_id : accessed_in[node])
+    {
+      scopes_graph[acc_scope_id].insert(created_in[node]);
+    }
+  }
+  // sort scopes
+  std::unordered_set<size_t> vis;
+  for (auto &scope : scopes_graph)
+  {
+    if (vis.find(scope.first) != vis.end())
+      continue;
+    sort_scopes_ids(scope.first, vis);
+  }
+  /*
+  for (auto &scope : scopes_graph)
+  {
+    std::cout << scope.first << " " << scope_nodes_by_id[scope.first].size() << "\n";
+  }
+  std::cout << "\n";
+  */
+}
+
+void Translator::sort_scopes_ids(size_t scope_id, std::unordered_set<size_t> &visited)
+{
+  visited.insert(scope_id);
+  for (auto &u : scopes_graph[scope_id])
+  {
+    if (visited.find(u) != visited.end())
+      continue;
+    sort_scopes_ids(u, visited);
+  }
+  scopes_ids_sorted.push_back(scope_id);
+}
+
+void Translator::generate_scope(size_t scope_id, std::ofstream &os)
+{
+  auto &terms_nodes = scope_nodes_by_id[scope_id];
+
+  for (auto &term_node : terms_nodes)
+  {
+
+    if (term_node->is_operation_node())
+    {
+      for (auto &operand : term_node->get_operands())
+      {
+        if (operand->get_term_type() == ir::rawDataType)
+          continue;
+
+        auto it = parents_copy[operand].find(term_node->get_label());
+        if (it != parents_copy[operand].end())
+          parents_copy[operand].erase(it);
+      }
+      for (auto &operand : term_node->get_operands())
+      {
+
+        bool is_operand_output =
+          program->get_outputs_nodes().find(operand->get_label()) != program->get_outputs_nodes().end();
+
+        if (operand->get_term_type() == ir::TermType::rawDataType)
+          continue;
+
+        if (is_operand_output)
+          continue;
+
+        if (program->type_of(operand->get_label()) == ir::ConstantTableEntryType::input)
+          continue;
+
+        if (parents_copy[operand].size() == 0)
+        {
+          if (generated_shareds.find(operand) != generated_shareds.end())
+            free_global_objs[operand->get_term_type()].push_back(current_label[operand]);
+          else
+            free_local_objs[operand->get_term_type()][created_in[operand]].push_back(current_label[operand]);
+        }
+      }
+    }
+
+    translate_term(term_node, os, scope_id);
+
+    // auto output_node_itr = program->get_outputs_nodes().find(term_node->get_label());
+
+    /*
+    if (output_node_itr != program->get_outputs_nodes().end())
+    {
+      write_output(
+        get_output_identifier(output_node_itr->first), get_identifier(output_node_itr->second),
+        (output_node_itr->second)->get_term_type(), os);
+    }
+    */
+  }
+}
+
+void Translator::write_as_shared_object(const ir::Program::Ptr &node, std::ofstream &os)
+{
+
+  std::string ident = get_identifier(current_label[node]);
+
+  if (node->get_term_type() == ir::TermType::ciphertextType)
+  {
+    os << shared_ciphers_map_id << "[\"" << ident << "\"] = "
+       << "std::move(" << ident << ");\n";
+  }
+  else
+  {
+    os << shared_plains_map_id << "[\"" << ident << "\"] = std::move(" << ident << ");\n";
+  }
+}
+
+void Translator::generate_function_call(std::ofstream &os, const std::string &func_name) const
+{
+  os << func_name << "(" << inputs_class_identifier[ir::ciphertextType] << ","
+     << inputs_class_identifier[ir::plaintextType] << "," << outputs_class_identifier[ir::ciphertextType] << ","
+     << outputs_class_identifier[ir::plaintextType] << "," << context_identifier << "," << relin_keys_identifier << ","
+     << galois_keys_identifier << "," << public_key_identifier << "," << evaluator_identifier << ","
+     << encoder_type_identifier << "," << encryptor_type_literal << ");";
+}
+
+void Translator::generate_function_call_class(std::ofstream &os, const std::string &func_name) const
+{
+  os << func_name << "(" << inputs_class_identifier[ir::ciphertextType] << ","
+     << inputs_class_identifier[ir::plaintextType] << "," << outputs_class_identifier[ir::ciphertextType] << ","
+     << outputs_class_identifier[ir::plaintextType] << "," << evaluator_identifier << "," << encoder_type_identifier
+     << "," << encryptor_type_identifier << ");";
+}
+
+void Translator::generate_class_func_signature(std::ofstream &os, const std::string &func_name) const
+{
+
+  ArgumentList argument_list;
+  os << func_name
+     << argument_list(
+          {{encrypted_inputs_class_literal, inputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
+           {encoded_inputs_class_literal, inputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
+           {encrypted_outputs_class_literal, outputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
+           {encoded_outputs_class_literal, outputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
+           {evaluator_type_literal, evaluator_identifier, AccessType::readOnly},
+           {bv_encoder_type_literal, encoder_type_identifier, AccessType::readOnly},
+           {encryptor_type_literal, encryptor_type_identifier, AccessType::readOnly}})
+     << '\n';
+}
+
+void Translator::generate_main_func_signature(std::ofstream &os, const std::string &func_name) const
+{
+  ArgumentList argument_list;
+  os << func_name
+     << argument_list(
+          {{encrypted_inputs_class_literal, inputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
+           {encoded_inputs_class_literal, inputs_class_identifier[ir::plaintextType], AccessType::readAndModify},
+           {encrypted_outputs_class_literal, outputs_class_identifier[ir::ciphertextType], AccessType::readAndModify},
+           {encoded_outputs_class_literal, outputs_class_identifier[ir::plaintextType], AccessType::readAndModify}})
+     << '\n';
+}
+
+void Translator::generate_constructor_signature(std::ofstream &os, const std::string &class_name) const
+{
+  ArgumentList argument_list;
+  os << class_name
+     << argument_list(
+          {{context_type_literal, context_identifier, AccessType::readOnly},
+           {relin_keys_type_literal, relin_keys_identifier, AccessType::readOnly},
+           {public_key_literal, public_key_identifier, AccessType::readOnly},
+           {galois_keys_type_literal, galois_keys_identifier, AccessType::readOnly}})
+     << '\n';
+}
+
+void Translator::generate_computation_class(std::ofstream &os_header, std::ofstream &os_source)
+{
+  // Generating the header file
+  {
+    os_header << "#pragma once\n #include<unordered_map>\n #include<vector>\n #include\"seal/seal.h\"\n";
+    os_header << "class " << generated_class_name << "{\n";
+    os_header << "private:\n";
+
+    // declaring all attributes
+    os_header << "std::unordered_map<std::string,seal::Ciphertext> " << shared_ciphers_map_id << ";\n";
+    os_header << "std::unordered_map<std::string,seal::Plaintext> " << shared_plains_map_id << ";\n";
+    os_header << context_type_literal << " " << context_identifier << ";\n";
+    os_header << relin_keys_type_literal << " " << relin_keys_identifier << ";\n";
+    os_header << galois_keys_type_literal << " " << galois_keys_identifier << ";\n";
+    os_header << public_key_literal << " " << public_key_identifier << ";\n";
+
+    for (auto &scope_id : scopes_ids_sorted)
+    {
+      os_header << "void ";
+      generate_class_func_signature(os_header, "func_" + std::to_string(scope_id));
+      os_header << ";\n";
+    }
+
+    os_header << "public:\n";
+    // constructor
+    generate_constructor_signature(os_header, generated_class_name);
+    os_header << ";\n";
+    os_header << "void ";
+    generate_main_func_signature(os_header, program->get_program_tag());
+    os_header << ";\n";
+    os_header << "};\n";
+  }
+
+  // generating source file
+  {
+    os_source << "#include \"" << generated_class_name << ".hpp"
+              << "\"\n";
+
+    define_class_constructor(os_source, generated_class_name);
+
+    for (auto &scope_id : scopes_ids_sorted)
+    {
+      os_source << "void " << generated_class_name << "::";
+      generate_class_func_signature(os_source, "func_" + std::to_string(scope_id));
+      os_source << "{\n";
+      generate_scope(scope_id, os_source);
+      os_source << "}\n";
+    }
+
+    define_main_func(os_source, program->get_program_tag());
+  }
+}
+
+void Translator::define_main_func(std::ofstream &os, const std::string &func_name) const
+{
+  os << "void " << generated_class_name << "::";
+  generate_main_func_signature(os, func_name);
+  os << "{\n";
+  os << evaluator_type_literal << " " << evaluator_identifier << "(" << context_identifier << ");\n";
+  os << bv_encoder_type_literal << " " << encoder_type_identifier << "(" << context_identifier << ");\n";
+  os << encryptor_type_literal << " " << encryptor_type_identifier << "(" << context_identifier << ","
+     << public_key_identifier << ");\n";
+
+  for (auto &scope_id : scopes_ids_sorted)
+    write_scope_function_call(scope_id, os);
+
+  os << "}\n";
+}
+
+void Translator::define_class_constructor(std::ofstream &os, const std::string &class_name) const
+{
+  ArgumentList argument_list;
+  os << class_name << "::";
+  generate_constructor_signature(os, class_name);
+  os << " : " << context_identifier << "(" << context_identifier << ")," << relin_keys_identifier << "("
+     << relin_keys_identifier << ")," << public_key_identifier << "(" << public_key_identifier << "),"
+     << galois_keys_identifier << "(" << galois_keys_identifier << ")"
+     << "\n";
+  os << "{\n";
+  os << "}\n";
+}
+
+bool Translator::is_shared_obj(const ir::Program::Ptr &node, size_t term_scope_id)
+{
+  int32_t accessed_inside = accessed_in[node].find(created_in[node]) != accessed_in[node].end();
+  bool is_shared = created_in[node] == term_scope_id && accessed_in[node].size() >= (1 + accessed_inside);
+  return is_shared;
+}
+
+std::string Translator::get_shared_identifier(const std::string &label, ir::TermType type)
+{
+  std::string ident = get_identifier(label);
+
+  if (type == ir::TermType::ciphertextType)
+  {
+    return shared_ciphers_map_id + "[\"" + ident + "\"]";
+  }
+  else
+  {
+    return shared_plains_map_id + "[\"" + ident + "\"]";
+  }
+}
+
+std::string Translator::get_input_identifier(const ir::Program::Ptr &term)
+{
+  std::string tag;
+  if (program->get_entry_form_constants_table(term->get_label()) != std::nullopt)
+  {
+    ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(term->get_label()));
+    ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
+    tag = entry_value.get_tag();
+  }
+  else
+    tag = term->get_label();
+
+  return std::string(inputs_class_identifier[term->get_term_type()]) + "[\"" + tag + "\"]";
 }
 
 } // namespace translator

@@ -190,6 +190,7 @@ bool DAG::update_if_output_entry(const std::string &output_label, const Ptr &nod
 
   if (it != outputs_nodes.end())
   {
+
     outputs_nodes[output_label] = node;
     return true;
   }

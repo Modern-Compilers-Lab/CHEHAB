@@ -79,6 +79,7 @@ struct SEid
 
     if (id.expr_ptr->get_term_type() == ir::plaintextType && (lhs_const_value_opt != std::nullopt))
     {
+      return false;
       return ir::check_constants_value_equality(*lhs_const_value_opt, *rhs_const_value_opt, ir::plaintextType);
     }
 

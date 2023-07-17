@@ -331,6 +331,7 @@ void Program::replace_with(const Ptr &lhs, const Ptr &rhs)
   }
   else
   {
+    std::cout << "here...\n";
     if (lhs_term_type != rhs_term_type)
     {
       // insert encode or encrypt

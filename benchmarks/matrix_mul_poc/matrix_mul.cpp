@@ -1,6 +1,6 @@
 #include "fhecompiler/fhecompiler.hpp"
 
-inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int vector_size)
+inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int vector_size, bool rotate_for_next = false)
 {
   fhecompiler::Ciphertext result = x;
   int step = 1;
@@ -8,17 +8,17 @@ inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int vec
   if (step < 0)
     throw std::logic_error("negative rotation step");
 
-  fhecompiler::Ciphertext rots_sum = x;
-
   for (; step < vector_size;)
   {
     result += (x << step++);
   }
   // result of sum will be in the first slot
-  x <<= vector_size;
+
+  if (rotate_for_next)
+    x <<= vector_size;
+
   return result;
 }
-
 /*
 inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int number_slots_to_rotate)
 {
@@ -97,11 +97,8 @@ int main()
   {
     fhecompiler::init("matrix_mul_poc", fhecompiler::Scheme::bfv, fhecompiler::Backend::SEAL);
 
-    size_t polynomial_modulus_degree = 4096;
-    size_t plaintext_modulus = 786433;
-
-    std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
-    std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
+    std::vector<std::vector<int64_t>> A;
+    std::vector<std::vector<int64_t>> B;
 
     const int N = 16;
     const int M = 64;
@@ -117,6 +114,7 @@ int main()
       }
       A.push_back(line);
     }
+
     for (size_t i = 0; i < P; i++)
     {
       std::vector<int64_t> line;
@@ -129,14 +127,8 @@ int main()
 
     std::vector<fhecompiler::Ciphertext> A_encrypted;
     // encoding and encryption of A
-    size_t vector_size =
-      1024; // this the number of slots from user perspective, compiler later may select n > vector_size
-    size_t nb_lines_to_pack_in_one_ciphertext = vector_size / A[0].size();
-    std::cout << nb_lines_to_pack_in_one_ciphertext << "\n";
-    /*
-      now nb_lines_to_pack_in_one_ciphertext is the number of lines that needs to be flattened and packed in one
-      plaintext to encrypt
-    */
+    size_t vector_size = 1024;
+    size_t nb_lines_to_pack_in_one_ciphertext = std::min(A.size(), vector_size / A[0].size());
     for (size_t i = 0; i < A.size(); i += nb_lines_to_pack_in_one_ciphertext)
     {
       std::vector<int64_t> lines_flattened;
@@ -147,8 +139,7 @@ int main()
           lines_flattened.push_back(A[i + k][j]);
         }
       }
-      fhecompiler::Ciphertext input("input" + std::to_string(i), fhecompiler::VarType::input);
-      A_encrypted.push_back(input);
+      A_encrypted.push_back(fhecompiler::Ciphertext::encrypt(lines_flattened));
     }
     //  encrypt by column for matrix B
     std::vector<std::vector<int64_t>> B_transpose;
@@ -173,7 +164,6 @@ int main()
     // make outputs
     std::vector<fhecompiler::Ciphertext> outputs;
     std::vector<std::vector<fhecompiler::Ciphertext>> lines_of_C_encrypted(A.size());
-
     for (size_t i = 0; i < A_encrypted.size(); i++) // 8
     {
       for (size_t j = 0; j < B_transpose.size(); j++) // 256
@@ -190,7 +180,8 @@ int main()
         for (size_t k = 0; k < nb_lines_to_pack_in_one_ciphertext; k++) // 8192
         {
           size_t number_of_slots_to_sum = A[0].size(); // = B.size()
-          fhecompiler::Ciphertext slots_sum = sum_all_slots(simd_product, A[0].size());
+          bool rotate_for_next = (k < (nb_lines_to_pack_in_one_ciphertext - 1));
+          fhecompiler::Ciphertext slots_sum = sum_all_slots(simd_product, number_of_slots_to_sum, rotate_for_next);
           fhecompiler::Ciphertext cipher_with_first_slot_only = slots_sum * mask;
 
           size_t corresponding_line = i * nb_lines_to_pack_in_one_ciphertext + k;
@@ -200,10 +191,8 @@ int main()
     }
 
     // making outputs
-
     for (size_t i = 0; i < lines_of_C_encrypted.size(); i++)
     {
-
       fhecompiler::Ciphertext output_line("output" + std::to_string(i), fhecompiler::VarType::output);
       output_line = lines_of_C_encrypted[i][0];
       for (size_t j = 1; j < lines_of_C_encrypted[i].size(); j++)
@@ -211,15 +200,10 @@ int main()
         output_line += (lines_of_C_encrypted[i][j] >> j);
       }
       C_encrypted.push_back(output_line);
-
-      for (size_t j = 0; j < lines_of_C_encrypted[i].size(); j++)
-      {
-        fhecompiler::Ciphertext output_line(
-          "output" + std::to_string(i) + std::to_string(j), fhecompiler::VarType::output);
-        output_line = lines_of_C_encrypted[i][j];
-      }
     }
 
+    size_t polynomial_modulus_degree = 4096;
+    size_t plaintext_modulus = 786433;
     params_selector::EncryptionParameters params;
     params.set_plaintext_modulus(plaintext_modulus);
     params.set_polynomial_modulus_degree(polynomial_modulus_degree);

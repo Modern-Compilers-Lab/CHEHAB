@@ -508,7 +508,6 @@ void print_ops_counters(Program *program)
     }
     visited.insert(node);
   }
-  std::cout << std::string(50, '-') << "\n";
   std::cout << "#(ct-ct mul) = " << mul_ct_ct << "\n";
   std::cout << "#(ct-ct add) = " << add_ct_ct << "\n";
   std::cout << "#(ct-ct sub) = " << sub_ct_ct << "\n";
@@ -516,7 +515,6 @@ void print_ops_counters(Program *program)
   std::cout << "#(ct-pt mul) = " << mul_ct_pt << "\n";
   std::cout << "#(ct-pt add) = " << add_ct_pt << "\n";
   std::cout << "#(ct-pt sub) = " << sub_ct_pt << "\n";
-  std::cout << std::string(50, '-') << "\n";
 }
 
 ConstantTableEntryType deduce_const_table_entry_table(
@@ -714,11 +712,7 @@ bool check_constants_value_equality(const ConstantValue &lhs, const ConstantValu
     if (lhs_v.size() != rhs_v.size())
       return false;
 
-    for (size_t i = 0; i < lhs_v.size(); i++)
-      if (lhs_v[i] != rhs_v[i])
-        return false;
-
-    return true;
+    return (lhs_v == rhs_v);
   }
   else if (term_type == ir::scalarType)
   {
@@ -769,6 +763,40 @@ Program::Ptr get_rotation_step_node(const Program::Ptr &node)
     return node->get_operands()[0];
 
   return node->get_operands()[1];
+}
+
+void print_program_depth(Program *program)
+{
+  auto &nodes = program->get_dataflow_sorted_nodes(true);
+  std::unordered_map<Program::Ptr, size_t> xdepth;
+  std::unordered_map<Program::Ptr, size_t> ldepth;
+  size_t max_xdepth = 0;
+  size_t max_ldepth = 0;
+  for (auto &node : nodes)
+  {
+    if (node->is_operation_node())
+    {
+      auto &operands = node->get_operands();
+      if (operands.size() == 1)
+      {
+        ldepth[node] = std::max(ldepth[node], ldepth[operands[0]]) + 1;
+        xdepth[node] = std::max(xdepth[node], xdepth[operands[0]]) + (node->get_opcode() == ir::OpCode::square);
+      }
+      else
+      {
+        xdepth[node] = std::max(xdepth[node], std::max(xdepth[operands[0]], xdepth[operands[1]]));
+        ldepth[node] = std::max(ldepth[node], std::max(ldepth[operands[0]], ldepth[operands[1]])) + 1;
+        if (node->get_term_type() == ir::ciphertextType && node->get_opcode() == ir::OpCode::mul)
+        {
+          xdepth[node] += 1;
+        }
+      }
+    }
+    max_xdepth = std::max(max_xdepth, xdepth[node]);
+    max_ldepth = std::max(max_ldepth, ldepth[node]);
+  }
+  std::cout << "profondeur multiplicative : " << max_xdepth << " \n"
+            << "profondeur : " << max_ldepth << "\n";
 }
 
 } // namespace ir
