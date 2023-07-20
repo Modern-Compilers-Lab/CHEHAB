@@ -41,12 +41,12 @@ public:
 
 private:
   bool match(
-    const TermMatcher &term_matcher, ir::Term *term, Subst &subst, bool global_analysis, std::int64_t &rel_cost,
+    const TermMatcher &term_matcher, ir::Term *term, Subst &subst, bool global_analysis, double &rel_cost,
     ir::Term::PtrSet &to_delete) const;
 
   ir::Term *construct_term(
     const TermMatcher &term_matcher, const Subst &subst, const ir::Term::PtrSet &to_delete, bool global_analysis,
-    std::int64_t &rel_cost, std::vector<std::size_t> &created_terms_ids);
+    double &rel_cost, std::vector<std::size_t> &created_terms_ids);
 
   std::shared_ptr<ir::Func> func_;
 

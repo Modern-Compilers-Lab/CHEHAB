@@ -1,12 +1,12 @@
-#include "fheco/param_select/encryption_params.hpp"
-#include <iostream>
+#include "fheco/param_select/enc_params.hpp"
+#include "fheco/util/common.hpp"
+#include <utility>
 
 using namespace std;
 
 namespace fheco::param_select
 {
-EncryptionParams::EncryptionParams(
-  size_t poly_modulus_degree, int plain_modulus_bit_size, int coeff_mod_data_level_bit_count)
+EncParams::EncParams(size_t poly_modulus_degree, int plain_modulus_bit_size, int coeff_mod_data_level_bit_count)
   : poly_modulus_degree_{poly_modulus_degree}, plain_modulus_bit_size_{plain_modulus_bit_size}
 {
   coeff_mod_bit_sizes_.assign(coeff_mod_data_level_bit_count / MOD_BIT_COUNT_MAX, MOD_BIT_COUNT_MAX);
@@ -23,7 +23,18 @@ EncryptionParams::EncryptionParams(
   coeff_mod_bit_count_ = coeff_mod_data_level_bit_count + coeff_mod_bit_sizes_.back();
 }
 
-int EncryptionParams::increase_coeff_mod_bit_sizes(int max_total_amount)
+EncParams::EncParams(size_t poly_modulus_degree, integer plain_modulus, vector<int> coeff_mod_bit_sizes)
+  : poly_modulus_degree_{poly_modulus_degree}, coeff_mod_bit_sizes_{move(coeff_mod_bit_sizes)}
+{
+  unsigned long msb_index;
+  FHECO_MSB_INDEX_UINT64(&msb_index, plain_modulus);
+  plain_modulus_bit_size_ = msb_index + 1;
+  coeff_mod_bit_count_ = 0;
+  for (auto prime_size : coeff_mod_bit_sizes_)
+    coeff_mod_bit_count_ += prime_size;
+}
+
+int EncParams::increase_coeff_mod_bit_sizes(int max_total_amount)
 {
   int start_idx = last_coeff_mod_big_prime_idx() + 1;
   int i;
@@ -39,7 +50,7 @@ int EncryptionParams::increase_coeff_mod_bit_sizes(int max_total_amount)
   return i;
 }
 
-int EncryptionParams::last_coeff_mod_big_prime_idx() const
+int EncParams::last_coeff_mod_big_prime_idx() const
 {
   int idx = 0;
   // Consider only data level primes
@@ -48,7 +59,7 @@ int EncryptionParams::last_coeff_mod_big_prime_idx() const
   return idx;
 }
 
-vector<int> EncryptionParams::coeff_mod_data_level_bit_sizes() const
+vector<int> EncParams::coeff_mod_data_level_bit_sizes() const
 {
   vector<int> data_level_part{coeff_mod_bit_sizes_};
   // Remove special prime
@@ -56,23 +67,19 @@ vector<int> EncryptionParams::coeff_mod_data_level_bit_sizes() const
   return data_level_part;
 }
 
-void EncryptionParams::print_params() const
+void EncParams::print_params(ostream &os) const
 {
-  cout << "/" << endl;
-  cout << "| Encryption parameters :" << endl;
-  cout << "|   poly_mod: " << poly_modulus_degree_ << endl;
-  cout << "|   plain_mod: " << plain_modulus_bit_size_ << " bits" << endl;
-
-  /*
-  Print the size of the true (product) coefficient modulus.
-  */
-  cout << "|   coeff_mod size: ";
-  cout << coeff_mod_bit_count_ << " (" << coeff_mod_bit_count_ - coeff_mod_bit_sizes_.back() << " + "
-       << coeff_mod_bit_sizes_.back() << ") (";
+  os << "/" << '\n';
+  os << "| Encryption parameters :" << '\n';
+  os << "|   poly_mod: " << poly_modulus_degree_ << '\n';
+  os << "|   plain_mod_size: " << plain_modulus_bit_size_ << " bits" << '\n';
+  os << "|   coeff_mod_size: ";
+  os << coeff_mod_bit_count_ << " (" << coeff_mod_bit_count_ - coeff_mod_bit_sizes_.back() << " + "
+     << coeff_mod_bit_sizes_.back() << ") (";
   for (size_t i = 0; i < coeff_mod_bit_sizes_.size() - 1; ++i)
-    cout << coeff_mod_bit_sizes_[i] << " + ";
-  cout << coeff_mod_bit_sizes_.back();
-  cout << ") bits" << endl;
-  cout << "\\" << endl;
+    os << coeff_mod_bit_sizes_[i] << " + ";
+  os << coeff_mod_bit_sizes_.back();
+  os << ") bits" << '\n';
+  os << "\\" << '\n';
 }
 } // namespace fheco::param_select

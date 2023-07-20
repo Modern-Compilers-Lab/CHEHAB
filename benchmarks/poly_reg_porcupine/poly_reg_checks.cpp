@@ -36,7 +36,7 @@ void poly_reg_synthesized()
 
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
-  os << (arg ? name : "non_" + name);
+  os << (arg ? name : "no_" + name);
 }
 
 int main(int argc, char **argv)
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
   if (argc > 5)
     const_folding = stoi(argv[5]);
 
-  print_bool_arg(call_quantifier, "quantificateur", clog);
+  print_bool_arg(call_quantifier, "quantifier", clog);
   clog << " ";
   clog << "trs_" << ruleset << " " << rewrite_heuristic;
   clog << " ";
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
   bool signdness = true;
   bool need_cyclic_rotation = false;
 
-  clog << "\nfonction non optimisée\n";
+  clog << "\nnoopt function\n";
 
   string noopt_func_name = app_name + "_noopt";
   const auto &noopt_func =
@@ -97,13 +97,13 @@ int main(int argc, char **argv)
   util::Quantifier noopt_quantifier(noopt_func);
   if (call_quantifier)
   {
-    cout << "\ncaractéristiques du circuit initial\n";
+    cout << "\ninitial circuit characteristics\n";
     noopt_quantifier.run_all_analysis();
     noopt_quantifier.print_info(cout);
     cout << endl;
   }
 
-  clog << "\nfonction optimisée\n";
+  clog << "\nopt function\n";
 
   if (cse)
   {
@@ -148,12 +148,12 @@ int main(int argc, char **argv)
 
   if (call_quantifier)
   {
-    cout << "\ncaractéristiques du circuit final\n";
+    cout << "\nfinal circuit characteristics\n";
     util::Quantifier opt_quantifier(opt_func);
     opt_quantifier.run_all_analysis();
     opt_quantifier.print_info(cout);
 
-    cout << "\ntaux d'amélioration\n";
+    cout << "\nimprovement rates\n";
     auto diff_quantifier = (noopt_quantifier - opt_quantifier) / noopt_quantifier * 100;
     diff_quantifier.print_info(cout);
   }

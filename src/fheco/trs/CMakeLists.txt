@@ -4,9 +4,7 @@ set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/depth_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/fold_op_gen_matcher.cpp
     ${CMAKE_CURRENT_LIST_DIR}/halide_adapted_ruleset.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/incorrect_toy_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/joined_ruleset.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/non_terminating_toy_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/op_gen_matcher.cpp
     ${CMAKE_CURRENT_LIST_DIR}/op_gen_op_code.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ops_cost_ruleset.cpp
@@ -16,7 +14,6 @@ set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/subst.cpp
     ${CMAKE_CURRENT_LIST_DIR}/term_matcher.cpp
     ${CMAKE_CURRENT_LIST_DIR}/term_op_code.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/toy_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/trs.cpp    
 )
 

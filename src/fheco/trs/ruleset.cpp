@@ -162,7 +162,7 @@ void print_ruleset(const Ruleset &ruleset, ostream &os)
   os << ruleset.name() << ":\n";
   for (const auto &[root_op_type, rules] : ruleset.rules_by_root_op())
   {
-    os << "règles de l'opération \"" << root_op_type << "\":\n";
+    os << "\"" << root_op_type << "\" rules:\n";
     for (const auto &rule : rules)
       os << util::ExprPrinter::make_rule_str_repr(rule) << '\n';
   }

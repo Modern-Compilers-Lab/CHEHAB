@@ -13,40 +13,39 @@ size_t HashPackedVal::operator()(const PackedVal &packed_val) const
   return h;
 }
 
-int64_t evaluate_raw_op_code(const OpCode &op_code, const vector<Term *> &operands)
+double evaluate_raw_op_code(const OpCode &op_code, const vector<Term::Type> &operands_types)
 {
-  if (Term::deduce_result_type(op_code, operands) == Term::Type::plain)
+  if (Term::deduce_result_type(op_code, operands_types) == Term::Type::plain)
     return 0;
 
-  // in decreasing order
   switch (op_code.type())
   {
   case OpCode::Type::mul:
-    if (operands[0]->type() == Term::Type::cipher && operands[1]->type() == Term::Type::cipher)
-      return 100;
+    if (operands_types[0] == Term::Type::cipher && operands_types[1] == Term::Type::cipher)
+      return 1;
 
     else
-      return 20;
+      return 0.2;
 
   case OpCode::Type::square:
-    return 70;
+    return 0.7;
 
   case OpCode::Type::encrypt:
-    return 50;
+    return 0.5;
 
   case OpCode::Type::relin:
-    return 25;
+    return 0.25;
 
   case OpCode::Type::rotate:
-    return 25;
+    return 0.25;
 
   case OpCode::Type::mod_switch:
-    return 5;
+    return 0.05;
 
   case OpCode::Type::add:
   case OpCode::Type::sub:
   case OpCode::Type::negate:
-    return 1;
+    return 0.01;
 
   case OpCode::Type::nop:
     return 0;
@@ -56,46 +55,13 @@ int64_t evaluate_raw_op_code(const OpCode &op_code, const vector<Term *> &operan
   }
 }
 
-int64_t evaluate_raw_op_code(const OpCode &op_code, const vector<Term::Type> &operands_types)
+double evaluate_raw_op_code(const OpCode &op_code, const vector<Term *> &operands)
 {
-  if (Term::deduce_result_type(op_code, operands_types) == Term::Type::plain)
-    return 0;
-
-  switch (op_code.type())
-  {
-  case OpCode::Type::mul:
-    if (operands_types[0] == Term::Type::cipher && operands_types[1] == Term::Type::cipher)
-      return 100;
-
-    else
-      return 20;
-
-  case OpCode::Type::square:
-    return 70;
-
-  case OpCode::Type::encrypt:
-    return 50;
-
-  case OpCode::Type::relin:
-    return 25;
-
-  case OpCode::Type::rotate:
-    return 25;
-
-  case OpCode::Type::mod_switch:
-    return 5;
-
-  case OpCode::Type::add:
-  case OpCode::Type::sub:
-  case OpCode::Type::negate:
-    return 1;
-
-  case OpCode::Type::nop:
-    return 0;
-
-  default:
-    throw invalid_argument("unhandled op_code raw cost resulting in a ciphertext");
-  }
+  vector<Term::Type> operands_types;
+  operands_types.reserve(operands.size());
+  for (auto operand : operands)
+    operands_types.push_back(operand->type());
+  return evaluate_raw_op_code(op_code, operands_types);
 }
 
 IOValues convert_to_io_values(const IOTermsInfo &io_terms_info)

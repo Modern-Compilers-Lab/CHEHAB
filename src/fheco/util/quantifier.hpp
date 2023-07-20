@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fheco/param_select/encryption_params.hpp"
+#include "fheco/param_select/enc_params.hpp"
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/op_code.hpp"
 #include "fheco/ir/term.hpp"
@@ -82,21 +82,21 @@ public:
 
   Quantifier(std::shared_ptr<ir::Func> func) : func_{std::move(func)} {}
 
-  void run_all_analysis(const param_select::EncryptionParams &params);
+  void run_all_analysis(const param_select::EncParams &params);
 
   void run_all_analysis();
 
-  void compute_he_depth_info();
+  void compute_depth_info();
 
   void count_terms_classes();
 
-  void compute_global_metrics(const param_select::EncryptionParams &params);
+  void compute_global_metrics(const param_select::EncParams &params);
 
-  void print_info(std::ostream &os, bool depth_details = false);
+  void print_info(std::ostream &os, bool depth_details = false, bool outputs_details = false);
 
-  void print_he_depth_info(std::ostream &os, bool details) const;
+  void print_depth_info(std::ostream &os, bool details) const;
 
-  void print_terms_classes_info(std::ostream &os) const;
+  void print_terms_classes_info(std::ostream &os, bool outputs_details) const;
 
   void print_global_metrics(std::ostream &os) const;
 
@@ -104,7 +104,7 @@ public:
 
   inline bool depth_metrics() const { return depth_metrics_; }
 
-  inline const DepthSummary &he_depth_summary() const { return he_depth_summary_; }
+  inline const DepthSummary &depth_summary() const { return depth_summary_; }
 
   inline const CtxtTermsDepthInfo &ctxt_leaves_depth_info() const { return ctxt_leaves_depth_info_; }
 
@@ -126,21 +126,21 @@ public:
 
   inline const CCOpCount &cc_mul_count() const { return cc_mul_count_; }
 
-  inline const CAOpCount &he_square_count() const { return he_square_count_; }
+  inline const CAOpCount &square_count() const { return square_count_; }
 
   inline double encrypt_count() const { return encrypt_count_; }
 
   inline const CAOpCount &relin_count() const { return relin_count_; }
 
-  inline const CAOpCount &he_rotate_count() const { return he_rotate_count_; }
+  inline const CAOpCount &rotate_count() const { return rotate_count_; }
 
   inline const CAOpCount &cp_mul_count() const { return cp_mul_count_; }
 
   inline const CAOpCount &mod_switch_count() const { return mod_switch_count_; }
 
-  inline const CAOpCount &he_add_sub_negate_count() const { return he_add_sub_negate_count_; }
+  inline const CAOpCount &he_add() const { return he_add_; }
 
-  inline const CtxtTermsInfo &ctxt_output_terms_info() const { return ctxt_output_terms_info_; }
+  inline const CtxtTermsInfo &ctxt_outputs_info() const { return ctxt_outputs_info_; }
 
   inline double circuit_static_cost() const { return circuit_static_cost_; }
 
@@ -148,22 +148,22 @@ public:
 
   inline double circuit_cost() const { return circuit_cost_; }
 
-  inline double rotation_keys_total_size() const { return rotation_keys_total_size_; }
+  inline double rotation_keys_size() const { return rotation_keys_size_; }
 
-  inline double relin_keys_total_size() const { return relin_keys_total_size_; }
+  inline double relin_keys_size() const { return relin_keys_size_; }
 
-  inline double ctxt_input_terms_total_size() const { return ctxt_input_terms_total_size_; }
+  inline double ctxt_inputs_size() const { return ctxt_inputs_size_; }
 
-  inline double ctxt_input_terms_count() const { return ctxt_input_terms_count_; }
+  inline double ctxt_inputs_count_() const { return ctxt_inputs_count__; }
 
-  inline double ctxt_output_terms_total_size() const { return ctxt_output_terms_total_size_; }
+  inline double ctxt_outputs_size() const { return ctxt_outputs_size_; }
 
 private:
   std::shared_ptr<ir::Func> func_;
 
   bool depth_metrics_ = false;
 
-  DepthSummary he_depth_summary_{};
+  DepthSummary depth_summary_{};
 
   CtxtTermsDepthInfo ctxt_leaves_depth_info_{};
 
@@ -185,21 +185,21 @@ private:
 
   CCOpCount cc_mul_count_{};
 
-  CAOpCount he_square_count_{};
+  CAOpCount square_count_{};
 
   double encrypt_count_ = 0;
 
   CAOpCount relin_count_{};
 
-  CAOpCount he_rotate_count_{};
+  CAOpCount rotate_count_{};
 
   CAOpCount cp_mul_count_{};
 
   CAOpCount mod_switch_count_{};
 
-  CAOpCount he_add_sub_negate_count_{};
+  CAOpCount he_add_{};
 
-  CtxtTermsInfo ctxt_output_terms_info_{};
+  CtxtTermsInfo ctxt_outputs_info_{};
 
   double circuit_static_cost_ = 0;
 
@@ -207,15 +207,15 @@ private:
 
   double circuit_cost_ = 0;
 
-  double rotation_keys_total_size_ = 0;
+  double rotation_keys_size_ = 0;
 
-  double relin_keys_total_size_ = 0;
+  double relin_keys_size_ = 0;
 
-  double ctxt_input_terms_total_size_ = 0;
+  double ctxt_inputs_size_ = 0;
 
-  double ctxt_input_terms_count_ = 0;
+  double ctxt_inputs_count__ = 0;
 
-  double ctxt_output_terms_total_size_ = 0;
+  double ctxt_outputs_size_ = 0;
 
   friend Quantifier operator/(const Quantifier &lhs, const Quantifier &rhs);
   friend Quantifier operator-(const Quantifier &lhs, const Quantifier &rhs);

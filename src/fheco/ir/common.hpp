@@ -14,9 +14,9 @@ namespace fheco::ir
 template <class>
 inline constexpr bool always_false_v = false;
 
-std::int64_t evaluate_raw_op_code(const OpCode &op_code, const std::vector<Term *> &operands);
+double evaluate_raw_op_code(const OpCode &op_code, const std::vector<Term::Type> &operands_types);
 
-std::int64_t evaluate_raw_op_code(const OpCode &op_code, const std::vector<Term::Type> &operands_types);
+double evaluate_raw_op_code(const OpCode &op_code, const std::vector<Term *> &operands);
 
 // https://github.com/HowardHinnant/hash_append/issues/7#issuecomment-629414712
 template <typename T>

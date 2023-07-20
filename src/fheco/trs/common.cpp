@@ -124,11 +124,11 @@ ostream &operator<<(ostream &os, RewriteHeuristic rewrite_heuristic)
   switch (rewrite_heuristic)
   {
   case RewriteHeuristic::bottom_up:
-    os << "parcours_ascendant";
+    os << "bottom_up";
     break;
 
   case RewriteHeuristic::top_down:
-    os << "parcours_descendant";
+    os << "top_down";
     break;
 
   default:

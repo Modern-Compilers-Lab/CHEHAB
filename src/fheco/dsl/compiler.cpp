@@ -35,7 +35,7 @@ void Compiler::compile(
   case Ruleset::depth:
   {
 #ifdef FHECO_LOGGING
-    clog << "\ntrs_" << ruleset << '\n';
+    clog << '\n' << ruleset << "_trs" << '\n';
 #endif
     trs::TRS depth_trs{trs::Ruleset::depth_ruleset(func)};
     depth_trs.run(rewrite_heuristic);
@@ -45,7 +45,7 @@ void Compiler::compile(
   case Ruleset::ops_cost:
   {
 #ifdef FHECO_LOGGING
-    clog << "\ntrs_" << ruleset << '\n';
+    clog << '\n' << ruleset << "_trs" << '\n';
 #endif
     trs::TRS ops_cost_trs{trs::Ruleset::ops_cost_ruleset(func)};
     ops_cost_trs.run(rewrite_heuristic);
@@ -55,7 +55,7 @@ void Compiler::compile(
   case Ruleset::joined:
   {
 #ifdef FHECO_LOGGING
-    clog << "\ntrs_" << ruleset << '\n';
+    clog << '\n' << ruleset << "_trs" << '\n';
 #endif
     trs::TRS joined_trs{trs::Ruleset::joined_ruleset(func)};
     joined_trs.run(rewrite_heuristic);
@@ -74,18 +74,18 @@ void Compiler::gen_he_code(
   const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name, std::ostream &source_os)
 {
 #ifdef FHECO_LOGGING
-  clog << "\nréduction_clés_rotation\n";
+  clog << "\nrotation_key_selection\n";
 #endif
   unordered_set<int> rotation_steps_keys;
   rotation_steps_keys = passes::reduce_rotation_keys(func, 29);
 
 #ifdef FHECO_LOGGING
-  clog << "\ninsertion_relin\n";
+  clog << "\nrelin_insertion\n";
 #endif
   size_t relin_keys_count = passes::relin_after_ctxt_ctxt_mul(func);
 
 #ifdef FHECO_LOGGING
-  clog << "\ngénération_code\n";
+  clog << "\ncode_generation\n";
 #endif
   code_gen::gen_func(func, rotation_steps_keys, header_os, header_name, source_os);
 }
@@ -127,15 +127,15 @@ ostream &operator<<(ostream &os, Compiler::Ruleset ruleset)
   switch (ruleset)
   {
   case Compiler::Ruleset::depth:
-    os << "profondeur";
+    os << "depth";
     break;
 
   case Compiler::Ruleset::ops_cost:
-    os << "coût_opérations";
+    os << "ops_cost";
     break;
 
   case Compiler::Ruleset::joined:
-    os << "combinée";
+    os << "joined";
     break;
 
   default:

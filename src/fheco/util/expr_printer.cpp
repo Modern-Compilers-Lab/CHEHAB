@@ -27,15 +27,15 @@ string ExprPrinter::make_rule_str_repr(const trs::Rule &rule, bool show_label, M
 {
   string repr{};
   if (show_label)
-    repr = rule.name() + " : ";
+    repr = rule.name() + ": ";
 
   repr += make_term_matcher_str_expr(rule.lhs(), mode) + " -> ";
   if (rule.has_dynamic_rhs())
-    repr += "rhs_dynamique";
+    repr += "dynamic_rhs";
   else
     repr += make_term_matcher_str_expr(rule.get_rhs(), mode);
   if (rule.has_cond())
-    repr += " [a une condition]";
+    repr += " [has_condition]";
   return repr;
 }
 
@@ -272,9 +272,9 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
 
 void ExprPrinter::print_expand_outputs_str_expr(ostream &os, int depth, Mode mode) const
 {
-  os << "nom_sortie : expression\n";
+  os << "output: expression\n";
   for (const auto output_info : func_->data_flow().outputs_info())
-    os << output_info.second.label_ << " : " << expand_term_str_expr(output_info.first, depth, mode) << '\n';
+    os << output_info.second.label_ << ": " << expand_term_str_expr(output_info.first, depth, mode) << '\n';
 }
 
 string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode mode) const
@@ -413,17 +413,17 @@ string ExprPrinter::make_leaf_str_expr(const ir::Term *term) const
 
 void ExprPrinter::print_outputs_str_expr(ostream &os) const
 {
-  os << "nom_sortie : expression\n";
+  os << "output: expression\n";
   for (const auto output_info : func_->data_flow().outputs_info())
   {
     if (auto it = terms_str_exprs_.find(output_info.first->id()); it != terms_str_exprs_.end())
-      os << output_info.second.label_ << " : " << it->second << '\n';
+      os << output_info.second.label_ << ": " << it->second << '\n';
   }
 }
 
 void ExprPrinter::print_terms_str_expr(ostream &os) const
 {
-  os << "id_terme : expression\n";
+  os << "term_id: expression\n";
   os << terms_str_exprs_;
 }
 

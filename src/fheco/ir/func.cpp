@@ -128,7 +128,7 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
     {
 #ifdef FHECO_LOGGING
       util::ExprPrinter expr_printer{Compiler::active_func()};
-      clog << "élimination du calcul constant : ";
+      clog << "const folding: ";
       if (operands.size() == 1)
         clog << op_code << " " << expr_printer.make_leaf_str_expr(operands[0]);
       else if (operands.size() == 2)

@@ -83,7 +83,7 @@ Term *Expr::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
     {
 #ifdef FHECO_LOGGING
       util::ExprPrinter expr_printer{Compiler::active_func()};
-      clog << "terme \"" << expr_printer.expand_term_str_expr(term) << "\" déjà existant (CSE)\n";
+      clog << "term \"" << expr_printer.expand_term_str_expr(term) << "\" already exists (CSE)\n";
 #endif
       inserted = false;
       return term;
@@ -116,7 +116,7 @@ Term *Expr::insert_const(ConstInfo const_info, bool &inserted)
     {
 #ifdef FHECO_LOGGING
       util::ExprPrinter expr_printer{Compiler::active_func()};
-      clog << "constante \"" << expr_printer.make_leaf_str_expr(it->second) << "\" déjà existante (CSE)\n";
+      clog << "constant \"" << expr_printer.make_leaf_str_expr(it->second) << "\" already exists (CSE)\n";
 #endif
       inserted = false;
       return it->second;

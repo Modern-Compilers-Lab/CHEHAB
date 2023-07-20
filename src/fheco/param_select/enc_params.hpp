@@ -1,17 +1,20 @@
 #pragma once
 
+#include "fheco/dsl/common.hpp"
 #include <cstddef>
-#include <cstdint>
+#include <ostream>
 #include <vector>
 
 #define MOD_BIT_COUNT_MAX 60
 
 namespace fheco::param_select
 {
-class EncryptionParams
+class EncParams
 {
 public:
-  EncryptionParams(std::size_t poly_modulus_degree, int plain_modulus_bit_size, int coeff_mod_data_level_bit_count);
+  EncParams(std::size_t poly_modulus_degree, int plain_modulus_bit_size, int coeff_mod_data_level_bit_count);
+
+  EncParams(std::size_t poly_modulus_degree, integer plain_modulus, std::vector<int> coeff_mod_bit_sizes);
 
   int increase_coeff_mod_bit_sizes(int max_total_amount);
 
@@ -19,7 +22,7 @@ public:
 
   std::vector<int> coeff_mod_data_level_bit_sizes() const;
 
-  void print_params() const;
+  void print_params(std::ostream &os) const;
 
   inline int coeff_mod_data_level_bit_count() const { return coeff_mod_bit_count_ - coeff_mod_bit_sizes_.back(); }
 

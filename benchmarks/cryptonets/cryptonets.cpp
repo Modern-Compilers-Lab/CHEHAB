@@ -93,7 +93,7 @@ void cryptonets(
 
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
-  os << (arg ? name : "non_" + name);
+  os << (arg ? name : "no_" + name);
 }
 
 int main(int argc, char **argv)
@@ -118,13 +118,15 @@ int main(int argc, char **argv)
   if (argc > 5)
     const_folding = stoi(argv[5]);
 
-  print_bool_arg(call_quantifier, "quantificateur", clog);
+  print_bool_arg(call_quantifier, "quantifier", clog);
   clog << " ";
-  clog << "trs_" << ruleset << " " << rewrite_heuristic;
+  clog << ruleset << "_trs";
+  clog << " ";
+  clog << rewrite_heuristic;
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
-  print_bool_arg(const_folding, "élimination_calculs_constants", clog);
+  print_bool_arg(const_folding, "constant_folding", clog);
   clog << '\n';
 
   if (cse)

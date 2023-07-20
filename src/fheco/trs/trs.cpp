@@ -23,7 +23,7 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created
 {
 #ifdef FHECO_LOGGING
   util::ExprPrinter expr_printer{func_};
-  clog << "\nRI initiale, ";
+  clog << "\ninitial IR, ";
   expr_printer.print_expand_outputs_str_expr(clog);
 #endif
   int64_t iter = max_iter;
@@ -49,29 +49,52 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created
     throw logic_error("unhandled RewriteHeuristic");
   }
 #ifdef FHECO_LOGGING
-  clog << "\nRI finale, ";
+  clog << "\nfinal IR, ";
   expr_printer.print_expand_outputs_str_expr(clog);
   clog << '\n';
-  clog << max_iter - iter << " tentatives de réécriture\n";
+  clog << "performed " << max_iter - iter << " rewrite attempts\n";
 #endif
   return did_rewrite;
 }
 
 bool TRS::apply_rule(ir::Term *term, const Rule &rule)
 {
+#ifdef FHECO_LOGGING
+  util::ExprPrinter expr_printer{func_};
+  clog << "applying rule \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\" on term \""
+       << expr_printer.expand_term_str_expr(term) << "\"\n";
+#endif
   Subst subst;
   bool global_analysis = false;
-  int64_t rel_cost = 0;
+  double rel_cost = 0;
   ir::Term::PtrSet to_delete;
   bool matched = match(rule.lhs(), term, subst, global_analysis, rel_cost, to_delete);
   if (!matched)
+  {
+#ifdef FHECO_LOGGING
+    clog << "matching failed\n";
+#endif
     return false;
-
+  }
+#ifdef FHECO_LOGGING
+  clog << "unified with substitution:\n";
+  clog << "σ = ";
+  pprint_substitution(func_, subst, clog);
+  clog << '\n';
+#endif
   if (!rule.check_cond(subst))
+  {
+#ifdef FHECO_LOGGING
+    clog << "condition not satisfied\n";
+#endif
     return false;
+  }
 
   vector<size_t> created_terms_ids;
   auto equiv_term = construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
+#ifdef FHECO_LOGGING
+  clog << "replace with \"" << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
+#endif
   func_->replace_term_with(term, equiv_term);
   return true;
 }
@@ -100,28 +123,27 @@ bool TRS::rewrite_term(
     --max_iter;
 
 #ifdef FHECO_LOGGING
-    auto top_term_str_expr = expr_printer.expand_term_str_expr(top_term);
-    clog << "\nréécriture du terme \"" << top_term_str_expr << "\"\n";
+    clog << "\nrewriting term \"" << expr_printer.expand_term_str_expr(top_term) << "\"\n";
 #endif
     for (const auto &rule : ruleset_.pick_rules(top_term->op_code().type()))
     {
 #ifdef FHECO_LOGGING
-      clog << "essayant la règle \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\", ";
+      clog << "trying rule \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\", ";
 #endif
       Subst subst;
-      int64_t rel_cost = 0;
+      double rel_cost = 0;
       ir::Term::PtrSet to_delete;
       bool matched = match(rule.lhs(), top_term, subst, global_analysis, rel_cost, to_delete);
 
       if (!matched)
       {
 #ifdef FHECO_LOGGING
-        clog << "échec de la mise en correspondance\n";
+        clog << "matching failed\n";
 #endif
         continue;
       }
 #ifdef FHECO_LOGGING
-      clog << "substitution trouvée :\n";
+      clog << "unified with substitution:\n";
       clog << "σ = ";
       pprint_substitution(func_, subst, clog);
       clog << '\n';
@@ -130,7 +152,7 @@ bool TRS::rewrite_term(
       if (!rule.check_cond(subst))
       {
 #ifdef FHECO_LOGGING
-        clog << "condition non satisfaite\n";
+        clog << "condition not satisfied\n";
 #endif
         continue;
       }
@@ -139,11 +161,15 @@ bool TRS::rewrite_term(
       auto equiv_term =
         construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
 
+#ifdef FHECO_LOGGING
+      if (global_analysis)
+        clog << "constructed rhs, rel_cost=" << rel_cost << '\n';
+#endif
+
       if (!global_analysis || rel_cost <= 0)
       {
 #ifdef FHECO_LOGGING
-        clog << "remplacer le terme \"" << top_term_str_expr << "\" par \""
-             << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
+        clog << "replace with \"" << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
 #endif
         func_->replace_term_with(top_term, equiv_term);
         did_rewrite = true;
@@ -175,14 +201,17 @@ bool TRS::rewrite_term(
         break;
       }
       else if (func_->data_flow().can_delete(equiv_term))
-        func_->delete_term_cascade(equiv_term);
+#ifdef FHECO_LOGGING
+        clog << "delete constructed equiv_term \"" << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
+#endif
+      func_->delete_term_cascade(equiv_term);
     }
   }
   return did_rewrite;
 }
 
 bool TRS::match(
-  const TermMatcher &term_matcher, ir::Term *term, Subst &subst, bool global_analysis, int64_t &rel_cost,
+  const TermMatcher &term_matcher, ir::Term *term, Subst &subst, bool global_analysis, double &rel_cost,
   ir::Term::PtrSet &to_delete) const
 {
   struct Call
@@ -269,7 +298,7 @@ bool TRS::match(
               return false;
           }
           else
-            throw invalid_argument("trying to match an operation op_gen_matcher");
+            throw invalid_argument("failed to match an operation op_gen_matcher");
         }
         if (top_term_matcher.type() != top_term->type())
           return false;
@@ -317,7 +346,7 @@ bool TRS::match(
 
 ir::Term *TRS::construct_term(
   const TermMatcher &matcher, const Subst &subst, const ir::Term::PtrSet &to_delete, bool global_analysis,
-  int64_t &rel_cost, vector<size_t> &created_terms_ids)
+  double &rel_cost, vector<size_t> &created_terms_ids)
 {
   struct Call
   {
