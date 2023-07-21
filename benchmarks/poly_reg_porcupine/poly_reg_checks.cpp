@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   if (argc > 1)
     call_quantifier = stoi(argv[1]);
 
-  auto ruleset = Compiler::Ruleset::joined;
+  auto ruleset = Compiler::Ruleset::ops_cost;
   if (argc > 2)
     ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
 
