@@ -4,6 +4,7 @@
 #include "fheco/trs/trs.hpp"
 #include "fheco/passes/scalar_mul_to_add.hpp"
 #include "fheco/util/common.hpp"
+#include <cstddef>
 #include <cstdlib>
 #include <vector>
 
@@ -11,7 +12,7 @@ using namespace std;
 
 namespace fheco::passes
 {
-void convert_scalar_mul_to_add(const std::shared_ptr<ir::Func> &func, size_t scalar_threshold)
+void convert_scalar_mul_to_add(const std::shared_ptr<ir::Func> &func, integer scalar_threshold)
 {
   trs::TermMatcher c_x{trs::TermMatcherType::cipher, "ctxt_x"};
 
@@ -23,11 +24,12 @@ void convert_scalar_mul_to_add(const std::shared_ptr<ir::Func> &func, size_t sca
     bool is_negative = scalar_val < 0;
     size_t uscalar_val = abs(scalar_val);
 
-    trs::TermMatcher elt = c_x;
-    for (size_t i = 1; i < uscalar_val; ++i)
-      elt = elt + c_x;
+    vector<trs::TermMatcher> elts;
+    elts.reserve(uscalar_val);
+    for (size_t i = 0; i < uscalar_val; ++i)
+      elts.push_back(c_x);
 
-    return is_negative ? -elt : elt;
+    return is_negative ? -trs::balanced_op(elts, trs::TermOpCode::add) : trs::balanced_op(elts, trs::TermOpCode::add);
   };
 
   auto const_scalar_cond = [&const1, &func, scalar_threshold](const trs::Subst &subst) {

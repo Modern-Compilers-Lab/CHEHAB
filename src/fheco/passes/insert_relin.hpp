@@ -14,7 +14,7 @@ class Term;
 
 namespace fheco::passes
 {
-std::size_t lazy_relin_heuristic(const std::shared_ptr<ir::Func> &func, std::size_t ctxt_size_threshold);
+std::size_t lazy_relin_heuristic(const std::shared_ptr<ir::Func> &func, std::size_t ctxt_size_threshold = 3);
 
 std::size_t relin_after_ctxt_ctxt_mul(const std::shared_ptr<ir::Func> &func);
 

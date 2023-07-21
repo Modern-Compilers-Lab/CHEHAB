@@ -21,6 +21,8 @@ namespace fheco::trs
 {
 bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created_sub_terms, bool global_analysis)
 {
+  bool order_operands_enabled = Compiler::order_operands_enabled();
+  Compiler::disable_order_operands();
 #ifdef FHECO_LOGGING
   util::ExprPrinter expr_printer{func_};
   clog << "\ninitial IR, ";
@@ -54,11 +56,15 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created
   clog << '\n';
   clog << "performed " << max_iter - iter << " rewrite attempts\n";
 #endif
+  if (order_operands_enabled)
+    Compiler::enable_order_operands();
   return did_rewrite;
 }
 
 bool TRS::apply_rule(ir::Term *term, const Rule &rule)
 {
+  bool order_operands_enabled = Compiler::order_operands_enabled();
+  Compiler::disable_order_operands();
 #ifdef FHECO_LOGGING
   util::ExprPrinter expr_printer{func_};
   clog << "applying rule \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\" on term \""
@@ -87,6 +93,8 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
 #ifdef FHECO_LOGGING
     clog << "condition not satisfied\n";
 #endif
+    if (order_operands_enabled)
+      Compiler::enable_order_operands();
     return false;
   }
 
@@ -96,6 +104,8 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
   clog << "replace with \"" << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
 #endif
   func_->replace_term_with(term, equiv_term);
+  if (order_operands_enabled)
+    Compiler::enable_order_operands();
   return true;
 }
 

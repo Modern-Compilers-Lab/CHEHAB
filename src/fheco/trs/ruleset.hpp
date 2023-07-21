@@ -66,9 +66,9 @@ public:
 
 private:
   static std::vector<Rule> get_log_reduct_rules(
-    std::size_t slot_count, const TermMatcher &x, const TermOpCode &op_code);
+    const TermMatcher &x, const TermOpCode &op_code, std::size_t slot_count);
 
-  static Rule make_log_reduct_comp(const TermMatcher &x, std::size_t size, const TermOpCode &op_code);
+  static Rule make_log_reduct_comp(const TermMatcher &x, const TermOpCode &op_code, std::size_t size);
 
   std::shared_ptr<ir::Func> func_;
 

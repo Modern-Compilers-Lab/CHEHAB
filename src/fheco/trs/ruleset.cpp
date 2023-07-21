@@ -17,7 +17,7 @@ Ruleset Ruleset::log2_reduct_opt_ruleset(shared_ptr<ir::Func> func)
   TermMatcher x{TermMatcherType::term, "x"};
   RulesByRootOp rules_by_root_op;
   for (const auto &op : binary_ops)
-    rules_by_root_op.emplace(op.type(), get_log_reduct_rules(func->slot_count(), x, op));
+    rules_by_root_op.emplace(op.type(), get_log_reduct_rules(x, op, func->slot_count()));
   return Ruleset{move(func), "log2_reduct_opt_ruleset", move(rules_by_root_op)};
 }
 
@@ -57,14 +57,14 @@ Ruleset::Ruleset(
   }
 }
 
-vector<Rule> Ruleset::get_log_reduct_rules(size_t slot_count, const TermMatcher &x, const TermOpCode &op_code)
+vector<Rule> Ruleset::get_log_reduct_rules(const TermMatcher &x, const TermOpCode &op_code, size_t slot_count)
 {
   vector<Rule> rules;
   if (!util::is_power_of_two(slot_count))
     slot_count = util::next_power_of_two(slot_count >> 1);
   while (slot_count > 2)
   {
-    rules.push_back(make_log_reduct_comp(x, slot_count, op_code));
+    rules.push_back(make_log_reduct_comp(x, op_code, slot_count));
     slot_count >>= 1;
   }
   return rules;
@@ -94,7 +94,7 @@ const Rule &Ruleset::get_rule(const string &name, ir::OpCode::Type op_code_type)
   throw invalid_argument("no rule with name was found");
 }
 
-Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, size_t size, const TermOpCode &op_code)
+Rule Ruleset::make_log_reduct_comp(const TermMatcher &x, const TermOpCode &op_code, size_t size)
 {
   if (!util::is_power_of_two(size))
     throw invalid_argument("make_log_reduct_comp size must be a power of two");
