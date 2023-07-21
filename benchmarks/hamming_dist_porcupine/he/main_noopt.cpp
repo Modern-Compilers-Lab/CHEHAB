@@ -21,7 +21,7 @@ int main(int argc, char **argv)
   params.set_plain_modulus(PlainModulus::Batching(n, 20));
   ClearArgsInfo clear_inputs, clear_outputs;
   size_t slot_count;
-  parse_inputs_outputs_file(is, params.plain_modulus(), clear_inputs, clear_outputs, slot_count);
+  parse_inputs_outputs_file(is, params.plain_modulus().value(), clear_inputs, clear_outputs, slot_count);
   params.set_coeff_modulus(CoeffModulus::Create(n, {36, 36, 37}));
   SEALContext context(params, false, sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
@@ -43,14 +43,13 @@ int main(int argc, char **argv)
   EncryptedArgs encrypted_outputs;
   EncodedArgs encoded_outputs;
 
-  chrono::high_resolution_clock::time_point time_start, time_end;
-  chrono::duration<double, milli> time_sum(0);
-  time_start = chrono::high_resolution_clock::now();
+  chrono::high_resolution_clock::time_point t;
+  chrono::duration<double, milli> elapsed;
+  t = chrono::high_resolution_clock::now();
   hamming_dist_noopt(
     encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
     relin_keys, galois_keys);
-  time_end = chrono::high_resolution_clock::now();
-  time_sum = time_end - time_start;
+  elapsed = chrono::high_resolution_clock::now() - t;
 
   ClearArgsInfo obtained_clear_outputs;
   get_clear_outputs(batch_encoder, decryptor, encrypted_outputs, encoded_outputs, slot_count, obtained_clear_outputs);
@@ -58,5 +57,5 @@ int main(int argc, char **argv)
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
-  cout << time_sum.count() << '\n';
+  cout << elapsed.count() << " ms\n";
 }

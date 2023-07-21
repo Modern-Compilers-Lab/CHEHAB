@@ -28,7 +28,7 @@ inline bool operator==(const ClearArgInfo &lhs, const ClearArgInfo &rhs)
 using ClearArgsInfo = std::unordered_map<std::string, ClearArgInfo>;
 
 void parse_inputs_outputs_file(
-  std::istream &is, const seal::Modulus &plain_modulus, ClearArgsInfo &inputs, ClearArgsInfo &outputs,
+  std::istream &is, std::uint64_t plain_modulus, ClearArgsInfo &inputs, ClearArgsInfo &outputs,
   std::size_t &slot_count);
 
 void prepare_he_inputs(
@@ -48,7 +48,7 @@ void print_variables_values(const ClearArgsInfo &m, std::size_t print_size, std:
 void print_variables_values(const ClearArgsInfo &m, std::ostream &os);
 
 template <typename T>
-inline void print_vector(const std::vector<T> &v, std::ostream &os, std::size_t print_size)
+inline void print_vec(const std::vector<T> &v, std::ostream &os, std::size_t print_size)
 {
   std::size_t size = v.size();
   if (size < 2 * print_size)
@@ -67,7 +67,7 @@ inline void print_vector(const std::vector<T> &v, std::ostream &os, std::size_t 
 }
 
 template <typename T>
-inline void print_vector(const std::vector<T> &v, std::ostream &os)
+inline void print_vec(const std::vector<T> &v, std::ostream &os)
 {
   if (v.size() == 0)
     return;

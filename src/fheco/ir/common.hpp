@@ -11,7 +11,7 @@
 
 namespace fheco::ir
 {
-template <class>
+template <typename>
 inline constexpr bool always_false_v = false;
 
 double evaluate_raw_op_code(const OpCode &op_code, const std::vector<Term::Type> &operands_types);

@@ -78,9 +78,9 @@ int main(int argc, char **argv)
   else
     Compiler::disable_const_folding();
 
-  chrono::high_resolution_clock::time_point time_start, time_end;
-  chrono::duration<double, milli> time_sum(0);
-  time_start = chrono::high_resolution_clock::now();
+  chrono::high_resolution_clock::time_point t;
+  chrono::duration<double, milli> elapsed;
+  t = chrono::high_resolution_clock::now();
   string func_name = "hamming_dist";
   const auto &func = Compiler::create_func(func_name, 4, 20, true, false);
 
@@ -93,9 +93,8 @@ int main(int argc, char **argv)
 
   Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
 
-  time_end = chrono::high_resolution_clock::now();
-  time_sum = time_end - time_start;
-  cout << time_sum.count() << '\n';
+  elapsed = chrono::high_resolution_clock::now() - t;
+  cout << elapsed.count() << " ms\n";
 
   if (call_quantifier)
   {

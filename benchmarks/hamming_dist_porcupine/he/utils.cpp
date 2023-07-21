@@ -6,7 +6,7 @@ using namespace std;
 using namespace seal;
 
 void parse_inputs_outputs_file(
-  istream &is, const Modulus &plain_modulus, ClearArgsInfo &inputs, ClearArgsInfo &outputs, size_t &slot_count)
+  istream &is, uint64_t plain_modulus, ClearArgsInfo &inputs, ClearArgsInfo &outputs, size_t &slot_count)
 {
   ios_base::fmtflags f(is.flags());
   is >> boolalpha;
@@ -60,7 +60,7 @@ void parse_inputs_outputs_file(
       if (!(is >> slot_value))
         throw invalid_argument("could not parse input slot");
 
-      auto signed_plain_modulus = static_cast<int64_t>(plain_modulus.value());
+      auto signed_plain_modulus = static_cast<int64_t>(plain_modulus);
       if (slot_value >= signed_plain_modulus || slot_value < 0)
       {
         slot_value %= signed_plain_modulus;
@@ -102,10 +102,10 @@ void prepare_he_inputs(
     {
       Ciphertext encrypted_input;
       encryptor.encrypt(encoded_input, encrypted_input);
-      encrypted_inputs.emplace(clear_input.first, encrypted_input);
+      encrypted_inputs.emplace(clear_input.first, move(encrypted_input));
     }
     else
-      encoded_inputs.emplace(clear_input.first, encoded_input);
+      encoded_inputs.emplace(clear_input.first, move(encoded_input));
   }
 }
 
@@ -158,9 +158,9 @@ void print_variables_values(const ClearArgsInfo &m, size_t print_size, ostream &
   {
     os << variable.first << " " << variable.second.is_cipher_ << " " << variable.second.is_signed_ << " ";
     if (variable.second.is_signed_)
-      print_vector(get<vector<int64_t>>(variable.second.value_), os, print_size);
+      print_vec(get<vector<int64_t>>(variable.second.value_), os, print_size);
     else
-      print_vector(get<vector<uint64_t>>(variable.second.value_), os, print_size);
+      print_vec(get<vector<uint64_t>>(variable.second.value_), os, print_size);
     os << '\n';
   }
   os.flags(f);
@@ -174,9 +174,9 @@ void print_variables_values(const ClearArgsInfo &m, ostream &os)
   {
     os << variable.first << " " << variable.second.is_cipher_ << " " << variable.second.is_signed_ << " ";
     if (variable.second.is_signed_)
-      print_vector(get<vector<int64_t>>(variable.second.value_), os);
+      print_vec(get<vector<int64_t>>(variable.second.value_), os);
     else
-      print_vector(get<vector<uint64_t>>(variable.second.value_), os);
+      print_vec(get<vector<uint64_t>>(variable.second.value_), os);
     os << '\n';
   }
   os.flags(f);
