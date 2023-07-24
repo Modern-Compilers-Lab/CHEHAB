@@ -91,28 +91,6 @@ void cryptonets(
   for (size_t i = 0; i < b8_shape[0]; ++i)
     b8.push_back(Plaintext("b8[" + to_string(i) + "]", wb_min, wb_max));
 
-  // show passed shapes
-  cout << "x: ";
-  print_vector(shape(x), cout);
-  cout << '\n';
-  cout << "w1: ";
-  print_vector(shape(w1), cout);
-  cout << '\n';
-  cout << "b1: ";
-  print_vector(shape(b1), cout);
-  cout << '\n';
-  cout << "w4: ";
-  print_vector(shape(w4), cout);
-  cout << '\n';
-  cout << "b4: ";
-  print_vector(shape(b4), cout);
-  cout << '\n';
-  cout << "w8: ";
-  print_vector(shape(w8), cout);
-  cout << '\n';
-  cout << "b8: ";
-  print_vector(shape(b8), cout);
-  cout << '\n';
   // predict
   auto y = predict(x, w1, b1, w4, b4, w8, b8);
   // declare outputs

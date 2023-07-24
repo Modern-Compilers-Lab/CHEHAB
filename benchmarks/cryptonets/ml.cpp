@@ -13,28 +13,13 @@ vector<Ciphertext> predict(
   vector<size_t> mean_pool_kernel_size = {2, 2};
 
   auto h1 = add(conv_2d(x, w1, conv_strides), b1);
-  show_info("convadd", h1, "h1");
-
   auto h2 = square(h1);
-  show_info("square", h2, "h2");
-
   auto h3 = scaled_mean_pool_2d(h2, mean_pool_kernel_size, mean_pool_kernel_size);
-  show_info("meanpool", h3, "h3");
-
   auto h4 = add(conv_2d(h3, w4, conv_strides), b4);
-  show_info("convadd", h4, "h4");
-
   auto h5 = scaled_mean_pool_2d(h4, mean_pool_kernel_size, mean_pool_kernel_size);
-  show_info("meanpool", h5, "h5");
-
   auto h6 = flatten(h5);
-  show_info("reshape", h6, "h6");
-
   auto h7 = square(h6);
-  show_info("square  ", h7, "h7");
-
   auto h8 = add(dot(h7, w8), b8);
-  show_info("dotadd  ", h8, "h8");
   return h8;
 }
 
@@ -50,7 +35,7 @@ vector<vector<vector<Ciphertext>>> conv_2d(
 
   size_t n_channels = n_channels_kernel;
 
-  auto padded_input = pad_2d(input, vector<size_t>{filters.size(), filters[0].size()}, strides);
+  auto padded_input = pad_2d(input, {filters.size(), filters[0].size()}, strides);
   size_t n_rows_output = input.size() / strides[0] + (input.size() % strides[0] > 0 ? 1 : 0);
   size_t n_cols_output = input[0].size() / strides[1] + (input[0].size() % strides[1] > 0 ? 1 : 0);
   size_t n_channels_output = filters[0][0][0].size();
@@ -131,25 +116,11 @@ vector<vector<vector<Ciphertext>>> pad_2d(
   vector<vector<vector<Ciphertext>>> output(
     n_rows_input + pad_rows,
     vector<vector<Ciphertext>>(n_cols_input + pad_cols, vector<Ciphertext>(n_channels, encrypt(0))));
-  for (int i = 0; i < n_rows_input; ++i)
+  for (size_t i = 0; i < n_rows_input; ++i)
   {
     for (size_t j = 0; j < n_cols_input; ++j)
       output[i + pad_top][j + pad_left] = input[i][j];
   }
-  return output;
-}
-
-vector<vector<vector<Ciphertext>>> add(const vector<vector<vector<Ciphertext>>> &input, const vector<Plaintext> &b)
-{
-  if (input[0][0].size() != b.size())
-    throw invalid_argument("incompatible sizes");
-
-  auto output = input;
-  for (size_t i = 0; i < output.size(); ++i)
-    for (size_t j = 0; j < output[0].size(); ++j)
-      for (size_t k = 0; k < output[0][0].size(); ++k)
-        output[i][j][k] += b[k];
-
   return output;
 }
 
@@ -158,9 +129,26 @@ vector<Ciphertext> add(const vector<Ciphertext> &input, const vector<Plaintext> 
   if (input.size() != b.size())
     throw invalid_argument("incompatible sizes");
 
-  auto output = input;
+  vector<Ciphertext> output(input.size());
   for (size_t i = 0; i < output.size(); ++i)
-    output[i] += b[i];
+    output[i] = input[i] + b[i];
+
+  return output;
+}
+
+vector<vector<vector<Ciphertext>>> add(const vector<vector<vector<Ciphertext>>> &input, const vector<Plaintext> &b)
+{
+  auto n_rows = input.size();
+  auto n_cols = input[0].size();
+  auto n_channels = input[0][0].size();
+  if (n_channels != b.size())
+    throw invalid_argument("incompatible sizes");
+
+  vector<vector<vector<Ciphertext>>> output(n_rows, vector<vector<Ciphertext>>(n_cols, vector<Ciphertext>(n_channels)));
+  for (size_t i = 0; i < n_rows; ++i)
+    for (size_t j = 0; j < n_cols; ++j)
+      for (size_t k = 0; k < n_channels; ++k)
+        output[i][j][k] = input[i][j][k] + b[k];
 
   return output;
 }

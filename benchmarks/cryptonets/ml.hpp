@@ -2,7 +2,6 @@
 
 #include "fheco/fheco.hpp"
 #include <cstddef>
-#include <iostream>
 #include <ostream>
 #include <string>
 #include <variant>
@@ -29,10 +28,10 @@ std::vector<std::vector<std::vector<fheco::Ciphertext>>> pad_2d(
   const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input, const std::vector<std::size_t> &kernel_size,
   const std::vector<std::size_t> &strides);
 
+std::vector<fheco::Ciphertext> add(const std::vector<fheco::Ciphertext> &input, const std::vector<fheco::Plaintext> &b);
+
 std::vector<std::vector<std::vector<fheco::Ciphertext>>> add(
   const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input, const std::vector<fheco::Plaintext> &b);
-
-std::vector<fheco::Ciphertext> add(const std::vector<fheco::Ciphertext> &input, const std::vector<fheco::Plaintext> &b);
 
 std::vector<std::vector<std::vector<fheco::Ciphertext>>> square(
   const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input);
@@ -45,7 +44,7 @@ std::vector<fheco::Ciphertext> dot(
 std::vector<fheco::Ciphertext> flatten(const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input);
 
 template <typename T>
-inline void print_vector(const std::vector<T> &v, std::ostream &os)
+inline void print_vec(const std::vector<T> &v, std::ostream &os)
 {
   if (v.empty())
     return;
@@ -55,13 +54,13 @@ inline void print_vector(const std::vector<T> &v, std::ostream &os)
   os << v.back();
 }
 
-template <class T>
+template <typename T>
 inline std::vector<std::size_t> shape(const T &v)
 {
   return std::vector<size_t>();
 }
 
-template <class T>
+template <typename T>
 inline std::vector<size_t> shape(const std::vector<T> &v)
 {
   std::vector<std::size_t> sizes = {v.size()};
@@ -71,10 +70,10 @@ inline std::vector<size_t> shape(const std::vector<T> &v)
   return sizes;
 }
 
-template <class Tensor>
-inline void show_info(const std::string &title, const Tensor &tensor, const std::string &var_name)
+template <typename Tensor>
+inline void show_info(const std::string &title, const Tensor &tensor, const std::string &var_name, std::ostream &os)
 {
-  std::cout << title << " " << var_name << " ";
-  print_vector(shape(tensor), std::cout);
-  std::cout << '\n';
+  os << title << " " << var_name << " ";
+  print_vec(shape(tensor), os);
+  os << '\n';
 }
