@@ -17,15 +17,15 @@ std::vector<fheco::Ciphertext> predict(
 
 std::vector<std::vector<std::vector<fheco::Ciphertext>>> conv_2d(
   const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input,
-  const std::vector<std::vector<std::vector<std::vector<fheco::Plaintext>>>> &filters,
+  const std::vector<std::vector<std::vector<std::vector<fheco::Plaintext>>>> &kernels,
   const std::vector<std::size_t> &strides);
 
 std::vector<std::vector<std::vector<fheco::Ciphertext>>> scaled_mean_pool_2d(
-  const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input, const std::vector<size_t> &kernel_size,
+  const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input, const std::vector<size_t> &kernel_shape,
   const std::vector<std::size_t> &strides);
 
 std::vector<std::vector<std::vector<fheco::Ciphertext>>> pad_2d(
-  const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input, const std::vector<std::size_t> &kernel_size,
+  const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input, const std::vector<std::size_t> &kernel_shape,
   const std::vector<std::size_t> &strides);
 
 std::vector<fheco::Ciphertext> add(const std::vector<fheco::Ciphertext> &input, const std::vector<fheco::Plaintext> &b);
