@@ -93,29 +93,27 @@ vector<vector<vector<Ciphertext>>> scaled_mean_pool_2d(
 vector<vector<vector<Ciphertext>>> pad_2d(
   const vector<vector<vector<Ciphertext>>> &input, const vector<size_t> &kernel_size, const vector<size_t> &strides)
 {
-  int n_rows_input = input.size();
-  int n_cols_input = input[0].size();
-  int n_channels = input[0][0].size();
-  int n_rows_kernel = kernel_size[0];
-  int n_cols_kernel = kernel_size[1];
-  int row_stride = strides[0];
-  int cols_stride = strides[1];
+  auto n_rows_input = input.size();
+  auto n_cols_input = input[0].size();
+  auto n_channels = input[0][0].size();
+  auto n_rows_kernel = kernel_size[0];
+  auto n_cols_kernel = kernel_size[1];
+  auto rows_stride = strides[0];
+  auto cols_stride = strides[1];
 
-  // rows padding
-  int pad_top = (n_rows_kernel - 1) / 2;
-  int pad_bottom = max(
-    n_rows_kernel - pad_top - 1 - (n_rows_input % row_stride == 0 ? row_stride - 1 : n_rows_input % row_stride - 1), 0);
-  int pad_rows = pad_top + pad_bottom;
-  // col padding
-  int pad_left = (n_cols_kernel - 1) / 2;
-  int pad_right = max(
-    n_cols_kernel - pad_left - 1 - (n_cols_input % cols_stride == 0 ? cols_stride - 1 : n_cols_input % cols_stride - 1),
-    0);
-  int pad_cols = pad_left + pad_right;
+  auto n_rows_out = (n_rows_input + 1) / rows_stride;
+  auto n_cols_out = (n_cols_input + 1) / cols_stride;
+  auto pad_rows = max((n_rows_out - 1) * rows_stride + n_rows_kernel - n_rows_input, 0UL);
+  auto pad_cols = max((n_cols_out - 1) * cols_stride + n_cols_kernel - n_cols_input, 0UL);
+  auto pad_top = pad_rows / 2;
+  auto pad_bottom = pad_rows - pad_top;
+  auto pad_left = pad_cols / 2;
+  auto pad_right = pad_cols - pad_left;
+  n_rows_out = n_rows_input + pad_rows;
+  n_cols_out = n_cols_input + pad_cols;
 
   vector<vector<vector<Ciphertext>>> output(
-    n_rows_input + pad_rows,
-    vector<vector<Ciphertext>>(n_cols_input + pad_cols, vector<Ciphertext>(n_channels, encrypt(0))));
+    n_rows_out, vector<vector<Ciphertext>>(n_cols_out, vector<Ciphertext>(n_channels, encrypt(0))));
   for (size_t i = 0; i < n_rows_input; ++i)
   {
     for (size_t j = 0; j < n_cols_input; ++j)
