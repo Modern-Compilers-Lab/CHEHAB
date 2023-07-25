@@ -3,10 +3,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <istream>
-#include <unordered_map>
 #include <memory>
 #include <ostream>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 #include "seal/seal.h"
@@ -15,78 +15,6 @@ typedef __int128 Number;
 
 using EncryptedArgs = std::unordered_map<std::string, seal::Ciphertext>;
 using EncodedArgs = std::unordered_map<std::string, seal::Plaintext>;
-
-void prepare_he_inputs(
-  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
-  const seal::Encryptor &encryptor, const std::vector<std::vector<std::vector<std::vector<Number>>>> &x,
-  const std::vector<std::vector<std::vector<std::vector<Number>>>> &w1,
-  const std::vector<std::vector<std::vector<std::vector<Number>>>> &w4, const std::vector<std::vector<Number>> &w8,
-  const std::vector<Number> &b1, const std::vector<Number> &b4, const std::vector<Number> &b8,
-  EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
-
-void prepare_inputs_group(
-  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
-  const seal::Encryptor &encryptor, const std::vector<Number> &inputs, const std::string &group_name, bool encrypt,
-  bool pack, EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
-
-void prepare_inputs_group(
-  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
-  const seal::Encryptor &encryptor, const std::vector<std::vector<Number>> &inputs, const std::string &group_name,
-  bool encrypt, bool pack, EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
-
-void prepare_inputs_group(
-  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
-  const seal::Encryptor &encryptor, const std::vector<std::vector<std::vector<std::vector<Number>>>> &inputs,
-  const std::string &group_name, bool encrypt, bool pack, EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
-
-std::vector<std::vector<Number>> get_clear_outputs(
-  const std::vector<std::uint64_t> &coprimes, const Number &modulus,
-  const std::vector<std::unique_ptr<seal::BatchEncoder>> &encoders,
-  std::vector<std::unique_ptr<seal::Decryptor>> &decryptors,
-  const std::vector<EncryptedArgs> &primes_encrypted_outputs);
-
-void print_encrypted_outputs_info(
-  const seal::SEALContext &context, seal::Decryptor &decryptor, const EncryptedArgs &encrypted_outputs,
-  std::ostream &os);
-
-template <typename T>
-inline void print_vec(const std::vector<T> &v, std::ostream &os, std::size_t print_size)
-{
-  std::size_t size = v.size();
-  if (size < 2 * print_size)
-    throw std::invalid_argument("vector size must at least twice print_size");
-
-  if (size == 0)
-    return;
-
-  for (std::size_t i = 0; i < print_size; ++i)
-    os << v[i] << " ";
-  if (v.size() > 2 * print_size)
-    os << "... ";
-  for (std::size_t i = size - print_size; i < size - 1; ++i)
-    os << v[i] << " ";
-  os << v.back();
-}
-
-template <typename T>
-inline void print_vec(const std::vector<T> &v, std::ostream &os)
-{
-  if (v.size() == 0)
-    return;
-
-  for (std::size_t i = 0; i < v.size() - 1; ++i)
-    os << v[i] << " ";
-  os << v.back();
-}
-
-// needed for big shifts
-template <typename T>
-inline T shift(T n, std::size_t step)
-{
-  while (step--)
-    n += n;
-  return n;
-}
 
 std::vector<std::vector<double>> load(std::istream &is, char delim);
 
@@ -129,6 +57,15 @@ std::vector<std::vector<std::vector<Number>>> scale(
 std::vector<std::vector<std::vector<std::vector<Number>>>> scale(
   const std::vector<std::vector<std::vector<std::vector<double>>>> &data, const Number &scaler);
 
+// needed for big shifts
+template <typename T>
+inline T shift(T n, std::size_t step)
+{
+  while (step--)
+    n += n;
+  return n;
+}
+
 std::vector<std::vector<Number>> reshape_order(
   const std::vector<std::vector<Number>> &data, const std::vector<std::size_t> &order);
 
@@ -137,6 +74,43 @@ std::vector<std::vector<std::vector<Number>>> reshape_order(
 
 std::vector<std::vector<std::vector<std::vector<Number>>>> reshape_order(
   const std::vector<std::vector<std::vector<std::vector<Number>>>> &data, const std::vector<std::size_t> &order);
+
+void prepare_he_inputs(
+  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
+  const seal::Encryptor &encryptor, const std::vector<std::vector<std::vector<std::vector<Number>>>> &x,
+  const std::vector<std::vector<std::vector<std::vector<Number>>>> &w1,
+  const std::vector<std::vector<std::vector<std::vector<Number>>>> &w4, const std::vector<std::vector<Number>> &w8,
+  const std::vector<Number> &b1, const std::vector<Number> &b4, const std::vector<Number> &b8,
+  EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
+
+void prepare_inputs_group(
+  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
+  const seal::Encryptor &encryptor, const std::vector<Number> &inputs, const std::string &group_name, bool encrypt,
+  bool pack, EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
+
+void prepare_inputs_group(
+  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
+  const seal::Encryptor &encryptor, const std::vector<std::vector<Number>> &inputs, const std::string &group_name,
+  bool encrypt, bool pack, EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
+
+void prepare_inputs_group(
+  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
+  const seal::Encryptor &encryptor, const std::vector<std::vector<std::vector<std::vector<Number>>>> &inputs,
+  const std::string &group_name, bool encrypt, bool pack, EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
+
+std::vector<std::vector<Number>> get_clear_outputs(
+  const std::vector<std::uint64_t> &coprimes, const Number &modulus,
+  const std::vector<std::unique_ptr<seal::BatchEncoder>> &encoders,
+  std::vector<std::unique_ptr<seal::Decryptor>> &decryptors,
+  const std::vector<EncryptedArgs> &primes_encrypted_outputs);
+
+std::vector<std::size_t> argmax(const std::vector<std::vector<Number>> &data);
+
+std::size_t count_equal(const std::vector<std::uint64_t> &a, const std::vector<std::uint64_t> &b);
+
+void print_encrypted_outputs_info(
+  const seal::SEALContext &context, seal::Decryptor &decryptor, const EncryptedArgs &encrypted_outputs,
+  std::ostream &os);
 
 template <typename T>
 inline std::vector<std::size_t> shape(const T &val)
@@ -154,6 +128,32 @@ inline std::vector<std::size_t> shape(const std::vector<T> &vec)
   return sizes;
 }
 
-std::vector<std::size_t> argmax(const std::vector<std::vector<Number>> &data);
+template <typename T>
+inline void print_vec(const std::vector<T> &v, std::ostream &os, std::size_t print_size)
+{
+  std::size_t size = v.size();
+  if (size < 2 * print_size)
+    throw std::invalid_argument("vector size must at least twice print_size");
 
-std::size_t count_equal(const std::vector<std::uint64_t> &a, const std::vector<std::uint64_t> &b);
+  if (size == 0)
+    return;
+
+  for (std::size_t i = 0; i < print_size; ++i)
+    os << v[i] << " ";
+  if (v.size() > 2 * print_size)
+    os << "... ";
+  for (std::size_t i = size - print_size; i < size - 1; ++i)
+    os << v[i] << " ";
+  os << v.back();
+}
+
+template <typename T>
+inline void print_vec(const std::vector<T> &v, std::ostream &os)
+{
+  if (v.size() == 0)
+    return;
+
+  for (std::size_t i = 0; i < v.size() - 1; ++i)
+    os << v[i] << " ";
+  os << v.back();
+}
