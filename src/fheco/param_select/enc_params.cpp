@@ -1,5 +1,6 @@
 #include "fheco/param_select/enc_params.hpp"
 #include "fheco/util/common.hpp"
+#include <cstdint>
 #include <utility>
 
 using namespace std;
@@ -26,9 +27,7 @@ EncParams::EncParams(size_t poly_modulus_degree, int plain_modulus_bit_size, int
 EncParams::EncParams(size_t poly_modulus_degree, integer plain_modulus, vector<int> coeff_mod_bit_sizes)
   : poly_modulus_degree_{poly_modulus_degree}, coeff_mod_bit_sizes_{move(coeff_mod_bit_sizes)}
 {
-  unsigned long msb_index;
-  FHECO_MSB_INDEX_UINT64(&msb_index, plain_modulus);
-  plain_modulus_bit_size_ = msb_index + 1;
+  plain_modulus_bit_size_ = util::bit_size(static_cast<uint64_t>(plain_modulus));
   coeff_mod_bit_count_ = 0;
   for (auto prime_size : coeff_mod_bit_sizes_)
     coeff_mod_bit_count_ += prime_size;

@@ -13,8 +13,8 @@ class ClearDataEval
 {
 public:
   ClearDataEval(
-    std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduction, bool overflow_warnings)
-    : slot_count_{slot_count}, modulus_{modulus}, signedness_{signedness}, delayed_reduction_{delayed_reduction},
+    std::size_t slot_count, integer modulus, bool signedness, bool delayed_reduct, bool overflow_warnings)
+    : slot_count_{slot_count}, modulus_{modulus}, signedness_{signedness}, delayed_reduct_{delayed_reduct},
       overflow_warnings_{overflow_warnings}
   {}
 
@@ -34,7 +34,7 @@ public:
 
   inline bool signedness() const { return signedness_; }
 
-  inline bool delayed_reduction() const { return delayed_reduction_; }
+  inline bool delayed_reduct() const { return delayed_reduct_; }
 
   inline bool overflow_warnings() const { return overflow_warnings_; }
 
@@ -57,7 +57,7 @@ private:
 
   bool signedness_;
 
-  bool delayed_reduction_;
+  bool delayed_reduct_;
 
   bool overflow_warnings_;
 };

@@ -63,6 +63,13 @@ inline int get_power_of_two(std::size_t value)
   return static_cast<int>(result);
 }
 
+inline int bit_size(std::uint64_t v)
+{
+  unsigned long msb_index;
+  FHECO_MSB_INDEX_UINT64(&msb_index, v);
+  return msb_index + 1;
+}
+
 void init_random(PackedVal &packed_val, integer slot_min, integer slot_max);
 
 bool is_scalar(const PackedVal &packed_val);

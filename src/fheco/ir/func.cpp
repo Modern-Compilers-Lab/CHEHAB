@@ -17,10 +17,10 @@ using namespace std;
 namespace fheco::ir
 {
 Func::Func(
-  string name, size_t slot_count, bool delayed_reduction, integer modulus, bool signedness,
+  string name, size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
   bool need_full_cyclic_rotation, bool overflow_warnings)
   : name_{move(name)}, slot_count_{slot_count}, need_full_cyclic_rotation_{need_full_cyclic_rotation},
-    clear_data_eval_{slot_count_, modulus, signedness, delayed_reduction, overflow_warnings}
+    clear_data_eval_{slot_count_, modulus, signedness, delayed_reduct, overflow_warnings}
 {
   if (need_full_cyclic_rotation && !util::is_power_of_two(slot_count_))
     throw invalid_argument("when need_full_cyclic_rotation, slot_count must be a power of two");

@@ -23,13 +23,12 @@ public:
     joined
   };
 
-  static inline void create_func(
-    std::string name, std::size_t slot_count, bool delayed_reduction, integer modulus, bool signedness,
+  static inline const std::shared_ptr<ir::Func> &create_func(
+    std::string name, std::size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
     bool need_full_cyclic_rotation, bool overflow_warnings = false)
   {
-    add_func(std::make_shared<ir::Func>(
-      std::move(name), slot_count, delayed_reduction, modulus, signedness, need_full_cyclic_rotation,
-      overflow_warnings));
+    return add_func(std::make_shared<ir::Func>(
+      std::move(name), slot_count, delayed_reduct, modulus, signedness, need_full_cyclic_rotation, overflow_warnings));
   }
 
   static inline const std::shared_ptr<ir::Func> &create_func(

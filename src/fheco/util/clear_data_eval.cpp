@@ -85,7 +85,7 @@ void ClearDataEval::operate_binary(
 
 void ClearDataEval::reduce(PackedVal &packed_val) const
 {
-  if (overflow_warnings_ && delayed_reduction_)
+  if (overflow_warnings_ && delayed_reduct_)
   {
     if (signedness_)
     {
@@ -109,8 +109,8 @@ void ClearDataEval::reduce(PackedVal &packed_val) const
       }
     }
   }
-  // !delayed_reduction_
-  else if (!delayed_reduction_)
+  // !delayed_reduct_
+  else if (!delayed_reduct_)
   {
     for (auto it = packed_val.begin(); it != packed_val.end(); ++it)
     {

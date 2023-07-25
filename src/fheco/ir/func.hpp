@@ -18,7 +18,7 @@ class Func
 {
 public:
   Func(
-    std::string name, std::size_t slot_count, bool delayed_reduction, integer modulus, bool signedness,
+    std::string name, std::size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
     bool need_full_cyclic_rotation, bool overflow_warnings);
 
   Func(
