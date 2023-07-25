@@ -2,6 +2,7 @@
 
 #include "fheco/fheco.hpp"
 #include <cstddef>
+#include <istream>
 #include <ostream>
 #include <string>
 #include <variant>
@@ -42,6 +43,15 @@ std::vector<fheco::Ciphertext> dot(
   const std::vector<fheco::Ciphertext> &input, const std::vector<std::vector<fheco::Plaintext>> &w);
 
 std::vector<fheco::Ciphertext> flatten(const std::vector<std::vector<std::vector<fheco::Ciphertext>>> &input);
+
+std::vector<fheco::integer> load(std::istream &is);
+
+std::vector<std::vector<fheco::integer>> load(std::istream &is, char delim);
+
+std::vector<std::string> split(const std::string &str, char delim);
+
+std::vector<std::vector<std::vector<std::vector<fheco::integer>>>> reshape_4d(
+  const std::vector<std::vector<fheco::integer>> &data, const std::vector<std::size_t> &shape);
 
 template <typename T>
 inline void print_vec(const std::vector<T> &v, std::ostream &os)

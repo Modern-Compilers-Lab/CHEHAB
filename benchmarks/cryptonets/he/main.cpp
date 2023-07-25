@@ -13,7 +13,7 @@ using namespace seal;
 
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
-  os << (arg ? name : "no" + name);
+  os << (arg ? name : "no_" + name);
 }
 
 int main(int argc, char **argv)
@@ -22,64 +22,28 @@ int main(int argc, char **argv)
   if (argc > 1)
     opt = stoi(argv[1]);
 
+  bool eval = true;
+  if (argc > 2)
+    eval = stoi(argv[2]);
+
   print_bool_arg(opt, "opt", clog);
+  clog << " ";
+  print_bool_arg(opt, "eval", clog);
   clog << '\n';
 
   chrono::high_resolution_clock::time_point t;
   chrono::duration<double, milli> elapsed;
-  // calculate scaling factors
-  const size_t in_precis = 6;
-  const size_t w1_precis = in_precis;
-  const size_t w4_precis = in_precis;
-  const size_t w8_precis = in_precis;
-  const size_t b1_precis = in_precis + w1_precis;
-  const size_t b4_precis = 2 * b1_precis + w4_precis + 2;
-  const size_t b8_precis = 2 * b4_precis + w8_precis + 4;
-  const Number in_scaler = 1 << in_precis;
-  const Number w1_scaler = 1 << w1_precis;
-  const Number w4_scaler = 1 << w4_precis;
-  const Number w8_scaler = 1 << w8_precis;
-  const Number b1_scaler = shift(static_cast<Number>(1), b1_precis);
-  const Number b4_scaler = shift(static_cast<Number>(1), b4_precis);
-  const Number b8_scaler = shift(static_cast<Number>(1), b8_precis);
-  clog << "precision (bits):\n";
-  clog << "inputs: " << in_precis << '\n';
-  clog << "weights: " << w1_precis << " " << w4_precis << " " << w8_precis << '\n';
-  clog << "biases: " << b1_precis << " " << b4_precis << " " << b8_precis << '\n';
   // open data files
-  ifstream x_is("data/x_test.tmp");
+  string data_loc = "data/";
+  ifstream x_is(data_loc + "x_test.tmp");
   if (!x_is)
     throw invalid_argument("failed to open x_test file");
 
-  ifstream y_is("data/y_test.tmp");
+  ifstream y_is(data_loc + "y_test.txt");
   if (!y_is)
     throw invalid_argument("failed to open y_test file");
 
-  ifstream w1_is("data/W1.tmp");
-  if (!w1_is)
-    throw invalid_argument("failed to open W1 file");
-
-  ifstream w4_is("data/W4.tmp");
-  if (!w4_is)
-    throw invalid_argument("failed to open W4 file");
-
-  ifstream w8_is("data/W8.tmp");
-  if (!w8_is)
-    throw invalid_argument("failed to open W8 file");
-
-  ifstream b1_is("data/b1.tmp");
-  if (!b1_is)
-    throw invalid_argument("failed to open b1 file");
-
-  ifstream b4_is("data/b4.tmp");
-  if (!b4_is)
-    throw invalid_argument("failed to open b4 file");
-
-  ifstream b8_is("data/b8.tmp");
-  if (!b8_is)
-    throw invalid_argument("failed to open b8 file");
-
-  // load clear data
+  // load
   clog << "load clear data .. " << flush;
   t = chrono::high_resolution_clock::now();
   vector<vector<vector<vector<double>>>> x_clear;
@@ -88,20 +52,6 @@ int main(int argc, char **argv)
     x_clear = reshape_4d(x, {x.size(), 28, 28, 1});
   }
   auto y_clear = load<size_t>(y_is);
-  vector<vector<vector<vector<double>>>> w1_clear;
-  {
-    auto w1 = load(w1_is, ',');
-    w1_clear = reshape_4d(w1, {w1.size(), 5, 1, 5});
-  }
-  vector<vector<vector<vector<double>>>> w4_clear;
-  {
-    auto w4 = load(w4_is, ',');
-    w4_clear = reshape_4d(w4, {w4.size(), 5, 5, 10});
-  }
-  auto w8_clear = load(w8_is, ',');
-  auto b1_clear = load<double>(b1_is);
-  auto b4_clear = load<double>(b4_is);
-  auto b8_clear = load<double>(b8_is);
   elapsed = chrono::high_resolution_clock::now() - t;
   clog << "ok (" << elapsed.count() << " ms)\n";
   // take subset
@@ -113,20 +63,25 @@ int main(int argc, char **argv)
   clog << '\n';
   print_vec(shape(y_clear), clog);
   clog << '\n';
-  // scale data
-  clog << "scale .. " << flush;
-  t = chrono::high_resolution_clock::now();
+  // compute scaling factors
+  const int in_precis = 6;
+  const int w1_precis = in_precis;
+  const int w4_precis = in_precis;
+  const int w8_precis = in_precis;
+  const int b1_precis = in_precis + w1_precis;
+  const int b4_precis = 2 * b1_precis + w4_precis + 2;
+  const int b8_precis = 2 * b4_precis + w8_precis + 4;
+  const Number in_scaler = shift(static_cast<Number>(1), in_precis);
+  clog << "precision (bits):\n";
+  clog << "inputs: " << in_precis << '\n';
+  clog << "weights: " << w1_precis << " " << w4_precis << " " << w8_precis << '\n';
+  clog << "biases: " << b1_precis << " " << b4_precis << " " << b8_precis << '\n';
+  // scale
+  clog << "scale" << '\n';
   auto x_clear_scaled = scale(x_clear, in_scaler);
+  // reshape_order
   x_clear_scaled = reshape_order(x_clear_scaled, {1, 2, 3, 0});
-  auto w1_clear_scaled = scale(w1_clear, w1_scaler);
-  auto w4_clear_scaled = scale(w4_clear, w4_scaler);
-  auto w8_clear_scaled = scale(w8_clear, w8_scaler);
-  auto b1_clear_scaled = scale(b1_clear, b1_scaler);
-  auto b4_clear_scaled = scale(b4_clear, b4_scaler);
-  auto b8_clear_scaled = scale(b8_clear, b8_scaler);
-  elapsed = chrono::high_resolution_clock::now() - t;
-  clog << "ok (" << elapsed.count() << " ms)\n";
-  // prepare data (encode with crt/encrypt) and run
+  // prepare data (encode with crt/encrypt) then evaluate
   const vector<uint64_t> coprimes{65537, 114689, 147457, 163841, 557057};
   Number modulus = 1;
   for (auto prime : coprimes)
@@ -140,67 +95,79 @@ int main(int argc, char **argv)
   chrono::duration<double, milli> eval_time(0);
   for (size_t i = 0; i < coprimes.size(); ++i)
   {
-    // create context and required seal objects
     clog << "coprime " << coprimes[i] << '\n';
-    EncryptionParameters params(scheme_type::bfv);
-    params.set_poly_modulus_degree(n);
-    params.set_plain_modulus(coprimes[i]);
-    params.set_coeff_modulus(CoeffModulus::BFVDefault(n));
-    SEALContext context(params, true, sec_level_type::tc128);
-    encoders.push_back(make_unique<BatchEncoder>(context));
-    KeyGenerator keygen(context);
-    const SecretKey &secret_key = keygen.secret_key();
-    PublicKey public_key;
-    keygen.create_public_key(public_key);
-    RelinKeys relin_keys;
-    keygen.create_relin_keys(relin_keys);
-    GaloisKeys galois_keys;
-    if (opt)
-      keygen.create_galois_keys(get_rotation_steps_cryptonets_opt(), galois_keys);
+    if (eval)
+    {
+      // create context, required seal objects and keys
+      clog << "create context, api objects and keys .. " << flush;
+      t = chrono::high_resolution_clock::now();
+      EncryptionParameters params(scheme_type::bfv);
+      params.set_poly_modulus_degree(n);
+      params.set_plain_modulus(coprimes[i]);
+      params.set_coeff_modulus(CoeffModulus::BFVDefault(n));
+      SEALContext context(params, true, sec_level_type::tc128);
+      encoders.push_back(make_unique<BatchEncoder>(context));
+      KeyGenerator keygen(context);
+      const SecretKey &secret_key = keygen.secret_key();
+      PublicKey public_key;
+      keygen.create_public_key(public_key);
+      RelinKeys relin_keys;
+      keygen.create_relin_keys(relin_keys);
+      GaloisKeys galois_keys;
+      if (opt)
+        keygen.create_galois_keys(get_rotation_steps_cryptonets_opt(), galois_keys);
+      else
+        keygen.create_galois_keys(get_rotation_steps_cryptonets_noopt(), galois_keys);
+      Encryptor encryptor(context, public_key);
+      Evaluator evaluator(context);
+      decryptors.push_back(make_unique<Decryptor>(context, secret_key));
+      clog << "ok (" << elapsed.count() << " ms)\n";
+      // encode/encrypt inputs
+      clog << "encode/encrypt .. " << flush;
+      t = chrono::high_resolution_clock::now();
+      EncryptedArgs encrypted_inputs;
+      prepare_he_inputs(modulus, coprimes[i], *encoders[i], encryptor, x_clear_scaled, encrypted_inputs);
+      EncodedArgs encoded_inputs;
+      elapsed = chrono::high_resolution_clock::now() - t;
+      clog << "ok (" << elapsed.count() << " ms)\n";
+      // run he evaluation
+      clog << "evaluate .. " << flush;
+      t = chrono::high_resolution_clock::now();
+      EncodedArgs encoded_outputs;
+      primes_encrypted_outputs.push_back(EncryptedArgs{});
+      if (opt)
+        cryptonets_opt(
+          encrypted_inputs, encoded_inputs, primes_encrypted_outputs[i], encoded_outputs, *encoders[i], encryptor,
+          evaluator, relin_keys, galois_keys);
+      else
+        cryptonets_noopt(
+          encrypted_inputs, encoded_inputs, primes_encrypted_outputs[i], encoded_outputs, *encoders[i], encryptor,
+          evaluator, relin_keys, galois_keys);
+      elapsed = chrono::high_resolution_clock::now() - t;
+      eval_time += elapsed;
+      clog << "ok (" << elapsed.count() << " ms)\n";
+      print_encrypted_outputs_info(context, *decryptors[i], primes_encrypted_outputs[i], clog);
+    }
     else
-      keygen.create_galois_keys(get_rotation_steps_cryptonets_noopt(), galois_keys);
-    Encryptor encryptor(context, public_key);
-    Evaluator evaluator(context);
-    decryptors.push_back(make_unique<Decryptor>(context, secret_key));
-    // encode/encrypt inputs
-    clog << "encode/encrypt .. " << flush;
-    t = chrono::high_resolution_clock::now();
-    EncryptedArgs encrypted_inputs;
-    EncodedArgs encoded_inputs;
-    prepare_he_inputs(
-      modulus, coprimes[i], *encoders[i], encryptor, x_clear_scaled, w1_clear_scaled, w4_clear_scaled, w8_clear_scaled,
-      b1_clear_scaled, b4_clear_scaled, b8_clear_scaled, encrypted_inputs, encoded_inputs);
-
-    elapsed = chrono::high_resolution_clock::now() - t;
-    clog << "ok (" << elapsed.count() << " ms)\n";
-    // run he evaluation
-    clog << "evaluate .. " << flush;
-    t = chrono::high_resolution_clock::now();
-    EncodedArgs encoded_outputs;
-    primes_encrypted_outputs.push_back(EncryptedArgs{});
-    if (opt)
-      cryptonets_opt(
-        encrypted_inputs, encoded_inputs, primes_encrypted_outputs[i], encoded_outputs, *encoders[i], encryptor,
-        evaluator, relin_keys, galois_keys);
-    else
-      cryptonets_noopt(
-        encrypted_inputs, encoded_inputs, primes_encrypted_outputs[i], encoded_outputs, *encoders[i], encryptor,
-        evaluator, relin_keys, galois_keys);
-    elapsed = chrono::high_resolution_clock::now() - t;
-    eval_time += elapsed;
-    clog << "ok (" << elapsed.count() << " ms)\n";
-    print_encrypted_outputs_info(context, *decryptors[i], primes_encrypted_outputs[i], clog);
+    {
+      clog << "export reduced weights and biases\n";
+      export_reduced_weights_biases(
+        modulus, coprimes[i], w1_precis, w4_precis, w8_precis, b1_precis, b4_precis, b8_precis);
+    }
   }
-  // decrypt
-  clog << "decrypt .. " << flush;
-  t = chrono::high_resolution_clock::now();
-  auto raw_y = get_clear_outputs(coprimes, modulus, encoders, decryptors, primes_encrypted_outputs);
-  elapsed = chrono::high_resolution_clock::now() - t;
-  clog << "ok (" << elapsed.count() << " ms)\n";
-  raw_y = reshape_order(raw_y, {1, 0});
-  // plain_plain_ops
-  auto obtained_y_clear = argmax(raw_y);
-  auto acc = static_cast<double>(count_equal(obtained_y_clear, y_clear)) / obtained_y_clear.size();
-  clog << "The accuracy on test data for MNIST: " << acc << '\n';
-  cout << eval_time.count() << " ms\n";
+  if (eval)
+  {
+    // decrypt
+    clog << "decrypt .. " << flush;
+    t = chrono::high_resolution_clock::now();
+    auto raw_y = get_clear_outputs(coprimes, modulus, encoders, decryptors, primes_encrypted_outputs);
+    elapsed = chrono::high_resolution_clock::now() - t;
+    clog << "ok (" << elapsed.count() << " ms)\n";
+    raw_y = reshape_order(raw_y, {1, 0});
+    // plain_plain_ops
+    auto obtained_y_clear = argmax(raw_y);
+    auto acc = static_cast<double>(count_equal(obtained_y_clear, y_clear)) / obtained_y_clear.size();
+    clog << "The accuracy on test data for MNIST: " << acc << '\n';
+    cout << eval_time.count() << " ms\n";
+  }
 }

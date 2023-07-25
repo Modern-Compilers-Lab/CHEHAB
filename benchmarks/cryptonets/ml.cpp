@@ -219,3 +219,89 @@ vector<Ciphertext> flatten(const vector<vector<vector<Ciphertext>>> &input)
 
   return output;
 }
+
+vector<integer> load(istream &is)
+{
+  vector<integer> data;
+  string line;
+  while (getline(is, line))
+    data.push_back(static_cast<integer>(stoull(line)));
+  return data;
+}
+
+vector<vector<integer>> load(istream &is, char delim)
+{
+  vector<vector<integer>> data;
+  string line;
+  while (getline(is, line))
+  {
+    auto tokens = split(line, delim);
+    vector<integer> line_data;
+    line_data.reserve(tokens.size());
+    for (const auto &token : tokens)
+      line_data.push_back(static_cast<integer>(stoull(token)));
+    data.push_back(line_data);
+  }
+  return data;
+}
+
+vector<string> split(const string &str, char delim)
+{
+  vector<string> tokens;
+  string token = "";
+  for (const auto &c : str)
+  {
+    if (c == delim)
+    {
+      tokens.push_back(token);
+      token = "";
+    }
+    else
+      token += c;
+  }
+  tokens.push_back(token);
+  return tokens;
+}
+
+vector<vector<vector<vector<integer>>>> reshape_4d(const vector<vector<integer>> &data, const vector<size_t> &shape)
+{
+  if (shape.size() < 4)
+    throw invalid_argument("incomplete dimensions");
+
+  vector<vector<vector<vector<integer>>>> result(
+    shape[0], vector<vector<vector<integer>>>(shape[1], vector<vector<integer>>(shape[2], vector<integer>(shape[3]))));
+  size_t i, j, k, l;
+  i = j = k = l = 0;
+  bool full = false;
+  for (const auto &vec : data)
+  {
+    for (const auto &e : vec)
+    {
+      result[i][j][k][l] = e;
+      ++l;
+      if (l == shape[3])
+      {
+        l = 0;
+        ++k;
+        if (k == shape[2])
+        {
+          k = 0;
+          ++j;
+          if (j == shape[1])
+          {
+            j = 0;
+            ++i;
+            if (i == shape[0])
+            {
+              full = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (full)
+      break;
+  }
+  return result;
+}

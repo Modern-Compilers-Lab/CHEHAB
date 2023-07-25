@@ -16,8 +16,6 @@ typedef __int128 Number;
 using EncryptedArgs = std::unordered_map<std::string, seal::Ciphertext>;
 using EncodedArgs = std::unordered_map<std::string, seal::Plaintext>;
 
-std::vector<std::vector<double>> load(std::istream &is, char delim);
-
 template <typename T>
 inline std::vector<T> load(std::istream &is)
 {
@@ -27,9 +25,10 @@ inline std::vector<T> load(std::istream &is)
     data.push_back(static_cast<T>(std::stod(line)));
   return data;
 }
-std::vector<std::string> split(const std::string &str, char delim);
 
-std::string trim(std::string s);
+std::vector<std::vector<double>> load(std::istream &is, char delim);
+
+std::vector<std::string> split(const std::string &str, char delim);
 
 std::vector<std::vector<std::vector<std::vector<double>>>> reshape_4d(
   const std::vector<std::vector<double>> &data, const std::vector<std::size_t> &shape);
@@ -59,12 +58,25 @@ std::vector<std::vector<std::vector<std::vector<Number>>>> scale(
 
 // needed for big shifts
 template <typename T>
-inline T shift(T n, std::size_t step)
+inline T shift(T n, int step)
 {
   while (step--)
     n += n;
   return n;
 }
+
+void export_reduced_weights_biases(
+  const Number &modulus, std::uint64_t plain_modulus, int w1_precis, int w4_precis, int w8_precis, int b1_precis,
+  int b4_precis, int b8_precis);
+
+std::vector<std::uint64_t> reduce(const std::vector<Number> &data, const Number &modulus, std::uint64_t plain_modulus);
+
+std::vector<std::vector<std::uint64_t>> reduce(
+  const std::vector<std::vector<Number>> &data, const Number &modulus, std::uint64_t plain_modulus);
+
+void print_reduced_data(const std::vector<std::uint64_t> &data, std::ostream &os);
+
+void print_reduced_data(const std::vector<std::vector<std::uint64_t>> &data, std::ostream &os, char delim);
 
 std::vector<std::vector<Number>> reshape_order(
   const std::vector<std::vector<Number>> &data, const std::vector<std::size_t> &order);
@@ -78,25 +90,7 @@ std::vector<std::vector<std::vector<std::vector<Number>>>> reshape_order(
 void prepare_he_inputs(
   const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
   const seal::Encryptor &encryptor, const std::vector<std::vector<std::vector<std::vector<Number>>>> &x,
-  const std::vector<std::vector<std::vector<std::vector<Number>>>> &w1,
-  const std::vector<std::vector<std::vector<std::vector<Number>>>> &w4, const std::vector<std::vector<Number>> &w8,
-  const std::vector<Number> &b1, const std::vector<Number> &b4, const std::vector<Number> &b8,
-  EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
-
-void prepare_inputs_group(
-  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
-  const seal::Encryptor &encryptor, const std::vector<Number> &inputs, const std::string &group_name, bool encrypt,
-  bool pack, EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
-
-void prepare_inputs_group(
-  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
-  const seal::Encryptor &encryptor, const std::vector<std::vector<Number>> &inputs, const std::string &group_name,
-  bool encrypt, bool pack, EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
-
-void prepare_inputs_group(
-  const Number &modulus, std::uint64_t plain_modulus, const seal::BatchEncoder &encoder,
-  const seal::Encryptor &encryptor, const std::vector<std::vector<std::vector<std::vector<Number>>>> &inputs,
-  const std::string &group_name, bool encrypt, bool pack, EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);
+  EncryptedArgs &encrypted_inputs);
 
 std::vector<std::vector<Number>> get_clear_outputs(
   const std::vector<std::uint64_t> &coprimes, const Number &modulus,

@@ -1,6 +1,7 @@
 #include "utils.hpp"
 #include <algorithm>
 #include <cctype>
+#include <fstream>
 #include <stdexcept>
 #include <utility>
 
@@ -15,8 +16,9 @@ vector<vector<double>> load(istream &is, char delim)
   {
     auto tokens = split(line, delim);
     vector<double> line_data;
+    line_data.reserve(tokens.size());
     for (const auto &token : tokens)
-      line_data.push_back(stod(trim(token)));
+      line_data.push_back(stod(token));
     data.push_back(line_data);
   }
   return data;
@@ -38,13 +40,6 @@ vector<string> split(const string &str, char delim)
   }
   tokens.push_back(token);
   return tokens;
-}
-
-string trim(string s)
-{
-  s.erase(s.begin(), find_if(s.begin(), s.end(), [](unsigned char ch) { return !isspace(ch); }));
-  s.erase(find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !isspace(ch); }).base(), s.end());
-  return s;
 }
 
 vector<vector<vector<vector<double>>>> reshape_4d(const vector<vector<double>> &data, const vector<size_t> &shape)
@@ -131,6 +126,159 @@ vector<vector<vector<vector<Number>>>> scale(const vector<vector<vector<vector<d
   return result;
 }
 
+void export_reduced_weights_biases(
+  const Number &modulus, uint64_t plain_modulus, int w1_precis, int w4_precis, int w8_precis, int b1_precis,
+  int b4_precis, int b8_precis)
+{
+  // open weights and biases files
+  string raw_data_loc = "data/";
+  ifstream w1_is(raw_data_loc + "w1.txt");
+  if (!w1_is)
+    throw invalid_argument("failed to open w1 file");
+
+  ifstream w4_is(raw_data_loc + "w4.txt");
+  if (!w4_is)
+    throw invalid_argument("failed to open w4 file");
+
+  ifstream w8_is(raw_data_loc + "w8.txt");
+  if (!w8_is)
+    throw invalid_argument("failed to open w8 file");
+
+  ifstream b1_is(raw_data_loc + "b1.txt");
+  if (!b1_is)
+    throw invalid_argument("failed to open b1 file");
+
+  ifstream b4_is(raw_data_loc + "b4.txt");
+  if (!b4_is)
+    throw invalid_argument("failed to open b4 file");
+
+  ifstream b8_is(raw_data_loc + "b8.txt");
+  if (!b8_is)
+    throw invalid_argument("failed to open b8 file");
+
+  // load
+  char in_delim = ',';
+  auto w1_clear = load(w1_is, in_delim);
+  auto w4_clear = load(w4_is, in_delim);
+  auto w8_clear = load(w8_is, in_delim);
+  auto b1_clear = load<double>(b1_is);
+  auto b4_clear = load<double>(b4_is);
+  auto b8_clear = load<double>(b8_is);
+  // compute scaling factors
+  const Number w1_scaler = shift(static_cast<Number>(1), w1_precis);
+  const Number w4_scaler = shift(static_cast<Number>(1), w4_precis);
+  const Number w8_scaler = shift(static_cast<Number>(1), w8_precis);
+  const Number b1_scaler = shift(static_cast<Number>(1), b1_precis);
+  const Number b4_scaler = shift(static_cast<Number>(1), b4_precis);
+  const Number b8_scaler = shift(static_cast<Number>(1), b8_precis);
+  // scale
+  auto w1_clear_scaled = scale(w1_clear, w1_scaler);
+  auto w4_clear_scaled = scale(w4_clear, w4_scaler);
+  auto w8_clear_scaled = scale(w8_clear, w8_scaler);
+  auto b1_clear_scaled = scale(b1_clear, b1_scaler);
+  auto b4_clear_scaled = scale(b4_clear, b4_scaler);
+  auto b8_clear_scaled = scale(b8_clear, b8_scaler);
+  // reduce
+  auto w1_clear_reduced = reduce(w1_clear_scaled, modulus, plain_modulus);
+  auto w4_clear_reduced = reduce(w4_clear_scaled, modulus, plain_modulus);
+  auto w8_clear_reduced = reduce(w8_clear_scaled, modulus, plain_modulus);
+  auto b1_clear_reduced = reduce(b1_clear_scaled, modulus, plain_modulus);
+  auto b4_clear_reduced = reduce(b4_clear_scaled, modulus, plain_modulus);
+  auto b8_clear_reduced = reduce(b8_clear_scaled, modulus, plain_modulus);
+  // print
+  string reduced_data_loc = "../constants/plain_mod_" + to_string(plain_modulus) + "/";
+  ofstream w1_os(reduced_data_loc + "w1.txt");
+  if (!w1_os)
+    throw logic_error("failed to create w1 file");
+
+  ofstream w4_os(reduced_data_loc + "w4.txt");
+  if (!w4_os)
+    throw logic_error("failed to create w4 file");
+
+  ofstream w8_os(reduced_data_loc + "w8.txt");
+  if (!w8_os)
+    throw logic_error("failed to create w8 file");
+
+  ofstream b1_os(reduced_data_loc + "b1.txt");
+  if (!b1_os)
+    throw logic_error("failed to create b1 file");
+
+  ofstream b4_os(reduced_data_loc + "b4.txt");
+  if (!b4_os)
+    throw logic_error("failed to create b4 file");
+
+  ofstream b8_os(reduced_data_loc + "b8.txt");
+  if (!b8_os)
+    throw logic_error("failed to create b8 file");
+
+  char out_delim = ' ';
+  print_reduced_data(w1_clear_reduced, w1_os, out_delim);
+  print_reduced_data(w4_clear_reduced, w4_os, out_delim);
+  print_reduced_data(w8_clear_reduced, w8_os, out_delim);
+  print_reduced_data(b1_clear_reduced, b1_os);
+  print_reduced_data(b4_clear_reduced, b4_os);
+  print_reduced_data(b8_clear_reduced, b8_os);
+}
+
+vector<uint64_t> reduce(const vector<Number> &data, const Number &modulus, uint64_t plain_modulus)
+{
+  vector<uint64_t> reduced_data(data.size());
+  for (size_t i = 0; i < reduced_data.size(); ++i)
+  {
+    auto val = data[i];
+    if (val >= modulus || val < 0)
+    {
+      val %= modulus;
+      if (val < 0)
+        val += modulus;
+    }
+    if (val >= plain_modulus)
+      reduced_data[i] = static_cast<uint64_t>(val % plain_modulus);
+    else
+      reduced_data[i] = static_cast<uint64_t>(val);
+  }
+  return reduced_data;
+}
+
+vector<vector<uint64_t>> reduce(const vector<vector<Number>> &data, const Number &modulus, uint64_t plain_modulus)
+{
+  vector<vector<uint64_t>> reduced_data(data.size(), vector<uint64_t>(data[0].size()));
+  for (size_t i = 0; i < reduced_data.size(); ++i)
+  {
+    for (size_t j = 0; j < reduced_data[0].size(); ++j)
+    {
+      auto val = data[i][j];
+      if (val >= modulus || val < 0)
+      {
+        val %= modulus;
+        if (val < 0)
+          val += modulus;
+      }
+      if (val >= plain_modulus)
+        reduced_data[i][j] = static_cast<uint64_t>(val % plain_modulus);
+      else
+        reduced_data[i][j] = static_cast<uint64_t>(val);
+    }
+  }
+  return reduced_data;
+}
+
+void print_reduced_data(const vector<uint64_t> &data, ostream &os)
+{
+  for (auto val : data)
+    os << val << '\n';
+}
+
+void print_reduced_data(const vector<vector<uint64_t>> &data, ostream &os, char delim)
+{
+  for (const auto &vec : data)
+  {
+    for (size_t i = 0; i < vec.size() - 1; ++i)
+      os << vec[i] << delim;
+    os << vec.back() << '\n';
+  }
+}
+
 vector<vector<Number>> reshape_order(const vector<vector<Number>> &data, const vector<size_t> &order)
 {
   if (order.size() != 2)
@@ -193,235 +341,39 @@ vector<vector<vector<vector<Number>>>> reshape_order(
 
 void prepare_he_inputs(
   const Number &modulus, uint64_t plain_modulus, const BatchEncoder &encoder, const Encryptor &encryptor,
-  const vector<vector<vector<vector<Number>>>> &x, const vector<vector<vector<vector<Number>>>> &w1,
-  const vector<vector<vector<vector<Number>>>> &w4, const vector<vector<Number>> &w8, const vector<Number> &b1,
-  const vector<Number> &b4, const vector<Number> &b8, EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs)
-{
-  prepare_inputs_group(
-    modulus, plain_modulus, encoder, encryptor, x, "x", true, true, encrypted_inputs, encoded_inputs);
-  prepare_inputs_group(
-    modulus, plain_modulus, encoder, encryptor, w1, "w1", false, false, encrypted_inputs, encoded_inputs);
-  prepare_inputs_group(
-    modulus, plain_modulus, encoder, encryptor, w4, "w4", false, false, encrypted_inputs, encoded_inputs);
-  prepare_inputs_group(
-    modulus, plain_modulus, encoder, encryptor, w8, "w8", false, false, encrypted_inputs, encoded_inputs);
-  prepare_inputs_group(
-    modulus, plain_modulus, encoder, encryptor, b1, "b1", false, false, encrypted_inputs, encoded_inputs);
-  prepare_inputs_group(
-    modulus, plain_modulus, encoder, encryptor, b4, "b4", false, false, encrypted_inputs, encoded_inputs);
-  prepare_inputs_group(
-    modulus, plain_modulus, encoder, encryptor, b8, "b8", false, false, encrypted_inputs, encoded_inputs);
-}
-
-void prepare_inputs_group(
-  const Number &modulus, uint64_t plain_modulus, const BatchEncoder &encoder, const Encryptor &encryptor,
-  const vector<Number> &inputs, const string &group_name, bool encrypt, bool pack, EncryptedArgs &encrypted_inputs,
-  EncodedArgs &encoded_inputs)
+  const vector<vector<vector<vector<Number>>>> &x, EncryptedArgs &encrypted_inputs)
 {
   auto slot_count = encoder.slot_count();
-  if (pack)
+  for (size_t i = 0; i < x.size(); ++i)
   {
-    string input_name = group_name;
-    vector<Number> batched_vals(slot_count);
-    if (inputs.size() != slot_count)
-      throw logic_error("inputs size different than available slot_count");
+    for (size_t j = 0; j < x[0].size(); ++j)
+    {
+      for (size_t k = 0; k < x[0][0].size(); ++k)
+      {
+        if (x[i][j][k].size() != slot_count)
+          throw logic_error("inputs size different than available slot_count");
 
-    for (size_t i = 0; i < slot_count; ++i)
-    {
-      auto slot_val = inputs[i];
-      if (slot_val >= modulus || slot_val < 0)
-      {
-        slot_val %= modulus;
-        if (slot_val < 0)
-          slot_val += modulus;
-      }
-      batched_vals[i] = slot_val;
-    }
-    vector<uint64_t> reduced_batched_vals(slot_count);
-    for (size_t i = 0; i < slot_count; ++i)
-      reduced_batched_vals[i] = static_cast<uint64_t>(batched_vals[i] % plain_modulus);
-    Plaintext ptxt;
-    encoder.encode(reduced_batched_vals, ptxt);
-    if (encrypt)
-    {
-      Ciphertext ctxt;
-      encryptor.encrypt(ptxt, ctxt);
-      encrypted_inputs.emplace(move(input_name), move(ctxt));
-    }
-    else
-      encoded_inputs.emplace(move(input_name), move(ptxt));
-  }
-  else
-  {
-    for (size_t i = 0; i < inputs.size(); ++i)
-    {
-      string input_name = group_name + "[" + to_string(i) + "]";
-      Number val = inputs[i];
-      if (val >= modulus || val < 0)
-      {
-        val %= modulus;
-        if (val < 0)
-          val += modulus;
-      }
-      vector<Number> batched_vals(slot_count, val);
-      uint64_t reduced_val = static_cast<uint64_t>(val % plain_modulus);
-      vector<uint64_t> reduced_batched_vals(slot_count, reduced_val);
-      Plaintext ptxt;
-      encoder.encode(reduced_batched_vals, ptxt);
-      if (encrypt)
-      {
-        Ciphertext ctxt;
-        encryptor.encrypt(ptxt, ctxt);
-        encrypted_inputs.emplace(move(input_name), move(ctxt));
-      }
-      else
-        encoded_inputs.emplace(move(input_name), move(ptxt));
-    }
-  }
-}
-
-void prepare_inputs_group(
-  const Number &modulus, uint64_t plain_modulus, const BatchEncoder &encoder, const Encryptor &encryptor,
-  const vector<vector<Number>> &inputs, const string &group_name, bool encrypt, bool pack,
-  EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs)
-{
-  auto slot_count = encoder.slot_count();
-  for (size_t i = 0; i < inputs.size(); ++i)
-  {
-    if (pack)
-    {
-      string input_name = group_name + "[" + to_string(i) + "]";
-      vector<Number> batched_vals(slot_count);
-      if (inputs[0].size() != slot_count)
-        throw logic_error("inputs size different than available slot_count");
-
-      for (size_t j = 0; j < slot_count; ++j)
-      {
-        auto slot_val = inputs[i][j];
-        if (slot_val >= modulus || slot_val < 0)
+        string input_name = "x[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "]";
+        vector<uint64_t> reduced_batched_vals(slot_count);
+        for (size_t l = 0; l < slot_count; ++l)
         {
-          slot_val %= modulus;
-          if (slot_val < 0)
-            slot_val += modulus;
+          auto val = x[i][j][k][l];
+          if (val >= modulus || val < 0)
+          {
+            val %= modulus;
+            if (val < 0)
+              val += modulus;
+          }
+          if (val >= plain_modulus)
+            reduced_batched_vals[l] = static_cast<uint64_t>(val % plain_modulus);
+          else
+            reduced_batched_vals[l] = static_cast<uint64_t>(val);
         }
-        batched_vals[j] = slot_val;
-      }
-      vector<uint64_t> reduced_batched_vals(slot_count);
-      for (size_t j = 0; j < slot_count; ++j)
-        reduced_batched_vals[j] = static_cast<uint64_t>(batched_vals[j] % plain_modulus);
-      Plaintext ptxt;
-      encoder.encode(reduced_batched_vals, ptxt);
-      if (encrypt)
-      {
-        Ciphertext ctxt;
-        encryptor.encrypt(ptxt, ctxt);
-        encrypted_inputs.emplace(move(input_name), move(ctxt));
-      }
-      else
-        encoded_inputs.emplace(move(input_name), move(ptxt));
-    }
-    else
-    {
-      for (size_t j = 0; j < inputs[0].size(); ++j)
-      {
-        string input_name = group_name + "[" + to_string(i) + "][" + to_string(j) + "]";
-        Number val = inputs[i][j];
-        if (val >= modulus || val < 0)
-        {
-          val %= modulus;
-          if (val < 0)
-            val += modulus;
-        }
-        vector<Number> batched_vals(slot_count, val);
-        uint64_t reduced_val = static_cast<uint64_t>(val % plain_modulus);
-        vector<uint64_t> reduced_batched_vals(slot_count, reduced_val);
         Plaintext ptxt;
         encoder.encode(reduced_batched_vals, ptxt);
-        if (encrypt)
-        {
-          Ciphertext ctxt;
-          encryptor.encrypt(ptxt, ctxt);
-          encrypted_inputs.emplace(move(input_name), move(ctxt));
-        }
-        else
-          encoded_inputs.emplace(move(input_name), move(ptxt));
-      }
-    }
-  }
-}
-
-void prepare_inputs_group(
-  const Number &modulus, uint64_t plain_modulus, const BatchEncoder &encoder, const Encryptor &encryptor,
-  const vector<vector<vector<vector<Number>>>> &inputs, const string &group_name, bool encrypt, bool pack,
-  EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs)
-{
-  auto slot_count = encoder.slot_count();
-  for (size_t i = 0; i < inputs.size(); ++i)
-  {
-    for (size_t j = 0; j < inputs[0].size(); ++j)
-    {
-      for (size_t k = 0; k < inputs[0][0].size(); ++k)
-      {
-        if (pack)
-        {
-          string input_name = group_name + "[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "]";
-          vector<Number> batched_vals(slot_count);
-          if (inputs[0][0][0].size() != slot_count)
-            throw logic_error("inputs size different than available slot_count");
-
-          for (size_t l = 0; l < slot_count; ++l)
-          {
-            auto val = inputs[i][j][k][l];
-            if (val >= modulus || val < 0)
-            {
-              val %= modulus;
-              if (val < 0)
-                val += modulus;
-            }
-            batched_vals[l] = val;
-          }
-          vector<uint64_t> reduced_batched_vals(slot_count);
-          for (size_t l = 0; l < slot_count; ++l)
-            reduced_batched_vals[l] = static_cast<uint64_t>(batched_vals[l] % plain_modulus);
-          Plaintext ptxt;
-          encoder.encode(reduced_batched_vals, ptxt);
-          if (encrypt)
-          {
-            Ciphertext ctxt;
-            encryptor.encrypt(ptxt, ctxt);
-            encrypted_inputs.emplace(move(input_name), move(ctxt));
-          }
-          else
-            encoded_inputs.emplace(move(input_name), move(ptxt));
-        }
-        else
-        {
-          for (size_t l = 0; l < inputs[0][0][0].size(); ++l)
-          {
-            string input_name =
-              group_name + "[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]";
-            Number val = inputs[i][j][k][l];
-            if (val >= modulus || val < 0)
-            {
-              val %= modulus;
-              if (val < 0)
-                val += modulus;
-            }
-            vector<Number> batched_vals(slot_count, val);
-            uint64_t reduced_val = static_cast<uint64_t>(val % plain_modulus);
-            vector<uint64_t> reduced_batched_vals(slot_count, reduced_val);
-            Plaintext ptxt;
-            encoder.encode(reduced_batched_vals, ptxt);
-            if (encrypt)
-            {
-              Ciphertext ctxt;
-              encryptor.encrypt(ptxt, ctxt);
-              encrypted_inputs.emplace(move(input_name), move(ctxt));
-            }
-            else
-              encoded_inputs.emplace(move(input_name), move(ptxt));
-          }
-        }
+        Ciphertext ctxt;
+        encryptor.encrypt(ptxt, ctxt);
+        encrypted_inputs.emplace(move(input_name), move(ctxt));
       }
     }
   }

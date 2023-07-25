@@ -226,6 +226,7 @@ void Expr::replace(Term *term1, Term *term2)
         if (*operand == *top_term1)
           *operand_it = top_term2;
       }
+      parent->type_ = Term::deduce_result_type(parent->op_code(), parent->operands());
       if (Compiler::cse_enabled())
       {
         auto [it, inserted] = op_terms_.emplace(OpTermKey{&parent->op_code(), &parent->operands()}, parent);

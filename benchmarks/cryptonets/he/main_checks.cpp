@@ -25,7 +25,7 @@ int main(int argc, char **argv)
   clog << '\n';
 
   string app_name = "cryptonets";
-  ifstream is("../" + app_name + "_io_example.txt");
+  ifstream is("../io_examples/" + app_name + "_io_example.txt");
   if (!is)
     throw invalid_argument("failed to open io example file");
 
