@@ -67,6 +67,7 @@ void Compiler::compile(
     break;
   }
 
+  passes::cse_commut(func);
   gen_he_code(func, header_os, header_name, source_os);
 }
 

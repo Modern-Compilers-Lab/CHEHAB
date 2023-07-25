@@ -8,39 +8,41 @@ using namespace seal;
 void parse_inputs_outputs_file(
   istream &is, uint64_t plain_modulus, ClearArgsInfo &inputs, ClearArgsInfo &outputs, size_t &slot_count)
 {
-  ios_base::fmtflags f(is.flags());
-  is >> boolalpha;
+  char delim = ' ';
+  string header;
+  getline(is, header);
+  auto tokens = split(header, delim);
+  if (tokens.size() < 3)
+    throw invalid_argument("malformatted header");
 
-  size_t nb_inputs, nb_outputs;
-  if (!(is >> slot_count >> nb_inputs >> nb_outputs))
-    throw invalid_argument("could not parse function general information");
+  slot_count = stoull(tokens[0]);
+  size_t nb_inputs = stoull(tokens[1]);
+  size_t nb_outputs = stoull(tokens[2]);
 
   // parse inputs
   for (size_t i = 0; i < nb_inputs; ++i)
   {
-    string var_name;
-    bool is_cipher, is_signed;
-    if (!(is >> var_name >> is_cipher >> is_signed))
-      throw invalid_argument("could not parse input information");
+    string line;
+    getline(is, line);
+    auto tokens = split(line, delim);
+    if (tokens.size() < slot_count + 3)
+      throw invalid_argument("malformatted input line");
 
+    string var_name = tokens[0];
+    bool is_cipher = stoi(tokens[1]);
+    bool is_signed = stoi(tokens[2]);
     if (is_signed)
     {
       vector<int64_t> var_value(slot_count);
       for (size_t j = 0; j < slot_count; ++j)
-      {
-        if (!(is >> var_value[j]))
-          throw invalid_argument("could not parse input slot");
-      }
+        var_value[j] = stoll(tokens[j + 3]);
       inputs.emplace(var_name, ClearArgInfo{move(var_value), is_cipher, true});
     }
     else
     {
       vector<uint64_t> var_value(slot_count);
       for (size_t j = 0; j < slot_count; ++j)
-      {
-        if (!(is >> var_value[j]))
-          throw invalid_argument("could not parse input slot");
-      }
+        var_value[j] = stoull(tokens[j + 3]);
       inputs.emplace(var_name, ClearArgInfo{move(var_value), is_cipher, false});
     }
   }
@@ -48,18 +50,18 @@ void parse_inputs_outputs_file(
   // parse outputs
   for (size_t i = 0; i < nb_outputs; ++i)
   {
-    string var_name;
-    bool is_cipher;
-    if (!(is >> var_name >> is_cipher))
-      throw invalid_argument("could not parse output information");
+    string line;
+    getline(is, line);
+    auto tokens = split(line, delim);
+    if (tokens.size() < slot_count + 2)
+      throw invalid_argument("malformatted output line");
 
+    string var_name = tokens[0];
+    bool is_cipher = stoi(tokens[1]);
     vector<uint64_t> var_value(slot_count);
     for (size_t j = 0; j < slot_count; ++j)
     {
-      int64_t slot_value;
-      if (!(is >> slot_value))
-        throw invalid_argument("could not parse input slot");
-
+      int64_t slot_value = stoll(tokens[j + 2]);
       auto signed_plain_modulus = static_cast<int64_t>(plain_modulus);
       if (slot_value >= signed_plain_modulus || slot_value < 0)
       {
@@ -71,7 +73,24 @@ void parse_inputs_outputs_file(
     }
     outputs.emplace(var_name, ClearArgInfo{move(var_value), is_cipher, false});
   }
-  is.flags(f);
+}
+
+vector<string> split(const string &str, char delim)
+{
+  vector<string> tokens;
+  string token = "";
+  for (const auto &c : str)
+  {
+    if (c == delim)
+    {
+      tokens.push_back(token);
+      token = "";
+    }
+    else
+      token += c;
+  }
+  tokens.push_back(token);
+  return tokens;
 }
 
 void prepare_he_inputs(
@@ -152,8 +171,6 @@ void print_encrypted_outputs_info(
 
 void print_variables_values(const ClearArgsInfo &m, size_t print_size, ostream &os)
 {
-  ios_base::fmtflags f(os.flags());
-  os << boolalpha;
   for (const auto &variable : m)
   {
     os << variable.first << " " << variable.second.is_cipher_ << " " << variable.second.is_signed_ << " ";
@@ -163,13 +180,10 @@ void print_variables_values(const ClearArgsInfo &m, size_t print_size, ostream &
       print_vec(get<vector<uint64_t>>(variable.second.value_), os, print_size);
     os << '\n';
   }
-  os.flags(f);
 }
 
 void print_variables_values(const ClearArgsInfo &m, ostream &os)
 {
-  ios_base::fmtflags f(os.flags());
-  os << boolalpha;
   for (const auto &variable : m)
   {
     os << variable.first << " " << variable.second.is_cipher_ << " " << variable.second.is_signed_ << " ";
@@ -179,5 +193,4 @@ void print_variables_values(const ClearArgsInfo &m, ostream &os)
       print_vec(get<vector<uint64_t>>(variable.second.value_), os);
     os << '\n';
   }
-  os.flags(f);
 }

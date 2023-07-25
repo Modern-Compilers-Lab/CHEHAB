@@ -31,6 +31,8 @@ void parse_inputs_outputs_file(
   std::istream &is, std::uint64_t plain_modulus, ClearArgsInfo &inputs, ClearArgsInfo &outputs,
   std::size_t &slot_count);
 
+std::vector<std::string> split(const std::string &str, char delim);
+
 void prepare_he_inputs(
   const seal::BatchEncoder &encoder, const seal::Encryptor &encryptor, const ClearArgsInfo &clear_inputs,
   EncryptedArgs &encrypted_inputs, EncodedArgs &encoded_inputs);

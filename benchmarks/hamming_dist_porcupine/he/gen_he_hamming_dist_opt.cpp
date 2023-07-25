@@ -27,8 +27,8 @@ evaluator.add_plain(c19, p17, c19);
 evaluator.multiply(c18, c19, c18);
 evaluator.relinearize(c18, relin_keys, c18);
 evaluator.rotate_rows(c18, 2, galois_keys, c19);
-evaluator.add(c18, c19, c18);
-evaluator.rotate_rows(c18, 1, galois_keys, c19);
+evaluator.add(c19, c18, c19);
+evaluator.rotate_rows(c19, 1, galois_keys, c18);
 evaluator.add(c18, c19, c18);
 encrypted_outputs.emplace("c_result", move(c18));
 }

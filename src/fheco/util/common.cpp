@@ -27,9 +27,6 @@ bool is_scalar(const PackedVal &packed_val)
 
 void print_io_terms_values(const shared_ptr<ir::Func> &func, ostream &os)
 {
-  ios_base::fmtflags f(os.flags());
-  os << boolalpha;
-
   os << func->slot_count() << " " << func->data_flow().inputs_info().size() << " "
      << func->data_flow().outputs_info().size() << '\n';
   for (const auto &input_info : func->data_flow().inputs_info())
@@ -53,16 +50,12 @@ void print_io_terms_values(const shared_ptr<ir::Func> &func, ostream &os)
       os << "not_available";
     os << '\n';
   }
-  os.flags(f);
 }
 
 void print_io_terms_values(
   const shared_ptr<ir::Func> &func, const ir::IOTermsInfo &inputs_info, const ir::IOTermsInfo &outputs_info,
   ostream &os)
 {
-  ios_base::fmtflags f(os.flags());
-  os << boolalpha;
-
   os << func->slot_count() << " " << inputs_info.size() << " " << outputs_info.size() << '\n';
   for (const auto &input_info : inputs_info)
   {
@@ -93,7 +86,6 @@ void print_io_terms_values(
       os << "not_available";
     os << '\n';
   }
-  os.flags(f);
 }
 
 void print_io_terms_values(const ir::IOTermsInfo &io_terms_values, size_t lead_trail_size, ostream &os)

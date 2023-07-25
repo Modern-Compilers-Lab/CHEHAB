@@ -7,22 +7,22 @@ edge [dir=back]
 15 [label="c0" style=solid color=red fontcolor=red]
 18 [label="c3" style=solid color=red fontcolor=red]
 19 [label="c4" style=solid color=red fontcolor=red]
-26 [label="*" style=solid color=black fontcolor=black]
-26 -> 15
-26 -> 19
-29 [label="relin" style=solid color=black fontcolor=black]
-29 -> 26
-27 [label="+" style=solid color=black fontcolor=black]
-27 -> 18
-27 -> 29
-28 [label="*" style=solid color=black fontcolor=black]
-28 -> 15
-28 -> 27
-30 [label="relin" style=solid color=black fontcolor=black]
-30 -> 28
+29 [label="*" style=solid color=black fontcolor=black]
+29 -> 15
+29 -> 19
+32 [label="relin" style=solid color=black fontcolor=black]
+32 -> 29
+30 [label="+" style=solid color=black fontcolor=black]
+30 -> 18
+30 -> 32
+31 [label="*" style=solid color=black fontcolor=black]
+31 -> 15
+31 -> 30
+33 [label="relin" style=solid color=black fontcolor=black]
+33 -> 31
 24 [label="+" style=solid color=black fontcolor=black]
 24 -> 17
-24 -> 30
+24 -> 33
 25 [label="- (c_result)" style=solid color=blue fontcolor=blue]
 25 -> 16
 25 -> 24
