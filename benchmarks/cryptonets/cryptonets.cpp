@@ -158,7 +158,12 @@ int main(int argc, char **argv)
   string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
+  if (!header_os)
+    throw logic_error("failed to create header file");
+
   ofstream source_os(gen_path + ".cpp");
+  if (!source_os)
+    throw logic_error("failed to create source file");
 
   Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
 

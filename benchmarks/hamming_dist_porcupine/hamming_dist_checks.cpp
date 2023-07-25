@@ -95,10 +95,19 @@ int main(int argc, char **argv)
   string noopt_gen_name = "gen_he_" + noopt_func_name;
   string noopt_gen_path = "he/" + noopt_gen_name;
   ofstream noopt_header_os(noopt_gen_path + ".hpp");
+  if (!noopt_header_os)
+    throw logic_error("failed to create noopt_header file");
+
   ofstream noopt_source_os(noopt_gen_path + ".cpp");
+  if (!noopt_source_os)
+    throw logic_error("failed to create noopt_source file");
+
   Compiler::gen_he_code(noopt_func, noopt_header_os, noopt_gen_name + ".hpp", noopt_source_os);
 
   ofstream noopt_ir_os(noopt_func_name + "_ir.dot");
+  if (!noopt_ir_os)
+    throw logic_error("failed to create noopt_ir file");
+
   util::draw_ir(noopt_func, noopt_ir_os);
 
   util::Quantifier noopt_quantifier(noopt_func);
@@ -136,7 +145,12 @@ int main(int argc, char **argv)
   string opt_gen_name = "gen_he_" + opt_func_name;
   string opt_gen_path = "he/" + opt_gen_name;
   ofstream opt_header_os(opt_gen_path + ".hpp");
+  if (!opt_header_os)
+    throw logic_error("failed to create opt_header file");
+
   ofstream opt_source_os(opt_gen_path + ".cpp");
+  if (!opt_source_os)
+    throw logic_error("failed to create opt_source file");
 
   Compiler::compile(opt_func, ruleset, rewrite_heuristic, opt_header_os, opt_gen_name + ".hpp", opt_source_os);
 
@@ -148,9 +162,15 @@ int main(int argc, char **argv)
     throw logic_error("compilation correctness-test failed");
 
   ofstream io_example_os(app_name + "_io_example.txt");
+  if (!io_example_os)
+    throw logic_error("failed to create io_example file");
+
   util::print_io_terms_values(noopt_func, io_example_os);
 
   ofstream opt_ir_os(opt_func_name + "_ir.dot");
+  if (!opt_ir_os)
+    throw logic_error("failed to create opt_ir file");
+
   util::draw_ir(opt_func, opt_ir_os);
 
   if (call_quantifier)
