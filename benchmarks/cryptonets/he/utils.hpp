@@ -11,7 +11,7 @@
 #include <vector>
 #include "seal/seal.h"
 
-typedef __int128 Number;
+using Number = __int128;
 
 using EncryptedArgs = std::unordered_map<std::string, seal::Ciphertext>;
 using EncodedArgs = std::unordered_map<std::string, seal::Plaintext>;
