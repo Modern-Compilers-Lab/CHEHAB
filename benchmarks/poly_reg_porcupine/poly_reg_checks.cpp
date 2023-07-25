@@ -78,11 +78,9 @@ int main(int argc, char **argv)
   bool need_cyclic_rotation = false;
 
   clog << "\nnoopt function\n";
-
   string noopt_func_name = app_name + "_noopt";
   const auto &noopt_func =
     Compiler::create_func(noopt_func_name, slot_count, bit_width, signdness, need_cyclic_rotation);
-
   poly_reg_baseline();
 
   string noopt_gen_name = "gen_he_" + noopt_func_name;
@@ -102,7 +100,6 @@ int main(int argc, char **argv)
     throw logic_error("failed to create noopt_ir file");
 
   util::draw_ir(noopt_func, noopt_ir_os);
-
   util::Quantifier noopt_quantifier(noopt_func);
   if (call_quantifier)
   {
@@ -113,7 +110,6 @@ int main(int argc, char **argv)
   }
 
   clog << "\nopt function\n";
-
   if (cse)
   {
     Compiler::enable_cse();
@@ -132,7 +128,6 @@ int main(int argc, char **argv)
 
   string opt_func_name = app_name + "_opt";
   const auto &opt_func = Compiler::create_func(opt_func_name, slot_count, bit_width, signdness, need_cyclic_rotation);
-
   poly_reg_baseline();
 
   string opt_gen_name = "gen_he_" + opt_func_name;
@@ -159,13 +154,11 @@ int main(int argc, char **argv)
     throw logic_error("failed to create io_example file");
 
   util::print_io_terms_values(noopt_func, io_example_os);
-
   ofstream opt_ir_os(opt_func_name + "_ir.dot");
   if (!opt_ir_os)
     throw logic_error("failed to create opt_ir file");
 
   util::draw_ir(opt_func, opt_ir_os);
-
   if (call_quantifier)
   {
     cout << "\nfinal circuit characteristics\n";
@@ -177,6 +170,5 @@ int main(int argc, char **argv)
     auto diff_quantifier = (noopt_quantifier - opt_quantifier) / noopt_quantifier * 100;
     diff_quantifier.print_info(cout);
   }
-
   return 0;
 }

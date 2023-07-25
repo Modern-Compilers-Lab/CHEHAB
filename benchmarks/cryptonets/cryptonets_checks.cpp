@@ -12,11 +12,16 @@
 using namespace std;
 using namespace fheco;
 
-void cryptonets(
-  const vector<size_t> &x_shape, const vector<size_t> &w1_shape, const vector<size_t> &b1_shape,
-  const vector<size_t> &w4_shape, const vector<size_t> &b4_shape, const vector<size_t> &w8_shape,
-  const vector<size_t> &b8_shape)
+void cryptonets()
 {
+  // shapes
+  vector<size_t> x_shape = {28, 28, 1};
+  vector<size_t> w1_shape = {5, 5, 1, 5};
+  vector<size_t> b1_shape = {5};
+  vector<size_t> w4_shape = {5, 5, 5, 10};
+  vector<size_t> b4_shape = {10};
+  vector<size_t> w8_shape = {40, 10};
+  vector<size_t> b8_shape = {10};
   // declare inputs
   int x_min_val = -10;
   int x_max_val = 10;
@@ -143,14 +148,10 @@ int main(int argc, char **argv)
   bool need_cyclic_rotation = false;
 
   clog << "\nnoopt function\n";
-
   string noopt_func_name = app_name + "_noopt";
   const auto &noopt_func =
     Compiler::create_func(noopt_func_name, slot_count, bit_width, signdness, need_cyclic_rotation);
-
-  cryptonets(
-    vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
-    vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
+  cryptonets();
 
   string noopt_gen_name = "gen_he_" + noopt_func_name;
   string noopt_gen_path = "he/" + noopt_gen_name;
@@ -169,7 +170,6 @@ int main(int argc, char **argv)
     throw logic_error("failed to create noopt_ir file");
 
   util::draw_ir(noopt_func, noopt_ir_os);
-
   util::Quantifier noopt_quantifier(noopt_func);
   if (call_quantifier)
   {
@@ -180,7 +180,6 @@ int main(int argc, char **argv)
   }
 
   clog << "\nopt function\n";
-
   if (cse)
   {
     Compiler::enable_cse();
@@ -199,10 +198,7 @@ int main(int argc, char **argv)
 
   string opt_func_name = app_name + "_opt";
   const auto &opt_func = Compiler::create_func(opt_func_name, slot_count, bit_width, signdness, need_cyclic_rotation);
-
-  cryptonets(
-    vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
-    vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
+  cryptonets();
 
   string opt_gen_name = "gen_he_" + opt_func_name;
   string opt_gen_path = "he/" + opt_gen_name;
@@ -228,13 +224,11 @@ int main(int argc, char **argv)
     throw logic_error("failed to create io_example file");
 
   util::print_io_terms_values(noopt_func, io_example_os);
-
   ofstream opt_ir_os(opt_func_name + "_ir.dot");
   if (!opt_ir_os)
     throw logic_error("failed to create opt_ir file");
 
   util::draw_ir(opt_func, opt_ir_os);
-
   if (call_quantifier)
   {
     cout << "\nfinal circuit characteristics\n";
@@ -246,6 +240,5 @@ int main(int argc, char **argv)
     auto diff_quantifier = (noopt_quantifier - opt_quantifier) / noopt_quantifier * 100;
     diff_quantifier.print_info(cout);
   }
-
   return 0;
 }

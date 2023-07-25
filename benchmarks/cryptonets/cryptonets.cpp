@@ -12,11 +12,16 @@
 using namespace std;
 using namespace fheco;
 
-void cryptonets(
-  const vector<size_t> &x_shape, const vector<size_t> &w1_shape, const vector<size_t> &b1_shape,
-  const vector<size_t> &w4_shape, const vector<size_t> &b4_shape, const vector<size_t> &w8_shape,
-  const vector<size_t> &b8_shape)
+void cryptonets()
 {
+  // shapes
+  vector<size_t> x_shape = {28, 28, 1};
+  vector<size_t> w1_shape = {5, 5, 1, 5};
+  vector<size_t> b1_shape = {5};
+  vector<size_t> w4_shape = {5, 5, 5, 10};
+  vector<size_t> b4_shape = {10};
+  vector<size_t> w8_shape = {40, 10};
+  vector<size_t> b8_shape = {10};
   // declare inputs
   vector<vector<vector<Ciphertext>>> x;
   for (size_t i = 0; i < x_shape[0]; ++i)
@@ -150,10 +155,7 @@ int main(int argc, char **argv)
   t = chrono::high_resolution_clock::now();
   string func_name = "cryptonets";
   const auto &func = Compiler::create_func(func_name, 8192, 17, true, false);
-
-  cryptonets(
-    vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
-    vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
+  cryptonets();
 
   string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
@@ -166,7 +168,6 @@ int main(int argc, char **argv)
     throw logic_error("failed to create source file");
 
   Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
-
   elapsed = chrono::high_resolution_clock::now() - t;
   cout << elapsed.count() << " ms\n";
 
@@ -176,6 +177,5 @@ int main(int argc, char **argv)
     quantifier.run_all_analysis();
     quantifier.print_info(cout);
   }
-
   return 0;
 }

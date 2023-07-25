@@ -82,7 +82,6 @@ int main(int argc, char **argv)
   string func_name = "box_blur";
   // Compiler::create_func(func_name, 13, 20, false, true);
   const auto &func = Compiler::create_func(func_name, 16, 20, false, true);
-
   box_blur_baseline();
 
   string gen_name = "_gen_he_" + func_name;
@@ -96,7 +95,6 @@ int main(int argc, char **argv)
     throw logic_error("failed to create source file");
 
   Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
-
   elapsed = chrono::high_resolution_clock::now() - t;
   cout << elapsed.count() << " ms\n";
 
@@ -106,6 +104,5 @@ int main(int argc, char **argv)
     quantifier.run_all_analysis();
     quantifier.print_info(cout);
   }
-
   return 0;
 }
