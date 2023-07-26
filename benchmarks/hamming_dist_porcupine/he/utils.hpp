@@ -29,7 +29,7 @@ using ClearArgsInfo = std::unordered_map<std::string, ClearArgInfo>;
 
 void parse_inputs_outputs_file(
   std::istream &is, std::uint64_t plain_modulus, ClearArgsInfo &inputs, ClearArgsInfo &outputs,
-  std::size_t &slot_count);
+  std::size_t &func_slot_count);
 
 std::vector<std::string> split(const std::string &str, char delim);
 
@@ -39,7 +39,7 @@ void prepare_he_inputs(
 
 void get_clear_outputs(
   const seal::BatchEncoder &encoder, seal::Decryptor &decryptor, const EncryptedArgs &encrypted_outputs,
-  const EncodedArgs &encoded_outputs, std::size_t slot_count, ClearArgsInfo &clear_outputs);
+  const EncodedArgs &encoded_outputs, std::size_t func_slot_count, ClearArgsInfo &clear_outputs);
 
 void print_encrypted_outputs_info(
   const seal::SEALContext &context, seal::Decryptor &decryptor, const EncryptedArgs &encrypted_outputs,

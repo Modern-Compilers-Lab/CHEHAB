@@ -34,8 +34,8 @@ int main(int argc, char **argv)
   params.set_poly_modulus_degree(n);
   params.set_plain_modulus(PlainModulus::Batching(n, 20));
   ClearArgsInfo clear_inputs, clear_outputs;
-  size_t slot_count;
-  parse_inputs_outputs_file(is, params.plain_modulus().value(), clear_inputs, clear_outputs, slot_count);
+  size_t func_slot_count;
+  parse_inputs_outputs_file(is, params.plain_modulus().value(), clear_inputs, clear_outputs, func_slot_count);
   params.set_coeff_modulus(CoeffModulus::Create(n, {60, 60, 60}));
   SEALContext context(params, true, sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
@@ -74,7 +74,8 @@ int main(int argc, char **argv)
   elapsed = chrono::high_resolution_clock::now() - t;
 
   ClearArgsInfo obtained_clear_outputs;
-  get_clear_outputs(batch_encoder, decryptor, encrypted_outputs, encoded_outputs, slot_count, obtained_clear_outputs);
+  get_clear_outputs(
+    batch_encoder, decryptor, encrypted_outputs, encoded_outputs, func_slot_count, obtained_clear_outputs);
   print_encrypted_outputs_info(context, decryptor, encrypted_outputs, clog);
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");

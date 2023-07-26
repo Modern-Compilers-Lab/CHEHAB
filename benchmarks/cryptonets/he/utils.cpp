@@ -351,7 +351,7 @@ void prepare_he_inputs(
       for (size_t k = 0; k < x[0][0].size(); ++k)
       {
         if (x[i][j][k].size() != slot_count)
-          throw logic_error("inputs size different than available slot_count");
+          throw logic_error("input size different than available slot_count");
 
         string input_name = "x[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "]";
         vector<uint64_t> reduced_batched_vals(slot_count);

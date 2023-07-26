@@ -19,6 +19,13 @@
 using namespace std;
 using namespace seal;
 
+using EvalFunc = void (*)(
+  const unordered_map<string, Ciphertext> &, const unordered_map<string, Plaintext> &,
+  unordered_map<string, Ciphertext> &, unordered_map<string, Plaintext> &, const BatchEncoder &, const Encryptor &,
+  const Evaluator &, const RelinKeys &, const GaloisKeys &);
+
+using RotationKeyFunc = vector<int> (*)();
+
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
   os << (arg ? name : "no_" + name);
@@ -91,22 +98,17 @@ int main(int argc, char **argv)
   x_clear_scaled = reshape_order(x_clear_scaled, {1, 2, 3, 0});
   // prepare data (encode with crt/encrypt) then evaluate
   const vector<uint64_t> coprimes{65537, 114689, 147457, 163841, 557057};
-  using EvalFunc = void (*)(
-    const unordered_map<string, Ciphertext> &, const unordered_map<string, Plaintext> &,
-    unordered_map<string, Ciphertext> &, unordered_map<string, Plaintext> &, const BatchEncoder &, const Encryptor &,
-    const Evaluator &, const RelinKeys &, const GaloisKeys &);
-  vector<EvalFunc> opt_eval_funcs = {
+  const vector<EvalFunc> opt_eval_funcs = {
     &cryptonets_65537_opt, &cryptonets_114689_opt, &cryptonets_147457_opt, &cryptonets_163841_opt,
     &cryptonets_557057_opt};
-  vector<EvalFunc> noopt_eval_funcs = {
+  const vector<EvalFunc> noopt_eval_funcs = {
     &cryptonets_65537_noopt, &cryptonets_114689_noopt, &cryptonets_147457_noopt, &cryptonets_163841_noopt,
     &cryptonets_557057_noopt};
-  using RotationKeyFunc = vector<int> (*)();
-  vector<RotationKeyFunc> opt_rotation_key_funcs = {
+  const vector<RotationKeyFunc> opt_rotation_key_funcs = {
     &get_rotation_steps_cryptonets_65537_opt, &get_rotation_steps_cryptonets_114689_opt,
     &get_rotation_steps_cryptonets_147457_opt, &get_rotation_steps_cryptonets_163841_opt,
     &get_rotation_steps_cryptonets_557057_opt};
-  vector<RotationKeyFunc> noopt_rotation_key_funcs = {
+  const vector<RotationKeyFunc> noopt_rotation_key_funcs = {
     &get_rotation_steps_cryptonets_65537_noopt, &get_rotation_steps_cryptonets_114689_noopt,
     &get_rotation_steps_cryptonets_147457_noopt, &get_rotation_steps_cryptonets_163841_noopt,
     &get_rotation_steps_cryptonets_557057_noopt};
