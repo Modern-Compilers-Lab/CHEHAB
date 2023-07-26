@@ -40,6 +40,8 @@ public:
 
   void replace(Term *term1, Term *term2);
 
+  void update_term_type_cascade(Term *term);
+
   void set_output(const Term *term, ParamTermInfo param_term_info);
 
   void unset_output(const Term *term);

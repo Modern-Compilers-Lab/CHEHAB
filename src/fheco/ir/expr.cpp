@@ -226,7 +226,7 @@ void Expr::replace(Term *term1, Term *term2)
         if (*operand == *top_term1)
           *operand_it = top_term2;
       }
-      parent->type_ = Term::deduce_result_type(parent->op_code(), parent->operands());
+      update_term_type_cascade(parent);
       if (Compiler::cse_enabled())
       {
         auto [it, inserted] = op_terms_.emplace(OpTermKey{&parent->op_code(), &parent->operands()}, parent);
@@ -248,6 +248,24 @@ void Expr::replace(Term *term1, Term *term2)
       delete_term_cascade(top_term1);
   }
   valid_top_sort_ = false;
+}
+
+void Expr::update_term_type_cascade(Term *term)
+{
+  stack<Term *> call_stack;
+  call_stack.push(term);
+  while (!call_stack.empty())
+  {
+    auto top_term = call_stack.top();
+    call_stack.pop();
+    auto new_type = Term::deduce_result_type(top_term->op_code(), top_term->operands());
+    if (top_term->type() != new_type)
+    {
+      top_term->type_ = new_type;
+      for (auto parent : top_term->parents())
+        call_stack.push(parent);
+    }
+  }
 }
 
 void Expr::set_output(const Term *term, ParamTermInfo param_term_info)
