@@ -148,11 +148,13 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
 
     size_t term_object_id = term->id();
     vector<size_t> operands_objects_id(term->operands().size());
+    unordered_map<size_t, size_t> operands_multip;
     for (size_t i = 0; i < operands_objects_id.size(); ++i)
     {
       auto operand = term->operands()[i];
+      size_t multip = ++operands_multip[operand->id()];
       auto operand_object_info_it = terms_objects_info.find(operand->id());
-      // operand with multiplicity > 1
+      // operand with multiplicity > 1 selected for overwrite
       if (operand_object_info_it == terms_objects_info.end())
       {
         operands_objects_id[i] = term_object_id;
@@ -160,7 +162,7 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
       }
       auto &operand_object_info = operand_object_info_it->second;
       operands_objects_id[i] = operand_object_info.id_;
-      if (func->data_flow().is_output(operand) || operand->type() == ir::Term::Type::plain)
+      if (func->data_flow().is_output(operand) || operand->type() == ir::Term::Type::plain || multip > 1)
         continue;
 
       --operand_object_info.dep_count_;
@@ -206,12 +208,13 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
     if (term->op_code() == ir::OpCode::encrypt)
     {
       os << encryptor_id << ".encrypt(";
-      gen_plain_var_id(term->operands()[0]->id(), os);
+      gen_plain_var_id(operands_objects_id[0], os);
     }
     else
     {
       os << evaluator_id << "." << operation_mapping.at(OpType{term->op_code().type(), move(operands_types)}) << "(";
-      for (size_t i = 0; i < operands_objects_id.size(); ++i)
+      // operation term needs operands so operands_objects_id cannot be empty
+      for (size_t i = 0;; ++i)
       {
         auto operand = term->operands()[i];
 
@@ -220,7 +223,7 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
         else
           gen_plain_var_id(operands_objects_id[i], os);
 
-        if (i + 1 == operands_objects_id.size())
+        if (i == operands_objects_id.size() - 1)
           break;
 
         os << ", ";
