@@ -58,7 +58,7 @@ public:
 
   Term *insert_const_term(PackedVal packed_val, bool &inserted);
 
-  inline void replace_term_with(Term *term1, Term *term2) { data_flow_.replace(term1, term2); }
+  void replace_term_with(Term *term1, Term *term2);
 
   inline void remove_dead_code() { data_flow_.prune_unreachabe_terms(); }
 

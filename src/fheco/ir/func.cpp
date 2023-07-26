@@ -7,7 +7,7 @@
 #include "fheco/util/expr_printer.hpp"
 #include <iostream>
 #endif
-#include <optional>
+#include <stack>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -17,8 +17,8 @@ using namespace std;
 namespace fheco::ir
 {
 Func::Func(
-  string name, size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
-  bool need_full_cyclic_rotation, bool overflow_warnings)
+  string name, size_t slot_count, bool delayed_reduct, integer modulus, bool signedness, bool need_full_cyclic_rotation,
+  bool overflow_warnings)
   : name_{move(name)}, slot_count_{slot_count}, need_full_cyclic_rotation_{need_full_cyclic_rotation},
     clear_data_eval_{slot_count_, modulus, signedness, delayed_reduct, overflow_warnings}
 {
@@ -113,18 +113,15 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
   if (Compiler::const_folding_enabled())
   {
     vector<PackedVal> const_vals;
-    bool can_fold = true;
+    const_vals.reserve(operands.size());
     for (auto operand : operands)
     {
       if (auto const_val = data_flow_.get_const_val(operand); const_val)
         const_vals.push_back(*const_val);
       else
-      {
-        can_fold = false;
         break;
-      }
     }
-    if (can_fold)
+    if (const_vals.size() == operands.size())
     {
 #ifdef FHECO_LOGGING
       util::ExprPrinter expr_printer{Compiler::active_func()};
@@ -150,6 +147,55 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
 Term *Func::insert_const_term(PackedVal packed_val, bool &inserted)
 {
   return data_flow_.insert_const({util::is_scalar(packed_val), move(packed_val)}, inserted);
+}
+
+void Func::replace_term_with(Term *term1, Term *term2)
+{
+  struct Call
+  {
+    Term *term1_;
+    Term *term2_;
+  };
+  stack<Call> call_stack;
+  call_stack.push(Call{term1, term2});
+  while (!call_stack.empty())
+  {
+    auto top_call = call_stack.top();
+    call_stack.pop();
+    auto top_term1 = top_call.term1_;
+    auto top_term2 = top_call.term2_;
+
+    bool is_const_top_term1 = data_flow_.is_const(top_term1);
+    data_flow_.replace(top_term1, top_term2);
+    if (!is_const_top_term1 && Compiler::const_folding_enabled() && data_flow_.is_const(top_term2))
+    {
+      for (auto parent : top_term2->parents())
+      {
+        const auto &operands = parent->operands();
+        vector<PackedVal> const_vals;
+        const_vals.reserve(operands.size());
+        for (auto operand : operands)
+        {
+          if (auto const_val = data_flow_.get_const_val(operand); const_val)
+            const_vals.push_back(*const_val);
+          else
+            break;
+        }
+        if (const_vals.size() == operands.size())
+        {
+          bool inserted;
+          if (parent->op_code().type() == OpCode::Type::encrypt)
+          {
+            call_stack.push(Call{parent, insert_const_term(const_vals[0], inserted)});
+            continue;
+          }
+          PackedVal dest_val;
+          clear_data_eval_.operate(parent->op_code(), const_vals, dest_val);
+          call_stack.push(Call{parent, insert_const_term(dest_val, inserted)});
+        }
+      }
+    }
+  }
 }
 
 // init_input
