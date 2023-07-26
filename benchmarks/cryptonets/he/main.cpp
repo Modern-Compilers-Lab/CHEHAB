@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
   print_bool_arg(opt, "opt", clog);
   clog << " ";
-  print_bool_arg(opt, "eval", clog);
+  print_bool_arg(eval, "eval", clog);
   clog << '\n';
 
   chrono::high_resolution_clock::time_point t;
