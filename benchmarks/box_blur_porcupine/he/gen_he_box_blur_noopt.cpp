@@ -30,5 +30,5 @@ encrypted_outputs.emplace("c6", move(c2));
 }
 
 vector<int> get_rotation_steps_box_blur_noopt(){
-return vector<int>{1, 5, 6};
+return vector<int>{5, 1, 6};
 }

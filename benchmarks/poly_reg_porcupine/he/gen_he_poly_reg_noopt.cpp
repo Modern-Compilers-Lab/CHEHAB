@@ -19,8 +19,8 @@ const GaloisKeys &galois_keys)
 Ciphertext c5 = encrypted_inputs.at("c4");
 Ciphertext c4 = encrypted_inputs.at("c3");
 Ciphertext c3 = encrypted_inputs.at("c2");
-Ciphertext c2 = encrypted_inputs.at("c1");
 Ciphertext c1 = encrypted_inputs.at("c0");
+Ciphertext c2 = encrypted_inputs.at("c1");
 size_t slot_count = encoder.slot_count();
 Ciphertext c6;
 evaluator.square(c1, c6);

@@ -196,7 +196,7 @@ int main(int argc, char **argv)
     // plain_plain_ops
     auto obtained_y_clear = argmax(raw_y);
     auto acc = static_cast<double>(count_equal(obtained_y_clear, y_clear)) / obtained_y_clear.size();
-    clog << "The accuracy on test data for MNIST: " << acc << '\n';
+    clog << "the accuracy on test data for MNIST: " << acc << '\n';
     cout << eval_time.count() << " ms\n";
   }
 }

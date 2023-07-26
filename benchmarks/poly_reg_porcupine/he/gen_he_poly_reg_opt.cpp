@@ -19,8 +19,8 @@ const GaloisKeys &galois_keys)
 Ciphertext c19 = encrypted_inputs.at("c4");
 Ciphertext c18 = encrypted_inputs.at("c3");
 Ciphertext c17 = encrypted_inputs.at("c2");
-Ciphertext c16 = encrypted_inputs.at("c1");
 Ciphertext c15 = encrypted_inputs.at("c0");
+Ciphertext c16 = encrypted_inputs.at("c1");
 size_t slot_count = encoder.slot_count();
 evaluator.multiply(c15, c19, c19);
 evaluator.relinearize(c19, relin_keys, c19);
