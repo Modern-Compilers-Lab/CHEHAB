@@ -86,7 +86,7 @@ void Quantifier::compute_depth_info()
         top_term->op_code().type() != ir::OpCode::Type::relin)
         ++operands_depth;
 
-      for (const auto operand : top_term->operands())
+      for (auto operand : top_term->operands())
       {
         if (operand->type() == ir::Term::Type::cipher)
         {

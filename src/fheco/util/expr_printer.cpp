@@ -116,7 +116,7 @@ string ExprPrinter::make_term_matcher_str_expr(const trs::TermMatcher &term_matc
   else if (mode == Mode::posfix)
   {
     string tmp_str_expr;
-    for (const auto operand : term_matcher.operands())
+    for (auto operand : term_matcher.operands())
       tmp_str_expr += make_term_matcher_str_expr(operand, mode) + " ";
 
     tmp_str_expr += term_matcher.op_code().str_repr();
@@ -185,7 +185,7 @@ string ExprPrinter::make_op_gen_matcher_str_expr(const trs::OpGenMatcher &op_gen
   else if (mode == Mode::posfix)
   {
     string tmp_str_expr;
-    for (const auto operand : op_gen_matcher.operands())
+    for (auto operand : op_gen_matcher.operands())
       tmp_str_expr += make_op_gen_matcher_str_expr(operand, mode) + " ";
     tmp_str_expr += op_gen_matcher.op_code().str_repr();
     return tmp_str_expr;
@@ -209,7 +209,7 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
         bool expl_parenth = mode_ == Mode::infix_expl_paren;
         if (term->op_code().arity() == 1)
         {
-          const auto arg = term->operands()[0];
+          auto arg = term->operands()[0];
           const auto &arg_expr = terms_str_exprs_.at(arg->id());
           if (term->op_code().type() == ir::OpCode::Type::rotate)
           {
@@ -223,8 +223,8 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
         }
         else if (term->op_code().arity() == 2)
         {
-          const auto lhs = term->operands()[0];
-          const auto rhs = term->operands()[1];
+          auto lhs = term->operands()[0];
+          auto rhs = term->operands()[1];
           const auto &lhs_expr = terms_str_exprs_.at(lhs->id());
           const auto &rhs_expr = terms_str_exprs_.at(rhs->id());
           string tmp_str_expr{};
@@ -252,14 +252,14 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
       else if (mode == Mode::prefix)
       {
         string tmp_str_expr = term->op_code().str_repr();
-        for (const auto operand : term->operands())
+        for (auto operand : term->operands())
           tmp_str_expr += " " + terms_str_exprs_.at(operand->id());
         terms_str_exprs_.emplace(term->id(), move(tmp_str_expr));
       }
       else if (mode == Mode::posfix)
       {
         string tmp_str_expr{};
-        for (const auto operand : term->operands())
+        for (auto operand : term->operands())
           tmp_str_expr += terms_str_exprs_.at(operand->id()) + " ";
         tmp_str_expr += term->op_code().str_repr();
         terms_str_exprs_.emplace(term->id(), move(tmp_str_expr));
@@ -273,7 +273,7 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
 void ExprPrinter::print_expand_outputs_str_expr(ostream &os, int depth, Mode mode) const
 {
   os << "output: expression\n";
-  for (const auto output_info : func_->data_flow().outputs_info())
+  for (auto output_info : func_->data_flow().outputs_info())
     os << output_info.second.label_ << ": " << expand_term_str_expr(output_info.first, depth, mode) << '\n';
 }
 
@@ -323,7 +323,7 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
           bool expl_parenth = mode == Mode::infix_expl_paren;
           if (top_term->op_code().arity() == 1)
           {
-            const auto arg = top_term->operands()[0];
+            auto arg = top_term->operands()[0];
             if (top_term->op_code().type() == ir::OpCode::Type::rotate)
             {
               if (arg->is_operation())
@@ -336,8 +336,8 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
           }
           else if (top_term->op_code().arity() == 2)
           {
-            const auto lhs = top_term->operands()[0];
-            const auto rhs = top_term->operands()[1];
+            auto lhs = top_term->operands()[0];
+            auto rhs = top_term->operands()[1];
             if (
               lhs->is_operation() && (expl_parenth || ops_precedence_.at(top_term->op_code().type()) <
                                                         ops_precedence_.at(lhs->op_code().type())))
@@ -360,12 +360,12 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
         else if (mode == Mode::prefix)
         {
           result = top_term->op_code().str_repr();
-          for (const auto operand : top_term->operands())
+          for (auto operand : top_term->operands())
             result += " " + dp.at(Call{operand, top_call.depth_ - 1});
         }
         else if (mode == Mode::posfix)
         {
-          for (const auto operand : top_term->operands())
+          for (auto operand : top_term->operands())
             result += dp.at(Call{operand, top_call.depth_ - 1}) + " ";
           result += top_term->op_code().str_repr();
         }
@@ -414,7 +414,7 @@ string ExprPrinter::make_leaf_str_expr(const ir::Term *term) const
 void ExprPrinter::print_outputs_str_expr(ostream &os) const
 {
   os << "output: expression\n";
-  for (const auto output_info : func_->data_flow().outputs_info())
+  for (auto output_info : func_->data_flow().outputs_info())
   {
     if (auto it = terms_str_exprs_.find(output_info.first->id()); it != terms_str_exprs_.end())
       os << output_info.second.label_ << ": " << it->second << '\n';

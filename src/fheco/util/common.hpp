@@ -180,7 +180,7 @@ std::vector<std::vector<T>> cart_product(const std::vector<std::vector<T>> &v)
     std::vector<std::vector<T>> r;
     for (const auto &x : s)
     {
-      for (const auto y : u)
+      for (auto y : u)
       {
         r.push_back(x);
         r.back().push_back(y);
