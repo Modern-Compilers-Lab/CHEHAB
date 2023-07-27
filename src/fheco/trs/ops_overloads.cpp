@@ -1,4 +1,5 @@
 #include "fheco/trs/ops_overloads.hpp"
+#include <stdexcept>
 #include <utility>
 
 using namespace std;
@@ -119,6 +120,12 @@ OpGenMatcher &operator%=(OpGenMatcher &lhs, OpGenMatcher rhs)
 
 TermMatcher balanced_op(const vector<TermMatcher> &args, const TermOpCode &op_code)
 {
+  if (args.empty())
+    throw invalid_argument("empty args vector");
+
+  if (op_code.arity() != 2)
+    throw invalid_argument("non-binary operation");
+
   vector<TermMatcher> balanced_ops;
   for (size_t i = 0; i < args.size() - 1; i += 2)
     balanced_ops.push_back(TermMatcher{op_code, vector<TermMatcher>{args[i], args[i + 1]}});

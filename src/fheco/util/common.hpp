@@ -15,12 +15,6 @@
 
 static_assert(sizeof(std::size_t) == 8, "require sizeof(std::size_t) == 8");
 
-// from SEAL
-#define FHECO_MSB_INDEX_UINT64(result, value)                            \
-  {                                                                      \
-    *result = 63UL - static_cast<unsigned long>(__builtin_clzll(value)); \
-  }
-
 namespace fheco::ir
 {
 class Func;
@@ -34,6 +28,7 @@ inline bool is_power_of_two(std::size_t v)
 }
 
 // https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+// returns the next power of two, returns v if v is a power of two
 inline std::size_t next_power_of_two(std::size_t v)
 {
   v--;
@@ -44,30 +39,31 @@ inline std::size_t next_power_of_two(std::size_t v)
   v |= v >> 16;
   v |= v >> 32;
   v++;
-  return v;
+  return v + (v == 0);
+}
+
+inline int msb_index(std::uint64_t v)
+{
+  return 63 - __builtin_clzll(v);
 }
 
 // from SEAL
 /**
 if the value is a power of two, return the power; otherwise, return -1.
 */
-inline int get_power_of_two(std::size_t value)
+inline int get_power_of_two(std::size_t v)
 {
-  if (value == 0 || (value & (value - 1)) != 0)
+  if (v == 0 || (v & (v - 1)) != 0)
   {
     return -1;
   }
 
-  unsigned long result = 0;
-  FHECO_MSB_INDEX_UINT64(&result, value);
-  return static_cast<int>(result);
+  return msb_index(v);
 }
 
 inline int bit_size(std::uint64_t v)
 {
-  unsigned long msb_index;
-  FHECO_MSB_INDEX_UINT64(&msb_index, v);
-  return msb_index + 1;
+  return msb_index(v) + 1;
 }
 
 void init_random(PackedVal &packed_val, integer slot_min, integer slot_max);
@@ -169,8 +165,8 @@ inline std::size_t popcount(T x)
 {
   static_assert(std::numeric_limits<T>::radix == 2, "non-binary type");
 
-  constexpr int bitwidth = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
-  std::bitset<bitwidth> bs(x);
+  constexpr int bit_width = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
+  std::bitset<bit_width> bs(x);
   return bs.count();
 }
 

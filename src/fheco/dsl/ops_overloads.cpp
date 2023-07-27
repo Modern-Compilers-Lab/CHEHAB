@@ -3,6 +3,7 @@
 #include "fheco/ir/op_code.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -443,7 +444,7 @@ Plaintext square(const Plaintext &arg)
 Ciphertext add_many(const vector<Ciphertext> &args)
 {
   if (args.empty())
-    return encrypt(Plaintext(0));
+    throw invalid_argument("empty args vector");
 
   vector<Ciphertext> sum_vec;
   for (size_t i = 0; i < args.size() - 1; i += 2)
@@ -460,7 +461,10 @@ Ciphertext add_many(const vector<Ciphertext> &args)
 
 Plaintext add_many(const vector<Plaintext> &args)
 {
-  Plaintext result(PackedVal{0});
+  if (args.empty())
+    throw invalid_argument("empty args vector");
+
+  Plaintext result(0);
   for (size_t i = 0; i < args.size(); ++i)
     result += args[i];
   return result;
@@ -470,7 +474,7 @@ Plaintext add_many(const vector<Plaintext> &args)
 Ciphertext mul_many(const vector<Ciphertext> &args)
 {
   if (args.empty())
-    return encrypt(Plaintext(0));
+    throw invalid_argument("empty args vector");
 
   vector<Ciphertext> sum_vec;
   for (size_t i = 0; i < args.size() - 1; i += 2)
@@ -487,6 +491,9 @@ Ciphertext mul_many(const vector<Ciphertext> &args)
 
 Plaintext mul_many(const vector<Plaintext> &args)
 {
+  if (args.empty())
+    throw invalid_argument("empty args vector");
+
   Plaintext result(1);
   for (size_t i = 0; i < args.size(); ++i)
     result *= args[i];
@@ -496,11 +503,17 @@ Plaintext mul_many(const vector<Plaintext> &args)
 // exponentiate
 Ciphertext exponentiate(const Ciphertext &arg, uint64_t exponent)
 {
+  if (exponent == 0)
+    return encrypt(Plaintext(1));
+
   vector<Ciphertext> args(static_cast<size_t>(exponent), arg);
   return mul_many(args);
 }
 Plaintext exponentiate(const Plaintext &arg, uint64_t exponent)
 {
+  if (exponent == 0)
+    return Plaintext(1);
+
   vector<Plaintext> args(static_cast<size_t>(exponent), arg);
   return mul_many(args);
 }
