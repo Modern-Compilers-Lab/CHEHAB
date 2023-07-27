@@ -28,22 +28,22 @@ vector<vector<vector<Ciphertext>>> conv_2d(
   const vector<vector<vector<Ciphertext>>> &input, const vector<vector<vector<vector<Plaintext>>>> &kernels,
   const vector<size_t> &strides)
 {
-  size_t n_channels_in = input[0][0].size();
-  size_t n_channels_kernel = kernels[0][0].size();
+  auto n_channels_in = input[0][0].size();
+  auto n_channels_kernel = kernels[0][0].size();
   if (n_channels_in != n_channels_kernel)
     throw invalid_argument("incompatible number of channels");
 
-  size_t n_rows_in = input.size();
-  size_t n_cols_in = input[0].size();
-  size_t n_rows_kernel = kernels.size();
-  size_t n_cols_kernel = kernels[0].size();
-  size_t row_stride = strides[0];
-  size_t col_stride = strides[1];
+  auto n_rows_in = input.size();
+  auto n_cols_in = input[0].size();
+  auto n_rows_kernel = kernels.size();
+  auto n_cols_kernel = kernels[0].size();
+  auto row_stride = strides[0];
+  auto col_stride = strides[1];
 
   auto padded_in = pad_2d(input, {n_rows_kernel, n_cols_kernel}, strides);
-  size_t n_rows_out = n_rows_in / row_stride + (n_rows_in % row_stride > 0 ? 1 : 0);
-  size_t n_cols_out = n_cols_in / col_stride + (n_cols_in % col_stride > 0 ? 1 : 0);
-  size_t n_channels_out = kernels[0][0][0].size();
+  auto n_rows_out = n_rows_in / row_stride + (n_rows_in % row_stride > 0 ? 1 : 0);
+  auto n_cols_out = n_cols_in / col_stride + (n_cols_in % col_stride > 0 ? 1 : 0);
+  auto n_channels_out = kernels[0][0][0].size();
   vector<vector<vector<Ciphertext>>> output(
     n_rows_out, vector<vector<Ciphertext>>(n_cols_out, vector<Ciphertext>(n_channels_out, encrypt(0))));
   size_t row_offset = 0;
@@ -71,17 +71,17 @@ vector<vector<vector<Ciphertext>>> conv_2d(
 vector<vector<vector<Ciphertext>>> scaled_mean_pool_2d(
   const vector<vector<vector<Ciphertext>>> &input, const vector<size_t> &kernel_shape, const vector<size_t> &strides)
 {
-  size_t n_rows_in = input.size();
-  size_t n_cols_in = input[0].size();
-  size_t n_channels_in = input[0][0].size();
-  size_t n_rows_kernel = kernel_shape[0];
-  size_t n_cols_kernel = kernel_shape[1];
-  size_t row_stride = strides[0];
-  size_t col_stride = strides[1];
+  auto n_rows_in = input.size();
+  auto n_cols_in = input[0].size();
+  auto n_channels_in = input[0][0].size();
+  auto n_rows_kernel = kernel_shape[0];
+  auto n_cols_kernel = kernel_shape[1];
+  auto row_stride = strides[0];
+  auto col_stride = strides[1];
 
-  size_t n_rows_out = n_rows_in / row_stride + (n_rows_in % row_stride > 0 ? 1 : 0);
-  size_t n_cols_out = n_cols_in / col_stride + (n_cols_in % col_stride > 0 ? 1 : 0);
-  size_t n_channels_output = input[0][0].size();
+  auto n_rows_out = n_rows_in / row_stride + (n_rows_in % row_stride > 0 ? 1 : 0);
+  auto n_cols_out = n_cols_in / col_stride + (n_cols_in % col_stride > 0 ? 1 : 0);
+  auto n_channels_output = input[0][0].size();
   vector<vector<vector<Ciphertext>>> output(
     n_rows_out, vector<vector<Ciphertext>>(n_cols_out, vector<Ciphertext>(n_channels_output, encrypt(0))));
   size_t row_offset = 0;
@@ -106,22 +106,22 @@ vector<vector<vector<Ciphertext>>> scaled_mean_pool_2d(
 vector<vector<vector<Ciphertext>>> pad_2d(
   const vector<vector<vector<Ciphertext>>> &input, const vector<size_t> &kernel_shape, const vector<size_t> &strides)
 {
-  size_t n_rows_in = input.size();
-  size_t n_cols_in = input[0].size();
-  size_t n_channels_in = input[0][0].size();
-  size_t n_rows_kernel = kernel_shape[0];
-  size_t n_cols_kernel = kernel_shape[1];
-  size_t row_stride = strides[0];
-  size_t col_stride = strides[1];
+  auto n_rows_in = input.size();
+  auto n_cols_in = input[0].size();
+  auto n_channels_in = input[0][0].size();
+  auto n_rows_kernel = kernel_shape[0];
+  auto n_cols_kernel = kernel_shape[1];
+  auto row_stride = strides[0];
+  auto col_stride = strides[1];
 
-  size_t n_rows_out = (n_rows_in + 1) / row_stride;
-  size_t n_cols_out = (n_cols_in + 1) / col_stride;
-  size_t pad_rows = max((n_rows_out - 1) * row_stride + n_rows_kernel - n_rows_in, 0UL);
-  size_t pad_cols = max((n_cols_out - 1) * col_stride + n_cols_kernel - n_cols_in, 0UL);
-  size_t pad_top = pad_rows / 2;
-  size_t pad_bottom = pad_rows - pad_top;
-  size_t pad_left = pad_cols / 2;
-  size_t pad_right = pad_cols - pad_left;
+  auto n_rows_out = (n_rows_in + 1) / row_stride;
+  auto n_cols_out = (n_cols_in + 1) / col_stride;
+  auto pad_rows = max((n_rows_out - 1) * row_stride + n_rows_kernel - n_rows_in, 0UL);
+  auto pad_cols = max((n_cols_out - 1) * col_stride + n_cols_kernel - n_cols_in, 0UL);
+  auto pad_top = pad_rows / 2;
+  auto pad_bottom = pad_rows - pad_top;
+  auto pad_left = pad_cols / 2;
+  auto pad_right = pad_cols - pad_left;
   n_rows_out = n_rows_in + pad_rows;
   n_cols_out = n_cols_in + pad_cols;
 
@@ -149,12 +149,12 @@ vector<Ciphertext> add(const vector<Ciphertext> &input, const vector<Plaintext> 
 
 vector<vector<vector<Ciphertext>>> add(const vector<vector<vector<Ciphertext>>> &input, const vector<Plaintext> &b)
 {
-  size_t n_channels = input[0][0].size();
+  auto n_channels = input[0][0].size();
   if (n_channels != b.size())
     throw invalid_argument("incompatible sizes");
 
-  size_t n_rows = input.size();
-  size_t n_cols = input[0].size();
+  auto n_rows = input.size();
+  auto n_cols = input[0].size();
   vector<vector<vector<Ciphertext>>> output(n_rows, vector<vector<Ciphertext>>(n_cols, vector<Ciphertext>(n_channels)));
   for (size_t i = 0; i < n_rows; ++i)
     for (size_t j = 0; j < n_cols; ++j)
@@ -166,9 +166,9 @@ vector<vector<vector<Ciphertext>>> add(const vector<vector<vector<Ciphertext>>> 
 
 vector<vector<vector<Ciphertext>>> square(const vector<vector<vector<Ciphertext>>> &input)
 {
-  size_t n_rows = input.size();
-  size_t n_cols = input[0].size();
-  size_t n_channels = input[0][0].size();
+  auto n_rows = input.size();
+  auto n_cols = input[0].size();
+  auto n_channels = input[0][0].size();
   vector<vector<vector<Ciphertext>>> output(n_rows, vector<vector<Ciphertext>>(n_cols, vector<Ciphertext>(n_channels)));
   for (size_t i = 0; i < n_rows; ++i)
     for (size_t j = 0; j < n_cols; ++j)
@@ -204,9 +204,9 @@ vector<Ciphertext> dot(const vector<Ciphertext> &input, const vector<vector<Plai
 
 vector<Ciphertext> flatten(const vector<vector<vector<Ciphertext>>> &input)
 {
-  size_t n_rows = input.size();
-  size_t n_cols = input[0].size();
-  size_t n_channels = input[0][0].size();
+  auto n_rows = input.size();
+  auto n_cols = input[0].size();
+  auto n_channels = input[0][0].size();
   vector<Ciphertext> output(n_rows * n_cols * n_channels);
   size_t i_out = 0;
   for (size_t i = 0; i < n_rows; ++i)
