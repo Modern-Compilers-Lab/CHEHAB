@@ -38,7 +38,7 @@ bool operator==(TermMatcherType term_matcher_type, ir::Term::Type term_type)
   }
 }
 
-void count_ctxt_leaves(ir::Term *term, TermsMetric &dp)
+void count_ctxt_leaves(ir::Term *term, TermsMetric &cache)
 {
   if (term->type() != ir::Term::Type::cipher)
     return;
@@ -62,20 +62,20 @@ void count_ctxt_leaves(ir::Term *term, TermsMetric &dp)
     {
       if (top_term->is_leaf())
       {
-        dp.emplace(top_term->id(), 1);
+        cache.emplace(top_term->id(), 1);
         if (top_call.parent_)
           ++interm_results[top_call.parent_->id()];
       }
       else
       {
-        auto [it, inserted] = dp.emplace(top_term->id(), interm_results.at(top_term->id()));
+        auto [it, inserted] = cache.emplace(top_term->id(), interm_results.at(top_term->id()));
         if (top_call.parent_)
           interm_results[top_call.parent_->id()] += it->second;
       }
       continue;
     }
 
-    if (auto it = dp.find(top_term->id()); it != dp.end())
+    if (auto it = cache.find(top_term->id()); it != cache.end())
     {
       if (top_call.parent_)
         interm_results[top_call.parent_->id()] += it->second;
@@ -90,7 +90,7 @@ void count_ctxt_leaves(ir::Term *term, TermsMetric &dp)
     }
   }
   for (auto e : interm_results)
-    dp.emplace(e.first, e.second);
+    cache.emplace(e.first, e.second);
 }
 
 ostream &operator<<(ostream &os, TermMatcherType term_matcher_type)

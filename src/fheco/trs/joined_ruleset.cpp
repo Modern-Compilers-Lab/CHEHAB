@@ -38,7 +38,7 @@ Ruleset Ruleset::joined_ruleset(shared_ptr<ir::Func> func)
   OpGenMatcher n{"n"};
   OpGenMatcher m{"m"};
 
-  auto dp = make_unique<TermsMetric>();
+  auto cache = make_unique<TermsMetric>();
 
   vector<Rule> add_rules{
     {"add_0-1", x + zero, x},
@@ -86,23 +86,23 @@ Ruleset Ruleset::joined_ruleset(shared_ptr<ir::Func> func)
 
     {"part-fold-assoc-add-sub-3", ((c0 - x) - y) + c1, ((c0 + c1) - y) - x},
 
-    {"assoc-balan-add-1", ((x + y) + z) + t, (x + y) + (z + t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-add-2", (z + (x + y)) + t, (z + x) + (y + t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-add-3", x + (y + (z + t)), (x + y) + (z + t), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-add-4", x + ((z + t) + y), (x + z) + (t + y), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
+    {"assoc-balan-add-1", ((x + y) + z) + t, (x + y) + (z + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-add-2", (z + (x + y)) + t, (z + x) + (y + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-add-3", x + (y + (z + t)), (x + y) + (z + t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-add-4", x + ((z + t) + y), (x + z) + (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
 
-    {"assoc-balan-add-sub-1", ((x + y) - z) + t, (x + y) - (z - t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-add-sub-2", (z - (x + y)) + t, (z - x) - (y - t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-add-sub-3", ((x - y) + z) + t, (x - y) + (z + t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-add-sub-4", (z + (x - y)) + t, (z + x) - (y - t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-add-sub-5", ((x - y) - z) + t, (x - y) - (z - t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-add-sub-6", (z - (x - y)) + t, (z - x) + (y + t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-add-sub-7", x + (y - (z + t)), (x + y) - (z + t), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-add-sub-8", x + ((z + t) - y), (x + z) + (t - y), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-add-sub-9", x + (y + (z - t)), (x + y) + (z - t), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-add-sub-10", x + ((z - t) + y), (x + z) - (t - y), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-add-sub-11", x + (y - (z - t)), (x + y) - (z - t), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-add-sub-12", x + ((z - t) - y), (x + z) - (t + y), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
+    {"assoc-balan-add-sub-1", ((x + y) - z) + t, (x + y) - (z - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-add-sub-2", (z - (x + y)) + t, (z - x) - (y - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-add-sub-3", ((x - y) + z) + t, (x - y) + (z + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-add-sub-4", (z + (x - y)) + t, (z + x) - (y - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-add-sub-5", ((x - y) - z) + t, (x - y) - (z - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-add-sub-6", (z - (x - y)) + t, (z - x) + (y + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-add-sub-7", x + (y - (z + t)), (x + y) - (z + t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-add-sub-8", x + ((z + t) - y), (x + z) + (t - y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-add-sub-9", x + (y + (z - t)), (x + y) + (z - t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-add-sub-10", x + ((z - t) + y), (x + z) - (t - y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-add-sub-11", x + (y - (z - t)), (x + y) - (z - t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-add-sub-12", x + ((z - t) - y), (x + z) - (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
 
     {"fact-add-square-1", x * ct_y + square(ct_y), (x + ct_y) * ct_y},
     {"fact-add-square-2", ct_y * x + square(ct_y), ct_y * (x + ct_y)},
@@ -157,23 +157,23 @@ Ruleset Ruleset::joined_ruleset(shared_ptr<ir::Func> func)
 
     {"part-fold-assoc-sub-5", (c0 - x) - c1, (c0 - c1) - x},
 
-    {"assoc-balan-sub-1", ((x - y) - z) - t, (x - y) - (z + t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-sub-2", (z - (x - y)) - t, (z - x) + (y - t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-sub-3", x - (y - (z - t)), (x - y) - (z + t), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-sub-4", x - ((z - t) - y), (x - z) + (t + y), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
+    {"assoc-balan-sub-1", ((x - y) - z) - t, (x - y) - (z + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-sub-2", (z - (x - y)) - t, (z - x) + (y - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-sub-3", x - (y - (z - t)), (x - y) - (z + t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-sub-4", x - ((z - t) - y), (x - z) + (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
 
-    {"assoc-balan-sub-add-1", ((x - y) + z) - t, (x - y) + (z - t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-sub-add-2", (z + (x - y)) - t, (z + x) - (y + t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-sub-add-3", ((x + y) - z) - t, (x + y) - (z + t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-sub-add-4", (z - (x + y)) - t, (z - x) - (y + t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-sub-add-5", ((x + y) + z) - t, (x + y) + (z - t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-sub-add-6", (z + (x + y)) - t, (z + x) + (y - t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-sub-add-7", x - (y + (z - t)), (x - y) - (z - t), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-sub-add-8", x - ((z - t) + y), (x - z) + (t - y), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-sub-add-9", x - (y - (z + t)), (x - y) + (z + t), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-sub-add-10", x - ((z + t) - y), (x - z) - (t - y), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-sub-add-11", x - (y + (z + t)), (x - y) - (z + t), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-sub-add-12", x - ((z + t) + y), (x - z) - (t + y), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
+    {"assoc-balan-sub-add-1", ((x - y) + z) - t, (x - y) + (z - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-sub-add-2", (z + (x - y)) - t, (z + x) - (y + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-sub-add-3", ((x + y) - z) - t, (x + y) - (z + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-sub-add-4", (z - (x + y)) - t, (z - x) - (y + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-sub-add-5", ((x + y) + z) - t, (x + y) + (z - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-sub-add-6", (z + (x + y)) - t, (z + x) + (y - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-sub-add-7", x - (y + (z - t)), (x - y) - (z - t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-sub-add-8", x - ((z - t) + y), (x - z) + (t - y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-sub-add-9", x - (y - (z + t)), (x - y) + (z + t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-sub-add-10", x - ((z + t) - y), (x - z) - (t - y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-sub-add-11", x - (y + (z + t)), (x - y) - (z + t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-sub-add-12", x - ((z + t) + y), (x - z) - (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
 
     {"fact-sub-square-1", x * ct_y - square(ct_y), (x - ct_y) * ct_y},
     {"fact-sub-square-2", ct_y * x - square(ct_y), ct_y * (x - ct_y)},
@@ -363,19 +363,19 @@ Ruleset Ruleset::joined_ruleset(shared_ptr<ir::Func> func)
 
     {"part-fold-assoc-mul", (x * c0) * c1, x * (c0 * c1)},
 
-    {"assoc-balan-mul-square-1", ((x * y) * x) * z, square(x) * (y * z), Rule::has_less_ctxt_leaves(z, x, y, *dp)},
-    {"assoc-balan-mul-square-2", (x * (x * y)) * z, square(x) * (y * z), Rule::has_less_ctxt_leaves(z, x, y, *dp)},
-    {"assoc-balan-mul-square-3", ((x * y) * y) * z, (x * z) * square(y), Rule::has_less_ctxt_leaves(z, x, y, *dp)},
-    {"assoc-balan-mul-square-4", (y * (x * y)) * z, square(y) * (x * z), Rule::has_less_ctxt_leaves(z, x, y, *dp)},
+    {"assoc-balan-mul-square-1", ((x * y) * x) * z, square(x) * (y * z), Rule::has_less_ctxt_leaves(z, x, y, *cache)},
+    {"assoc-balan-mul-square-2", (x * (x * y)) * z, square(x) * (y * z), Rule::has_less_ctxt_leaves(z, x, y, *cache)},
+    {"assoc-balan-mul-square-3", ((x * y) * y) * z, (x * z) * square(y), Rule::has_less_ctxt_leaves(z, x, y, *cache)},
+    {"assoc-balan-mul-square-4", (y * (x * y)) * z, square(y) * (x * z), Rule::has_less_ctxt_leaves(z, x, y, *cache)},
     {"assoc-balan-mul-square-5", ((x * y) * z) * x, square(x) * (y * z)},
     {"assoc-balan-mul-square-6", x * ((x * y) * z), square(x) * (y * z)},
     {"assoc-balan-mul-square-7", ((x * y) * z) * y, (x * z) * square(y)},
     {"assoc-balan-mul-square-8", y * ((x * y) * z), square(y) * (x * z)},
 
-    {"assoc-balan-mul-1", ((x * y) * z) * t, (x * y) * (z * t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-mul-2", (z * (x * y)) * t, (z * x) * (y * t), Rule::has_less_ctxt_leaves(t, x, y, *dp)},
-    {"assoc-balan-mul-3", x * (y * (z * t)), (x * y) * (z * t), Rule::has_less_ctxt_leaves(x, z, t, *dp)},
-    {"assoc-balan-mul-4", x * ((z * t) * y), (x * z) * (t * y), Rule::has_less_ctxt_leaves(x, z, t, *dp)}};
+    {"assoc-balan-mul-1", ((x * y) * z) * t, (x * y) * (z * t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-mul-2", (z * (x * y)) * t, (z * x) * (y * t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
+    {"assoc-balan-mul-3", x * (y * (z * t)), (x * y) * (z * t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+    {"assoc-balan-mul-4", x * ((z * t) * y), (x * z) * (t * y), Rule::has_less_ctxt_leaves(x, z, t, *cache)}};
 
   return Ruleset{
     move(func),
@@ -385,6 +385,6 @@ Ruleset Ruleset::joined_ruleset(shared_ptr<ir::Func> func)
      {ir::OpCode::Type::negate, move(negate_rules)},
      {ir::OpCode::Type::rotate, move(rotate_rules)},
      {ir::OpCode::Type::mul, move(mul_rules)}},
-    move(dp)};
+    move(cache)};
 }
 } // namespace fheco::trs

@@ -23,34 +23,34 @@ function<bool(const Subst &)> Rule::is_not_rotation(TermMatcher x)
   };
 }
 
-function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y, TermsMetric &dp)
+function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y, TermsMetric &cache)
 {
-  return [x = move(x), y = move(y), &dp](const Subst &subst) {
-    TermsMetric dp;
+  return [x = move(x), y = move(y), &cache](const Subst &subst) {
+    TermsMetric cache;
     auto x_term = subst.get(x);
     auto y_term = subst.get(y);
 
     int64_t x_ctxt_leaves_count = 0;
     if (x_term->type() == ir::Term::Type::cipher)
     {
-      count_ctxt_leaves(x_term, dp);
-      x_ctxt_leaves_count = dp.at(x_term->id());
+      count_ctxt_leaves(x_term, cache);
+      x_ctxt_leaves_count = cache.at(x_term->id());
     }
 
     int64_t y_ctxt_leaves_count = 0;
     if (y_term->type() == ir::Term::Type::cipher)
     {
-      count_ctxt_leaves(y_term, dp);
-      y_ctxt_leaves_count = dp.at(y_term->id());
+      count_ctxt_leaves(y_term, cache);
+      y_ctxt_leaves_count = cache.at(y_term->id());
     }
 
     return x_ctxt_leaves_count < y_ctxt_leaves_count;
   };
 }
 
-function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &dp)
+function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &cache)
 {
-  return [x = move(x), y1 = move(y1), y2 = move(y2), &dp](const Subst &subst) {
+  return [x = move(x), y1 = move(y1), y2 = move(y2), &cache](const Subst &subst) {
     auto x_term = subst.get(x);
     auto y1_term = subst.get(y1);
     auto y2_term = subst.get(y2);
@@ -58,22 +58,22 @@ function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatc
     int64_t x_ctxt_leaves_count = 0;
     if (x_term->type() == ir::Term::Type::cipher)
     {
-      count_ctxt_leaves(x_term, dp);
-      x_ctxt_leaves_count = dp.at(x_term->id());
+      count_ctxt_leaves(x_term, cache);
+      x_ctxt_leaves_count = cache.at(x_term->id());
     }
 
     int64_t y1_ctxt_leaves_count = 0;
     if (y1_term->type() == ir::Term::Type::cipher)
     {
-      count_ctxt_leaves(y1_term, dp);
-      y1_ctxt_leaves_count = dp.at(y1_term->id());
+      count_ctxt_leaves(y1_term, cache);
+      y1_ctxt_leaves_count = cache.at(y1_term->id());
     }
 
     int64_t y2_ctxt_leaves_count = 0;
     if (y2_term->type() == ir::Term::Type::cipher)
     {
-      count_ctxt_leaves(y2_term, dp);
-      y2_ctxt_leaves_count = dp.at(y2_term->id());
+      count_ctxt_leaves(y2_term, cache);
+      y2_ctxt_leaves_count = cache.at(y2_term->id());
     }
 
     return x_ctxt_leaves_count < (y1_ctxt_leaves_count + y2_ctxt_leaves_count);

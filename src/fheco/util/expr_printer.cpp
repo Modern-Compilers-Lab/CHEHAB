@@ -303,7 +303,7 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
       return *lhs.term_ == *rhs.term_ && lhs.depth_ == rhs.depth_;
     }
   };
-  unordered_map<Call, string, HashCall, EqualCall> dp;
+  unordered_map<Call, string, HashCall, EqualCall> computed_calls;
 
   call_stack.push(Call{term, depth, false});
   while (!call_stack.empty())
@@ -327,12 +327,13 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
             if (top_term->op_code().type() == ir::OpCode::Type::rotate)
             {
               if (arg->is_operation())
-                result = "(" + dp.at(Call{arg, top_call.depth_ - 1}) + ") " + top_term->op_code().str_repr();
+                result =
+                  "(" + computed_calls.at(Call{arg, top_call.depth_ - 1}) + ") " + top_term->op_code().str_repr();
               else
-                result = dp.at(Call{arg, top_call.depth_ - 1}) + " " + top_term->op_code().str_repr();
+                result = computed_calls.at(Call{arg, top_call.depth_ - 1}) + " " + top_term->op_code().str_repr();
             }
             else
-              result = top_term->op_code().str_repr() + "(" + dp.at(Call{arg, top_call.depth_ - 1}) + ")";
+              result = top_term->op_code().str_repr() + "(" + computed_calls.at(Call{arg, top_call.depth_ - 1}) + ")";
           }
           else if (top_term->op_code().arity() == 2)
           {
@@ -341,18 +342,18 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
             if (
               lhs->is_operation() && (expl_parenth || ops_precedence_.at(top_term->op_code().type()) <
                                                         ops_precedence_.at(lhs->op_code().type())))
-              result += "(" + dp.at(Call{lhs, top_call.depth_ - 1}) + ")";
+              result += "(" + computed_calls.at(Call{lhs, top_call.depth_ - 1}) + ")";
             else
-              result += dp.at(Call{lhs, top_call.depth_ - 1});
+              result += computed_calls.at(Call{lhs, top_call.depth_ - 1});
 
             result += " " + top_term->op_code().str_repr() + " ";
 
             if (
               rhs->is_operation() && (expl_parenth || ops_precedence_.at(top_term->op_code().type()) <
                                                         ops_precedence_.at(rhs->op_code().type())))
-              result += "(" + dp.at(Call{rhs, top_call.depth_ - 1}) + ")";
+              result += "(" + computed_calls.at(Call{rhs, top_call.depth_ - 1}) + ")";
             else
-              result += dp.at(Call{rhs, top_call.depth_ - 1});
+              result += computed_calls.at(Call{rhs, top_call.depth_ - 1});
           }
           else
             throw invalid_argument("infix with non binary unary operation");
@@ -361,30 +362,30 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
         {
           result = top_term->op_code().str_repr();
           for (auto operand : top_term->operands())
-            result += " " + dp.at(Call{operand, top_call.depth_ - 1});
+            result += " " + computed_calls.at(Call{operand, top_call.depth_ - 1});
         }
         else if (mode == Mode::posfix)
         {
           for (auto operand : top_term->operands())
-            result += dp.at(Call{operand, top_call.depth_ - 1}) + " ";
+            result += computed_calls.at(Call{operand, top_call.depth_ - 1}) + " ";
           result += top_term->op_code().str_repr();
         }
         else
           throw invalid_argument("invalid mode");
       }
-      dp.emplace(Call{top_term, top_call.depth_}, move(result));
+      computed_calls.emplace(Call{top_term, top_call.depth_}, move(result));
       continue;
     }
 
-    if (auto it = dp.find(Call{top_term, top_call.depth_}); it != dp.end())
+    if (auto it = computed_calls.find(Call{top_term, top_call.depth_}); it != computed_calls.end())
       continue;
 
     if (top_call.depth_ <= 0)
     {
       if (top_term->is_leaf())
-        dp.emplace(Call{top_term, 0}, make_leaf_str_expr(top_term));
+        computed_calls.emplace(Call{top_term, 0}, make_leaf_str_expr(top_term));
       else
-        dp.emplace(Call{top_term, 0}, "$" + to_string(top_term->id()));
+        computed_calls.emplace(Call{top_term, 0}, "$" + to_string(top_term->id()));
 
       continue;
     }
@@ -393,7 +394,7 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
     for (auto operand : top_term->operands())
       call_stack.push(Call{operand, top_call.depth_ - 1, false});
   }
-  return dp.at(Call{term, depth});
+  return computed_calls.at(Call{term, depth});
 }
 
 string ExprPrinter::make_leaf_str_expr(const ir::Term *term) const

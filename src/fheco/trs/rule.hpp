@@ -24,10 +24,10 @@ public:
 
   static std::function<bool(const Subst &)> is_not_rotation(TermMatcher x);
 
-  static std::function<bool(const Subst &)> has_less_ctxt_leaves(TermMatcher x, TermMatcher y, TermsMetric &dp);
+  static std::function<bool(const Subst &)> has_less_ctxt_leaves(TermMatcher x, TermMatcher y, TermsMetric &cache);
 
   static std::function<bool(const Subst &)> has_less_ctxt_leaves(
-    TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &dp);
+    TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &cache);
 
   Rule(std::string name, TermMatcher lhs, TermMatcher static_rhs)
     : name_{std::move(name)}, lhs_{std::move(lhs)}, rhs_{[static_rhs = std::move(static_rhs)](const Subst &) {
