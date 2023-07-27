@@ -32,28 +32,55 @@ void Quantifier::compute_depth_info()
 {
   ctxt_leaves_depth_info_.clear();
 
-  stack<pair<const ir::Term *, CtxtTermDepthInfo>> dfs;
+  struct Call
+  {
+    const ir::Term *term_;
+    DepthInfo depth_info_;
+  };
+  stack<Call> call_stack;
+
+  struct HashCall
+  {
+    size_t operator()(const Call &call) const
+    {
+      size_t h = hash<ir::Term>()(*call.term_);
+      ir::hash_combine(h, call.depth_info_.xdepth_);
+      ir::hash_combine(h, call.depth_info_.depth_);
+      return h;
+    }
+  };
+  struct EqualCall
+  {
+    bool operator()(const Call &lhs, const Call &rhs) const
+    {
+      return *lhs.term_ == *rhs.term_ && pair<double, double>{lhs.depth_info_.xdepth_, lhs.depth_info_.depth_} ==
+                                           pair<double, double>{rhs.depth_info_.xdepth_, rhs.depth_info_.depth_};
+    }
+  };
+  unordered_set<Call, HashCall, EqualCall> emitted_calls;
+
   for (auto [output_term, output_info] : func_->data_flow().outputs_info())
   {
     if (output_term->type() == ir::Term::Type::cipher && output_term->is_source())
-      dfs.push({output_term, CtxtTermDepthInfo{0, 0}});
+      call_stack.push({output_term, DepthInfo{0, 0}});
 
-    while (!dfs.empty())
+    while (!call_stack.empty())
     {
-      auto [top_term, top_ctxt_info] = dfs.top();
-      dfs.pop();
+      auto top_call = call_stack.top();
+      call_stack.pop();
+      auto top_term = top_call.term_;
+      auto top_depth_info = top_call.depth_info_;
       if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
       {
-        auto [it, inserted] = ctxt_leaves_depth_info_.emplace(top_term, CtxtTermDepthInfo{0, 0});
-        double new_xdepth = max(it->second.xdepth_, top_ctxt_info.xdepth_);
-        double new_depth = max(it->second.depth_, top_ctxt_info.depth_);
-        it->second = CtxtTermDepthInfo{new_xdepth, new_depth};
+        auto [it, inserted] = ctxt_leaves_depth_info_.emplace(top_term, DepthInfo{0, 0});
+        it->second.xdepth_ = max(it->second.xdepth_, top_depth_info.xdepth_);
+        it->second.depth_ = max(it->second.depth_, top_depth_info.depth_);
         continue;
       }
-      double operands_xdepth = top_ctxt_info.xdepth_;
+      auto operands_xdepth = top_depth_info.xdepth_;
       if (top_term->op_code().type() == ir::OpCode::Type::mul || top_term->op_code().type() == ir::OpCode::Type::square)
         ++operands_xdepth;
-      double operands_depth = top_ctxt_info.depth_;
+      auto operands_depth = top_depth_info.depth_;
       if (
         top_term->op_code().type() != ir::OpCode::Type::mod_switch &&
         top_term->op_code().type() != ir::OpCode::Type::relin)
@@ -62,12 +89,19 @@ void Quantifier::compute_depth_info()
       for (const auto operand : top_term->operands())
       {
         if (operand->type() == ir::Term::Type::cipher)
-          dfs.push({operand, CtxtTermDepthInfo{operands_xdepth, operands_depth}});
+        {
+          Call operand_call{operand, DepthInfo{operands_xdepth, operands_depth}};
+          if (emitted_calls.find(operand_call) == emitted_calls.end())
+          {
+            emitted_calls.insert(operand_call);
+            call_stack.push(move(operand_call));
+          }
+        }
       }
     }
   }
-  double first_leaf_xdepth = ctxt_leaves_depth_info_.begin()->second.xdepth_;
-  double first_leaf_depth = ctxt_leaves_depth_info_.begin()->second.depth_;
+  auto first_leaf_xdepth = ctxt_leaves_depth_info_.begin()->second.xdepth_;
+  auto first_leaf_depth = ctxt_leaves_depth_info_.begin()->second.depth_;
   depth_summary_.min_xdepth_ = first_leaf_xdepth;
   depth_summary_.min_depth_ = first_leaf_depth;
   depth_summary_.avg_xdepth_ = 0;
@@ -285,18 +319,17 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
 
   for (auto e : cc_mul_count_)
   {
-    double level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
-    double coeff = level * (e.first.arg1_size_ - 1) * (e.first.arg2_size_ - 1);
-    double op_cost =
-      coeff * ir::evaluate_raw_op_code(ir::OpCode::mul, {ir::Term::Type::cipher, ir::Term::Type::cipher});
+    auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
+    auto coeff = level * (e.first.arg1_size_ - 1) * (e.first.arg2_size_ - 1);
+    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::mul, {ir::Term::Type::cipher, ir::Term::Type::cipher});
     circuit_cost_ += op_cost * e.second;
   }
 
   for (auto e : square_count_)
   {
-    double level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
-    double coeff = level * (e.first.arg_size_ - 1) * (e.first.arg_size_ - 1);
-    double op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::square, {ir::Term::Type::cipher});
+    auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
+    auto coeff = level * (e.first.arg_size_ - 1) * (e.first.arg_size_ - 1);
+    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::square, {ir::Term::Type::cipher});
     circuit_cost_ += op_cost * e.second;
   }
 
@@ -304,52 +337,52 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
 
   for (auto e : relin_count_)
   {
-    double level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
-    double coeff = level * (e.first.arg_size_ - 2);
-    double op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::relin, {ir::Term::Type::cipher});
+    auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
+    auto coeff = level * (e.first.arg_size_ - 2);
+    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::relin, {ir::Term::Type::cipher});
     circuit_cost_ += op_cost * e.second;
   }
 
   for (auto e : rotate_count_)
   {
-    double level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
-    double coeff = level;
-    double op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::rotate(0), {ir::Term::Type::cipher});
+    auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
+    auto coeff = level;
+    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::rotate(0), {ir::Term::Type::cipher});
     circuit_cost_ += op_cost * e.second;
   }
 
   for (auto e : cp_mul_count_)
   {
-    double level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
-    double coeff = level;
-    double op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::mul, {ir::Term::Type::cipher, ir::Term::Type::plain});
+    auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
+    auto coeff = level;
+    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::mul, {ir::Term::Type::cipher, ir::Term::Type::plain});
     circuit_cost_ += op_cost * e.second;
   }
 
   for (auto e : mod_switch_count_)
   {
-    double level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
-    double coeff = level;
-    double op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::mod_switch, {ir::Term::Type::cipher});
+    auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
+    auto coeff = level;
+    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::mod_switch, {ir::Term::Type::cipher});
     circuit_cost_ += op_cost * e.second;
   }
 
   for (auto e : he_add_)
   {
-    double level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
-    double coeff = level;
-    double op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::add, {ir::Term::Type::cipher, ir::Term::Type::plain});
+    auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
+    auto coeff = level;
+    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::add, {ir::Term::Type::cipher, ir::Term::Type::plain});
     circuit_cost_ += op_cost * e.second;
   }
 
-  double pkey_size = 2 * (params.coeff_mod_bit_sizes().size() + 1) * params.coeff_mod_bit_sizes().size() *
-                     params.poly_modulus_degree() * 8;
+  auto pkey_size = 2 * (params.coeff_mod_bit_sizes().size() + 1) * params.coeff_mod_bit_sizes().size() *
+                   params.poly_modulus_degree() * 8;
 
   rotation_keys_size_ = rotation_keys_count_ * pkey_size;
 
   relin_keys_size_ = relin_keys_count_ * pkey_size;
 
-  double fresh_ctxt_size = 2 * (params.coeff_mod_bit_sizes().size() - 1) * params.poly_modulus_degree() * 8;
+  auto fresh_ctxt_size = 2 * (params.coeff_mod_bit_sizes().size() - 1) * params.poly_modulus_degree() * 8;
   for (auto input_info : func_->data_flow().inputs_info())
   {
     if (input_info.first->type() == ir::Term::Type::cipher)
@@ -364,9 +397,9 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
     if (output_info.first->type() == ir::Term::Type::cipher)
     {
       auto output_ctxt_info = ctxt_outputs_info_.at(output_info.first);
-      double output_size = output_ctxt_info.size_ *
-                           (params.coeff_mod_bit_sizes().size() - 1 - output_ctxt_info.opposite_level_) *
-                           params.poly_modulus_degree() * 8;
+      auto output_size = output_ctxt_info.size_ *
+                         (params.coeff_mod_bit_sizes().size() - 1 - output_ctxt_info.opposite_level_) *
+                         params.poly_modulus_degree() * 8;
       ctxt_outputs_size_ += output_size;
     }
   }
@@ -468,7 +501,7 @@ void Quantifier::print_global_metrics(ostream &os) const
 
 size_t Quantifier::HashCCOpInfo::operator()(const CCOpInfo &cc_op_info) const
 {
-  size_t h = hash<size_t>{}(cc_op_info.opposite_level_);
+  auto h = hash<double>{}(cc_op_info.opposite_level_);
   ir::hash_combine(h, cc_op_info.arg1_size_);
   ir::hash_combine(h, cc_op_info.arg2_size_);
   return h;
@@ -476,21 +509,21 @@ size_t Quantifier::HashCCOpInfo::operator()(const CCOpInfo &cc_op_info) const
 
 bool Quantifier::EqualCCOpInfo::operator()(const CCOpInfo &lhs, const CCOpInfo &rhs) const
 {
-  return tuple<size_t, size_t, size_t>{lhs.opposite_level_, lhs.arg1_size_, lhs.arg2_size_} ==
-         tuple<size_t, size_t, size_t>{rhs.opposite_level_, rhs.arg1_size_, rhs.arg2_size_};
+  return tuple<double, double, double>{lhs.opposite_level_, lhs.arg1_size_, lhs.arg2_size_} ==
+         tuple<double, double, double>{rhs.opposite_level_, rhs.arg1_size_, rhs.arg2_size_};
 }
 
 size_t Quantifier::HashCAOpInfo::operator()(const CAOpInfo &ca_op_info) const
 {
-  size_t h = hash<size_t>{}(ca_op_info.opposite_level_);
+  auto h = hash<double>{}(ca_op_info.opposite_level_);
   ir::hash_combine(h, ca_op_info.arg_size_);
   return h;
 }
 
 bool Quantifier::EqualCAOpInfo::operator()(const CAOpInfo &lhs, const CAOpInfo &rhs) const
 {
-  return pair<size_t, size_t>{lhs.opposite_level_, lhs.arg_size_} ==
-         pair<size_t, size_t>{rhs.opposite_level_, rhs.arg_size_};
+  return pair<double, double>{lhs.opposite_level_, lhs.arg_size_} ==
+         pair<double, double>{rhs.opposite_level_, rhs.arg_size_};
 }
 
 Quantifier operator/(const Quantifier &lhs, const Quantifier &rhs)
@@ -748,8 +781,7 @@ Quantifier::CtxtTermsDepthInfo operator*=(Quantifier::CtxtTermsDepthInfo &lhs, i
   return lhs;
 }
 
-Quantifier::CtxtTermDepthInfo operator/(
-  const Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs)
+Quantifier::DepthInfo operator/(const Quantifier::DepthInfo &lhs, const Quantifier::DepthInfo &rhs)
 {
   auto result = lhs;
   result.depth_ /= rhs.depth_;
@@ -757,14 +789,13 @@ Quantifier::CtxtTermDepthInfo operator/(
   return result;
 }
 
-Quantifier::CtxtTermDepthInfo &operator/=(Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs)
+Quantifier::DepthInfo &operator/=(Quantifier::DepthInfo &lhs, const Quantifier::DepthInfo &rhs)
 {
   lhs = lhs / rhs;
   return lhs;
 }
 
-Quantifier::CtxtTermDepthInfo operator-(
-  const Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs)
+Quantifier::DepthInfo operator-(const Quantifier::DepthInfo &lhs, const Quantifier::DepthInfo &rhs)
 {
   auto result = lhs;
   result.depth_ -= rhs.depth_;
@@ -772,13 +803,13 @@ Quantifier::CtxtTermDepthInfo operator-(
   return result;
 }
 
-Quantifier::CtxtTermDepthInfo &operator-=(Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs)
+Quantifier::DepthInfo &operator-=(Quantifier::DepthInfo &lhs, const Quantifier::DepthInfo &rhs)
 {
   lhs = lhs - rhs;
   return lhs;
 }
 
-Quantifier::CtxtTermDepthInfo operator*(const Quantifier::CtxtTermDepthInfo &lhs, int coeff)
+Quantifier::DepthInfo operator*(const Quantifier::DepthInfo &lhs, int coeff)
 {
   auto result = lhs;
   result.depth_ *= coeff;
@@ -786,12 +817,12 @@ Quantifier::CtxtTermDepthInfo operator*(const Quantifier::CtxtTermDepthInfo &lhs
   return result;
 }
 
-Quantifier::CtxtTermDepthInfo operator*(int coeff, const Quantifier::CtxtTermDepthInfo &rhs)
+Quantifier::DepthInfo operator*(int coeff, const Quantifier::DepthInfo &rhs)
 {
   return rhs * coeff;
 }
 
-Quantifier::CtxtTermDepthInfo operator*=(Quantifier::CtxtTermDepthInfo &lhs, int coeff)
+Quantifier::DepthInfo operator*=(Quantifier::DepthInfo &lhs, int coeff)
 {
   lhs = lhs * coeff;
   return lhs;
@@ -1050,7 +1081,7 @@ ostream &operator<<(ostream &os, const Quantifier::CtxtTermsDepthInfo &ctxt_term
   return os;
 }
 
-ostream &operator<<(ostream &os, const Quantifier::CtxtTermDepthInfo &ctxt_term_depth_info)
+ostream &operator<<(ostream &os, const Quantifier::DepthInfo &ctxt_term_depth_info)
 {
   return os << ctxt_term_depth_info.xdepth_ << ", " << ctxt_term_depth_info.depth_;
 }

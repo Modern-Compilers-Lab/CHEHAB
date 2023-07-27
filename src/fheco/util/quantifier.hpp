@@ -30,14 +30,12 @@ public:
     double max_depth_;
   };
 
-  struct CtxtTermDepthInfo
+  struct DepthInfo
   {
     double xdepth_;
     double depth_;
   };
-
-  using CtxtTermsDepthInfo =
-    std::unordered_map<const ir::Term *, CtxtTermDepthInfo, ir::Term::HashPtr, ir::Term::EqualPtr>;
+  using CtxtTermsDepthInfo = std::unordered_map<const ir::Term *, DepthInfo, ir::Term::HashPtr, ir::Term::EqualPtr>;
 
   // ctxt ctxt operation info
   struct CCOpInfo
@@ -77,7 +75,6 @@ public:
     double opposite_level_;
     double size_;
   };
-
   using CtxtTermsInfo = std::unordered_map<const ir::Term *, CtxtTermInfo, ir::Term::HashPtr, ir::Term::EqualPtr>;
 
   Quantifier(std::shared_ptr<ir::Func> func) : func_{std::move(func)} {}
@@ -268,21 +265,19 @@ Quantifier::CtxtTermsDepthInfo operator*(int coeff, const Quantifier::CtxtTermsD
 
 Quantifier::CtxtTermsDepthInfo operator*=(Quantifier::CtxtTermsDepthInfo &lhs, int coeff);
 
-Quantifier::CtxtTermDepthInfo operator/(
-  const Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs);
+Quantifier::DepthInfo operator/(const Quantifier::DepthInfo &lhs, const Quantifier::DepthInfo &rhs);
 
-Quantifier::CtxtTermDepthInfo &operator/=(Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs);
+Quantifier::DepthInfo &operator/=(Quantifier::DepthInfo &lhs, const Quantifier::DepthInfo &rhs);
 
-Quantifier::CtxtTermDepthInfo operator-(
-  const Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs);
+Quantifier::DepthInfo operator-(const Quantifier::DepthInfo &lhs, const Quantifier::DepthInfo &rhs);
 
-Quantifier::CtxtTermDepthInfo &operator-=(Quantifier::CtxtTermDepthInfo &lhs, const Quantifier::CtxtTermDepthInfo &rhs);
+Quantifier::DepthInfo &operator-=(Quantifier::DepthInfo &lhs, const Quantifier::DepthInfo &rhs);
 
-Quantifier::CtxtTermDepthInfo operator*(const Quantifier::CtxtTermDepthInfo &lhs, int coeff);
+Quantifier::DepthInfo operator*(const Quantifier::DepthInfo &lhs, int coeff);
 
-Quantifier::CtxtTermDepthInfo operator*(int coeff, const Quantifier::CtxtTermDepthInfo &rhs);
+Quantifier::DepthInfo operator*(int coeff, const Quantifier::DepthInfo &rhs);
 
-Quantifier::CtxtTermDepthInfo operator*=(Quantifier::CtxtTermDepthInfo &lhs, int coeff);
+Quantifier::DepthInfo operator*=(Quantifier::DepthInfo &lhs, int coeff);
 
 Quantifier::CCOpCount operator/(const Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs);
 
@@ -344,7 +339,7 @@ std::ostream &operator<<(std::ostream &os, const Quantifier &quantifier);
 
 std::ostream &operator<<(std::ostream &os, const Quantifier::CtxtTermsDepthInfo &ctxt_terms_depth_info);
 
-std::ostream &operator<<(std::ostream &os, const Quantifier::CtxtTermDepthInfo &ctxt_term_depth_info);
+std::ostream &operator<<(std::ostream &os, const Quantifier::DepthInfo &ctxt_term_depth_info);
 
 std::ostream &operator<<(std::ostream &os, const Quantifier::CCOpCount &cc_op_count);
 
