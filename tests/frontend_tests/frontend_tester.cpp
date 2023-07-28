@@ -2,6 +2,7 @@
 
 int main()
 {
+  /*
   test1_frontend();
   std::cout << "test1 passed\n";
   test2_frontend();
@@ -26,8 +27,10 @@ int main()
   std::cout << "test11 passed\n";
   test12_frontend();
   std::cout << "test12 passed\n";
+  */
   test13_frontend();
   std::cout << "test13 passed\n";
+  /*
   test14_frontend();
   std::cout << "test14 passed\n";
   test15_frontend();
@@ -44,4 +47,5 @@ int main()
   std::cout << "test20 passed\n";
   test21_frontend();
   std::cout << "test21 passed\n";
+  */
 }

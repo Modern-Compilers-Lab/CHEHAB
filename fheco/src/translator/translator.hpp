@@ -107,7 +107,7 @@ public:
 
   void define_class_constructor(std::ofstream &os, const std::string &class_name) const;
 
-  void define_main_func(std::ofstream &os, const std::string &func_name) const;
+  void define_main_func(std::ofstream &os, const std::string &func_name);
 
   void write_assign_operation(
     std::ofstream &os, const std::string &lhs_id, const std::string &rhs_id, ir::TermType type);
@@ -116,7 +116,9 @@ public:
   void write_output(
     const std::string &output_tag, const std::string &output_identifier, ir::TermType type, std::ostream &os);
 
-  void write_rotations_steps_getter(const std::vector<int32_t> &steps, std::ostream &os);
+  void write_rotations_steps_getter_def(const std::vector<int32_t> &steps, std::ostream &os_source);
+
+  void write_rotations_steps_getter_dec(std::ostream &os_header);
 
   bool is_shared_obj(const ir::Program::Ptr &node, size_t term_scope_id);
 
@@ -127,7 +129,7 @@ public:
   */
   ir::OpCode deduce_opcode_to_generate(const Ptr &node) const;
 
-  void translate_program(std::ofstream &os, size_t threshold);
+  void translate_program(size_t threshold, std::ofstream &os_header, std::ofstream &os_source);
 
   /*
     every change that needs to be done on IR node before code generation happens in fix_ir_instruction
@@ -138,7 +140,7 @@ public:
 
   void make_scopes_graph(size_t nodes_count_threshold);
 
-  std::string get_output_identifier(const std::string &output_label, ir::TermType term_type);
+  std::string get_output_identifier(const std::string &output_label, ir::TermType term_type, bool from_map = true);
 
   void sort_scopes_ids(size_t scope_id, std::unordered_set<size_t> &visited);
 

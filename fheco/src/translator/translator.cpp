@@ -6,11 +6,6 @@
 #include "rotationkeys_select_pass.hpp"
 #include <fstream>
 
-/*
-  All objects are associated global with possibility of re-use
-  Sort objects to increase cache hits
-*/
-
 namespace translator
 {
 
@@ -42,7 +37,7 @@ std::string Translator::get_identifier(const Ptr &term_ptr)
   {
     ir::ConstantTableEntry table_entry = *(program->get_entry_form_constants_table(current_label[term_ptr]));
     ir::ConstantTableEntry::EntryValue entry_value = table_entry.get_entry_value();
-    return (entry_value.get_tag().length() == 0 ? term_ptr->get_label() : entry_value.get_tag());
+    return (entry_value.get_tag().length() == 0 ? current_label[term_ptr] : entry_value.get_tag());
   }
   else
     return current_label[term_ptr];
@@ -74,7 +69,7 @@ std::string Translator::get_shared_identifier(const Ptr &term)
   }
 }
 
-std::string Translator::get_output_identifier(const std::string &output_label, ir::TermType term_type)
+std::string Translator::get_output_identifier(const std::string &output_label, ir::TermType term_type, bool from_map)
 {
   std::string tag;
   if (program->get_entry_form_constants_table(output_label) != std::nullopt)
@@ -86,116 +81,11 @@ std::string Translator::get_output_identifier(const std::string &output_label, i
   else
     tag = output_label;
 
+  if (from_map == false)
+    return tag;
+
   return std::string(outputs_class_identifier[term_type]) + "[\"" + tag + "\"]";
 }
-
-/*
-void Translator::convert_to_inplace(const ir::Term::Ptr &node_ptr)
-{
-  if (!node_ptr->is_operation_node())
-    return;
-
-  auto &operands = node_ptr->get_operands();
-
-  if (operands.size() == 0)
-    throw("unexpected size of operands, 0 operands");
-
-  if (program->is_output_node(node_ptr->get_label()))
-    return;
-
-  // std::unordered_set<ir::OpCode> instructions_to_be_converted = {ir::OpCode::relinearize, ir::OpCode::modswitch};
-
-  bool conversion_condition = false;
-  // (instructions_to_be_converted.find(node_ptr->get_opcode()) != instructions_to_be_converted.end());
-
-  if (operands.size() == 1)
-  {
-    auto &operand_ptr = operands[0];
-    ir::OpCode opcode = node_ptr->get_opcode();
-
-    if (opcode == ir::OpCode::assign || opcode == ir::OpCode::encrypt)
-      return;
-    else
-    {
-      operand_ptr->delete_parent(node_ptr->get_label());
-
-      bool is_an_output_operand = (program->is_output_node(operand_ptr->get_label()));
-
-      if (program->type_of(operand_ptr->get_label()) == ir::ConstantTableEntryType::input && !node_ptr->is_inplace())
-        return;
-
-      if (is_an_output_operand)
-        return;
-
-      // an additional condition to convert to inplace implicitly
-
-      bool dependency_condition = operand_ptr->get_parents_labels().size() == 0;
-
-      conversion_condition = dependency_condition;
-
-      if (conversion_condition)
-      {
-        program->insert_new_entry_from_existing_with_delete(operand_ptr->get_label(), node_ptr->get_label());
-        node_ptr->set_label(operand_ptr->get_label());
-      }
-    }
-  }
-  else if (operands.size() == 2)
-  {
-    auto &lhs_ptr = operands[0];
-    auto &rhs_ptr = operands[1];
-    ir::OpCode opcode = node_ptr->get_opcode();
-
-    rhs_ptr->delete_parent(node_ptr->get_label());
-    lhs_ptr->delete_parent(node_ptr->get_label());
-
-    // an additional condition to convert to inplace implicitly
-
-    bool commutative = (node_ptr->get_opcode() == ir::OpCode::add) || (node_ptr->get_opcode() == ir::OpCode::mul);
-
-    if (program->type_of(lhs_ptr->get_label()) == ir::ConstantTableEntryType::input && !commutative)
-      return;
-
-    bool is_lhs_an_output = program->is_output_node(operands[0]->get_label());
-    bool is_rhs_an_output = program->is_output_node(operands[1]->get_label());
-
-    bool is_rhs_an_input = program->type_of(operands[1]->get_label()) == ir::ConstantTableEntryType::input;
-
-    if (
-      commutative && operands[0]->get_term_type() == ir::ciphertextType &&
-      operands[1]->get_term_type() == ir::ciphertextType &&
-      operands[0]->get_parents_labels().size() > operands[1]->get_parents_labels().size() && !is_rhs_an_output &&
-      !is_rhs_an_input)
-    {
-      node_ptr->reverse_operands();
-    }
-
-    if (program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::constant)
-      return;
-
-    if (program->type_of(operands[0]->get_label()) == ir::ConstantTableEntryType::input)
-      return;
-
-    if (
-      program->is_output_node(operands[0]->get_label())) // in this case no need to check dependency condition since the
-lhs is an output, checking
-                             // !conversion_condition is enough
-      return;
-
-bool dependency_condition = lhs_ptr->get_parents_labels().size() == 0;
-
-conversion_condition = conversion_condition || dependency_condition;
-
-if (conversion_condition)
-{
-  program->insert_new_entry_from_existing_with_delete(lhs_ptr->get_label(), node_ptr->get_label());
-  node_ptr->set_label(lhs_ptr->get_label());
-}
-}
-else throw("unexpected size of operands, more than 2");
-}
-
-*/
 
 void Translator::translate_constant_table_entry(
   const ir::Program::Ptr &term, ir::ConstantTableEntry &table_entry, ir::TermType term_type, std::ofstream &os,
@@ -221,14 +111,6 @@ void Translator::translate_constant_table_entry(
       type_str = scalar_int;
     else if (scheme == fhecompiler::ckks)
     {
-      /*
-      using ScalarValue = ir::ConstantTableEntry::ScalarValue;
-      ScalarValue scalar_value = std::get<ScalarValue>(*(entry_value.value));
-      if (auto scalar_constant = std::get_if<int64_t>(&scalar_value))
-      {
-        type_str = scalar_int;
-      }
-      */
       type_str = scalar_float;
     }
     else
@@ -281,24 +163,6 @@ void Translator::translate_constant_table_entry(
           os, tag, term->get_label(), std::to_string(e_value), type_str, std::to_string(program->get_vector_size()),
           program->get_scale());
       }
-      /*
-      if (type_str == scalar_int)
-      {
-        // bfv/bgv
-        // we call reduce
-        uint64_t value = static_cast<uint64_t>(std::get<int64_t>(scalar_value)); // later we change that
-        encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(value), type_str, std::to_string(program->get_dimension()));
-      }
-      else if (type_str == scalar_float)
-      {
-        // !
-        // we call reduce
-        double value = static_cast<double>(std::get<double>(scalar_value)); // later we change that
-        encoding_writer.write_scalar_encoding(
-          os, tag, std::to_string(value), type_str, std::to_string(program->get_dimension()));
-      }
-      */
     }
     else
       throw("type not supported ");
@@ -315,8 +179,6 @@ void Translator::translate_binary_operation(const Ptr &term_ptr, std::ofstream &
 
   std::string op_identifier = get_identifier(term_ptr);
   auto &operands = term_ptr->get_operands();
-  // bool is_lhs_shared = generated_shareds.find(operands[0]) != generated_shareds.end();
-  // bool is_rhs_shared = generated_shareds.find(operands[1]) != generated_shareds.end();
   std::string lhs_identifier = get_identifier(operands[0]);
   std::string rhs_identifier = get_identifier(operands[1]);
 
@@ -353,13 +215,13 @@ void Translator::translate_unary_operation(const Ptr &term_ptr, std::ofstream &o
 
 void Translator::translate_term(const Ptr &term, std::ofstream &os, size_t term_scope_id)
 {
-  bool is_new_object(true);
-
   auto constant_table_entry_opt = program->get_entry_form_constants_table(term->get_label());
 
   bool is_input = program->type_of(term->get_label()) == ir::ConstantTableEntryType::input;
 
   bool is_output = program->get_outputs_nodes().find(term->get_label()) != program->get_outputs_nodes().end();
+
+  bool is_new_object(true);
 
   if (is_input == false && is_output == false)
   {
@@ -430,7 +292,7 @@ void Translator::translate_term(const Ptr &term, std::ofstream &os, size_t term_
   }
 }
 
-void Translator::translate_program(std::ofstream &os, size_t threshold)
+void Translator::translate_program(size_t threshold, std::ofstream &os_header, std::ofstream &os_source)
 {
   auto &nodes = program->get_dataflow_sorted_nodes(true);
   for (auto &node : nodes)
@@ -439,15 +301,19 @@ void Translator::translate_program(std::ofstream &os, size_t threshold)
     parents_copy[node] = node->get_parents_labels();
   }
 
+  os_header << "#pragma once\n #include<unordered_map>\n #include<vector>\n #include\"seal/seal.h\"\n";
+
+  os_source << "#include \"" << generated_class_name << ".hpp"
+            << "\"\n";
+
+  os_header << gen_steps_function_signature << ";\n";
+
   if (program->get_rotations_steps().size())
-    write_rotations_steps_getter(program->get_rotations_steps(), os);
+    write_rotations_steps_getter_def(program->get_rotations_steps(), os_source);
 
   make_scopes_graph(threshold);
 
   fix_ir_instructions_pass();
-
-  std::ofstream os_header("Computation.hpp");
-  std::ofstream os_source("Computation.cpp");
 
   generate_computation_class(os_header, os_source);
 }
@@ -561,20 +427,20 @@ ir::OpCode Translator::deduce_opcode_to_generate(const Ptr &node) const
     throw("node with more than 2 operands in deduce_opcode_to_generate");
 }
 
-void Translator::write_rotations_steps_getter(const std::vector<int32_t> &steps, std::ostream &os)
+void Translator::write_rotations_steps_getter_def(const std::vector<int32_t> &steps, std::ostream &os_source)
 {
-  os << gen_steps_function_signature << "{\n";
-  os << "std::vector<" << rotation_step_type_literal << ">"
-     << " steps = {";
+  os_source << gen_steps_function_signature << "{\n";
+  os_source << "std::vector<" << rotation_step_type_literal << ">"
+            << " steps = {";
   for (size_t i = 0; i < steps.size(); i++)
   {
-    os << steps[i];
+    os_source << steps[i];
     if (i < steps.size() - 1)
-      os << ",";
+      os_source << ",";
     else
-      os << "};";
+      os_source << "};";
   }
-  os << " return steps; }";
+  os_source << " return steps; }";
 }
 
 void Translator::fix_ir_instruction(const ir::Program::Ptr &node)
@@ -685,13 +551,6 @@ void Translator::make_scopes_graph(size_t nodes_count_threshold)
       continue;
     sort_scopes_ids(scope.first, vis);
   }
-  /*
-  for (auto &scope : scopes_graph)
-  {
-    std::cout << scope.first << " " << scope_nodes_by_id[scope.first].size() << "\n";
-  }
-  std::cout << "\n";
-  */
 }
 
 void Translator::sort_scopes_ids(size_t scope_id, std::unordered_set<size_t> &visited)
@@ -706,9 +565,9 @@ void Translator::sort_scopes_ids(size_t scope_id, std::unordered_set<size_t> &vi
   scopes_ids_sorted.push_back(scope_id);
 }
 
-void Translator::generate_scope(size_t scope_id, std::ofstream &os)
+void Translator::generate_scope(size_t _scope_id, std::ofstream &os)
 {
-  auto &terms_nodes = scope_nodes_by_id[scope_id];
+  auto &terms_nodes = scope_nodes_by_id[_scope_id];
 
   for (auto &term_node : terms_nodes)
   {
@@ -741,26 +600,34 @@ void Translator::generate_scope(size_t scope_id, std::ofstream &os)
 
         if (parents_copy[operand].size() == 0)
         {
+          std::string new_obj_label = current_label[operand];
+          ir::TermType operand_t_type = operand->get_term_type();
           if (generated_shareds.find(operand) != generated_shareds.end())
-            free_global_objs[operand->get_term_type()].push_back(current_label[operand]);
+          {
+            size_t p_size = free_global_objs[operand_t_type].size();
+            if (p_size == 0)
+              free_global_objs[operand_t_type].push_back(new_obj_label);
+            else
+            {
+              if (free_global_objs[operand_t_type].back() != new_obj_label)
+                free_global_objs[operand_t_type].push_back(new_obj_label);
+            }
+          }
           else
-            free_local_objs[operand->get_term_type()][created_in[operand]].push_back(current_label[operand]);
+          {
+            size_t p_size = free_local_objs[operand_t_type][created_in[operand]].size();
+            if (p_size == 0)
+              free_local_objs[operand_t_type][created_in[operand]].push_back(new_obj_label);
+            else
+            {
+              if (free_local_objs[operand_t_type][created_in[operand]].back() != new_obj_label)
+                free_local_objs[operand_t_type][created_in[operand]].push_back(new_obj_label);
+            }
+          }
         }
       }
     }
-
-    translate_term(term_node, os, scope_id);
-
-    // auto output_node_itr = program->get_outputs_nodes().find(term_node->get_label());
-
-    /*
-    if (output_node_itr != program->get_outputs_nodes().end())
-    {
-      write_output(
-        get_output_identifier(output_node_itr->first), get_identifier(output_node_itr->second),
-        (output_node_itr->second)->get_term_type(), os);
-    }
-    */
+    translate_term(term_node, os, _scope_id);
   }
 }
 
@@ -841,7 +708,6 @@ void Translator::generate_computation_class(std::ofstream &os_header, std::ofstr
 {
   // Generating the header file
   {
-    os_header << "#pragma once\n #include<unordered_map>\n #include<vector>\n #include\"seal/seal.h\"\n";
     os_header << "class " << generated_class_name << "{\n";
     os_header << "private:\n";
 
@@ -853,10 +719,10 @@ void Translator::generate_computation_class(std::ofstream &os_header, std::ofstr
     os_header << galois_keys_type_literal << " " << galois_keys_identifier << ";\n";
     os_header << public_key_literal << " " << public_key_identifier << ";\n";
 
-    for (auto &scope_id : scopes_ids_sorted)
+    for (auto &_scope_id : scopes_ids_sorted)
     {
       os_header << "void ";
-      generate_class_func_signature(os_header, "func_" + std::to_string(scope_id));
+      generate_class_func_signature(os_header, "func_" + std::to_string(_scope_id));
       os_header << ";\n";
     }
 
@@ -872,17 +738,14 @@ void Translator::generate_computation_class(std::ofstream &os_header, std::ofstr
 
   // generating source file
   {
-    os_source << "#include \"" << generated_class_name << ".hpp"
-              << "\"\n";
-
     define_class_constructor(os_source, generated_class_name);
 
-    for (auto &scope_id : scopes_ids_sorted)
+    for (auto &_scope_id : scopes_ids_sorted)
     {
       os_source << "void " << generated_class_name << "::";
-      generate_class_func_signature(os_source, "func_" + std::to_string(scope_id));
+      generate_class_func_signature(os_source, "func_" + std::to_string(_scope_id));
       os_source << "{\n";
-      generate_scope(scope_id, os_source);
+      generate_scope(_scope_id, os_source);
       os_source << "}\n";
     }
 
@@ -890,7 +753,7 @@ void Translator::generate_computation_class(std::ofstream &os_header, std::ofstr
   }
 }
 
-void Translator::define_main_func(std::ofstream &os, const std::string &func_name) const
+void Translator::define_main_func(std::ofstream &os, const std::string &func_name)
 {
   os << "void " << generated_class_name << "::";
   generate_main_func_signature(os, func_name);
@@ -902,6 +765,16 @@ void Translator::define_main_func(std::ofstream &os, const std::string &func_nam
 
   for (auto &scope_id : scopes_ids_sorted)
     write_scope_function_call(scope_id, os);
+
+  for (auto &output_it : program->get_outputs_nodes())
+  {
+    if (output_it.first != output_it.second->get_label())
+    {
+      write_output(
+        get_output_identifier(output_it.first, output_it.second->get_term_type(), false),
+        get_identifier(output_it.second), (output_it.second)->get_term_type(), os);
+    }
+  }
 
   os << "}\n";
 }

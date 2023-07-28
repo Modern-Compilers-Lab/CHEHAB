@@ -150,12 +150,14 @@ void compile(const std::string &output_filename, params_selector::EncryptionPara
   translator::Translator tr(program, params);
   {
     std::ofstream translation_os(output_filename);
+    std::ofstream os_header("Computation.hpp");
+    std::ofstream os_source("Computation.cpp");
+    if (!os_header)
+      throw("couldn't open header file for translation.\n");
+    if (!os_source)
+      throw("couldn't open source file for translation.\n");
 
-    if (!translation_os)
-      throw("couldn't open file for translation.\n");
-
-    tr.translate_program(translation_os, 20000);
-
+    tr.translate_program(10000, os_header, os_source);
     translation_os.close();
   }
   std::cout << sep << "\n \n";

@@ -10,7 +10,6 @@ inline fhecompiler::Ciphertext sum_all_slots(fhecompiler::Ciphertext &x, int vec
   step--;
   for (; step > 0;)
   {
-
     rots_sum += (x << (step--));
   }
   // result of sum will be in the first slot

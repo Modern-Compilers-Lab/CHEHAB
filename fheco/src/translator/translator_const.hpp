@@ -375,7 +375,6 @@ public:
     vector_value_str += "}";
     const std::string _vector_id = vector_id + "_clear";
     os << "std::vector<" << vector_type << "> " << _vector_id << " = " << vector_value_str << ";" << '\n';
-
     // encoding
     if (is_new_object)
       os << types_map[ir::plaintextType] << " " << plaintext_id << ";" << '\n';
