@@ -41,7 +41,7 @@ bool operator==(TermMatcherType term_matcher_type, ir::Term::Type term_type)
 void count_ctxt_leaves(ir::Term *term, TermsMetric &cache)
 {
   if (term->type() != ir::Term::Type::cipher)
-    return;
+    throw invalid_argument("expected ciphertext term");
 
   struct Call
   {
@@ -60,7 +60,7 @@ void count_ctxt_leaves(ir::Term *term, TermsMetric &cache)
     auto top_term = top_call.term_;
     if (top_call.children_processed_)
     {
-      if (top_term->is_leaf())
+      if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
       {
         cache.emplace(top_term->id(), 1);
         if (top_call.parent_)
