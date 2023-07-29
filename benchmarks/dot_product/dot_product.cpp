@@ -1,4 +1,3 @@
-#include "fhecompiler.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -6,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include "fheco.hpp"
 
 using namespace std;
 using namespace fhecompiler;
