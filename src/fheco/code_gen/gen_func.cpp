@@ -28,12 +28,11 @@ void gen_func(
   gen_func_def_signature(func->name(), source_os);
   source_os << "\n{\n";
 
-  TermsObjectsInfo terms_objects_info;
-  gen_input_terms(func->data_flow().inputs_info(), source_os, terms_objects_info);
-  gen_const_terms(
-    func->data_flow().constants_info(), func->clear_data_evaluator().signedness(), source_os, terms_objects_info);
-  gen_op_terms(func, source_os, terms_objects_info);
-  gen_output_terms(func->data_flow().outputs_info(), source_os, terms_objects_info);
+  TermsCtxtObjectsInfo terms_ctxt_objects_info;
+  gen_input_terms(func->data_flow().inputs_info(), source_os, terms_ctxt_objects_info);
+  gen_const_terms(func->data_flow().constants_info(), func->clear_data_evaluator().signedness(), source_os);
+  gen_op_terms(func, source_os, terms_ctxt_objects_info);
+  gen_output_terms(func->data_flow().outputs_info(), source_os, terms_ctxt_objects_info);
 
   source_os << "}\n";
   source_os << '\n';
@@ -73,16 +72,16 @@ void gen_func_def_signature(const string &func_name, ostream &os)
   os << "const " << galois_keys_type << " &" << galois_keys_id << ")";
 }
 
-void gen_input_terms(const ir::IOTermsInfo &input_terms_info, ostream &os, TermsObjectsInfo &terms_objects_info)
+void gen_input_terms(
+  const ir::IOTermsInfo &input_terms_info, ostream &os, TermsCtxtObjectsInfo &terms_ctxt_objects_info)
 {
   for (const auto &input_info : input_terms_info)
   {
     auto term = input_info.first;
     auto object_id = term->id();
-    terms_objects_info.emplace(term->id(), ObjectInfo{object_id, term->parents().size()});
-
     if (term->type() == ir::Term::Type::cipher)
     {
+      terms_ctxt_objects_info.emplace(term->id(), CtxtObjectInfo{object_id, term->parents().size()});
       os << cipher_type << " ";
       gen_cipher_var_id(object_id, os);
       os << " = " << encrypted_inputs_container_id << ".at(\"" << input_info.second.label_ << "\")";
@@ -107,16 +106,13 @@ void gen_plain_var_id(size_t term_id, ostream &os)
   os << "p" << term_id;
 }
 
-void gen_const_terms(
-  const ir::ConstTermsValues &const_terms_info, bool signedness, ostream &os, TermsObjectsInfo &terms_objects_info)
+void gen_const_terms(const ir::ConstTermsValues &const_terms_info, bool signedness, ostream &os)
 {
   os << "size_t " << slot_count_id << " = " << encoder_id << ".slot_count();\n";
   for (const auto &const_info : const_terms_info)
   {
     auto term = const_info.first;
     auto object_id = term->id();
-    terms_objects_info.emplace(term->id(), ObjectInfo{object_id, term->parents().size()});
-
     os << plain_type << " ";
     gen_plain_var_id(object_id, os);
     os << ";\n";
@@ -139,58 +135,61 @@ void gen_const_terms(
   }
 }
 
-void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInfo &terms_objects_info)
+void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsCtxtObjectsInfo &terms_ctxt_objects_info)
 {
   for (auto term : func->get_top_sorted_terms())
   {
     if (!term->is_operation())
       continue;
 
-    size_t term_object_id = term->id();
-    vector<size_t> operands_objects_id(term->operands().size());
+    auto term_object_id = term->id();
+    vector<size_t> operands_ctxt_objects_ids(term->operands().size());
     unordered_map<size_t, size_t> operands_multip;
-    for (size_t i = 0; i < operands_objects_id.size(); ++i)
+    for (size_t i = 0; i < operands_ctxt_objects_ids.size(); ++i)
     {
       auto operand = term->operands()[i];
-      size_t multip = ++operands_multip[operand->id()];
-      auto operand_object_info_it = terms_objects_info.find(operand->id());
+      if (operand->type() != ir::Term::Type::cipher)
+        continue;
+
+      auto multip = ++operands_multip[operand->id()];
+      auto operand_object_info_it = terms_ctxt_objects_info.find(operand->id());
       // operand with multiplicity > 1 selected for overwrite
-      if (operand_object_info_it == terms_objects_info.end())
+      if (operand_object_info_it == terms_ctxt_objects_info.end())
       {
-        operands_objects_id[i] = term_object_id;
+        operands_ctxt_objects_ids[i] = term_object_id;
         continue;
       }
       auto &operand_object_info = operand_object_info_it->second;
-      operands_objects_id[i] = operand_object_info.id_;
+      operands_ctxt_objects_ids[i] = operand_object_info.id_;
       if (func->data_flow().is_output(operand) || operand->type() == ir::Term::Type::plain || multip > 1)
         continue;
 
       --operand_object_info.dep_count_;
       if (term_object_id == term->id() && operand_object_info.dep_count_ == 0)
       {
-        term_object_id = operands_objects_id[i];
-        terms_objects_info.erase(operand_object_info_it);
+        term_object_id = operands_ctxt_objects_ids[i];
+        terms_ctxt_objects_info.erase(operand_object_info_it);
       }
     }
 
     if (term_object_id == term->id())
     {
-      for (auto it = terms_objects_info.begin(); it != terms_objects_info.end();)
+      for (auto it = terms_ctxt_objects_info.begin(); it != terms_ctxt_objects_info.end();)
       {
         if (it->second.dep_count_ == 0)
         {
           term_object_id = it->second.id_;
-          terms_objects_info.erase(it);
+          terms_ctxt_objects_info.erase(it);
           break;
         }
         ++it;
       }
     }
-    size_t dep_count = term->parents().size();
+    auto dep_count = term->parents().size();
     if (func->data_flow().is_output(term))
       ++dep_count;
 
-    terms_objects_info.emplace(term->id(), ObjectInfo{term_object_id, dep_count});
+    terms_ctxt_objects_info.emplace(term->id(), CtxtObjectInfo{term_object_id, dep_count});
 
     if (term_object_id == term->id())
     {
@@ -208,22 +207,22 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
     if (term->op_code() == ir::OpCode::encrypt)
     {
       os << encryptor_id << ".encrypt(";
-      gen_plain_var_id(operands_objects_id[0], os);
+      gen_plain_var_id(term->operands()[0]->id(), os);
     }
     else
     {
       os << evaluator_id << "." << operation_mapping.at(OpType{term->op_code().type(), move(operands_types)}) << "(";
-      // operation term needs operands so operands_objects_id cannot be empty
+      // operation term needs operands so operands_ctxt_objects_ids cannot be empty
       for (size_t i = 0;; ++i)
       {
         auto operand = term->operands()[i];
 
         if (operand->type() == ir::Term::Type::cipher)
-          gen_cipher_var_id(operands_objects_id[i], os);
+          gen_cipher_var_id(operands_ctxt_objects_ids[i], os);
         else
-          gen_plain_var_id(operands_objects_id[i], os);
+          gen_plain_var_id(operand->id(), os);
 
-        if (i == operands_objects_id.size() - 1)
+        if (i == operands_ctxt_objects_ids.size() - 1)
           break;
 
         os << ", ";
@@ -256,24 +255,23 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsObjectsInf
   }
 }
 
-void gen_output_terms(const ir::IOTermsInfo &output_terms_info, ostream &os, const TermsObjectsInfo &terms_objects_info)
+void gen_output_terms(
+  const ir::IOTermsInfo &output_terms_info, ostream &os, const TermsCtxtObjectsInfo &terms_ctxt_objects_info)
 {
   for (const auto &output_info : output_terms_info)
   {
     auto term = output_info.first;
-    size_t term_object = terms_objects_info.at(term->id()).id_;
-
     if (term->type() == ir::Term::Type::cipher)
     {
       os << encrypted_outputs_container_id << ".emplace(\"" << output_info.second.label_ << "\", ";
       os << "move(";
-      gen_cipher_var_id(term_object, os);
+      gen_cipher_var_id(terms_ctxt_objects_info.at(term->id()).id_, os);
     }
     else
     {
       os << encoded_outputs_container_id << ".emplace(\"" << output_info.second.label_ << "\", ";
       os << "move(";
-      gen_plain_var_id(term_object, os);
+      gen_plain_var_id(term->id(), os);
     }
     os << "));\n";
   }

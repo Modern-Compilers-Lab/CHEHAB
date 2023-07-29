@@ -10,6 +10,7 @@
 #include <stack>
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_set>
 #include <utility>
 
 using namespace std;
@@ -166,11 +167,17 @@ void Func::replace_term_with(Term *term1, Term *term2)
     auto top_term2 = top_call.term2_;
 
     bool is_const_top_term1 = data_flow_.is_const(top_term1);
+    unordered_set<size_t> top_term1_parents_ids;
+    for (auto parent : top_term1->parents())
+      top_term1_parents_ids.insert(parent->id());
     data_flow_.replace(top_term1, top_term2);
     if (!is_const_top_term1 && Compiler::const_folding_enabled() && data_flow_.is_const(top_term2))
     {
       for (auto parent : top_term2->parents())
       {
+        if (top_term1_parents_ids.find(parent->id()) == top_term1_parents_ids.end())
+          continue;
+
         const auto &operands = parent->operands();
         vector<PackedVal> const_vals;
         const_vals.reserve(operands.size());
