@@ -35,6 +35,14 @@ public:
     double xdepth_;
     double depth_;
   };
+  struct HashDepthInfo
+  {
+    std::size_t operator()(const DepthInfo &depth_info) const;
+  };
+  struct EqualDepthInfo
+  {
+    bool operator()(const DepthInfo &lhs, const DepthInfo &rhs) const;
+  };
   using CtxtTermsDepthInfo = std::unordered_map<const ir::Term *, DepthInfo, ir::Term::HashPtr, ir::Term::EqualPtr>;
 
   // ctxt ctxt operation info

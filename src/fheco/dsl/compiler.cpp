@@ -30,6 +30,11 @@ void Compiler::compile(
   shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, ostream &header_os,
   string_view header_name, ostream &source_os)
 {
+#ifdef FHECO_LOGGING
+  clog << "\remove_dead_code\n";
+#endif
+  func->remove_dead_code();
+
   switch (ruleset)
   {
   case Ruleset::depth:
@@ -83,7 +88,7 @@ void Compiler::gen_he_code(
 #ifdef FHECO_LOGGING
   clog << "\nrelin_insertion\n";
 #endif
-  size_t relin_keys_count = passes::relin_after_ctxt_ctxt_mul(func);
+  size_t relin_keys_count = passes::lazy_relin_heuristic(func);
 
 #ifdef FHECO_LOGGING
   clog << "\ncode_generation\n";

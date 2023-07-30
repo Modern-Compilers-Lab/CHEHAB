@@ -174,7 +174,7 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsCtxtObject
 
     if (term_object_id == term->id())
     {
-      for (auto it = terms_ctxt_objects_info.begin(); it != terms_ctxt_objects_info.end();)
+      for (auto it = terms_ctxt_objects_info.begin(); it != terms_ctxt_objects_info.end(); ++it)
       {
         if (it->second.dep_count_ == 0)
         {
@@ -182,7 +182,6 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsCtxtObject
           terms_ctxt_objects_info.erase(it);
           break;
         }
-        ++it;
       }
     }
     auto dep_count = term->parents().size();

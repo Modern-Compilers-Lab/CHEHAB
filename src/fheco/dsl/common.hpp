@@ -10,18 +10,6 @@ using integer = std::int64_t;
 
 using PackedVal = std::vector<integer>;
 
-enum class Scheme
-{
-  none,
-  bfv
-};
-
-enum class Backend
-{
-  none,
-  seal
-};
-
 enum class SecurityLevel
 {
   none,

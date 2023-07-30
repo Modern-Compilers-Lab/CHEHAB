@@ -8,6 +8,7 @@
 #include <tuple>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 using namespace std;
 
@@ -39,67 +40,64 @@ void Quantifier::compute_depth_info()
   };
   stack<Call> call_stack;
 
-  struct HashCall
-  {
-    size_t operator()(const Call &call) const
-    {
-      size_t h = hash<ir::Term>()(*call.term_);
-      ir::hash_combine(h, call.depth_info_.xdepth_);
-      ir::hash_combine(h, call.depth_info_.depth_);
-      return h;
-    }
-  };
-  struct EqualCall
-  {
-    bool operator()(const Call &lhs, const Call &rhs) const
-    {
-      return *lhs.term_ == *rhs.term_ && pair<double, double>{lhs.depth_info_.xdepth_, lhs.depth_info_.depth_} ==
-                                           pair<double, double>{rhs.depth_info_.xdepth_, rhs.depth_info_.depth_};
-    }
-  };
-  unordered_set<Call, HashCall, EqualCall> emitted_calls;
+  using DepthInfoSet = unordered_set<DepthInfo, HashDepthInfo, EqualDepthInfo>;
+  unordered_map<const ir::Term *, DepthInfoSet> emitted_calls;
 
   for (auto [output_term, output_info] : func_->data_flow().outputs_info())
   {
-    if (output_term->type() == ir::Term::Type::cipher && output_term->is_source())
+    if (output_term->type() == ir::Term::Type::cipher)
       call_stack.push({output_term, DepthInfo{0, 0}});
-
-    while (!call_stack.empty())
+  }
+  while (!call_stack.empty())
+  {
+    auto top_call = call_stack.top();
+    call_stack.pop();
+    auto top_term = top_call.term_;
+    auto top_depth_info = top_call.depth_info_;
+    if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
     {
-      auto top_call = call_stack.top();
-      call_stack.pop();
-      auto top_term = top_call.term_;
-      auto top_depth_info = top_call.depth_info_;
-      if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
-      {
-        auto [it, inserted] = ctxt_leaves_depth_info_.emplace(top_term, DepthInfo{0, 0});
-        it->second.xdepth_ = max(it->second.xdepth_, top_depth_info.xdepth_);
-        it->second.depth_ = max(it->second.depth_, top_depth_info.depth_);
-        continue;
-      }
-      auto operands_xdepth = top_depth_info.xdepth_;
-      if (top_term->op_code().type() == ir::OpCode::Type::mul || top_term->op_code().type() == ir::OpCode::Type::square)
-        ++operands_xdepth;
-      auto operands_depth = top_depth_info.depth_;
-      if (
-        top_term->op_code().type() != ir::OpCode::Type::mod_switch &&
-        top_term->op_code().type() != ir::OpCode::Type::relin)
-        ++operands_depth;
+      auto [it, inserted] = ctxt_leaves_depth_info_.emplace(top_term, DepthInfo{0, 0});
+      it->second.xdepth_ = max(it->second.xdepth_, top_depth_info.xdepth_);
+      it->second.depth_ = max(it->second.depth_, top_depth_info.depth_);
+      continue;
+    }
+    auto operands_xdepth = top_depth_info.xdepth_;
+    if (top_term->op_code().type() == ir::OpCode::Type::mul || top_term->op_code().type() == ir::OpCode::Type::square)
+      ++operands_xdepth;
+    auto operands_depth = top_depth_info.depth_;
+    if (
+      top_term->op_code().type() != ir::OpCode::Type::mod_switch &&
+      top_term->op_code().type() != ir::OpCode::Type::relin)
+      ++operands_depth;
 
-      for (auto operand : top_term->operands())
+    DepthInfo operands_depth_info{operands_xdepth, operands_depth};
+    for (auto operand : top_term->operands())
+    {
+      if (operand->type() == ir::Term::Type::cipher)
       {
-        if (operand->type() == ir::Term::Type::cipher)
+        if (auto it = emitted_calls.find(top_term); it != emitted_calls.end())
         {
-          Call operand_call{operand, DepthInfo{operands_xdepth, operands_depth}};
-          if (emitted_calls.find(operand_call) == emitted_calls.end())
+          for (const auto &depth_info : it->second)
           {
-            emitted_calls.insert(operand_call);
-            call_stack.push(move(operand_call));
+            if (operands_xdepth > depth_info.xdepth_ || operands_depth > depth_info.depth_)
+            {
+              it->second.insert(operands_depth_info);
+              call_stack.push({operand, move(operands_depth_info)});
+              break;
+            }
           }
+        }
+        else
+        {
+          emitted_calls.emplace(operand, DepthInfoSet{operands_depth_info});
+          call_stack.push({operand, move(operands_depth_info)});
         }
       }
     }
   }
+  if (ctxt_leaves_depth_info_.empty())
+    return;
+
   auto first_leaf_xdepth = ctxt_leaves_depth_info_.begin()->second.xdepth_;
   auto first_leaf_depth = ctxt_leaves_depth_info_.begin()->second.depth_;
   depth_summary_.min_xdepth_ = first_leaf_xdepth;
@@ -497,6 +495,18 @@ void Quantifier::print_global_metrics(ostream &os) const
      << " output)\n";
   os << "rotation_keys_size: " << rotation_keys_size_ / 1024.0 / 1024.0 << " MB (" << rotation_keys_count_ << " key)\n";
   os << "relin_keys_size: " << relin_keys_size_ / 1024.0 / 1024.0 << " MB (" << relin_keys_count_ << " key)\n";
+}
+
+size_t Quantifier::HashDepthInfo::operator()(const DepthInfo &depth_info) const
+{
+  auto h = hash<double>{}(depth_info.xdepth_);
+  ir::hash_combine(h, depth_info.depth_);
+  return h;
+}
+
+bool Quantifier::EqualDepthInfo::operator()(const DepthInfo &lhs, const DepthInfo &rhs) const
+{
+  return pair<double, double>{lhs.xdepth_, lhs.depth_} == pair<double, double>{rhs.xdepth_, rhs.depth_};
 }
 
 size_t Quantifier::HashCCOpInfo::operator()(const CCOpInfo &cc_op_info) const
