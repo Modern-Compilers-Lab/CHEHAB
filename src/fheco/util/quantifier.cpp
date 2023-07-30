@@ -2,13 +2,13 @@
 #include "fheco/ir/func.hpp"
 #include "fheco/util/quantifier.hpp"
 #include <limits>
+#include <set>
 #include <stack>
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
-#include <vector>
 
 using namespace std;
 
@@ -40,7 +40,15 @@ void Quantifier::compute_depth_info()
   };
   stack<Call> call_stack;
 
-  using DepthInfoSet = unordered_set<DepthInfo, HashDepthInfo, EqualDepthInfo>;
+  struct CompareDepthInfo
+  {
+    bool operator()(const DepthInfo &lhs, const DepthInfo &rhs) const
+    {
+      return lhs.depth_ + lhs.xdepth_ > rhs.depth_ + rhs.xdepth_;
+    }
+  };
+
+  using DepthInfoSet = set<DepthInfo, CompareDepthInfo>;
   unordered_map<const ir::Term *, DepthInfoSet> emitted_calls;
 
   for (auto [output_term, output_info] : func_->data_flow().outputs_info())
@@ -57,29 +65,29 @@ void Quantifier::compute_depth_info()
     if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
     {
       auto [it, inserted] = ctxt_leaves_depth_info_.emplace(top_term, DepthInfo{0, 0});
-      it->second.xdepth_ = max(it->second.xdepth_, top_depth_info.xdepth_);
       it->second.depth_ = max(it->second.depth_, top_depth_info.depth_);
+      it->second.xdepth_ = max(it->second.xdepth_, top_depth_info.xdepth_);
       continue;
     }
-    auto operands_xdepth = top_depth_info.xdepth_;
-    if (top_term->op_code().type() == ir::OpCode::Type::mul || top_term->op_code().type() == ir::OpCode::Type::square)
-      ++operands_xdepth;
     auto operands_depth = top_depth_info.depth_;
     if (
       top_term->op_code().type() != ir::OpCode::Type::mod_switch &&
       top_term->op_code().type() != ir::OpCode::Type::relin)
       ++operands_depth;
+    auto operands_xdepth = top_depth_info.xdepth_;
+    if (top_term->op_code().type() == ir::OpCode::Type::mul || top_term->op_code().type() == ir::OpCode::Type::square)
+      ++operands_xdepth;
 
-    DepthInfo operands_depth_info{operands_xdepth, operands_depth};
+    DepthInfo operands_depth_info{operands_depth, operands_xdepth};
     for (auto operand : top_term->operands())
     {
       if (operand->type() == ir::Term::Type::cipher)
       {
-        if (auto it = emitted_calls.find(top_term); it != emitted_calls.end())
+        if (auto it = emitted_calls.find(operand); it != emitted_calls.end())
         {
           for (const auto &depth_info : it->second)
           {
-            if (operands_xdepth > depth_info.xdepth_ || operands_depth > depth_info.depth_)
+            if (operands_depth > depth_info.depth_ || operands_xdepth > depth_info.xdepth_)
             {
               it->second.insert(operands_depth_info);
               call_stack.push({operand, move(operands_depth_info)});
@@ -98,31 +106,31 @@ void Quantifier::compute_depth_info()
   if (ctxt_leaves_depth_info_.empty())
     return;
 
-  auto first_leaf_xdepth = ctxt_leaves_depth_info_.begin()->second.xdepth_;
   auto first_leaf_depth = ctxt_leaves_depth_info_.begin()->second.depth_;
-  depth_summary_.min_xdepth_ = first_leaf_xdepth;
+  auto first_leaf_xdepth = ctxt_leaves_depth_info_.begin()->second.xdepth_;
   depth_summary_.min_depth_ = first_leaf_depth;
-  depth_summary_.avg_xdepth_ = 0;
+  depth_summary_.min_xdepth_ = first_leaf_xdepth;
   depth_summary_.avg_depth_ = 0;
-  depth_summary_.max_xdepth_ = first_leaf_xdepth;
+  depth_summary_.avg_xdepth_ = 0;
   depth_summary_.max_depth_ = first_leaf_xdepth;
+  depth_summary_.max_xdepth_ = first_leaf_xdepth;
   for (const auto &e : ctxt_leaves_depth_info_)
   {
-    if (e.second.xdepth_ < depth_summary_.min_xdepth_)
-      depth_summary_.min_xdepth_ = e.second.xdepth_;
     if (e.second.depth_ < depth_summary_.min_depth_)
       depth_summary_.min_depth_ = e.second.depth_;
+    if (e.second.xdepth_ < depth_summary_.min_xdepth_)
+      depth_summary_.min_xdepth_ = e.second.xdepth_;
 
-    depth_summary_.avg_xdepth_ += e.second.xdepth_;
     depth_summary_.avg_depth_ += e.second.depth_;
+    depth_summary_.avg_xdepth_ += e.second.xdepth_;
 
-    if (e.second.xdepth_ > depth_summary_.max_xdepth_)
-      depth_summary_.max_xdepth_ = e.second.xdepth_;
     if (e.second.depth_ > depth_summary_.max_depth_)
       depth_summary_.max_depth_ = e.second.depth_;
+    if (e.second.xdepth_ > depth_summary_.max_xdepth_)
+      depth_summary_.max_xdepth_ = e.second.xdepth_;
   }
-  depth_summary_.avg_xdepth_ /= ctxt_leaves_depth_info_.size();
   depth_summary_.avg_depth_ /= ctxt_leaves_depth_info_.size();
+  depth_summary_.avg_xdepth_ /= ctxt_leaves_depth_info_.size();
 
   depth_metrics_ = true;
 }
@@ -136,14 +144,21 @@ void Quantifier::count_terms_classes()
   ptxt_leaves_count_ = 0;
   pp_ops_count_ = 0;
   ctxt_leaves_count_ = 0;
-  cc_mul_count_.clear();
-  square_count_.clear();
+  cc_mul_counts_.clear();
+  cc_mul_total_ = 0;
+  square_counts_.clear();
+  square_total_ = 0;
   encrypt_count_ = 0;
-  relin_count_.clear();
-  rotate_count_.clear();
-  cp_mul_count_.clear();
-  mod_switch_count_.clear();
-  he_add_.clear();
+  relin_counts_.clear();
+  relin_total_ = 0;
+  rotate_counts_.clear();
+  rotate_total_ = 0;
+  cp_mul_counts_.clear();
+  cp_mul_total_ = 0;
+  mod_switch_counts_.clear();
+  mod_switch_total_ = 0;
+  he_add_counts_.clear();
+  he_add_total_ = 0;
   ctxt_outputs_info_.clear();
   circuit_static_cost_ = 0;
 
@@ -172,7 +187,8 @@ void Quantifier::count_terms_classes()
             ctxt_terms_info.emplace(
               term, CtxtTermInfo{arg1_info.opposite_level_, arg1_info.size_ + arg2_info.size_ - 1});
             ++captured_terms_count_;
-            auto [it, inserted] = cc_mul_count_.emplace(
+            ++cc_mul_total_;
+            auto [it, inserted] = cc_mul_counts_.emplace(
               CCOpInfo{
                 arg1_info.opposite_level_, min(arg1_info.size_, arg2_info.size_),
                 max(arg1_info.size_, arg2_info.size_)},
@@ -188,8 +204,9 @@ void Quantifier::count_terms_classes()
 
             ctxt_terms_info.emplace(term, CtxtTermInfo{ctxt_arg_info.opposite_level_, ctxt_arg_info.size_});
             ++captured_terms_count_;
+            ++cp_mul_total_;
             auto [it, inserted] =
-              cp_mul_count_.emplace(CAOpInfo{ctxt_arg_info.opposite_level_, ctxt_arg_info.size_}, 1);
+              cp_mul_counts_.emplace(CAOpInfo{ctxt_arg_info.opposite_level_, ctxt_arg_info.size_}, 1);
             if (!inserted)
               ++it->second;
           }
@@ -199,7 +216,8 @@ void Quantifier::count_terms_classes()
           const auto &arg_info = ctxt_terms_info.find(term->operands()[0])->second;
           ctxt_terms_info.emplace(term, CtxtTermInfo{arg_info.opposite_level_, 2 * arg_info.size_ - 1});
           ++captured_terms_count_;
-          auto [it, inserted] = square_count_.emplace(CAOpInfo{arg_info.opposite_level_, arg_info.size_}, 1);
+          ++square_total_;
+          auto [it, inserted] = square_counts_.emplace(CAOpInfo{arg_info.opposite_level_, arg_info.size_}, 1);
           if (!inserted)
             ++it->second;
         }
@@ -215,7 +233,8 @@ void Quantifier::count_terms_classes()
           ctxt_terms_info.emplace(term, CtxtTermInfo{arg_info.opposite_level_, 2});
           relin_keys_count_ = max(relin_keys_count_, arg_info.size_ - 2);
           ++captured_terms_count_;
-          auto [it, inserted] = relin_count_.emplace(CAOpInfo{arg_info.opposite_level_, arg_info.size_}, 1);
+          ++relin_total_;
+          auto [it, inserted] = relin_counts_.emplace(CAOpInfo{arg_info.opposite_level_, arg_info.size_}, 1);
           if (!inserted)
             ++it->second;
         }
@@ -225,7 +244,8 @@ void Quantifier::count_terms_classes()
           ctxt_terms_info.emplace(term, CtxtTermInfo{arg_info.opposite_level_, arg_info.size_});
           rotation_keys_steps.insert(term->op_code().steps());
           ++captured_terms_count_;
-          auto [it, inserted] = rotate_count_.emplace(CAOpInfo{arg_info.opposite_level_, arg_info.size_}, 1);
+          ++rotate_total_;
+          auto [it, inserted] = rotate_counts_.emplace(CAOpInfo{arg_info.opposite_level_, arg_info.size_}, 1);
           if (!inserted)
             ++it->second;
         }
@@ -234,7 +254,8 @@ void Quantifier::count_terms_classes()
           const auto &arg_info = ctxt_terms_info.find(term->operands()[0])->second;
           ctxt_terms_info.emplace(term, CtxtTermInfo{arg_info.opposite_level_ + 1, arg_info.size_});
           ++captured_terms_count_;
-          auto [it, inserted] = mod_switch_count_.emplace(CAOpInfo{arg_info.opposite_level_, arg_info.size_}, 1);
+          ++mod_switch_total_;
+          auto [it, inserted] = mod_switch_counts_.emplace(CAOpInfo{arg_info.opposite_level_, arg_info.size_}, 1);
           if (!inserted)
             ++it->second;
         }
@@ -260,7 +281,8 @@ void Quantifier::count_terms_classes()
           }
           ctxt_terms_info.emplace(term, CtxtTermInfo{max_arg_info.opposite_level_, max_arg_info.size_});
           ++captured_terms_count_;
-          auto [it, inserted] = he_add_.emplace(CAOpInfo{max_arg_info.opposite_level_, max_arg_info.size_}, 1);
+          ++he_add_total_;
+          auto [it, inserted] = he_add_counts_.emplace(CAOpInfo{max_arg_info.opposite_level_, max_arg_info.size_}, 1);
           if (!inserted)
             ++it->second;
         }
@@ -269,7 +291,8 @@ void Quantifier::count_terms_classes()
           const auto &arg_info = ctxt_terms_info.find(term->operands()[0])->second;
           ctxt_terms_info.emplace(term, CtxtTermInfo{arg_info.opposite_level_, arg_info.size_});
           ++captured_terms_count_;
-          auto [it, inserted] = he_add_.emplace(CAOpInfo{arg_info.opposite_level_, arg_info.size_}, 1);
+          ++he_add_total_;
+          auto [it, inserted] = he_add_counts_.emplace(CAOpInfo{arg_info.opposite_level_, arg_info.size_}, 1);
           if (!inserted)
             ++it->second;
         }
@@ -315,7 +338,7 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
   ctxt_inputs_count__ = 0;
   ctxt_outputs_size_ = 0;
 
-  for (auto e : cc_mul_count_)
+  for (auto e : cc_mul_counts_)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level * (e.first.arg1_size_ - 1) * (e.first.arg2_size_ - 1);
@@ -323,7 +346,7 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
     circuit_cost_ += op_cost * e.second;
   }
 
-  for (auto e : square_count_)
+  for (auto e : square_counts_)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level * (e.first.arg_size_ - 1) * (e.first.arg_size_ - 1);
@@ -333,7 +356,7 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
 
   circuit_cost_ += encrypt_count_ * ir::evaluate_raw_op_code(ir::OpCode::encrypt, {ir::Term::Type::plain});
 
-  for (auto e : relin_count_)
+  for (auto e : relin_counts_)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level * (e.first.arg_size_ - 2);
@@ -341,7 +364,7 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
     circuit_cost_ += op_cost * e.second;
   }
 
-  for (auto e : rotate_count_)
+  for (auto e : rotate_counts_)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level;
@@ -349,7 +372,7 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
     circuit_cost_ += op_cost * e.second;
   }
 
-  for (auto e : cp_mul_count_)
+  for (auto e : cp_mul_counts_)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level;
@@ -357,7 +380,7 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
     circuit_cost_ += op_cost * e.second;
   }
 
-  for (auto e : mod_switch_count_)
+  for (auto e : mod_switch_counts_)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level;
@@ -365,7 +388,7 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
     circuit_cost_ += op_cost * e.second;
   }
 
-  for (auto e : he_add_)
+  for (auto e : he_add_counts_)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level;
@@ -426,14 +449,14 @@ void Quantifier::print_depth_info(ostream &os, bool details) const
     return;
   }
 
-  os << "ctxt_leaves_*: (xdepth, depth)\n";
-  os << "max: (" << depth_summary_.max_xdepth_ << ", " << depth_summary_.max_depth_ << ")\n";
-  os << "avg: (" << depth_summary_.avg_xdepth_ << ", " << depth_summary_.avg_depth_ << ")\n";
-  os << "min: (" << depth_summary_.min_xdepth_ << ", " << depth_summary_.min_depth_ << ")\n";
+  os << "ctxt_leaves_*: (depth, xdepth)\n";
+  os << "max: (" << depth_summary_.max_depth_ << ", " << depth_summary_.max_xdepth_ << ")\n";
+  os << "avg: (" << depth_summary_.avg_depth_ << ", " << depth_summary_.avg_xdepth_ << ")\n";
+  os << "min: (" << depth_summary_.min_depth_ << ", " << depth_summary_.min_xdepth_ << ")\n";
 
   if (details && ctxt_leaves_depth_info_.size())
   {
-    os << "depth per ctxt leaf term, $id: (xdepth, depth)\n";
+    os << "depth per ctxt leaf term, $id: (depth, xdepth)\n";
     os << ctxt_leaves_depth_info_;
   }
 }
@@ -454,21 +477,28 @@ void Quantifier::print_terms_classes_info(ostream &os, bool outputs_details) con
   os << "|ptxt_ptxt_ops|: " << pp_ops_count_ << '\n';
   os << "operations_static_cost: " << circuit_static_cost_ << '\n';
   print_line_sep(os);
-  os << "|mul| (level, arg1_size, arg2_size): count\n" << cc_mul_count_;
+  os << "|mul| (level, arg1_size, arg2_size): count\n" << cc_mul_counts_;
+  os << "total: " << cc_mul_total_ << '\n';
   print_line_sep(os);
-  os << "|square| (level, arg_size): count\n" << square_count_;
+  os << "|square| (level, arg_size): count\n" << square_counts_;
+  os << "total: " << square_total_ << '\n';
   print_line_sep(os);
   os << "|encrypt|: " << encrypt_count_ << '\n';
   print_line_sep(os);
-  os << "|relin| (level, arg_size): count\n" << relin_count_;
+  os << "|relin| (level, arg_size): count\n" << relin_counts_;
+  os << "total: " << relin_total_ << '\n';
   print_line_sep(os);
-  os << "|rotate| (level, arg_size): count\n" << rotate_count_;
+  os << "|rotate| (level, arg_size): count\n" << rotate_counts_;
+  os << "total: " << rotate_total_ << '\n';
   print_line_sep(os);
-  os << "|mul_plain| (level, ctxt_arg_size): count\n" << cp_mul_count_;
+  os << "|mul_plain| (level, ctxt_arg_size): count\n" << cp_mul_counts_;
+  os << "total: " << cp_mul_total_ << '\n';
   print_line_sep(os);
-  os << "|mod_switch| (level, arg_size): count\n" << mod_switch_count_;
+  os << "|mod_switch| (level, arg_size): count\n" << mod_switch_counts_;
+  os << "total: " << mod_switch_total_ << '\n';
   print_line_sep(os);
-  os << "|he_add| (level, max_args_size): count\n" << he_add_;
+  os << "|he_add| (level, max_args_size): count\n" << he_add_counts_;
+  os << "total: " << he_add_total_ << '\n';
   print_line_sep(os);
   os << "|rotation_keys|: " << rotation_keys_count_ << '\n';
   os << "|relin_keys|: " << relin_keys_count_ << '\n';
@@ -499,14 +529,14 @@ void Quantifier::print_global_metrics(ostream &os) const
 
 size_t Quantifier::HashDepthInfo::operator()(const DepthInfo &depth_info) const
 {
-  auto h = hash<double>{}(depth_info.xdepth_);
-  ir::hash_combine(h, depth_info.depth_);
+  auto h = hash<double>{}(depth_info.depth_);
+  ir::hash_combine(h, depth_info.xdepth_);
   return h;
 }
 
 bool Quantifier::EqualDepthInfo::operator()(const DepthInfo &lhs, const DepthInfo &rhs) const
 {
-  return pair<double, double>{lhs.xdepth_, lhs.depth_} == pair<double, double>{rhs.xdepth_, rhs.depth_};
+  return pair<double, double>{lhs.depth_, lhs.xdepth_} == pair<double, double>{rhs.depth_, rhs.xdepth_};
 }
 
 size_t Quantifier::HashCCOpInfo::operator()(const CCOpInfo &cc_op_info) const
@@ -553,14 +583,21 @@ Quantifier operator/(const Quantifier &lhs, const Quantifier &rhs)
     result.ptxt_leaves_count_ /= rhs.ptxt_leaves_count();
     result.pp_ops_count_ /= rhs.pp_ops_count();
     result.ctxt_leaves_count_ /= rhs.ctxt_leaves_count();
-    result.cc_mul_count_ /= rhs.cc_mul_count();
-    result.square_count_ /= rhs.square_count();
+    result.cc_mul_counts_ /= rhs.cc_mul_counts();
+    result.cc_mul_total_ /= rhs.cc_mul_total();
+    result.square_counts_ /= rhs.square_counts();
+    result.square_total_ /= rhs.square_total();
     result.encrypt_count_ /= rhs.encrypt_count();
-    result.relin_count_ /= rhs.relin_count();
-    result.rotate_count_ /= rhs.rotate_count();
-    result.cp_mul_count_ /= rhs.cp_mul_count();
-    result.mod_switch_count_ /= rhs.mod_switch_count();
-    result.he_add_ /= rhs.he_add();
+    result.relin_counts_ /= rhs.relin_counts();
+    result.relin_total_ /= rhs.relin_total();
+    result.rotate_counts_ /= rhs.rotate_counts();
+    result.rotate_total_ /= rhs.rotate_total();
+    result.cp_mul_counts_ /= rhs.cp_mul_counts();
+    result.cp_mul_total_ /= rhs.cp_mul_total();
+    result.mod_switch_counts_ /= rhs.mod_switch_counts();
+    result.mod_switch_total_ /= rhs.mod_switch_total();
+    result.he_add_counts_ /= rhs.he_add_counts();
+    result.he_add_total_ /= rhs.he_add_total();
     result.ctxt_outputs_info_ /= rhs.ctxt_outputs_info();
     result.circuit_static_cost_ /= rhs.circuit_static_cost();
   }
@@ -599,14 +636,21 @@ Quantifier operator-(const Quantifier &lhs, const Quantifier &rhs)
     result.ptxt_leaves_count_ -= rhs.ptxt_leaves_count();
     result.pp_ops_count_ -= rhs.pp_ops_count();
     result.ctxt_leaves_count_ -= rhs.ctxt_leaves_count();
-    result.cc_mul_count_ -= rhs.cc_mul_count();
-    result.square_count_ -= rhs.square_count();
+    result.cc_mul_counts_ -= rhs.cc_mul_counts();
+    result.cc_mul_total_ -= rhs.cc_mul_total();
+    result.square_counts_ -= rhs.square_counts();
+    result.square_total_ -= rhs.square_total();
     result.encrypt_count_ -= rhs.encrypt_count();
-    result.relin_count_ -= rhs.relin_count();
-    result.rotate_count_ -= rhs.rotate_count();
-    result.cp_mul_count_ -= rhs.cp_mul_count();
-    result.mod_switch_count_ -= rhs.mod_switch_count();
-    result.he_add_ -= rhs.he_add();
+    result.relin_counts_ -= rhs.relin_counts();
+    result.relin_total_ -= rhs.relin_total();
+    result.rotate_counts_ -= rhs.rotate_counts();
+    result.rotate_total_ -= rhs.rotate_total();
+    result.cp_mul_counts_ -= rhs.cp_mul_counts();
+    result.cp_mul_total_ -= rhs.cp_mul_total();
+    result.mod_switch_counts_ -= rhs.mod_switch_counts();
+    result.mod_switch_total_ -= rhs.mod_switch_total();
+    result.he_add_counts_ -= rhs.he_add_counts();
+    result.he_add_total_ -= rhs.he_add_total();
     result.ctxt_outputs_info_ -= rhs.ctxt_outputs_info();
     result.circuit_static_cost_ -= rhs.circuit_static_cost();
   }
@@ -631,34 +675,47 @@ Quantifier &operator-=(Quantifier &lhs, const Quantifier &rhs)
 Quantifier operator*(const Quantifier &lhs, int coeff)
 {
   Quantifier result = lhs;
-  result.depth_summary_ *= coeff;
-  result.ctxt_leaves_depth_info_ *= coeff;
-
-  result.relin_keys_count_ *= coeff;
-  result.rotation_keys_count_ *= coeff;
-  result.all_terms_count_ *= coeff;
-  result.captured_terms_count_ *= coeff;
-  result.ptxt_leaves_count_ *= coeff;
-  result.pp_ops_count_ *= coeff;
-  result.ctxt_leaves_count_ *= coeff;
-  result.cc_mul_count_ *= coeff;
-  result.square_count_ *= coeff;
-  result.encrypt_count_ *= coeff;
-  result.relin_count_ *= coeff;
-  result.rotate_count_ *= coeff;
-  result.cp_mul_count_ *= coeff;
-  result.mod_switch_count_ *= coeff;
-  result.he_add_ *= coeff;
-  result.ctxt_outputs_info_ *= coeff;
-  result.circuit_static_cost_ *= coeff;
-
-  result.circuit_cost_ *= coeff;
-  result.rotation_keys_size_ *= coeff;
-  result.relin_keys_size_ *= coeff;
-  result.ctxt_inputs_size_ *= coeff;
-  result.ctxt_inputs_count__ *= coeff;
-  result.ctxt_outputs_size_ *= coeff;
-
+  if (result.depth_metrics())
+  {
+    result.depth_summary_ *= coeff;
+    result.ctxt_leaves_depth_info_ *= coeff;
+  }
+  if (result.terms_classes_metrics())
+  {
+    result.relin_keys_count_ *= coeff;
+    result.rotation_keys_count_ *= coeff;
+    result.all_terms_count_ *= coeff;
+    result.captured_terms_count_ *= coeff;
+    result.ptxt_leaves_count_ *= coeff;
+    result.pp_ops_count_ *= coeff;
+    result.ctxt_leaves_count_ *= coeff;
+    result.cc_mul_counts_ *= coeff;
+    result.cc_mul_total_ *= coeff;
+    result.square_counts_ *= coeff;
+    result.square_total_ *= coeff;
+    result.encrypt_count_ *= coeff;
+    result.relin_counts_ *= coeff;
+    result.relin_total_ *= coeff;
+    result.rotate_counts_ *= coeff;
+    result.rotate_total_ *= coeff;
+    result.cp_mul_counts_ *= coeff;
+    result.cp_mul_total_ *= coeff;
+    result.mod_switch_counts_ *= coeff;
+    result.mod_switch_total_ *= coeff;
+    result.he_add_counts_ *= coeff;
+    result.he_add_total_ *= coeff;
+    result.ctxt_outputs_info_ *= coeff;
+    result.circuit_static_cost_ *= coeff;
+  }
+  if (result.global_metrics())
+  {
+    result.circuit_cost_ *= coeff;
+    result.rotation_keys_size_ *= coeff;
+    result.relin_keys_size_ *= coeff;
+    result.ctxt_inputs_size_ *= coeff;
+    result.ctxt_inputs_count__ *= coeff;
+    result.ctxt_outputs_size_ *= coeff;
+  }
   return result;
 }
 
@@ -676,12 +733,12 @@ Quantifier operator*=(Quantifier &lhs, int coeff)
 Quantifier::DepthSummary operator/(const Quantifier::DepthSummary &lhs, const Quantifier::DepthSummary &rhs)
 {
   auto result = lhs;
-  result.min_xdepth_ /= rhs.min_xdepth_;
   result.min_depth_ /= rhs.min_depth_;
-  result.avg_xdepth_ /= rhs.avg_xdepth_;
+  result.min_xdepth_ /= rhs.min_xdepth_;
   result.avg_depth_ /= rhs.avg_depth_;
-  result.max_xdepth_ /= rhs.max_xdepth_;
+  result.avg_xdepth_ /= rhs.avg_xdepth_;
   result.max_depth_ /= rhs.max_depth_;
+  result.max_xdepth_ /= rhs.max_xdepth_;
   return result;
 }
 
@@ -694,12 +751,12 @@ Quantifier::DepthSummary &operator/=(Quantifier::DepthSummary &lhs, const Quanti
 Quantifier::DepthSummary operator-(const Quantifier::DepthSummary &lhs, const Quantifier::DepthSummary &rhs)
 {
   auto result = lhs;
-  result.min_xdepth_ -= rhs.min_xdepth_;
   result.min_depth_ -= rhs.min_depth_;
-  result.avg_xdepth_ -= rhs.avg_xdepth_;
+  result.min_xdepth_ -= rhs.min_xdepth_;
   result.avg_depth_ -= rhs.avg_depth_;
-  result.max_xdepth_ -= rhs.max_xdepth_;
+  result.avg_xdepth_ -= rhs.avg_xdepth_;
   result.max_depth_ -= rhs.max_depth_;
+  result.max_xdepth_ -= rhs.max_xdepth_;
   return result;
 }
 
@@ -712,12 +769,12 @@ Quantifier::DepthSummary &operator-=(Quantifier::DepthSummary &lhs, const Quanti
 Quantifier::DepthSummary operator*(const Quantifier::DepthSummary &lhs, int coeff)
 {
   auto result = lhs;
-  result.min_xdepth_ *= coeff;
   result.min_depth_ *= coeff;
-  result.avg_xdepth_ *= coeff;
+  result.min_xdepth_ *= coeff;
   result.avg_depth_ *= coeff;
-  result.max_xdepth_ *= coeff;
+  result.avg_xdepth_ *= coeff;
   result.max_depth_ *= coeff;
+  result.max_xdepth_ *= coeff;
   return result;
 }
 
@@ -838,7 +895,7 @@ Quantifier::DepthInfo operator*=(Quantifier::DepthInfo &lhs, int coeff)
   return lhs;
 }
 
-Quantifier::CCOpCount operator/(const Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs)
+Quantifier::CCOpsCounts operator/(const Quantifier::CCOpsCounts &lhs, const Quantifier::CCOpsCounts &rhs)
 {
   auto result = lhs;
   for (auto &e : result)
@@ -856,13 +913,13 @@ Quantifier::CCOpCount operator/(const Quantifier::CCOpCount &lhs, const Quantifi
   return result;
 }
 
-Quantifier::CCOpCount &operator/=(Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs)
+Quantifier::CCOpsCounts &operator/=(Quantifier::CCOpsCounts &lhs, const Quantifier::CCOpsCounts &rhs)
 {
   lhs = lhs / rhs;
   return lhs;
 }
 
-Quantifier::CCOpCount operator-(const Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs)
+Quantifier::CCOpsCounts operator-(const Quantifier::CCOpsCounts &lhs, const Quantifier::CCOpsCounts &rhs)
 {
   auto result = lhs;
   for (auto &e : result)
@@ -878,13 +935,13 @@ Quantifier::CCOpCount operator-(const Quantifier::CCOpCount &lhs, const Quantifi
   return result;
 }
 
-Quantifier::CCOpCount &operator-=(Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs)
+Quantifier::CCOpsCounts &operator-=(Quantifier::CCOpsCounts &lhs, const Quantifier::CCOpsCounts &rhs)
 {
   lhs = lhs - rhs;
   return lhs;
 }
 
-Quantifier::CCOpCount operator*(const Quantifier::CCOpCount &lhs, int coeff)
+Quantifier::CCOpsCounts operator*(const Quantifier::CCOpsCounts &lhs, int coeff)
 {
   auto result = lhs;
   for (auto &e : result)
@@ -893,18 +950,18 @@ Quantifier::CCOpCount operator*(const Quantifier::CCOpCount &lhs, int coeff)
   return result;
 }
 
-Quantifier::CCOpCount operator*(int coeff, const Quantifier::CCOpCount &rhs)
+Quantifier::CCOpsCounts operator*(int coeff, const Quantifier::CCOpsCounts &rhs)
 {
   return rhs * coeff;
 }
 
-Quantifier::CCOpCount operator*=(Quantifier::CCOpCount &lhs, int coeff)
+Quantifier::CCOpsCounts operator*=(Quantifier::CCOpsCounts &lhs, int coeff)
 {
   lhs = lhs * coeff;
   return lhs;
 }
 
-Quantifier::CAOpCount operator/(const Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs)
+Quantifier::CAOpsCounts operator/(const Quantifier::CAOpsCounts &lhs, const Quantifier::CAOpsCounts &rhs)
 {
   auto result = lhs;
   for (auto &e : result)
@@ -922,13 +979,13 @@ Quantifier::CAOpCount operator/(const Quantifier::CAOpCount &lhs, const Quantifi
   return result;
 }
 
-Quantifier::CAOpCount &operator/=(Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs)
+Quantifier::CAOpsCounts &operator/=(Quantifier::CAOpsCounts &lhs, const Quantifier::CAOpsCounts &rhs)
 {
   lhs = lhs / rhs;
   return lhs;
 }
 
-Quantifier::CAOpCount operator-(const Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs)
+Quantifier::CAOpsCounts operator-(const Quantifier::CAOpsCounts &lhs, const Quantifier::CAOpsCounts &rhs)
 {
   auto result = lhs;
   for (auto &e : result)
@@ -944,13 +1001,13 @@ Quantifier::CAOpCount operator-(const Quantifier::CAOpCount &lhs, const Quantifi
   return result;
 }
 
-Quantifier::CAOpCount &operator-=(Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs)
+Quantifier::CAOpsCounts &operator-=(Quantifier::CAOpsCounts &lhs, const Quantifier::CAOpsCounts &rhs)
 {
   lhs = lhs - rhs;
   return lhs;
 }
 
-Quantifier::CAOpCount operator*(const Quantifier::CAOpCount &lhs, int coeff)
+Quantifier::CAOpsCounts operator*(const Quantifier::CAOpsCounts &lhs, int coeff)
 {
   auto result = lhs;
   for (auto &e : result)
@@ -959,12 +1016,12 @@ Quantifier::CAOpCount operator*(const Quantifier::CAOpCount &lhs, int coeff)
   return result;
 }
 
-Quantifier::CAOpCount operator*(int coeff, const Quantifier::CAOpCount &rhs)
+Quantifier::CAOpsCounts operator*(int coeff, const Quantifier::CAOpsCounts &rhs)
 {
   return rhs * coeff;
 }
 
-Quantifier::CAOpCount operator*=(Quantifier::CAOpCount &lhs, int coeff)
+Quantifier::CAOpsCounts operator*=(Quantifier::CAOpsCounts &lhs, int coeff)
 {
   lhs = lhs * coeff;
   return lhs;
@@ -1093,30 +1150,22 @@ ostream &operator<<(ostream &os, const Quantifier::CtxtTermsDepthInfo &ctxt_term
 
 ostream &operator<<(ostream &os, const Quantifier::DepthInfo &ctxt_term_depth_info)
 {
-  return os << ctxt_term_depth_info.xdepth_ << ", " << ctxt_term_depth_info.depth_;
+  return os << ctxt_term_depth_info.depth_ << ", " << ctxt_term_depth_info.xdepth_;
 }
 
-ostream &operator<<(ostream &os, const Quantifier::CCOpCount &cc_op_count)
+ostream &operator<<(ostream &os, const Quantifier::CCOpsCounts &cc_ops_counts)
 {
-  double total = 0;
-  for (const auto &e : cc_op_count)
-  {
-    total += e.second;
+  for (const auto &e : cc_ops_counts)
     os << "(L-" << e.first.opposite_level_ << ", " << e.first.arg1_size_ << ", " << e.first.arg2_size_
        << "): " << e.second << '\n';
-  }
-  return os << "total: " << total << '\n';
+  return os;
 }
 
-ostream &operator<<(ostream &os, const Quantifier::CAOpCount &ca_op_count)
+ostream &operator<<(ostream &os, const Quantifier::CAOpsCounts &ca_op_counts)
 {
-  double total = 0;
-  for (const auto &e : ca_op_count)
-  {
-    total += e.second;
+  for (const auto &e : ca_op_counts)
     os << "(L-" << e.first.opposite_level_ << ", " << e.first.arg_size_ << "): " << e.second << '\n';
-  }
-  return os << "total: " << total << '\n';
+  return os;
 }
 
 ostream &operator<<(ostream &os, const Quantifier::CtxtTermsInfo &ctxt_terms_info)

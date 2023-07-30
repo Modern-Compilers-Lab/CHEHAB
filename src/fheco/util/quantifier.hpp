@@ -22,18 +22,18 @@ class Quantifier
 public:
   struct DepthSummary
   {
-    double min_xdepth_;
     double min_depth_;
-    double avg_xdepth_;
+    double min_xdepth_;
     double avg_depth_;
-    double max_xdepth_;
+    double avg_xdepth_;
     double max_depth_;
+    double max_xdepth_;
   };
 
   struct DepthInfo
   {
-    double xdepth_;
     double depth_;
+    double xdepth_;
   };
   struct HashDepthInfo
   {
@@ -60,7 +60,7 @@ public:
   {
     bool operator()(const CCOpInfo &lhs, const CCOpInfo &rhs) const;
   };
-  using CCOpCount = std::unordered_map<CCOpInfo, double, HashCCOpInfo, EqualCCOpInfo>;
+  using CCOpsCounts = std::unordered_map<CCOpInfo, double, HashCCOpInfo, EqualCCOpInfo>;
 
   // ctxt any operation info
   struct CAOpInfo
@@ -76,7 +76,7 @@ public:
   {
     bool operator()(const CAOpInfo &lhs, const CAOpInfo &rhs) const;
   };
-  using CAOpCount = std::unordered_map<CAOpInfo, double, HashCAOpInfo, EqualCAOpInfo>;
+  using CAOpsCounts = std::unordered_map<CAOpInfo, double, HashCAOpInfo, EqualCAOpInfo>;
 
   struct CtxtTermInfo
   {
@@ -129,21 +129,35 @@ public:
 
   inline double ctxt_leaves_count() const { return ctxt_leaves_count_; }
 
-  inline const CCOpCount &cc_mul_count() const { return cc_mul_count_; }
+  inline const CCOpsCounts &cc_mul_counts() const { return cc_mul_counts_; }
 
-  inline const CAOpCount &square_count() const { return square_count_; }
+  inline double cc_mul_total() const { return cc_mul_total_; }
+
+  inline const CAOpsCounts &square_counts() const { return square_counts_; }
+
+  inline double square_total() const { return square_total_; }
 
   inline double encrypt_count() const { return encrypt_count_; }
 
-  inline const CAOpCount &relin_count() const { return relin_count_; }
+  inline const CAOpsCounts &relin_counts() const { return relin_counts_; }
 
-  inline const CAOpCount &rotate_count() const { return rotate_count_; }
+  inline double relin_total() const { return relin_total_; }
 
-  inline const CAOpCount &cp_mul_count() const { return cp_mul_count_; }
+  inline const CAOpsCounts &rotate_counts() const { return rotate_counts_; }
 
-  inline const CAOpCount &mod_switch_count() const { return mod_switch_count_; }
+  inline double rotate_total() const { return rotate_total_; }
 
-  inline const CAOpCount &he_add() const { return he_add_; }
+  inline const CAOpsCounts &cp_mul_counts() const { return cp_mul_counts_; }
+
+  inline double cp_mul_total() const { return cp_mul_total_; }
+
+  inline const CAOpsCounts &mod_switch_counts() const { return mod_switch_counts_; }
+
+  inline double mod_switch_total() const { return mod_switch_total_; }
+
+  inline const CAOpsCounts &he_add_counts() const { return he_add_counts_; }
+
+  inline double he_add_total() const { return he_add_total_; }
 
   inline const CtxtTermsInfo &ctxt_outputs_info() const { return ctxt_outputs_info_; }
 
@@ -188,21 +202,35 @@ private:
 
   double ctxt_leaves_count_ = 0;
 
-  CCOpCount cc_mul_count_{};
+  CCOpsCounts cc_mul_counts_{};
 
-  CAOpCount square_count_{};
+  double cc_mul_total_ = 0;
+
+  CAOpsCounts square_counts_{};
+
+  double square_total_ = 0;
 
   double encrypt_count_ = 0;
 
-  CAOpCount relin_count_{};
+  CAOpsCounts relin_counts_{};
 
-  CAOpCount rotate_count_{};
+  double relin_total_ = 0;
 
-  CAOpCount cp_mul_count_{};
+  CAOpsCounts rotate_counts_{};
 
-  CAOpCount mod_switch_count_{};
+  double rotate_total_ = 0;
 
-  CAOpCount he_add_{};
+  CAOpsCounts cp_mul_counts_{};
+
+  double cp_mul_total_ = 0;
+
+  CAOpsCounts mod_switch_counts_{};
+
+  double mod_switch_total_ = 0;
+
+  CAOpsCounts he_add_counts_{};
+
+  double he_add_total_ = 0;
 
   CtxtTermsInfo ctxt_outputs_info_{};
 
@@ -287,33 +315,33 @@ Quantifier::DepthInfo operator*(int coeff, const Quantifier::DepthInfo &rhs);
 
 Quantifier::DepthInfo operator*=(Quantifier::DepthInfo &lhs, int coeff);
 
-Quantifier::CCOpCount operator/(const Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs);
+Quantifier::CCOpsCounts operator/(const Quantifier::CCOpsCounts &lhs, const Quantifier::CCOpsCounts &rhs);
 
-Quantifier::CCOpCount &operator/=(Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs);
+Quantifier::CCOpsCounts &operator/=(Quantifier::CCOpsCounts &lhs, const Quantifier::CCOpsCounts &rhs);
 
-Quantifier::CCOpCount operator-(const Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs);
+Quantifier::CCOpsCounts operator-(const Quantifier::CCOpsCounts &lhs, const Quantifier::CCOpsCounts &rhs);
 
-Quantifier::CCOpCount &operator-=(Quantifier::CCOpCount &lhs, const Quantifier::CCOpCount &rhs);
+Quantifier::CCOpsCounts &operator-=(Quantifier::CCOpsCounts &lhs, const Quantifier::CCOpsCounts &rhs);
 
-Quantifier::CCOpCount operator*(const Quantifier::CCOpCount &lhs, int coeff);
+Quantifier::CCOpsCounts operator*(const Quantifier::CCOpsCounts &lhs, int coeff);
 
-Quantifier::CCOpCount operator*(int coeff, const Quantifier::CCOpCount &rhs);
+Quantifier::CCOpsCounts operator*(int coeff, const Quantifier::CCOpsCounts &rhs);
 
-Quantifier::CCOpCount operator*=(Quantifier::CCOpCount &lhs, int coeff);
+Quantifier::CCOpsCounts operator*=(Quantifier::CCOpsCounts &lhs, int coeff);
 
-Quantifier::CAOpCount operator/(const Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs);
+Quantifier::CAOpsCounts operator/(const Quantifier::CAOpsCounts &lhs, const Quantifier::CAOpsCounts &rhs);
 
-Quantifier::CAOpCount &operator/=(Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs);
+Quantifier::CAOpsCounts &operator/=(Quantifier::CAOpsCounts &lhs, const Quantifier::CAOpsCounts &rhs);
 
-Quantifier::CAOpCount operator-(const Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs);
+Quantifier::CAOpsCounts operator-(const Quantifier::CAOpsCounts &lhs, const Quantifier::CAOpsCounts &rhs);
 
-Quantifier::CAOpCount &operator-=(Quantifier::CAOpCount &lhs, const Quantifier::CAOpCount &rhs);
+Quantifier::CAOpsCounts &operator-=(Quantifier::CAOpsCounts &lhs, const Quantifier::CAOpsCounts &rhs);
 
-Quantifier::CAOpCount operator*(const Quantifier::CAOpCount &lhs, int coeff);
+Quantifier::CAOpsCounts operator*(const Quantifier::CAOpsCounts &lhs, int coeff);
 
-Quantifier::CAOpCount operator*(int coeff, const Quantifier::CAOpCount &rhs);
+Quantifier::CAOpsCounts operator*(int coeff, const Quantifier::CAOpsCounts &rhs);
 
-Quantifier::CAOpCount operator*=(Quantifier::CAOpCount &lhs, int coeff);
+Quantifier::CAOpsCounts operator*=(Quantifier::CAOpsCounts &lhs, int coeff);
 
 Quantifier::CtxtTermsInfo operator/(const Quantifier::CtxtTermsInfo &lhs, const Quantifier::CtxtTermsInfo &rhs);
 
@@ -349,9 +377,9 @@ std::ostream &operator<<(std::ostream &os, const Quantifier::CtxtTermsDepthInfo 
 
 std::ostream &operator<<(std::ostream &os, const Quantifier::DepthInfo &ctxt_term_depth_info);
 
-std::ostream &operator<<(std::ostream &os, const Quantifier::CCOpCount &cc_op_count);
+std::ostream &operator<<(std::ostream &os, const Quantifier::CCOpsCounts &cc_ops_counts);
 
-std::ostream &operator<<(std::ostream &os, const Quantifier::CAOpCount &ca_op_count);
+std::ostream &operator<<(std::ostream &os, const Quantifier::CAOpsCounts &ca_op_counts);
 
 std::ostream &operator<<(std::ostream &os, const Quantifier::CtxtTermsInfo &ctxt_terms_info);
 
