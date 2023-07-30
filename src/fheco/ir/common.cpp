@@ -64,13 +64,27 @@ double evaluate_raw_op_code(const OpCode &op_code, const vector<Term *> &operand
   return evaluate_raw_op_code(op_code, operands_types);
 }
 
-IOValues convert_to_io_values(const IOTermsInfo &io_terms_info)
+IOValues convert_to_io_values(const InputTermsInfo &input_terms_info)
 {
   IOValues io_values;
-  for (const auto &[term, io_info] : io_terms_info)
+  for (const auto &[term, input_info] : input_terms_info)
   {
-    if (io_info.example_val_)
-      io_values.emplace(io_info.label_, *io_info.example_val_);
+    if (input_info.example_val_)
+      io_values.emplace(input_info.label_, *input_info.example_val_);
+  }
+  return io_values;
+}
+
+IOValues convert_to_io_values(const OutputTermsInfo &output_terms_info)
+{
+  IOValues io_values;
+  for (const auto &[term, output_info] : output_terms_info)
+  {
+    if (output_info.example_val_)
+    {
+      for (const auto &label : output_info.labels_)
+        io_values.emplace(label, *output_info.example_val_);
+    }
   }
   return io_values;
 }

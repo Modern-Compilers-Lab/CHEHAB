@@ -273,9 +273,20 @@ void print_reduced_data(const vector<vector<uint64_t>> &data, ostream &os, char 
 {
   for (const auto &vec : data)
   {
-    for (size_t i = 0; i < vec.size() - 1; ++i)
-      os << vec[i] << delim;
-    os << vec.back() << '\n';
+    if (vec.empty())
+      continue;
+
+    for (auto it = vec.cbegin();;)
+    {
+      os << *it;
+      ++it;
+      if (it == vec.cend())
+      {
+        os << '\n';
+        break;
+      }
+      os << delim;
+    }
   }
 }
 

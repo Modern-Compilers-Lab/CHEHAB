@@ -26,7 +26,7 @@ public:
 
   Term *insert_op(OpCode op_code, std::vector<Term *> operands, bool &inserted);
 
-  Term *insert_input(Term::Type type, ParamTermInfo input_info);
+  Term *insert_input(Term::Type type, InputTermInfo input_info);
 
   Term *insert_const(ConstInfo const_info, bool &inserted);
 
@@ -42,7 +42,7 @@ public:
 
   void update_term_type_cascade(Term *term);
 
-  void set_output(const Term *term, ParamTermInfo param_term_info);
+  void set_output(const Term *term, OutputTermInfo output_term_info);
 
   void unset_output(const Term *term);
 
@@ -62,23 +62,23 @@ public:
 
   inline bool is_output(const Term *term) const { return outputs_info_.find(term) != outputs_info_.end(); }
 
-  const ParamTermInfo *get_input_info(const Term *term) const;
+  const InputTermInfo *get_input_info(const Term *term) const;
 
   const PackedVal *get_const_val(const Term *term) const;
 
   const ConstInfo *get_const_info(const Term *term) const;
 
-  const ParamTermInfo *get_output_info(const Term *term) const;
+  const OutputTermInfo *get_output_info(const Term *term) const;
 
   const Term *get_input_term(const std::string &label) const;
 
   const Term *get_output_term(const std::string &label) const;
 
-  inline const IOTermsInfo &inputs_info() const { return inputs_info_; }
+  inline const InputTermsInfo &inputs_info() const { return inputs_info_; }
 
   inline const ConstTermsValues &constants_info() const { return const_terms_info_; }
 
-  inline const IOTermsInfo &outputs_info() const { return outputs_info_; }
+  inline const OutputTermsInfo &outputs_info() const { return outputs_info_; }
 
   const std::vector<const Term *> &get_top_sorted_terms();
 
@@ -107,13 +107,13 @@ private:
 
   void topological_sort();
 
-  IOTermsInfo inputs_info_{};
+  InputTermsInfo inputs_info_{};
 
   ConstTermsValues const_terms_info_{};
 
   std::unordered_map<PackedVal, Term *, HashPackedVal> values_to_const_terms_{};
 
-  IOTermsInfo outputs_info_{};
+  OutputTermsInfo outputs_info_{};
 
   std::vector<const Term *> sorted_terms_{};
 

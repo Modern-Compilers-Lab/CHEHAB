@@ -34,9 +34,18 @@ void draw_ir(const shared_ptr<ir::Func> &func, ostream &os, bool show_key, bool 
     // try to impose operands order
     if (impose_operands_order && operands.size() > 1)
     {
-      for (size_t i = 0; i < operands.size() - 1; ++i)
-        os << operands[i]->id() << " -> ";
-      os << operands.back()->id() << " [style=invis]\n";
+      for (auto it = operands.cbegin();;)
+      {
+        auto operand = *it;
+        os << operand->id();
+        ++it;
+        if (it == operands.cend())
+        {
+          os << " [style=invis]\n";
+          break;
+        }
+        os << " -> ";
+      }
     }
   }
 
@@ -84,9 +93,18 @@ void draw_term(
       // try to impose operands order
       if (impose_operands_order && operands.size() > 1)
       {
-        for (size_t i = 0; i < operands.size() - 1; ++i)
-          os << operands[i]->id() << " -> ";
-        os << operands.back()->id() << " [style=invis]\n";
+        for (auto it = operands.cbegin();;)
+        {
+          auto operand = *it;
+          os << operand->id();
+          ++it;
+          if (it == operands.cend())
+          {
+            os << " [style=invis]\n";
+            break;
+          }
+          os << " -> ";
+        }
       }
       continue;
     }
@@ -188,8 +206,15 @@ string make_term_label(const shared_ptr<ir::Func> &func, const ir::Term *term, b
   if (term->is_operation())
   {
     if (auto output_info = func->data_flow().get_output_info(term); output_info)
-      return term->op_code().str_repr() + " (" + output_info->label_ + ")";
-
+    {
+      string label = term->op_code().str_repr() + " (";
+      if (output_info->labels_.size() > 1)
+        label += "[" + *output_info->labels_.begin() + "]";
+      else
+        label += *output_info->labels_.begin();
+      label += ")";
+      return label;
+    }
     return term->op_code().str_repr();
   }
 
@@ -198,14 +223,25 @@ string make_term_label(const shared_ptr<ir::Func> &func, const ir::Term *term, b
   {
     string label = input_info->label_;
     if (auto output_info = func->data_flow().get_output_info(term); output_info)
-      label += "(" + output_info->label_ + ")";
+    {
+      label += " (";
+      if (output_info->labels_.size() > 1)
+        label += "[" + *output_info->labels_.begin() + "]";
+      else
+        label += *output_info->labels_.begin();
+      label += ")";
+    }
     return label;
   }
   else if (auto const_info = func->data_flow().get_const_info(term); const_info)
   {
     if (auto output_info = func->data_flow().get_output_info(term); output_info)
-      return output_info->label_;
-
+    {
+      if (output_info->labels_.size() > 1)
+        return "[" + *output_info->labels_.begin() + "]";
+      else
+        return *output_info->labels_.begin();
+    }
     if (const_info->is_scalar_)
       return to_string(const_info->val_[0]);
 
@@ -285,23 +321,23 @@ void draw_term_matcher_util(
   if (impose_operands_order && operands.size() > 1)
   {
     leaf_idx = 0;
-    for (size_t i = 0; i < operands.size() - 1; ++i)
+    for (auto it = operands.cbegin();;)
     {
-      os << operands[i].id();
-      if (operands[i].is_leaf())
+      auto operand = *it;
+      os << operand.id();
+      if (operand.is_leaf())
       {
         os << "." << term_leaves_occ_ids[leaf_idx];
         ++leaf_idx;
       }
+      ++it;
+      if (it == operands.cend())
+      {
+        os << " [style=invis]\n";
+        break;
+      }
       os << " -> ";
     }
-    os << operands.back().id();
-    if (operands.back().is_leaf())
-    {
-      os << "." << term_leaves_occ_ids[leaf_idx];
-      ++leaf_idx;
-    }
-    os << " [style=invis]\n";
   }
 }
 
@@ -348,23 +384,23 @@ void draw_op_gen_matcher_util(
   if (impose_operands_order && operands.size() > 1)
   {
     leaf_idx = 0;
-    for (size_t i = 0; i < operands.size() - 1; ++i)
+    for (auto it = operands.cbegin();;)
     {
-      os << "-" << operands[i].id();
-      if (operands[i].is_leaf())
+      auto operand = *it;
+      os << "-" << operand.id();
+      if (operand.is_leaf())
       {
         os << "." << leaf_occ_ids[leaf_idx];
         ++leaf_idx;
       }
+      ++it;
+      if (it == operands.cend())
+      {
+        os << " [style=invis]\n";
+        break;
+      }
       os << " -> ";
     }
-    os << "-" << operands.back().id();
-    if (operands.back().is_leaf())
-    {
-      os << "." << leaf_occ_ids[leaf_idx];
-      ++leaf_idx;
-    }
-    os << " [style=invis]\n";
   }
 }
 } // namespace fheco::util

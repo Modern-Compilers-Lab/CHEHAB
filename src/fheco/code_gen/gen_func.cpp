@@ -73,7 +73,7 @@ void gen_func_def_signature(const string &func_name, ostream &os)
 }
 
 void gen_input_terms(
-  const ir::IOTermsInfo &input_terms_info, ostream &os, TermsCtxtObjectsInfo &terms_ctxt_objects_info)
+  const ir::InputTermsInfo &input_terms_info, ostream &os, TermsCtxtObjectsInfo &terms_ctxt_objects_info)
 {
   for (const auto &input_info : input_terms_info)
   {
@@ -108,7 +108,8 @@ void gen_plain_var_id(size_t term_id, ostream &os)
 
 void gen_const_terms(const ir::ConstTermsValues &const_terms_info, bool signedness, ostream &os)
 {
-  os << "size_t " << slot_count_id << " = " << encoder_id << ".slot_count();\n";
+  if (const_terms_info.size())
+    os << "size_t " << slot_count_id << " = " << encoder_id << ".slot_count();\n";
   for (const auto &const_info : const_terms_info)
   {
     auto term = const_info.first;
@@ -255,24 +256,49 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsCtxtObject
 }
 
 void gen_output_terms(
-  const ir::IOTermsInfo &output_terms_info, ostream &os, const TermsCtxtObjectsInfo &terms_ctxt_objects_info)
+  const ir::OutputTermsInfo &output_terms_info, ostream &os, const TermsCtxtObjectsInfo &terms_ctxt_objects_info)
 {
   for (const auto &output_info : output_terms_info)
   {
     auto term = output_info.first;
     if (term->type() == ir::Term::Type::cipher)
     {
-      os << encrypted_outputs_container_id << ".emplace(\"" << output_info.second.label_ << "\", ";
-      os << "move(";
-      gen_cipher_var_id(terms_ctxt_objects_info.at(term->id()).id_, os);
+      auto ctxt_object_id = terms_ctxt_objects_info.at(term->id()).id_;
+      // an output term has at least one label
+      for (auto it = output_info.second.labels_.cbegin();;)
+      {
+        const auto label = *it;
+        os << encrypted_outputs_container_id << ".emplace(\"" << label << "\", ";
+        ++it;
+        if (it == output_info.second.labels_.cend())
+        {
+          os << "move(";
+          gen_cipher_var_id(ctxt_object_id, os);
+          os << "));\n";
+          break;
+        }
+        gen_cipher_var_id(ctxt_object_id, os);
+        os << ");\n";
+      }
     }
     else
     {
-      os << encoded_outputs_container_id << ".emplace(\"" << output_info.second.label_ << "\", ";
-      os << "move(";
-      gen_plain_var_id(term->id(), os);
+      for (auto it = output_info.second.labels_.cbegin();;)
+      {
+        const auto label = *it;
+        os << encoded_outputs_container_id << ".emplace(\"" << label << "\", ";
+        ++it;
+        if (it == output_info.second.labels_.cend())
+        {
+          os << "move(";
+          gen_plain_var_id(term->id(), os);
+          os << "));\n";
+          break;
+        }
+        gen_plain_var_id(term->id(), os);
+        os << ");\n";
+      }
     }
-    os << "));\n";
   }
 }
 

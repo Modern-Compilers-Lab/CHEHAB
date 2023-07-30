@@ -274,7 +274,11 @@ void ExprPrinter::print_expand_outputs_str_expr(ostream &os, int depth, Mode mod
 {
   os << "output: expression\n";
   for (auto output_info : func_->data_flow().outputs_info())
-    os << output_info.second.label_ << ": " << expand_term_str_expr(output_info.first, depth, mode) << '\n';
+  {
+    auto str_expr = expand_term_str_expr(output_info.first, depth, mode);
+    for (const auto &label : output_info.second.labels_)
+      os << label << ": " << str_expr << '\n';
+  }
 }
 
 string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode mode) const
@@ -418,7 +422,10 @@ void ExprPrinter::print_outputs_str_expr(ostream &os) const
   for (auto output_info : func_->data_flow().outputs_info())
   {
     if (auto it = terms_str_exprs_.find(output_info.first->id()); it != terms_str_exprs_.end())
-      os << output_info.second.label_ << ": " << it->second << '\n';
+    {
+      for (const auto &label : output_info.second.labels_)
+        os << label << ": " << it->second << '\n';
+    }
   }
 }
 

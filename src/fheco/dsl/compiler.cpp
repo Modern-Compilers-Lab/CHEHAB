@@ -31,7 +31,7 @@ void Compiler::compile(
   string_view header_name, ostream &source_os)
 {
 #ifdef FHECO_LOGGING
-  clog << "\remove_dead_code\n";
+  clog << "\nremove_dead_code\n";
 #endif
   func->remove_dead_code();
 

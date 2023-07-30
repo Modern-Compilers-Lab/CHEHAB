@@ -73,10 +73,10 @@ bool is_scalar(const PackedVal &packed_val);
 void print_io_terms_values(const std::shared_ptr<ir::Func> &func, std::ostream &os);
 
 void print_io_terms_values(
-  const std::shared_ptr<ir::Func> &func, const ir::IOTermsInfo &inputs, const ir::IOTermsInfo &outputs,
+  const std::shared_ptr<ir::Func> &func, const ir::InputTermsInfo &inputs, const ir::OutputTermsInfo &outputs,
   std::ostream &os);
 
-void print_io_terms_values(const ir::IOTermsInfo &io_terms_values, std::size_t lead_trail_size, std::ostream &os);
+void print_io_terms_values(const ir::InputTermsInfo &inputs, const ir::OutputTermsInfo &outputs, std::ostream &os);
 
 void print_const_terms_values(
   const ir::ConstTermsValues &const_terms_values, std::size_t lead_trail_size, std::ostream &os);
@@ -190,8 +190,6 @@ std::vector<std::vector<T>> cart_product(const std::vector<std::vector<T>> &v)
   }
   return s;
 }
-
-std::ostream &operator<<(std::ostream &os, const ir::IOTermsInfo &io_terms_values);
 
 std::ostream &operator<<(std::ostream &os, const ir::ConstTermsValues &const_terms_values);
 
