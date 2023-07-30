@@ -2,9 +2,9 @@
 #include "fheco/ir/expr.hpp"
 #ifdef FHECO_LOGGING
 #include "fheco/util/expr_printer.hpp"
+#include <iostream>
 #endif
 #include <algorithm>
-#include <iostream>
 #include <stack>
 #include <stdexcept>
 #include <tuple>
@@ -99,10 +99,10 @@ Term *Expr::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
   return term;
 }
 
-Term *Expr::insert_input(Term::Type type, ParamTermInfo input_info)
+Term *Expr::insert_input(Term::Type type, InputTermInfo input_term_info)
 {
   Term *term = new Term(move(type));
-  inputs_info_.emplace(term, move(input_info));
+  inputs_info_.emplace(term, move(input_term_info));
   terms_.insert(term);
   return term;
 }
@@ -194,9 +194,7 @@ void Expr::replace(Term *term1, Term *term2)
     {
       if (auto term2_output_it = outputs_info_.find(top_term2); term2_output_it != outputs_info_.end())
       {
-        clog << "output term with label '" << term1_output_it->second.label_
-             << "' was merged with the output term with label '" << term2_output_it->second.label_
-             << "', and will be accessible with the latter label\n";
+        term2_output_it->second.labels_.merge(term1_output_it->second.labels_);
         outputs_info_.erase(term1_output_it);
       }
       else
@@ -268,9 +266,9 @@ void Expr::update_term_type_cascade(Term *term)
   }
 }
 
-void Expr::set_output(const Term *term, ParamTermInfo param_term_info)
+void Expr::set_output(const Term *term, OutputTermInfo output_term_info)
 {
-  if (outputs_info_.insert_or_assign(term, move(param_term_info)).second)
+  if (outputs_info_.insert_or_assign(term, move(output_term_info)).second)
     valid_top_sort_ = false;
 }
 
@@ -392,7 +390,7 @@ TermQualif Expr::get_qualif(const Term *term) const
   return TermQualif::op;
 }
 
-const ParamTermInfo *Expr::get_input_info(const Term *term) const
+const InputTermInfo *Expr::get_input_info(const Term *term) const
 {
   if (auto it = inputs_info_.find(term); it != inputs_info_.end())
     return &it->second;
@@ -416,7 +414,7 @@ const ConstInfo *Expr::get_const_info(const Term *term) const
   return nullptr;
 }
 
-const ParamTermInfo *Expr::get_output_info(const Term *term) const
+const OutputTermInfo *Expr::get_output_info(const Term *term) const
 {
   if (auto it = outputs_info_.find(term); it != outputs_info_.end())
     return &it->second;
@@ -438,7 +436,7 @@ const Term *Expr::get_output_term(const string &label) const
 {
   for (const auto &[term, output_info] : outputs_info_)
   {
-    if (output_info.label_ == label)
+    if (output_info.labels_.find(label) != output_info.labels_.end())
       return term;
   }
   throw invalid_argument("no output_info with label was found");

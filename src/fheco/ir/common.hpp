@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace fheco::ir
@@ -40,23 +41,41 @@ enum class TermQualif
   op_out
 };
 
-struct ParamTermInfo
+struct InputTermInfo
 {
   std::string label_;
   std::optional<PackedVal> example_val_;
 };
 
-inline bool operator==(const ParamTermInfo &lhs, const ParamTermInfo &rhs)
+struct OutputTermInfo
+{
+  std::unordered_set<std::string> labels_;
+  std::optional<PackedVal> example_val_;
+};
+
+inline bool operator==(const InputTermInfo &lhs, const InputTermInfo &rhs)
 {
   return lhs.label_ == rhs.label_ && lhs.example_val_ == rhs.example_val_;
 }
 
-inline bool operator!=(const ParamTermInfo &lhs, const ParamTermInfo &rhs)
+inline bool operator!=(const InputTermInfo &lhs, const InputTermInfo &rhs)
 {
   return !(lhs == rhs);
 }
 
-using IOTermsInfo = std::unordered_map<const Term *, ParamTermInfo, Term::HashPtr, Term::EqualPtr>;
+inline bool operator==(const OutputTermInfo &lhs, const OutputTermInfo &rhs)
+{
+  return lhs.labels_ == rhs.labels_ && lhs.example_val_ == rhs.example_val_;
+}
+
+inline bool operator!=(const OutputTermInfo &lhs, const OutputTermInfo &rhs)
+{
+  return !(lhs == rhs);
+}
+
+using InputTermsInfo = std::unordered_map<const Term *, InputTermInfo, Term::HashPtr, Term::EqualPtr>;
+
+using OutputTermsInfo = std::unordered_map<const Term *, OutputTermInfo, Term::HashPtr, Term::EqualPtr>;
 
 struct ConstInfo
 {
@@ -80,5 +99,7 @@ using TermsValues = std::unordered_map<const Term *, PackedVal, Term::HashPtr, T
 
 using IOValues = std::unordered_map<std::string, PackedVal>;
 
-IOValues convert_to_io_values(const IOTermsInfo &io_terms_info);
+IOValues convert_to_io_values(const InputTermsInfo &input_terms_info);
+
+IOValues convert_to_io_values(const OutputTermsInfo &output_terms_info);
 } // namespace fheco::ir

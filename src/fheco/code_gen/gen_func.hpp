@@ -35,7 +35,7 @@ void gen_rotation_steps_getter_decl(const std::string &func_name, std::ostream &
 void gen_func_def_signature(const std::string &func_name, std::ostream &os);
 
 void gen_input_terms(
-  const ir::IOTermsInfo &input_terms_info, std::ostream &os, TermsCtxtObjectsInfo &terms_ctxt_objects_info);
+  const ir::InputTermsInfo &input_terms_info, std::ostream &os, TermsCtxtObjectsInfo &terms_ctxt_objects_info);
 
 void gen_cipher_var_id(std::size_t term_id, std::ostream &os);
 
@@ -47,7 +47,7 @@ void gen_op_terms(
   const std::shared_ptr<ir::Func> &func, std::ostream &os, TermsCtxtObjectsInfo &terms_ctxt_objects_info);
 
 void gen_output_terms(
-  const ir::IOTermsInfo &output_terms_info, std::ostream &os, const TermsCtxtObjectsInfo &terms_ctxt_objects_info);
+  const ir::OutputTermsInfo &output_terms_info, std::ostream &os, const TermsCtxtObjectsInfo &terms_ctxt_objects_info);
 
 void gen_rotation_steps_getter_def(
   const std::string &func_name, const std::unordered_set<int> &steps, std::ostream &os);

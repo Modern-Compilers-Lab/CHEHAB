@@ -71,10 +71,16 @@ inline void print_vec(const std::vector<T> &v, std::ostream &os, std::size_t pri
 template <typename T>
 inline void print_vec(const std::vector<T> &v, std::ostream &os)
 {
-  if (v.size() == 0)
+  if (v.empty())
     return;
 
-  for (std::size_t i = 0; i < v.size() - 1; ++i)
-    os << v[i] << " ";
-  os << v.back();
+  for (auto it = v.cbegin();;)
+  {
+    os << *it;
+    ++it;
+    if (it == v.cend())
+      break;
+
+    os << " ";
+  }
 }

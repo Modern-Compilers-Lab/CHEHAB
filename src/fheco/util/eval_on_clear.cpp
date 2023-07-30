@@ -27,7 +27,17 @@ ir::IOValues evaluate_on_clear(const shared_ptr<ir::Func> &func, const ir::IOVal
           if (auto output_info = func->data_flow().get_output_info(term); output_info)
           {
             temps_values.emplace(term, input_val);
-            outputs_values.emplace(output_info->label_, move(input_val));
+            for (auto it = output_info->labels_.cbegin();;)
+            {
+              const auto &label = *it;
+              ++it;
+              if (it == output_info->labels_.cend())
+              {
+                outputs_values.emplace(label, move(input_val));
+                break;
+              }
+              outputs_values.emplace(label, input_val);
+            }
           }
           else
             temps_values.emplace(term, move(input_val));
@@ -89,7 +99,10 @@ ir::IOValues evaluate_on_clear(const shared_ptr<ir::Func> &func, const ir::IOVal
     if (auto output_info = func->data_flow().get_output_info(term); output_info)
     {
       if (auto term_val_it = temps_values.find(term); term_val_it != temps_values.end())
-        outputs_values.emplace(output_info->label_, term_val_it->second);
+      {
+        for (const auto &label : output_info->labels_)
+          outputs_values.emplace(label, term_val_it->second);
+      }
       else
         cerr << "could not compute output term (output id=" << term->id() << ")\n";
     }
