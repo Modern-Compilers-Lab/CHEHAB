@@ -2,7 +2,7 @@
 #include "fheco/ir/term.hpp"
 #include "fheco/util/common.hpp"
 #include "fheco/util/draw_ir.hpp"
-#include "fheco/util/draw_ir_util.hpp"
+#include "fheco/util/draw_ir_constants.hpp"
 #include <cstddef>
 #include <stack>
 #include <stdexcept>

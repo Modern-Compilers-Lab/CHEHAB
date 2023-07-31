@@ -9,23 +9,23 @@ using namespace std;
 
 namespace fheco::trs
 {
-function<bool(const Subst &)> Rule::is_not_const(TermMatcher x, shared_ptr<ir::Func> func)
+function<bool(const Substitution &)> Rule::is_not_const(TermMatcher x, shared_ptr<ir::Func> func)
 {
-  return [func = move(func), x = move(x)](const Subst &subst) {
+  return [func = move(func), x = move(x)](const Substitution &subst) {
     return func->data_flow().is_const(subst.get(x));
   };
 }
 
-function<bool(const Subst &)> Rule::is_not_rotation(TermMatcher x)
+function<bool(const Substitution &)> Rule::is_not_rotation(TermMatcher x)
 {
-  return [x = move(x)](const Subst &subst) {
+  return [x = move(x)](const Substitution &subst) {
     return subst.get(x)->op_code().type() != ir::OpCode::Type::rotate;
   };
 }
 
-function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y, TermsMetric &cache)
+function<bool(const Substitution &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y, TermsMetric &cache)
 {
-  return [x = move(x), y = move(y), &cache](const Subst &subst) {
+  return [x = move(x), y = move(y), &cache](const Substitution &subst) {
     TermsMetric cache;
     auto x_term = subst.get(x);
     auto y_term = subst.get(y);
@@ -48,9 +48,9 @@ function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatc
   };
 }
 
-function<bool(const Subst &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &cache)
+function<bool(const Substitution &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &cache)
 {
-  return [x = move(x), y1 = move(y1), y2 = move(y2), &cache](const Subst &subst) {
+  return [x = move(x), y1 = move(y1), y2 = move(y2), &cache](const Substitution &subst) {
     auto x_term = subst.get(x);
     auto y1_term = subst.get(y1);
     auto y2_term = subst.get(y2);
@@ -116,7 +116,7 @@ vector<Rule> Rule::generate_customized_terms_variants() const
     variant.lhs_.customize_generic_subterms(indexed_comb);
     auto rhs = get_rhs();
     rhs.customize_generic_subterms(indexed_comb);
-    variant.rhs_ = [static_rhs = move(rhs)](const Subst &) {
+    variant.rhs_ = [static_rhs = move(rhs)](const Substitution &) {
       return static_rhs;
     };
     result.push_back(move(variant));

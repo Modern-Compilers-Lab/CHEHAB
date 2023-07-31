@@ -11,6 +11,7 @@ install(
     FILES
         ${CMAKE_CURRENT_LIST_DIR}/clear_data_eval.hpp
         ${CMAKE_CURRENT_LIST_DIR}/common.hpp
+        ${CMAKE_CURRENT_LIST_DIR}/draw_ir_constants.hpp
         ${CMAKE_CURRENT_LIST_DIR}/draw_ir.hpp
         ${CMAKE_CURRENT_LIST_DIR}/eval_on_clear.hpp
         ${CMAKE_CURRENT_LIST_DIR}/expr_printer.hpp

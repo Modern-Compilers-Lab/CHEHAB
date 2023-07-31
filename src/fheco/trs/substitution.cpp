@@ -1,6 +1,6 @@
 #include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
-#include "fheco/trs/subst.hpp"
+#include "fheco/trs/substitution.hpp"
 #include "fheco/util/expr_printer.hpp"
 #include <stdexcept>
 #include <utility>
@@ -10,7 +10,7 @@ using namespace std;
 namespace fheco::trs
 {
 
-bool Subst::insert(TermMatcher term_matcher, ir::Term *term)
+bool Substitution::insert(TermMatcher term_matcher, ir::Term *term)
 {
   if (!term_matcher.is_variable())
     throw invalid_argument("term_matcher must be a varible");
@@ -19,7 +19,7 @@ bool Subst::insert(TermMatcher term_matcher, ir::Term *term)
   return inserted || it->second->id() == term->id();
 }
 
-bool Subst::insert(OpGenMatcher op_gen_matcher, int val)
+bool Substitution::insert(OpGenMatcher op_gen_matcher, int val)
 {
   if (!op_gen_matcher.is_variable())
     throw invalid_argument("op_gen_matcher must be a varible");
@@ -28,7 +28,7 @@ bool Subst::insert(OpGenMatcher op_gen_matcher, int val)
   return inserted || it->second == val;
 }
 
-ir::Term *Subst::get(const TermMatcher &term_matcher) const
+ir::Term *Substitution::get(const TermMatcher &term_matcher) const
 {
   if (auto it = terms_matching_.find(term_matcher); it != terms_matching_.end())
     return it->second;
@@ -36,7 +36,7 @@ ir::Term *Subst::get(const TermMatcher &term_matcher) const
   throw invalid_argument("substitution for term_matcher not provided");
 }
 
-int Subst::get(const OpGenMatcher &op_gen_matcher) const
+int Substitution::get(const OpGenMatcher &op_gen_matcher) const
 {
   if (auto it = op_gen_matching_.find(op_gen_matcher); it != op_gen_matching_.end())
     return it->second;
@@ -44,7 +44,7 @@ int Subst::get(const OpGenMatcher &op_gen_matcher) const
   throw invalid_argument("substitution for op_gen_matcher not provided");
 }
 
-void pprint_substitution(const shared_ptr<ir::Func> &func, const Subst &subst, ostream &os)
+void pprint_substitution(const shared_ptr<ir::Func> &func, const Substitution &subst, ostream &os)
 {
   util::ExprPrinter expr_printer{func};
   os << "{";
@@ -76,7 +76,7 @@ void pprint_substitution(const shared_ptr<ir::Func> &func, const Subst &subst, o
   os << "}";
 }
 
-ostream &operator<<(ostream &os, const Subst &subst)
+ostream &operator<<(ostream &os, const Substitution &subst)
 {
   os << "Terms substitution:\n";
   for (const auto &v : subst.terms_matching())

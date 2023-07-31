@@ -8,7 +8,7 @@ using namespace std;
 
 namespace fheco::trs
 {
-int fold_op_gen_matcher(const OpGenMatcher &matcher, const Subst &subst)
+int fold_op_gen_matcher(const OpGenMatcher &matcher, const Substitution &subst)
 {
   struct Call
   {

@@ -7,8 +7,8 @@ using namespace std;
 
 namespace fheco::param_select
 {
-EncParams::EncParams(size_t poly_modulus_degree, int plain_modulus_bit_size, int coeff_mod_data_level_bit_count)
-  : poly_modulus_degree_{poly_modulus_degree}, plain_modulus_bit_size_{plain_modulus_bit_size}
+EncParams::EncParams(size_t poly_mod_degree, int plain_mod_bit_size, int coeff_mod_data_level_bit_count)
+  : poly_mod_degree_{poly_mod_degree}, plain_mod_bit_size_{plain_mod_bit_size}
 {
   coeff_mod_bit_sizes_.assign(coeff_mod_data_level_bit_count / MOD_BIT_COUNT_MAX, MOD_BIT_COUNT_MAX);
   int remaining_bits = coeff_mod_data_level_bit_count % MOD_BIT_COUNT_MAX;
@@ -24,10 +24,10 @@ EncParams::EncParams(size_t poly_modulus_degree, int plain_modulus_bit_size, int
   coeff_mod_bit_count_ = coeff_mod_data_level_bit_count + coeff_mod_bit_sizes_.back();
 }
 
-EncParams::EncParams(size_t poly_modulus_degree, integer plain_modulus, vector<int> coeff_mod_bit_sizes)
-  : poly_modulus_degree_{poly_modulus_degree}, coeff_mod_bit_sizes_{move(coeff_mod_bit_sizes)}
+EncParams::EncParams(size_t poly_mod_degree, integer plain_mod, vector<int> coeff_mod_bit_sizes)
+  : poly_mod_degree_{poly_mod_degree}, coeff_mod_bit_sizes_{move(coeff_mod_bit_sizes)}
 {
-  plain_modulus_bit_size_ = util::bit_size(static_cast<uint64_t>(plain_modulus));
+  plain_mod_bit_size_ = util::bit_size(static_cast<uint64_t>(plain_mod));
   coeff_mod_bit_count_ = 0;
   for (auto prime_size : coeff_mod_bit_sizes_)
     coeff_mod_bit_count_ += prime_size;
@@ -68,17 +68,24 @@ vector<int> EncParams::coeff_mod_data_level_bit_sizes() const
 
 void EncParams::print_params(ostream &os) const
 {
-  os << "/" << '\n';
-  os << "| Encryption parameters :" << '\n';
-  os << "|   poly_mod: " << poly_modulus_degree_ << '\n';
-  os << "|   plain_mod_size: " << plain_modulus_bit_size_ << " bits" << '\n';
-  os << "|   coeff_mod_size: ";
-  os << coeff_mod_bit_count_ << " (" << coeff_mod_bit_count_ - coeff_mod_bit_sizes_.back() << " + "
-     << coeff_mod_bit_sizes_.back() << ") (";
-  for (size_t i = 0; i < coeff_mod_bit_sizes_.size() - 1; ++i)
-    os << coeff_mod_bit_sizes_[i] << " + ";
-  os << coeff_mod_bit_sizes_.back();
-  os << ") bits" << '\n';
-  os << "\\" << '\n';
+  os << "poly_mod: " << poly_mod_degree_ << '\n';
+  os << "plain_mod_size: " << plain_mod_bit_size_ << " bits" << '\n';
+  os << "coeff_mod_size: ";
+  os << coeff_mod_bit_count_;
+  if (coeff_mod_bit_sizes_.empty())
+    return;
+
+  os << " (" << coeff_mod_bit_count_ - coeff_mod_bit_sizes_.back() << " + " << coeff_mod_bit_sizes_.back() << ") (";
+  for (auto it = coeff_mod_bit_sizes_.cbegin();;)
+  {
+    os << *it;
+    ++it;
+    if (it == coeff_mod_bit_sizes_.cend())
+    {
+      os << ") bits\n";
+      break;
+    }
+    os << " + ";
+  }
 }
 } // namespace fheco::param_select

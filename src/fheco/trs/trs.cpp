@@ -70,7 +70,7 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
   clog << "applying rule \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\" on term \""
        << expr_printer.expand_term_str_expr(term) << "\"\n";
 #endif
-  Subst subst;
+  Substitution subst;
   bool global_analysis = false;
   double rel_cost = 0;
   ir::Term::PtrSet to_delete;
@@ -140,7 +140,7 @@ bool TRS::rewrite_term(
 #ifdef FHECO_LOGGING
       clog << "trying rule \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\", ";
 #endif
-      Subst subst;
+      Substitution subst;
       double rel_cost = 0;
       ir::Term::PtrSet to_delete;
       bool matched = match(rule.lhs(), top_term, subst, global_analysis, rel_cost, to_delete);
@@ -221,7 +221,7 @@ bool TRS::rewrite_term(
 }
 
 bool TRS::match(
-  const TermMatcher &term_matcher, ir::Term *term, Subst &subst, bool global_analysis, double &rel_cost,
+  const TermMatcher &term_matcher, ir::Term *term, Substitution &subst, bool global_analysis, double &rel_cost,
   ir::Term::PtrSet &to_delete) const
 {
   struct Call
@@ -355,7 +355,7 @@ bool TRS::match(
 }
 
 ir::Term *TRS::construct_term(
-  const TermMatcher &matcher, const Subst &subst, const ir::Term::PtrSet &to_delete, bool global_analysis,
+  const TermMatcher &matcher, const Substitution &subst, const ir::Term::PtrSet &to_delete, bool global_analysis,
   double &rel_cost, vector<size_t> &created_terms_ids)
 {
   struct Call

@@ -10,49 +10,49 @@ using namespace std::literals;
 
 namespace fheco::code_gen
 {
-inline constexpr std::string_view seal_namespace{"seal"};
+constexpr std::string_view seal_namespace{"seal"};
 
-inline constexpr std::string_view cipher_type{"Ciphertext"};
-inline constexpr std::string_view plain_type{"Plaintext"};
+constexpr std::string_view cipher_type{"Ciphertext"};
+constexpr std::string_view plain_type{"Plaintext"};
 
-inline constexpr std::string_view header_encrypted_io_type{"std::unordered_map<std::string, seal::Ciphertext>"};
-inline constexpr std::string_view header_encoded_io_type{"std::unordered_map<std::string, seal::Plaintext>"};
+constexpr std::string_view header_encrypted_io_type{"std::unordered_map<std::string, seal::Ciphertext>"};
+constexpr std::string_view header_encoded_io_type{"std::unordered_map<std::string, seal::Plaintext>"};
 
-inline constexpr std::string_view source_encrypted_io_type{"unordered_map<string, Ciphertext>"};
-inline constexpr std::string_view source_encoded_io_type{"unordered_map<string, Plaintext>"};
+constexpr std::string_view source_encrypted_io_type{"unordered_map<string, Ciphertext>"};
+constexpr std::string_view source_encoded_io_type{"unordered_map<string, Plaintext>"};
 
-inline constexpr std::string_view encrypted_inputs_container_id{"encrypted_inputs"};
-inline constexpr std::string_view encoded_inputs_container_id{"encoded_inputs"};
+constexpr std::string_view encrypted_inputs_container_id{"encrypted_inputs"};
+constexpr std::string_view encoded_inputs_container_id{"encoded_inputs"};
 
-inline constexpr std::string_view encrypted_outputs_container_id{"encrypted_outputs"};
-inline constexpr std::string_view encoded_outputs_container_id{"encoded_outputs"};
+constexpr std::string_view encrypted_outputs_container_id{"encrypted_outputs"};
+constexpr std::string_view encoded_outputs_container_id{"encoded_outputs"};
 
-inline constexpr std::string_view relin_keys_type{"RelinKeys"};
-inline constexpr std::string_view relin_keys_id{"relin_keys"};
+constexpr std::string_view relin_keys_type{"RelinKeys"};
+constexpr std::string_view relin_keys_id{"relin_keys"};
 
-inline constexpr std::string_view galois_keys_type{"GaloisKeys"};
-inline constexpr std::string_view galois_keys_id{"galois_keys"};
+constexpr std::string_view galois_keys_type{"GaloisKeys"};
+constexpr std::string_view galois_keys_id{"galois_keys"};
 
-inline const std::string rotation_steps_getter_id = "get_rotation_steps";
+const std::string rotation_steps_getter_id = "get_rotation_steps";
 
-inline constexpr std::size_t line_threshold = 16;
+constexpr std::size_t line_threshold = 16;
 
-inline constexpr std::string_view encoder_type{"BatchEncoder"};
-inline constexpr std::string_view encoder_id{"encoder"};
-inline constexpr std::string_view slot_count_id{"slot_count"};
-inline constexpr std::string_view encode{"encode"};
-inline constexpr std::string_view decode{"decode"};
+constexpr std::string_view encoder_type{"BatchEncoder"};
+constexpr std::string_view encoder_id{"encoder"};
+constexpr std::string_view slot_count_id{"slot_count"};
+constexpr std::string_view encode{"encode"};
+constexpr std::string_view decode{"decode"};
 
-inline constexpr std::string_view encryptor_type{"Encryptor"};
-inline constexpr std::string_view encryptor_id{"encryptor"};
-inline constexpr std::string_view encrypt{"encrypt"};
-inline constexpr std::string_view signed_slot_type{"std::int64_t"};
-inline constexpr std::string_view unsigned_slot_type{"std::uint64_t"};
+constexpr std::string_view encryptor_type{"Encryptor"};
+constexpr std::string_view encryptor_id{"encryptor"};
+constexpr std::string_view encrypt{"encrypt"};
+constexpr std::string_view signed_slot_type{"std::int64_t"};
+constexpr std::string_view unsigned_slot_type{"std::uint64_t"};
 
-inline constexpr std::string_view evaluator_type{"Evaluator"};
-inline constexpr std::string_view evaluator_id{"evaluator"};
+constexpr std::string_view evaluator_type{"Evaluator"};
+constexpr std::string_view evaluator_id{"evaluator"};
 
-inline constexpr std::string_view header_includes{
+constexpr std::string_view header_includes{
   R"(#pragma once
 
 #include <string>
@@ -61,18 +61,18 @@ inline constexpr std::string_view header_includes{
 #include "seal/seal.h"
 )"};
 
-inline constexpr std::string_view source_includes{
+constexpr std::string_view source_includes{
   R"(#include <cstddef>
 #include <cstdint>
 #include <utility>
 )"};
 
-inline constexpr std::string_view source_usings{
+constexpr std::string_view source_usings{
   R"(using namespace std;
 using namespace seal;
 )"};
 
-inline const std::unordered_map<OpType, std::string_view, HashOpType, EqualOpType> operation_mapping = {
+const std::unordered_map<OpType, std::string_view, HashOpType, EqualOpType> operation_mapping = {
   {{ir::OpCode::Type::add, {ir::Term::Type::cipher, ir::Term::Type::cipher}}, "add"sv},
   {{ir::OpCode::Type::add, {ir::Term::Type::cipher, ir::Term::Type::plain}}, "add_plain"sv},
   {{ir::OpCode::Type::sub, {ir::Term::Type::cipher, ir::Term::Type::cipher}}, "sub"sv},

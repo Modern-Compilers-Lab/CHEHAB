@@ -14,10 +14,10 @@ class Term;
 
 namespace fheco::trs
 {
-class Subst
+class Substitution
 {
 public:
-  Subst() {}
+  Substitution() {}
 
   bool insert(TermMatcher term_matcher, ir::Term *term);
 
@@ -37,7 +37,7 @@ private:
   std::unordered_map<OpGenMatcher, int> op_gen_matching_{};
 };
 
-void pprint_substitution(const std::shared_ptr<ir::Func> &func, const Subst &subst, std::ostream &os);
+void pprint_substitution(const std::shared_ptr<ir::Func> &func, const Substitution &subst, std::ostream &os);
 
-std::ostream &operator<<(std::ostream &os, const Subst &subst);
+std::ostream &operator<<(std::ostream &os, const Substitution &subst);
 } // namespace fheco::trs

@@ -55,13 +55,13 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"merge-rotate-add", (x << n) + (y << n), (x + y) << n},
 
     {"nest-rotate-add-1", (x << n) + (y << m), ((x << (n - m)) + y) << m,
-     [n, m](const Subst subst) {
+     [n, m](const Substitution &subst) {
        auto n_steps = subst.get(n);
        auto m_steps = subst.get(m);
        return m_steps > 0 && n_steps > m_steps;
      }},
     {"nest-rotate-add-2", (x << n) + (y << m), (x + (y << (m - n))) << n,
-     [n, m](const Subst subst) {
+     [n, m](const Substitution &subst) {
        auto n_steps = subst.get(n);
        auto m_steps = subst.get(m);
        return n_steps > 0 && m_steps > n_steps;
@@ -171,13 +171,13 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"merge-rotate-sub", (x << n) - (y << n), (x - y) << n},
 
     {"nest-rotate-sub-1", (x << n) - (y << m), ((x << (n - m)) - y) << m,
-     [n, m](const Subst subst) {
+     [n, m](const Substitution &subst) {
        auto n_steps = subst.get(n);
        auto m_steps = subst.get(m);
        return m_steps > 0 && n_steps > m_steps;
      }},
     {"nest-rotate-sub-2", (x << n) - (y << m), (x - (y << (m - n))) << n,
-     [n, m](const Subst subst) {
+     [n, m](const Substitution &subst) {
        auto n_steps = subst.get(n);
        auto m_steps = subst.get(m);
        return n_steps > 0 && m_steps > n_steps;
@@ -387,29 +387,29 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"fold-rotate", x << n << m, x << ((m + n) % func->slot_count())},
 
     {"nest-large-steps-rotate-add-1-1", (x + (y << n)) << m, (x << m) + (y << (n + m) % func->slot_count()),
-     [n, m, slot_count = func->slot_count()](const Subst subst) {
+     [n, m, slot_count = func->slot_count()](const Substitution &subst) {
        return subst.get(n) + subst.get(m) >= slot_count;
      }},
     {"nest-large-steps-rotate-add-1-2", ((y << n) + x) << m, (y << (n + m) % func->slot_count()) + (x << m),
-     [n, m, slot_count = func->slot_count()](const Subst subst) {
+     [n, m, slot_count = func->slot_count()](const Substitution &subst) {
        return subst.get(n) + subst.get(m) >= slot_count;
      }},
 
     {"nest-large-steps-rotate-sub-1-1", (x - (y << n)) << m, (x << m) - (y << (n + m) % func->slot_count()),
-     [n, m, slot_count = func->slot_count()](const Subst subst) {
+     [n, m, slot_count = func->slot_count()](const Substitution &subst) {
        return subst.get(n) + subst.get(m) >= slot_count;
      }},
     {"nest-large-steps-rotate-sub-1-2", ((y << n) - x) << m, (y << (n + m) % func->slot_count()) - (x << m),
-     [n, m, slot_count = func->slot_count()](const Subst subst) {
+     [n, m, slot_count = func->slot_count()](const Substitution &subst) {
        return subst.get(n) + subst.get(m) >= slot_count;
      }},
 
     {"nest-large-steps-rotate-mul-1-1", (x * (y << n)) << m, (x << m) * (y << (n + m) % func->slot_count()),
-     [n, m, slot_count = func->slot_count()](const Subst subst) {
+     [n, m, slot_count = func->slot_count()](const Substitution &subst) {
        return subst.get(n) + subst.get(m) >= slot_count;
      }},
     {"nest-large-steps-rotate-mul-1-2", ((y << n) * x) << m, (y << (n + m) % func->slot_count()) * (x << m),
-     [n, m, slot_count = func->slot_count()](const Subst subst) {
+     [n, m, slot_count = func->slot_count()](const Substitution &subst) {
        return subst.get(n) + subst.get(m) >= slot_count;
      }}};
 
@@ -425,13 +425,13 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"merge-rotate-mul", (x << n) * (y << n), (x * y) << n},
 
     {"nest-rotate-mul-1", (x << n) * (y << m), ((x << (n - m)) * y) << m,
-     [n, m](const Subst subst) {
+     [n, m](const Substitution &subst) {
        auto n_steps = subst.get(n);
        auto m_steps = subst.get(m);
        return m_steps > 0 && n_steps > m_steps;
      }},
     {"nest-rotate-mul-2", (x << n) * (y << m), (x * (y << (m - n))) << n,
-     [n, m](const Subst subst) {
+     [n, m](const Substitution &subst) {
        auto n_steps = subst.get(n);
        auto m_steps = subst.get(m);
        return n_steps > 0 && m_steps > n_steps;

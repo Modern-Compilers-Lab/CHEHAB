@@ -267,7 +267,7 @@ void gen_output_terms(
       // an output term has at least one label
       for (auto it = output_info.second.labels_.cbegin();;)
       {
-        const auto label = *it;
+        const auto &label = *it;
         os << encrypted_outputs_container_id << ".emplace(\"" << label << "\", ";
         ++it;
         if (it == output_info.second.labels_.cend())
@@ -285,7 +285,7 @@ void gen_output_terms(
     {
       for (auto it = output_info.second.labels_.cbegin();;)
       {
-        const auto label = *it;
+        const auto &label = *it;
         os << encoded_outputs_container_id << ".emplace(\"" << label << "\", ";
         ++it;
         if (it == output_info.second.labels_.cend())

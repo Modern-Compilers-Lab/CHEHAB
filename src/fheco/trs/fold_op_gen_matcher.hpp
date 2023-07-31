@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fheco/trs/op_gen_matcher.hpp"
-#include "fheco/trs/subst.hpp"
+#include "fheco/trs/substitution.hpp"
 #include <cstddef>
 #include <ostream>
 #include <unordered_map>
@@ -12,7 +12,7 @@ namespace fheco::trs
 using OpGenMatcherBlocksCoeffs =
   std::unordered_map<OpGenMatcher::RefWrapp, int, OpGenMatcher::HashRefWrapp, OpGenMatcher::EqualrRefWrapp>;
 
-int fold_op_gen_matcher(const OpGenMatcher &op_gen_matcher, const Subst &subst);
+int fold_op_gen_matcher(const OpGenMatcher &op_gen_matcher, const Substitution &subst);
 
 void operate(const OpGenOpCode &op_code, const std::vector<int> &args, int &dest);
 

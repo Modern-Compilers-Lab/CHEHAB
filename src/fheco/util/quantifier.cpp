@@ -396,14 +396,14 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
     circuit_cost_ += op_cost * e.second;
   }
 
-  auto pkey_size = 2 * (params.coeff_mod_bit_sizes().size() + 1) * params.coeff_mod_bit_sizes().size() *
-                   params.poly_modulus_degree() * 8;
+  auto pkey_size =
+    2 * (params.coeff_mod_bit_sizes().size() + 1) * params.coeff_mod_bit_sizes().size() * params.poly_mod_degree() * 8;
 
   rotation_keys_size_ = rotation_keys_count_ * pkey_size;
 
   relin_keys_size_ = relin_keys_count_ * pkey_size;
 
-  auto fresh_ctxt_size = 2 * (params.coeff_mod_bit_sizes().size() - 1) * params.poly_modulus_degree() * 8;
+  auto fresh_ctxt_size = 2 * (params.coeff_mod_bit_sizes().size() - 1) * params.poly_mod_degree() * 8;
   for (auto input_info : func_->data_flow().inputs_info())
   {
     if (input_info.first->type() == ir::Term::Type::cipher)
@@ -420,7 +420,7 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
       auto output_ctxt_info = ctxt_outputs_info_.at(output_info.first);
       auto output_size = output_ctxt_info.size_ *
                          (params.coeff_mod_bit_sizes().size() - 1 - output_ctxt_info.opposite_level_) *
-                         params.poly_modulus_degree() * 8;
+                         params.poly_mod_degree() * 8;
       ctxt_outputs_size_ += output_size;
     }
   }
