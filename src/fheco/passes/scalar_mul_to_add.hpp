@@ -1,6 +1,5 @@
 #pragma once
 
-#include "fheco/dsl/common.hpp"
 #include <cstddef>
 #include <memory>
 

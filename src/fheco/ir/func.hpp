@@ -19,12 +19,12 @@ class Func
 public:
   Func(
     std::string name, std::size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
-    bool need_full_cyclic_rotation, bool overflow_warnings);
+    bool need_cyclic_rotation, bool overflow_warnings);
 
   Func(
-    std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_full_cyclic_rotation,
+    std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_cyclic_rotation,
     bool overflow_warnings)
-    : Func(std::move(name), slot_count, true, 1 << bit_width, signedness, need_full_cyclic_rotation, overflow_warnings)
+    : Func(std::move(name), slot_count, true, 1 << bit_width, signedness, need_cyclic_rotation, overflow_warnings)
   {}
 
   template <typename T>
@@ -49,6 +49,14 @@ public:
   }
 
   Term *insert_op_term(OpCode op_code, std::vector<Term *> operands, bool &inserted);
+
+  bool can_fold(const std::vector<Term *> &operands, std::vector<PackedVal> &operands_vals) const;
+
+  inline bool can_fold(const std::vector<Term *> &operands) const
+  {
+    std::vector<PackedVal> operands_vals;
+    return can_fold(operands, operands_vals);
+  }
 
   inline Term *insert_const_term(PackedVal packed_val)
   {
@@ -78,7 +86,7 @@ public:
 
   inline const util::ClearDataEval &clear_data_evaluator() const { return clear_data_eval_; }
 
-  inline bool need_full_cyclic_rotation() const { return need_full_cyclic_rotation_; }
+  inline bool need_cyclic_rotation() const { return need_cyclic_rotation_; }
 
   inline const Expr &data_flow() const { return data_flow_; }
 
@@ -87,7 +95,7 @@ private:
 
   std::size_t slot_count_;
 
-  bool need_full_cyclic_rotation_;
+  bool need_cyclic_rotation_;
 
   util::ClearDataEval clear_data_eval_;
 

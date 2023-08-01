@@ -25,18 +25,18 @@ public:
 
   static inline const std::shared_ptr<ir::Func> &create_func(
     std::string name, std::size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
-    bool need_full_cyclic_rotation, bool overflow_warnings = false)
+    bool need_cyclic_rotation, bool overflow_warnings = false)
   {
     return add_func(std::make_shared<ir::Func>(
-      std::move(name), slot_count, delayed_reduct, modulus, signedness, need_full_cyclic_rotation, overflow_warnings));
+      std::move(name), slot_count, delayed_reduct, modulus, signedness, need_cyclic_rotation, overflow_warnings));
   }
 
   static inline const std::shared_ptr<ir::Func> &create_func(
-    std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_full_cyclic_rotation,
+    std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_cyclic_rotation,
     bool overflow_warnings = false)
   {
     return add_func(std::make_shared<ir::Func>(
-      std::move(name), slot_count, bit_width, signedness, need_full_cyclic_rotation, overflow_warnings));
+      std::move(name), slot_count, bit_width, signedness, need_cyclic_rotation, overflow_warnings));
   }
 
   static void compile(

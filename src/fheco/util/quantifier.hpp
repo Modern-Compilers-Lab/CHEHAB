@@ -35,47 +35,56 @@ public:
     double depth_;
     double xdepth_;
   };
+
   struct HashDepthInfo
   {
     std::size_t operator()(const DepthInfo &depth_info) const;
   };
+
   struct EqualDepthInfo
   {
     bool operator()(const DepthInfo &lhs, const DepthInfo &rhs) const;
   };
+
   using CtxtTermsDepthInfo = std::unordered_map<const ir::Term *, DepthInfo, ir::Term::HashPtr, ir::Term::EqualPtr>;
 
-  // ctxt ctxt operation info
+  // ctxt-ctxt operation info
   struct CCOpInfo
   {
     double opposite_level_;
     double arg1_size_;
     double arg2_size_;
   };
+
   struct HashCCOpInfo
   {
     std::size_t operator()(const CCOpInfo &cc_op) const;
   };
+
   struct EqualCCOpInfo
   {
     bool operator()(const CCOpInfo &lhs, const CCOpInfo &rhs) const;
   };
+
   using CCOpsCounts = std::unordered_map<CCOpInfo, double, HashCCOpInfo, EqualCCOpInfo>;
 
-  // ctxt any operation info
+  // ctxt-any operation info
   struct CAOpInfo
   {
     double opposite_level_;
     double arg_size_;
   };
+
   struct HashCAOpInfo
   {
     std::size_t operator()(const CAOpInfo &ca_op_info) const;
   };
+
   struct EqualCAOpInfo
   {
     bool operator()(const CAOpInfo &lhs, const CAOpInfo &rhs) const;
   };
+
   using CAOpsCounts = std::unordered_map<CAOpInfo, double, HashCAOpInfo, EqualCAOpInfo>;
 
   struct CtxtTermInfo
@@ -83,6 +92,7 @@ public:
     double opposite_level_;
     double size_;
   };
+
   using CtxtTermsInfo = std::unordered_map<const ir::Term *, CtxtTermInfo, ir::Term::HashPtr, ir::Term::EqualPtr>;
 
   Quantifier(std::shared_ptr<ir::Func> func) : func_{std::move(func)} {}
@@ -115,19 +125,21 @@ public:
 
   inline bool terms_classes_metrics() const { return terms_classes_metrics_; }
 
-  inline double relin_keys_count() const { return relin_keys_count_; }
-
-  inline double rotation_keys_count() const { return rotation_keys_count_; }
-
-  inline double all_terms_count() const { return all_terms_count_; }
+  inline double terms_count() const { return terms_count_; }
 
   inline double captured_terms_count() const { return captured_terms_count_; }
 
+  inline double ctxt_inputs_count() const { return ctxt_inputs_count_; }
+
   inline double ptxt_leaves_count() const { return ptxt_leaves_count_; }
+
+  inline double constants_count() const { return constants_count_; }
 
   inline double pp_ops_count() const { return pp_ops_count_; }
 
-  inline double ctxt_leaves_count() const { return ctxt_leaves_count_; }
+  inline double constants_ops_count() const { return constants_ops_count_; }
+
+  inline double circuit_static_cost() const { return circuit_static_cost_; }
 
   inline const CCOpsCounts &cc_mul_counts() const { return cc_mul_counts_; }
 
@@ -151,6 +163,14 @@ public:
 
   inline double cp_mul_total() const { return cp_mul_total_; }
 
+  inline const CAOpsCounts &c_scalar_mul_counts() const { return c_scalar_mul_counts_; }
+
+  inline double c_scalar_mul_total() const { return c_scalar_mul_total_; }
+
+  inline const CAOpsCounts &c_non_scalar_mul_counts() const { return c_non_scalar_mul_counts_; }
+
+  inline double c_non_scalar_mul_total() const { return c_non_scalar_mul_total_; }
+
   inline const CAOpsCounts &mod_switch_counts() const { return mod_switch_counts_; }
 
   inline double mod_switch_total() const { return mod_switch_total_; }
@@ -161,7 +181,9 @@ public:
 
   inline const CtxtTermsInfo &ctxt_outputs_info() const { return ctxt_outputs_info_; }
 
-  inline double circuit_static_cost() const { return circuit_static_cost_; }
+  inline double relin_keys_count() const { return relin_keys_count_; }
+
+  inline double rotation_keys_count() const { return rotation_keys_count_; }
 
   inline bool global_metrics() const { return global_metrics_; }
 
@@ -172,8 +194,6 @@ public:
   inline double relin_keys_size() const { return relin_keys_size_; }
 
   inline double ctxt_inputs_size() const { return ctxt_inputs_size_; }
-
-  inline double ctxt_inputs_count_() const { return ctxt_inputs_count__; }
 
   inline double ctxt_outputs_size() const { return ctxt_outputs_size_; }
 
@@ -188,19 +208,21 @@ private:
 
   bool terms_classes_metrics_ = false;
 
-  double relin_keys_count_ = 0;
-
-  double rotation_keys_count_ = 0;
-
-  double all_terms_count_ = 0;
+  double terms_count_ = 0;
 
   double captured_terms_count_ = 0;
 
+  double ctxt_inputs_count_ = 0;
+
   double ptxt_leaves_count_ = 0;
+
+  double constants_count_ = 0;
 
   double pp_ops_count_ = 0;
 
-  double ctxt_leaves_count_ = 0;
+  double constants_ops_count_ = 0;
+
+  double circuit_static_cost_ = 0;
 
   CCOpsCounts cc_mul_counts_{};
 
@@ -224,6 +246,14 @@ private:
 
   double cp_mul_total_ = 0;
 
+  CAOpsCounts c_scalar_mul_counts_{};
+
+  double c_scalar_mul_total_ = 0;
+
+  CAOpsCounts c_non_scalar_mul_counts_{};
+
+  double c_non_scalar_mul_total_ = 0;
+
   CAOpsCounts mod_switch_counts_{};
 
   double mod_switch_total_ = 0;
@@ -234,7 +264,9 @@ private:
 
   CtxtTermsInfo ctxt_outputs_info_{};
 
-  double circuit_static_cost_ = 0;
+  double relin_keys_count_ = 0;
+
+  double rotation_keys_count_ = 0;
 
   bool global_metrics_ = false;
 
@@ -245,8 +277,6 @@ private:
   double relin_keys_size_ = 0;
 
   double ctxt_inputs_size_ = 0;
-
-  double ctxt_inputs_count__ = 0;
 
   double ctxt_outputs_size_ = 0;
 

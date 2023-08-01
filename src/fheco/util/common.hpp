@@ -22,6 +22,13 @@ class Func;
 
 namespace fheco::util
 {
+// https://github.com/HowardHinnant/hash_append/issues/7#issuecomment-629414712
+template <typename T>
+inline void hash_combine(std::size_t &seed, const T &val)
+{
+  seed ^= std::hash<T>{}(val) + 0x9e3779b97f4a7c15ULL + (seed << 12) + (seed >> 4);
+}
+
 inline bool is_power_of_two(std::size_t v)
 {
   return v != 0 && (v & (v - 1)) == 0;

@@ -1,5 +1,6 @@
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/func.hpp"
+#include "fheco/util/common.hpp"
 #include "fheco/util/quantifier.hpp"
 #include <limits>
 #include <set>
@@ -64,9 +65,13 @@ void Quantifier::compute_depth_info()
     auto top_depth_info = top_call.depth_info_;
     if (top_term->is_leaf() || top_term->op_code().type() == ir::OpCode::Type::encrypt)
     {
-      auto [it, inserted] = ctxt_leaves_depth_info_.emplace(top_term, DepthInfo{0, 0});
-      it->second.depth_ = max(it->second.depth_, top_depth_info.depth_);
-      it->second.xdepth_ = max(it->second.xdepth_, top_depth_info.xdepth_);
+      auto [it, inserted] =
+        ctxt_leaves_depth_info_.emplace(top_term, DepthInfo{top_depth_info.depth_, top_depth_info.xdepth_});
+      if (!inserted)
+      {
+        it->second.depth_ = max(it->second.depth_, top_depth_info.depth_);
+        it->second.xdepth_ = max(it->second.xdepth_, top_depth_info.xdepth_);
+      }
       continue;
     }
     auto operands_depth = top_depth_info.depth_;
@@ -137,13 +142,14 @@ void Quantifier::compute_depth_info()
 
 void Quantifier::count_terms_classes()
 {
-  relin_keys_count_ = 0;
-  rotation_keys_count_ = 0;
-  all_terms_count_ = 0;
+  terms_count_ = 0;
   captured_terms_count_ = 0;
+  ctxt_inputs_count_ = 0;
   ptxt_leaves_count_ = 0;
+  constants_count_ = 0;
   pp_ops_count_ = 0;
-  ctxt_leaves_count_ = 0;
+  constants_ops_count_ = 0;
+  circuit_static_cost_ = 0;
   cc_mul_counts_.clear();
   cc_mul_total_ = 0;
   square_counts_.clear();
@@ -155,12 +161,17 @@ void Quantifier::count_terms_classes()
   rotate_total_ = 0;
   cp_mul_counts_.clear();
   cp_mul_total_ = 0;
+  c_scalar_mul_counts_.clear();
+  c_scalar_mul_total_ = 0;
+  c_non_scalar_mul_counts_.clear();
+  c_non_scalar_mul_total_ = 0;
   mod_switch_counts_.clear();
   mod_switch_total_ = 0;
   he_add_counts_.clear();
   he_add_total_ = 0;
   ctxt_outputs_info_.clear();
-  circuit_static_cost_ = 0;
+  relin_keys_count_ = 0;
+  rotation_keys_count_ = 0;
 
   global_metrics_ = false;
 
@@ -170,7 +181,7 @@ void Quantifier::count_terms_classes()
 
   for (auto term : func_->get_top_sorted_terms())
   {
-    ++all_terms_count_;
+    ++terms_count_;
     if (term->is_operation())
     {
       if (term->type() == ir::Term::Type::cipher)
@@ -203,12 +214,33 @@ void Quantifier::count_terms_classes()
                                           : ctxt_terms_info.find(term->operands()[1])->second;
 
             ctxt_terms_info.emplace(term, CtxtTermInfo{ctxt_arg_info.opposite_level_, ctxt_arg_info.size_});
+            auto op_info = CAOpInfo{ctxt_arg_info.opposite_level_, ctxt_arg_info.size_};
             ++captured_terms_count_;
             ++cp_mul_total_;
-            auto [it, inserted] =
-              cp_mul_counts_.emplace(CAOpInfo{ctxt_arg_info.opposite_level_, ctxt_arg_info.size_}, 1);
+            auto [it, inserted] = cp_mul_counts_.emplace(op_info, 1);
             if (!inserted)
               ++it->second;
+            auto ptxt_operand =
+              (term->operands()[0]->type() == ir::Term::Type::plain) ? term->operands()[0] : term->operands()[1];
+            bool is_c_scalar_mul = false;
+            if (auto const_info = func_->data_flow().get_const_info(ptxt_operand); const_info)
+            {
+              if (const_info->is_scalar_)
+              {
+                is_c_scalar_mul = true;
+                ++c_scalar_mul_total_;
+                auto [it, inserted] = c_scalar_mul_counts_.emplace(move(op_info), 1);
+                if (!inserted)
+                  ++it->second;
+              }
+            }
+            if (!is_c_scalar_mul)
+            {
+              ++c_non_scalar_mul_total_;
+              auto [it, inserted] = c_non_scalar_mul_counts_.emplace(move(op_info), 1);
+              if (!inserted)
+                ++it->second;
+            }
           }
         }
         else if (term->op_code().type() == ir::OpCode::Type::square)
@@ -303,9 +335,11 @@ void Quantifier::count_terms_classes()
       {
         ++captured_terms_count_;
         ++pp_ops_count_;
+        if (func_->can_fold(term->operands()))
+          ++constants_ops_count_;
       }
 
-      circuit_static_cost_ += ir::evaluate_raw_op_code(term->op_code(), term->operands());
+      circuit_static_cost_ += ir::static_eval_op(func_, term->op_code(), term->operands());
     }
     else
     {
@@ -313,12 +347,14 @@ void Quantifier::count_terms_classes()
       {
         ctxt_terms_info.emplace(term, CtxtTermInfo{0, 2});
         ++captured_terms_count_;
-        ++ctxt_leaves_count_;
+        ++ctxt_inputs_count_;
       }
       else
       {
         ++captured_terms_count_;
         ++ptxt_leaves_count_;
+        if (func_->data_flow().is_const(term))
+          ++constants_count_;
       }
     }
     if (func_->data_flow().is_output(term))
@@ -335,14 +371,17 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
   rotation_keys_size_ = 0;
   relin_keys_size_ = 0;
   ctxt_inputs_size_ = 0;
-  ctxt_inputs_count__ = 0;
   ctxt_outputs_size_ = 0;
+
+  circuit_cost_ += constants_count_ * ir::static_eval_op(ir::OpCode::nop, {{ir::Term::Type::plain, true, false}});
 
   for (auto e : cc_mul_counts_)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level * (e.first.arg1_size_ - 1) * (e.first.arg2_size_ - 1);
-    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::mul, {ir::Term::Type::cipher, ir::Term::Type::cipher});
+    auto op_cost =
+      coeff * ir::static_eval_op(
+                ir::OpCode::mul, {{ir::Term::Type::cipher, false, false}, {ir::Term::Type::cipher, false, false}});
     circuit_cost_ += op_cost * e.second;
   }
 
@@ -350,17 +389,17 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level * (e.first.arg_size_ - 1) * (e.first.arg_size_ - 1);
-    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::square, {ir::Term::Type::cipher});
+    auto op_cost = coeff * ir::static_eval_op(ir::OpCode::square, {{ir::Term::Type::cipher, false, false}});
     circuit_cost_ += op_cost * e.second;
   }
 
-  circuit_cost_ += encrypt_count_ * ir::evaluate_raw_op_code(ir::OpCode::encrypt, {ir::Term::Type::plain});
+  circuit_cost_ += encrypt_count_ * ir::static_eval_op(ir::OpCode::encrypt, {{ir::Term::Type::plain, false, false}});
 
   for (auto e : relin_counts_)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level * (e.first.arg_size_ - 2);
-    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::relin, {ir::Term::Type::cipher});
+    auto op_cost = coeff * ir::static_eval_op(ir::OpCode::relin, {{ir::Term::Type::cipher, false, false}});
     circuit_cost_ += op_cost * e.second;
   }
 
@@ -368,15 +407,27 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level;
-    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::rotate(0), {ir::Term::Type::cipher});
+    auto op_cost = coeff * ir::static_eval_op(ir::OpCode::rotate(0), {{ir::Term::Type::cipher, false, false}});
     circuit_cost_ += op_cost * e.second;
   }
 
-  for (auto e : cp_mul_counts_)
+  for (auto e : c_scalar_mul_counts_)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level;
-    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::mul, {ir::Term::Type::cipher, ir::Term::Type::plain});
+    auto op_cost =
+      coeff * ir::static_eval_op(
+                ir::OpCode::mul, {{ir::Term::Type::cipher, false, false}, {ir::Term::Type::plain, true, true}});
+    circuit_cost_ += op_cost * e.second;
+  }
+
+  for (auto e : c_non_scalar_mul_counts_)
+  {
+    auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
+    auto coeff = level;
+    auto op_cost =
+      coeff * ir::static_eval_op(
+                ir::OpCode::mul, {{ir::Term::Type::cipher, false, false}, {ir::Term::Type::plain, false, false}});
     circuit_cost_ += op_cost * e.second;
   }
 
@@ -384,7 +435,7 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level;
-    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::mod_switch, {ir::Term::Type::cipher});
+    auto op_cost = coeff * ir::static_eval_op(ir::OpCode::mod_switch, {{ir::Term::Type::cipher, false, false}});
     circuit_cost_ += op_cost * e.second;
   }
 
@@ -392,7 +443,9 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
   {
     auto level = params.coeff_mod_bit_sizes().size() - e.first.opposite_level_;
     auto coeff = level;
-    auto op_cost = coeff * ir::evaluate_raw_op_code(ir::OpCode::add, {ir::Term::Type::cipher, ir::Term::Type::plain});
+    auto op_cost =
+      coeff * ir::static_eval_op(
+                ir::OpCode::add, {{ir::Term::Type::cipher, false, false}, {ir::Term::Type::plain, false, false}});
     circuit_cost_ += op_cost * e.second;
   }
 
@@ -407,10 +460,7 @@ void Quantifier::compute_global_metrics(const param_select::EncParams &params)
   for (auto input_info : func_->data_flow().inputs_info())
   {
     if (input_info.first->type() == ir::Term::Type::cipher)
-    {
       ctxt_inputs_size_ += fresh_ctxt_size;
-      ++ctxt_inputs_count__;
-    }
   }
 
   for (auto output_info : func_->data_flow().outputs_info())
@@ -469,12 +519,14 @@ void Quantifier::print_terms_classes_info(ostream &os, bool outputs_details) con
     return;
   }
 
-  os << "|terms|: " << all_terms_count_ << '\n';
+  os << "|terms|: " << terms_count_ << '\n';
   os << "captured_terms: " << captured_terms_count_ << " ("
-     << static_cast<double>(captured_terms_count_) / all_terms_count_ * 100 << "%)\n";
-  os << "|ctxt_leaves|: " << ctxt_leaves_count_ << '\n';
+     << static_cast<double>(captured_terms_count_) / terms_count_ * 100 << "%)\n";
+  os << "|ctxt_inputs|: " << ctxt_inputs_count_ << '\n';
   os << "|ptxt_leaves|: " << ptxt_leaves_count_ << '\n';
+  os << "|constants|: " << constants_count_ << '\n';
   os << "|ptxt_ptxt_ops|: " << pp_ops_count_ << '\n';
+  os << "|constants_ops|: " << constants_ops_count_ << '\n';
   os << "operations_static_cost: " << circuit_static_cost_ << '\n';
   print_line_sep(os);
   os << "|mul| (level, arg1_size, arg2_size): count\n" << cc_mul_counts_;
@@ -493,6 +545,12 @@ void Quantifier::print_terms_classes_info(ostream &os, bool outputs_details) con
   print_line_sep(os);
   os << "|mul_plain| (level, ctxt_arg_size): count\n" << cp_mul_counts_;
   os << "total: " << cp_mul_total_ << '\n';
+  print_line_sep(os);
+  os << "|mul_scalar| (level, ctxt_arg_size): count\n" << c_scalar_mul_counts_;
+  os << "total: " << c_scalar_mul_total_ << '\n';
+  print_line_sep(os);
+  os << "|mul_non_scalar| (level, ctxt_arg_size): count\n" << c_non_scalar_mul_counts_;
+  os << "total: " << c_non_scalar_mul_total_ << '\n';
   print_line_sep(os);
   os << "|mod_switch| (level, arg_size): count\n" << mod_switch_counts_;
   os << "total: " << mod_switch_total_ << '\n';
@@ -520,7 +578,7 @@ void Quantifier::print_global_metrics(ostream &os) const
   }
 
   os << "circuit_cost: " << circuit_cost_ << '\n';
-  os << "ctxt_inputs_size: " << ctxt_inputs_size_ / 1024.0 / 1024.0 << " MB (" << ctxt_inputs_count__ << " input)\n";
+  os << "ctxt_inputs_size: " << ctxt_inputs_size_ / 1024.0 / 1024.0 << " MB (" << ctxt_inputs_count_ << " input)\n";
   os << "ctxt_outputs_size: " << ctxt_outputs_size_ / 1024.0 / 1024.0 << " MB (" << ctxt_outputs_info_.size()
      << " output)\n";
   os << "rotation_keys_size: " << rotation_keys_size_ / 1024.0 / 1024.0 << " MB (" << rotation_keys_count_ << " key)\n";
@@ -530,7 +588,7 @@ void Quantifier::print_global_metrics(ostream &os) const
 size_t Quantifier::HashDepthInfo::operator()(const DepthInfo &depth_info) const
 {
   auto h = hash<double>{}(depth_info.depth_);
-  ir::hash_combine(h, depth_info.xdepth_);
+  util::hash_combine(h, depth_info.xdepth_);
   return h;
 }
 
@@ -542,8 +600,8 @@ bool Quantifier::EqualDepthInfo::operator()(const DepthInfo &lhs, const DepthInf
 size_t Quantifier::HashCCOpInfo::operator()(const CCOpInfo &cc_op_info) const
 {
   auto h = hash<double>{}(cc_op_info.opposite_level_);
-  ir::hash_combine(h, cc_op_info.arg1_size_);
-  ir::hash_combine(h, cc_op_info.arg2_size_);
+  util::hash_combine(h, cc_op_info.arg1_size_);
+  util::hash_combine(h, cc_op_info.arg2_size_);
   return h;
 }
 
@@ -556,7 +614,7 @@ bool Quantifier::EqualCCOpInfo::operator()(const CCOpInfo &lhs, const CCOpInfo &
 size_t Quantifier::HashCAOpInfo::operator()(const CAOpInfo &ca_op_info) const
 {
   auto h = hash<double>{}(ca_op_info.opposite_level_);
-  ir::hash_combine(h, ca_op_info.arg_size_);
+  util::hash_combine(h, ca_op_info.arg_size_);
   return h;
 }
 
@@ -576,13 +634,14 @@ Quantifier operator/(const Quantifier &lhs, const Quantifier &rhs)
   }
   if (result.terms_classes_metrics() && rhs.terms_classes_metrics())
   {
-    result.relin_keys_count_ /= rhs.relin_keys_count();
-    result.rotation_keys_count_ /= rhs.rotation_keys_count();
-    result.all_terms_count_ /= rhs.all_terms_count();
+    result.terms_count_ /= rhs.terms_count();
     result.captured_terms_count_ /= rhs.captured_terms_count();
+    result.ctxt_inputs_count_ /= rhs.ctxt_inputs_count();
     result.ptxt_leaves_count_ /= rhs.ptxt_leaves_count();
+    result.constants_count_ /= rhs.constants_count();
     result.pp_ops_count_ /= rhs.pp_ops_count();
-    result.ctxt_leaves_count_ /= rhs.ctxt_leaves_count();
+    result.constants_ops_count_ /= rhs.constants_ops_count();
+    result.circuit_static_cost_ /= rhs.circuit_static_cost();
     result.cc_mul_counts_ /= rhs.cc_mul_counts();
     result.cc_mul_total_ /= rhs.cc_mul_total();
     result.square_counts_ /= rhs.square_counts();
@@ -594,12 +653,17 @@ Quantifier operator/(const Quantifier &lhs, const Quantifier &rhs)
     result.rotate_total_ /= rhs.rotate_total();
     result.cp_mul_counts_ /= rhs.cp_mul_counts();
     result.cp_mul_total_ /= rhs.cp_mul_total();
+    result.c_scalar_mul_counts_ /= rhs.c_scalar_mul_counts();
+    result.c_scalar_mul_total_ /= rhs.c_scalar_mul_total();
+    result.c_non_scalar_mul_counts_ /= rhs.c_non_scalar_mul_counts();
+    result.c_non_scalar_mul_total_ /= rhs.c_non_scalar_mul_total();
     result.mod_switch_counts_ /= rhs.mod_switch_counts();
     result.mod_switch_total_ /= rhs.mod_switch_total();
     result.he_add_counts_ /= rhs.he_add_counts();
     result.he_add_total_ /= rhs.he_add_total();
     result.ctxt_outputs_info_ /= rhs.ctxt_outputs_info();
-    result.circuit_static_cost_ /= rhs.circuit_static_cost();
+    result.relin_keys_count_ /= rhs.relin_keys_count();
+    result.rotation_keys_count_ /= rhs.rotation_keys_count();
   }
   if (result.global_metrics() && rhs.global_metrics())
   {
@@ -607,7 +671,6 @@ Quantifier operator/(const Quantifier &lhs, const Quantifier &rhs)
     result.rotation_keys_size_ /= rhs.rotation_keys_size();
     result.relin_keys_size_ /= rhs.relin_keys_size();
     result.ctxt_inputs_size_ /= rhs.ctxt_inputs_size();
-    result.ctxt_inputs_count__ /= rhs.ctxt_inputs_count_();
     result.ctxt_outputs_size_ /= rhs.ctxt_outputs_size();
   }
   return result;
@@ -629,13 +692,14 @@ Quantifier operator-(const Quantifier &lhs, const Quantifier &rhs)
   }
   if (result.terms_classes_metrics() && rhs.terms_classes_metrics())
   {
-    result.relin_keys_count_ -= rhs.relin_keys_count();
-    result.rotation_keys_count_ -= rhs.rotation_keys_count();
-    result.all_terms_count_ -= rhs.all_terms_count();
+    result.terms_count_ -= rhs.terms_count();
     result.captured_terms_count_ -= rhs.captured_terms_count();
+    result.ctxt_inputs_count_ -= rhs.ctxt_inputs_count();
     result.ptxt_leaves_count_ -= rhs.ptxt_leaves_count();
+    result.constants_count_ -= rhs.constants_count();
     result.pp_ops_count_ -= rhs.pp_ops_count();
-    result.ctxt_leaves_count_ -= rhs.ctxt_leaves_count();
+    result.constants_ops_count_ -= rhs.constants_ops_count();
+    result.circuit_static_cost_ -= rhs.circuit_static_cost();
     result.cc_mul_counts_ -= rhs.cc_mul_counts();
     result.cc_mul_total_ -= rhs.cc_mul_total();
     result.square_counts_ -= rhs.square_counts();
@@ -647,12 +711,17 @@ Quantifier operator-(const Quantifier &lhs, const Quantifier &rhs)
     result.rotate_total_ -= rhs.rotate_total();
     result.cp_mul_counts_ -= rhs.cp_mul_counts();
     result.cp_mul_total_ -= rhs.cp_mul_total();
+    result.c_scalar_mul_counts_ -= rhs.c_scalar_mul_counts();
+    result.c_scalar_mul_total_ -= rhs.c_scalar_mul_total();
+    result.c_non_scalar_mul_counts_ = rhs.c_non_scalar_mul_counts();
+    result.c_non_scalar_mul_total_ -= rhs.c_non_scalar_mul_total();
     result.mod_switch_counts_ -= rhs.mod_switch_counts();
     result.mod_switch_total_ -= rhs.mod_switch_total();
     result.he_add_counts_ -= rhs.he_add_counts();
     result.he_add_total_ -= rhs.he_add_total();
     result.ctxt_outputs_info_ -= rhs.ctxt_outputs_info();
-    result.circuit_static_cost_ -= rhs.circuit_static_cost();
+    result.relin_keys_count_ -= rhs.relin_keys_count();
+    result.rotation_keys_count_ -= rhs.rotation_keys_count();
   }
   if (result.global_metrics() && rhs.global_metrics())
   {
@@ -660,7 +729,6 @@ Quantifier operator-(const Quantifier &lhs, const Quantifier &rhs)
     result.rotation_keys_size_ -= rhs.rotation_keys_size();
     result.relin_keys_size_ -= rhs.relin_keys_size();
     result.ctxt_inputs_size_ -= rhs.ctxt_inputs_size();
-    result.ctxt_inputs_count__ -= rhs.ctxt_inputs_count_();
     result.ctxt_outputs_size_ -= rhs.ctxt_outputs_size();
   }
   return result;
@@ -682,13 +750,15 @@ Quantifier operator*(const Quantifier &lhs, int coeff)
   }
   if (result.terms_classes_metrics())
   {
-    result.relin_keys_count_ *= coeff;
-    result.rotation_keys_count_ *= coeff;
-    result.all_terms_count_ *= coeff;
+
+    result.terms_count_ *= coeff;
     result.captured_terms_count_ *= coeff;
+    result.ctxt_inputs_count_ *= coeff;
     result.ptxt_leaves_count_ *= coeff;
+    result.constants_count_ *= coeff;
     result.pp_ops_count_ *= coeff;
-    result.ctxt_leaves_count_ *= coeff;
+    result.constants_ops_count_ *= coeff;
+    result.circuit_static_cost_ *= coeff;
     result.cc_mul_counts_ *= coeff;
     result.cc_mul_total_ *= coeff;
     result.square_counts_ *= coeff;
@@ -700,12 +770,17 @@ Quantifier operator*(const Quantifier &lhs, int coeff)
     result.rotate_total_ *= coeff;
     result.cp_mul_counts_ *= coeff;
     result.cp_mul_total_ *= coeff;
+    result.c_scalar_mul_counts_ *= coeff;
+    result.c_scalar_mul_total_ *= coeff;
+    result.c_non_scalar_mul_counts_ *= coeff;
+    result.c_non_scalar_mul_total_ *= coeff;
     result.mod_switch_counts_ *= coeff;
     result.mod_switch_total_ *= coeff;
     result.he_add_counts_ *= coeff;
     result.he_add_total_ *= coeff;
     result.ctxt_outputs_info_ *= coeff;
-    result.circuit_static_cost_ *= coeff;
+    result.relin_keys_count_ *= coeff;
+    result.rotation_keys_count_ *= coeff;
   }
   if (result.global_metrics())
   {
@@ -713,7 +788,6 @@ Quantifier operator*(const Quantifier &lhs, int coeff)
     result.rotation_keys_size_ *= coeff;
     result.relin_keys_size_ *= coeff;
     result.ctxt_inputs_size_ *= coeff;
-    result.ctxt_inputs_count__ *= coeff;
     result.ctxt_outputs_size_ *= coeff;
   }
   return result;

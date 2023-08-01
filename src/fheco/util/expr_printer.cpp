@@ -1,4 +1,3 @@
-#include "fheco/ir/common.hpp"
 #include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
 #include "fheco/util/common.hpp"
@@ -296,7 +295,7 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
     size_t operator()(const Call &call) const
     {
       size_t h = hash<ir::Term>()(*call.term_);
-      ir::hash_combine(h, call.depth_);
+      util::hash_combine(h, call.depth_);
       return h;
     }
   };

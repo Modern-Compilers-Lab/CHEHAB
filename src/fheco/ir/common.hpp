@@ -3,7 +3,7 @@
 #include "fheco/dsl/common.hpp"
 #include "fheco/ir/term.hpp"
 #include <cstddef>
-#include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -12,23 +12,27 @@
 
 namespace fheco::ir
 {
-template <typename>
-inline constexpr bool always_false_v = false;
-
-double evaluate_raw_op_code(const OpCode &op_code, const std::vector<Term::Type> &operands_types);
-
-double evaluate_raw_op_code(const OpCode &op_code, const std::vector<Term *> &operands);
-
-// https://github.com/HowardHinnant/hash_append/issues/7#issuecomment-629414712
-template <typename T>
-inline void hash_combine(std::size_t &seed, const T &val)
-{
-  seed ^= std::hash<T>{}(val) + 0x9e3779b97f4a7c15ULL + (seed << 12) + (seed >> 4);
-}
+class Func;
 
 struct HashPackedVal
 {
   std::size_t operator()(const PackedVal &packed_val) const;
+};
+
+struct OpType
+{
+  ir::OpCode::Type op_code_type_;
+  std::vector<ir::Term::Type> operands_types_;
+};
+
+struct HashOpType
+{
+  std::size_t operator()(const OpType &op_type) const;
+};
+
+struct EqualOpType
+{
+  bool operator()(const OpType &lhs, const OpType &rhs) const;
 };
 
 enum class TermQualif
@@ -102,4 +106,15 @@ using IOValues = std::unordered_map<std::string, PackedVal>;
 IOValues convert_to_io_values(const InputTermsInfo &input_terms_info);
 
 IOValues convert_to_io_values(const OutputTermsInfo &output_terms_info);
+
+struct TermInfo
+{
+  Term::Type type_;
+  bool is_const_;
+  bool is_scalar_;
+};
+
+double static_eval_op(const std::shared_ptr<Func> &func, const OpCode &op_code, const std::vector<Term *> &operands);
+
+double static_eval_op(const OpCode &op_code, const std::vector<TermInfo> &operands_info);
 } // namespace fheco::ir

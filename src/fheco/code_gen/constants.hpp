@@ -1,7 +1,6 @@
 #pragma once
 
-#include "fheco/code_gen/common.hpp"
-#include "fheco/ir/term.hpp"
+#include "fheco/ir/common.hpp"
 #include <cstddef>
 #include <string_view>
 #include <unordered_map>
@@ -72,7 +71,7 @@ constexpr std::string_view source_usings{
 using namespace seal;
 )"};
 
-const std::unordered_map<OpType, std::string_view, HashOpType, EqualOpType> operation_mapping = {
+const std::unordered_map<ir::OpType, std::string_view, ir::HashOpType, ir::EqualOpType> operation_mapping = {
   {{ir::OpCode::Type::add, {ir::Term::Type::cipher, ir::Term::Type::cipher}}, "add"sv},
   {{ir::OpCode::Type::add, {ir::Term::Type::cipher, ir::Term::Type::plain}}, "add_plain"sv},
   {{ir::OpCode::Type::sub, {ir::Term::Type::cipher, ir::Term::Type::cipher}}, "sub"sv},

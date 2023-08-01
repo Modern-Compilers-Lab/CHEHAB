@@ -1,5 +1,6 @@
 #include "fheco/dsl/compiler.hpp"
 #include "fheco/ir/expr.hpp"
+#include "fheco/util/common.hpp"
 #ifdef FHECO_LOGGING
 #include "fheco/util/expr_printer.hpp"
 #include <iostream>
@@ -51,7 +52,7 @@ size_t Expr::HashOpTermKey::operator()(const OpTermKey &k) const
   size_t h = hash<OpCode>()(*k.op_code_);
   const auto &operands = *k.operands_;
   for (auto operand : operands)
-    hash_combine(h, *operand);
+    util::hash_combine(h, *operand);
   return h;
 }
 

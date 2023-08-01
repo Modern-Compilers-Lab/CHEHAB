@@ -1,4 +1,6 @@
 #include "fheco/ir/term.hpp"
+#include <algorithm>
+#include <iterator>
 #include <stdexcept>
 #include <utility>
 
@@ -44,49 +46,12 @@ string Term::term_type_str_repr(Type term_type)
 
 Term::Type Term::deduce_result_type(const OpCode &op_code, const vector<Term *> &operands)
 {
-  if (op_code.arity() != operands.size())
-    throw invalid_argument("invalid number of operands for op_code");
-
-  if (op_code.arity() == 0)
-    throw invalid_argument("cannot deduce result type of operation with 0 operands (nop)");
-
-  // non arithmetic operations
-  if (op_code.type() == OpCode::Type::encrypt)
-  {
-    if (operands[0]->type() != Type::plain)
-      throw invalid_argument("encrypt arg must be plaintext");
-
-    return Type::cipher;
-  }
-
-  if (op_code.type() == OpCode::Type::mod_switch)
-  {
-    if (operands[0]->type() != Type::cipher)
-      throw invalid_argument("mod_switch arg must be ciphertext");
-
-    return Type::cipher;
-  }
-
-  if (op_code.type() == OpCode::Type::relin)
-  {
-    if (operands[0]->type() != Type::cipher)
-      throw invalid_argument("relin arg must be cipher");
-
-    return Type::cipher;
-  }
-
-  // arithmetic operations
-  switch (op_code.arity())
-  {
-  case 1:
-    return operands[0]->type();
-
-  case 2:
-    return min(operands[0]->type(), operands[1]->type());
-
-  default:
-    throw logic_error("unhandled term type deduction for operations with arity > 2");
-  }
+  vector<Type> operands_types;
+  operands_types.reserve(operands.size());
+  transform(operands.cbegin(), operands.cend(), back_inserter(operands_types), [](const Term *operand) {
+    return operand->type();
+  });
+  return deduce_result_type(op_code, operands_types);
 }
 
 Term::Type Term::deduce_result_type(const OpCode &op_code, const vector<Type> &operands_types)
@@ -95,7 +60,7 @@ Term::Type Term::deduce_result_type(const OpCode &op_code, const vector<Type> &o
     throw invalid_argument("invalid number of operands for op_code");
 
   if (op_code.arity() == 0)
-    throw invalid_argument("cannot deduce result type of operation with 0 operands (nop)");
+    throw invalid_argument("cannot deduce result type of operation with 0 operands");
 
   // non arithmetic operations
   if (op_code.type() == OpCode::Type::encrypt)

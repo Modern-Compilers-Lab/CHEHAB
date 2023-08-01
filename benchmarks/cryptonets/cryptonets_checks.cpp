@@ -185,11 +185,6 @@ int main(int argc, char **argv)
 
   Compiler::gen_he_code(noopt_func, noopt_header_os, noopt_gen_name + ".hpp", noopt_source_os);
 
-  ofstream noopt_ir_os(noopt_func_name + "_ir.dot");
-  if (!noopt_ir_os)
-    throw logic_error("failed to create noopt_ir file");
-
-  util::draw_ir(noopt_func, noopt_ir_os);
   util::Quantifier noopt_quantifier(noopt_func);
   if (call_quantifier)
   {
@@ -245,11 +240,6 @@ int main(int argc, char **argv)
     throw logic_error("failed to create io_example file");
 
   util::print_io_terms_values(noopt_func, io_example_os);
-  ofstream opt_ir_os(opt_func_name + "_ir.dot");
-  if (!opt_ir_os)
-    throw logic_error("failed to create opt_ir file");
-
-  util::draw_ir(opt_func, opt_ir_os);
   if (call_quantifier)
   {
     cout << "\nfinal circuit characteristics\n";

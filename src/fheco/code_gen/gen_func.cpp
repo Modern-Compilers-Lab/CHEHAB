@@ -1,5 +1,6 @@
 #include "fheco/code_gen/constants.hpp"
 #include "fheco/code_gen/gen_func.hpp"
+#include "fheco/ir/common.hpp"
 #include "fheco/ir/func.hpp"
 #include "fheco/passes/prepare_code_gen.hpp"
 #include <algorithm>
@@ -201,7 +202,7 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsCtxtObject
     vector<ir::Term::Type> operands_types;
     operands_types.reserve(term->operands().size());
     transform(
-      term->operands().cbegin(), term->operands().cend(), std::back_inserter(operands_types),
+      term->operands().cbegin(), term->operands().cend(), back_inserter(operands_types),
       [](const ir::Term *operand) { return operand->type(); });
 
     if (term->op_code() == ir::OpCode::encrypt)
@@ -211,7 +212,8 @@ void gen_op_terms(const shared_ptr<ir::Func> &func, ostream &os, TermsCtxtObject
     }
     else
     {
-      os << evaluator_id << "." << operation_mapping.at(OpType{term->op_code().type(), move(operands_types)}) << "(";
+      os << evaluator_id << "." << operation_mapping.at(ir::OpType{term->op_code().type(), move(operands_types)})
+         << "(";
       // operation term needs operands so operands_ctxt_objects_ids cannot be empty
       for (size_t i = 0;; ++i)
       {

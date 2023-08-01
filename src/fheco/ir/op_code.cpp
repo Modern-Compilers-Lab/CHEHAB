@@ -1,5 +1,5 @@
-#include "fheco/ir/common.hpp"
 #include "fheco/ir/op_code.hpp"
+#include "fheco/util/common.hpp"
 #include <stdexcept>
 
 using namespace std;
@@ -126,7 +126,7 @@ size_t hash<fheco::ir::OpCode>::operator()(const fheco::ir::OpCode &op_code) con
 {
   size_t h = hash<fheco::ir::OpCode::Type>()(op_code.type());
   for (auto g : op_code.generators())
-    fheco::ir::hash_combine(h, g);
+    fheco::util::hash_combine(h, g);
   return h;
 }
 } // namespace std

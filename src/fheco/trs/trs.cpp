@@ -329,7 +329,7 @@ bool TRS::match(
   if (global_analysis)
   {
     to_delete.insert(term);
-    rel_cost = -ir::evaluate_raw_op_code(term->op_code(), term->operands());
+    rel_cost = -ir::static_eval_op(func_, term->op_code(), term->operands());
     sorted_terms.pop_back();
     for (auto sorted_term_it = sorted_terms.crbegin(); sorted_term_it != sorted_terms.crend(); ++sorted_term_it)
     {
@@ -348,7 +348,7 @@ bool TRS::match(
         }
       }
       if (to_delete_it != to_delete.end())
-        rel_cost -= ir::evaluate_raw_op_code(sorted_term->op_code(), sorted_term->operands());
+        rel_cost -= ir::static_eval_op(func_, sorted_term->op_code(), sorted_term->operands());
     }
   }
   return true;
@@ -403,10 +403,10 @@ ir::Term *TRS::construct_term(
             if (Compiler::cse_enabled())
             {
               if (!func_->data_flow().find_op_commut(&term_op_code, &term_operands))
-                rel_cost += ir::evaluate_raw_op_code(term_op_code, term_operands);
+                rel_cost += ir::static_eval_op(func_, term_op_code, term_operands);
             }
             else
-              rel_cost += ir::evaluate_raw_op_code(term_op_code, term_operands);
+              rel_cost += ir::static_eval_op(func_, term_op_code, term_operands);
           }
 
           bool inserted;
@@ -414,7 +414,7 @@ ir::Term *TRS::construct_term(
           if (global_analysis && Compiler::cse_enabled())
           {
             if (to_delete.find(term) != to_delete.end())
-              rel_cost += ir::evaluate_raw_op_code(term->op_code(), term->operands());
+              rel_cost += ir::static_eval_op(func_, term->op_code(), term->operands());
           }
           matching.emplace(top_matcher, term);
           if (inserted)

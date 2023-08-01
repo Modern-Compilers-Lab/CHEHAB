@@ -18,13 +18,13 @@ using namespace std;
 namespace fheco::ir
 {
 Func::Func(
-  string name, size_t slot_count, bool delayed_reduct, integer modulus, bool signedness, bool need_full_cyclic_rotation,
+  string name, size_t slot_count, bool delayed_reduct, integer modulus, bool signedness, bool need_cyclic_rotation,
   bool overflow_warnings)
-  : name_{move(name)}, slot_count_{slot_count}, need_full_cyclic_rotation_{need_full_cyclic_rotation},
+  : name_{move(name)}, slot_count_{slot_count}, need_cyclic_rotation_{need_cyclic_rotation},
     clear_data_eval_{slot_count_, modulus, signedness, delayed_reduct, overflow_warnings}
 {
-  if (need_full_cyclic_rotation && !util::is_power_of_two(slot_count_))
-    throw invalid_argument("when need_full_cyclic_rotation, slot_count must be a power of two");
+  if (need_cyclic_rotation && !util::is_power_of_two(slot_count_))
+    throw invalid_argument("when need_cyclic_rotation, slot_count must be a power of two");
 }
 
 template <typename T>
@@ -113,16 +113,8 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
 {
   if (Compiler::const_folding_enabled())
   {
-    vector<PackedVal> const_vals;
-    const_vals.reserve(operands.size());
-    for (auto operand : operands)
-    {
-      if (auto const_val = data_flow_.get_const_val(operand); const_val)
-        const_vals.push_back(*const_val);
-      else
-        break;
-    }
-    if (const_vals.size() == operands.size())
+    vector<PackedVal> operands_vals;
+    if (can_fold(operands, operands_vals))
     {
 #ifdef FHECO_LOGGING
       util::ExprPrinter expr_printer{Compiler::active_func()};
@@ -135,14 +127,27 @@ Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &insert
       clog << '\n';
 #endif
       if (op_code.type() == OpCode::Type::encrypt)
-        return insert_const_term(const_vals[0], inserted);
+        return insert_const_term(operands_vals[0], inserted);
 
       PackedVal dest_val;
-      clear_data_eval_.operate(op_code, const_vals, dest_val);
+      clear_data_eval_.operate(op_code, operands_vals, dest_val);
       return insert_const_term(dest_val, inserted);
     }
   }
   return data_flow_.insert_op(move(op_code), move(operands), inserted);
+}
+
+bool Func::can_fold(const vector<Term *> &operands, vector<PackedVal> &operands_vals) const
+{
+  operands_vals.reserve(operands.size());
+  for (auto operand : operands)
+  {
+    if (auto val = data_flow_.get_const_val(operand); val)
+      operands_vals.push_back(*val);
+    else
+      return false;
+  }
+  return true;
 }
 
 Term *Func::insert_const_term(PackedVal packed_val, bool &inserted)
@@ -178,26 +183,17 @@ void Func::replace_term_with(Term *term1, Term *term2)
         if (top_term1_parents_ids.find(parent->id()) == top_term1_parents_ids.end())
           continue;
 
-        const auto &operands = parent->operands();
-        vector<PackedVal> const_vals;
-        const_vals.reserve(operands.size());
-        for (auto operand : operands)
-        {
-          if (auto const_val = data_flow_.get_const_val(operand); const_val)
-            const_vals.push_back(*const_val);
-          else
-            break;
-        }
-        if (const_vals.size() == operands.size())
+        vector<PackedVal> operands_vals;
+        if (can_fold(parent->operands(), operands_vals))
         {
           bool inserted;
           if (parent->op_code().type() == OpCode::Type::encrypt)
           {
-            call_stack.push(Call{parent, insert_const_term(const_vals[0], inserted)});
+            call_stack.push(Call{parent, insert_const_term(operands_vals[0], inserted)});
             continue;
           }
           PackedVal dest_val;
-          clear_data_eval_.operate(parent->op_code(), const_vals, dest_val);
+          clear_data_eval_.operate(parent->op_code(), operands_vals, dest_val);
           call_stack.push(Call{parent, insert_const_term(dest_val, inserted)});
         }
       }

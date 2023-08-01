@@ -1,11 +1,9 @@
 set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
-    ${CMAKE_CURRENT_LIST_DIR}/common.cpp
     ${CMAKE_CURRENT_LIST_DIR}/gen_func.cpp
 )
 
 install(
     FILES
-        ${CMAKE_CURRENT_LIST_DIR}/common.hpp
         ${CMAKE_CURRENT_LIST_DIR}/constants.hpp
         ${CMAKE_CURRENT_LIST_DIR}/gen_func.hpp
 
