@@ -1,0 +1,34 @@
+digraph "box_blur_opt" {
+graph [label="box_blur_opt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+18 [label="img" style=solid color=red fontcolor=red]
+26 [label="<< 1" style=solid color=black fontcolor=black]
+26 -> 18
+35 [label="+" style=solid color=black fontcolor=black]
+35 -> 18
+35 -> 26
+37 [label="<< 2" style=solid color=black fontcolor=black]
+37 -> 18
+38 [label="+" style=solid color=black fontcolor=black]
+38 -> 35
+38 -> 37
+39 [label="<< 31" style=solid color=black fontcolor=black]
+39 -> 38
+24 [label="<< 1023" style=solid color=black fontcolor=black]
+24 -> 18
+25 [label="+" style=solid color=black fontcolor=black]
+25 -> 18
+25 -> 24
+27 [label="+" style=solid color=black fontcolor=black]
+27 -> 25
+27 -> 26
+41 [label="<< 991" style=solid color=black fontcolor=black]
+41 -> 38
+42 [label="+" style=solid color=black fontcolor=black]
+42 -> 27
+42 -> 41
+34 [label="+ (result)" style=solid color=blue fontcolor=blue]
+34 -> 39
+34 -> 42
+}

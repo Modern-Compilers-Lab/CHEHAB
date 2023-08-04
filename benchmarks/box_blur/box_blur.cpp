@@ -1,87 +1,108 @@
 #include "fheco/fheco.hpp"
+#include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <ostream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 using namespace std;
 using namespace fheco;
 
-void box_blur(size_t height, size_t width)
+void box_blur(size_t width)
 {
-  vector<size_t> shape{height, width};
-  const Ciphertext img("img", shape);
-  Ciphertext top_row = img >> width;
-  Ciphertext bottom_row = img << width;
-  Ciphertext top_sum = (top_row >> 1) + top_row + (top_row << 1);
+  Ciphertext img("img", 0, 255);
+  Ciphertext top_sum = (img >> (width + 1)) + (img >> width) + (img >> (width - 1));
   Ciphertext curr_sum = (img >> 1) + img + (img << 1);
-  Ciphertext bottom_sum = (bottom_row >> 1) + bottom_row + (bottom_row << 1);
+  Ciphertext bottom_sum = (img << (width - 1)) + (img << width) + (img << (width + 1));
   Ciphertext result = top_sum + curr_sum + bottom_sum;
   result.set_output("result");
+}
 
-  Ciphertext result1 = Plaintext(0, shape);
-  for (size_t i = 1; i < height - 1; ++i)
-  {
-    for (size_t j = 1; j < width - 1; ++j)
-    {
-      result1[i][j] = img[i - 1][j + 1] + // Top left
-                      img[i + 0][j + 1] + // Top center
-                      img[i + 1][j + 1] + // Top right
-                      img[i - 1][j + 0] + // Mid left
-                      img[i + 0][j + 0] + // Current pixel
-                      img[i + 1][j + 0] + // Mid right
-                      img[i - 1][j - 1] + // Low left
-                      img[i + 0][j - 1] + // Low center
-                      img[i + 1][j - 1]; // Low right
-    }
-  }
-  result1.set_output("result1");
+void print_bool_arg(bool arg, const string &name, ostream &os)
+{
+  os << (arg ? name : "no_" + name);
 }
 
 int main(int argc, char **argv)
 {
-  size_t width = 64;
+  bool call_quantifier = false;
   if (argc > 1)
-    width = stoul(argv[1]);
+    call_quantifier = stoi(argv[1]);
 
-  size_t height = 64;
+  auto ruleset = Compiler::Ruleset::ops_cost;
   if (argc > 2)
-    height = stoul(argv[2]);
+    ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
 
-  int trs_passes = 1;
+  auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
   if (argc > 3)
-    trs_passes = stoi(argv[3]);
+    rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
 
-  bool optimize = trs_passes > 0;
+  bool cse = true;
+  if (argc > 4)
+    cse = stoi(argv[4]);
 
-  cout << "width: " << width << ", "
-       << "height: " << height << ", "
-       << "trs_passes: " << trs_passes << '\n';
+  bool const_folding = true;
+  if (argc > 5)
+    const_folding = stoi(argv[5]);
 
+  print_bool_arg(call_quantifier, "quantifier", clog);
+  clog << " ";
+  clog << ruleset << "_trs";
+  clog << " ";
+  clog << rewrite_heuristic;
+  clog << " ";
+  print_bool_arg(cse, "cse", clog);
+  clog << " ";
+  print_bool_arg(const_folding, "constant_folding", clog);
+  clog << '\n';
+
+  if (cse)
+  {
+    Compiler::enable_cse();
+    Compiler::enable_order_operands();
+  }
+  else
+  {
+    Compiler::disable_cse();
+    Compiler::disable_order_operands();
+  }
+
+  if (const_folding)
+    Compiler::enable_const_folding();
+  else
+    Compiler::disable_const_folding();
+
+  chrono::high_resolution_clock::time_point t;
+  chrono::duration<double, milli> elapsed;
+  t = chrono::high_resolution_clock::now();
   string func_name = "box_blur";
-  Compiler::create_func(func_name, height * width, 16, true);
-  box_blur(height, width);
+  size_t width = 32;
+  size_t height = 32;
+  const auto &func = Compiler::create_func(func_name, width * height, 20, false, true);
+  box_blur(width);
 
-  // ofstream init_ir_os(func_name + "_init_ir.dot");
-  // util::draw_ir(*Compiler::active_func(), init_ir_os);
+  string gen_name = "_gen_he_" + func_name;
+  string gen_path = "he/" + gen_name;
+  ofstream header_os(gen_path + ".hpp");
+  if (!header_os)
+    throw logic_error("failed to create header file");
 
-  // util::Quantifier quantifier(Compiler::active_func());
-  // quantifier.run_analysis();
-  // quantifier.print_info(cout);
+  ofstream source_os(gen_path + ".cpp");
+  if (!source_os)
+    throw logic_error("failed to create source file");
 
-  // util::ExprPrinter expr_printer(Compiler::active_func());
-  // expr_printer.compute_terms_str_expr(util::ExprPrinter::Mode::infix_explicit_parenthesis);
-  // expr_printer.print_outputs_str_expr(cout);
-  // cout << Compiler::active_func()->constants_info();
+  Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+  elapsed = chrono::high_resolution_clock::now() - t;
+  cout << elapsed.count() << " ms\n";
 
-  // const auto &rand_inputs = Compiler::active_func()->inputs_info();
-  // auto outputs = util::evaluate_on_clear(*Compiler::active_func(), rand_inputs);
-  // if (outputs != Compiler::active_func()->outputs_info())
-  //   throw logic_error("compilation correctness-test failed");
-
-  // ofstream rand_example_os(func_name + "_rand_example.txt");
-  // util::print_io_terms_values(*Compiler::active_func(), rand_example_os);
+  if (call_quantifier)
+  {
+    util::Quantifier quantifier{func};
+    quantifier.run_all_analysis();
+    quantifier.print_info(cout);
+  }
   return 0;
 }
