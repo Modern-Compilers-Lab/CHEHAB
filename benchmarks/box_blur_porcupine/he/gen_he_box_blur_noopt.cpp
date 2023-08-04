@@ -17,7 +17,6 @@ const RelinKeys &relin_keys,
 const GaloisKeys &galois_keys)
 {
 Ciphertext c1 = encrypted_inputs.at("c0");
-size_t slot_count = encoder.slot_count();
 Ciphertext c2;
 evaluator.rotate_rows(c1, 1, galois_keys, c2);
 evaluator.add(c2, c1, c2);

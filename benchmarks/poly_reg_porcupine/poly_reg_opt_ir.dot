@@ -2,28 +2,26 @@ digraph "poly_reg_opt" {
 graph [label="poly_reg_opt" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
-16 [label="c1" style=solid color=red fontcolor=red]
-17 [label="c2" style=solid color=red fontcolor=red]
-15 [label="c0" style=solid color=red fontcolor=red]
-18 [label="c3" style=solid color=red fontcolor=red]
-19 [label="c4" style=solid color=red fontcolor=red]
-29 [label="*" style=solid color=black fontcolor=black]
-29 -> 15
-29 -> 19
-32 [label="relin" style=solid color=black fontcolor=black]
-32 -> 29
-30 [label="+" style=solid color=black fontcolor=black]
-30 -> 18
-30 -> 32
-31 [label="*" style=solid color=black fontcolor=black]
-31 -> 15
-31 -> 30
-33 [label="relin" style=solid color=black fontcolor=black]
-33 -> 31
-24 [label="+" style=solid color=black fontcolor=black]
-24 -> 17
-24 -> 33
-25 [label="- (c_result)" style=solid color=blue fontcolor=blue]
+14 [label="c1" style=solid color=red fontcolor=red]
+15 [label="c2" style=solid color=red fontcolor=red]
+13 [label="c0" style=solid color=red fontcolor=red]
+16 [label="c3" style=solid color=red fontcolor=red]
+17 [label="c4" style=solid color=red fontcolor=red]
+27 [label="*" style=solid color=black fontcolor=black]
+27 -> 13
+27 -> 17
+25 [label="+" style=solid color=black fontcolor=black]
 25 -> 16
-25 -> 24
+25 -> 27
+28 [label="relin" style=solid color=black fontcolor=black]
+28 -> 25
+26 [label="*" style=solid color=black fontcolor=black]
+26 -> 13
+26 -> 28
+22 [label="+" style=solid color=black fontcolor=black]
+22 -> 15
+22 -> 26
+23 [label="- (c_result)" style=solid color=blue fontcolor=blue]
+23 -> 14
+23 -> 22
 }

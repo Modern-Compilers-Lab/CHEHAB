@@ -30,11 +30,6 @@ void Compiler::compile(
   shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, ostream &header_os,
   string_view header_name, ostream &source_os)
 {
-#ifdef FHECO_LOGGING
-  clog << "\nremove_dead_code\n";
-#endif
-  func->remove_dead_code();
-
   switch (ruleset)
   {
   case Ruleset::depth:

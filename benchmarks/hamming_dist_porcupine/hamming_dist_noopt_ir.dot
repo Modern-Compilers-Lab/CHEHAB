@@ -7,28 +7,28 @@ edge [dir=back]
 4 [label="+" style=solid color=black fontcolor=black]
 4 -> 3
 4 -> 2
-5 [label="negate" style=solid color=black fontcolor=black]
-5 -> 4
-6 [label="*" style=solid color=black fontcolor=black]
-6 -> 5
-6 -> 3
-15 [label="relin" style=solid color=black fontcolor=black]
-15 -> 6
-7 [label="*" style=solid color=black fontcolor=black]
+7 [label="negate" style=solid color=black fontcolor=black]
 7 -> 4
-7 -> 2
+8 [label="*" style=solid color=black fontcolor=black]
+8 -> 7
+8 -> 3
+15 [label="relin" style=solid color=black fontcolor=black]
+15 -> 8
+6 [label="*" style=solid color=black fontcolor=black]
+6 -> 4
+6 -> 2
 16 [label="relin" style=solid color=black fontcolor=black]
-16 -> 7
-8 [label="-" style=solid color=black fontcolor=black]
-8 -> 15
-8 -> 16
+16 -> 6
+9 [label="-" style=solid color=black fontcolor=black]
+9 -> 15
+9 -> 16
 1 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
-9 [label="*" style=solid color=black fontcolor=black]
-9 -> 4
-9 -> 1
+5 [label="*" style=solid color=black fontcolor=black]
+5 -> 4
+5 -> 1
 10 [label="+" style=solid color=black fontcolor=black]
-10 -> 8
 10 -> 9
+10 -> 5
 11 [label="<< 2" style=solid color=black fontcolor=black]
 11 -> 10
 12 [label="+" style=solid color=black fontcolor=black]

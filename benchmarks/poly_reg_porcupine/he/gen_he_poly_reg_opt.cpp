@@ -16,20 +16,18 @@ const Evaluator &evaluator,
 const RelinKeys &relin_keys,
 const GaloisKeys &galois_keys)
 {
-Ciphertext c19 = encrypted_inputs.at("c4");
-Ciphertext c18 = encrypted_inputs.at("c3");
-Ciphertext c17 = encrypted_inputs.at("c2");
-Ciphertext c15 = encrypted_inputs.at("c0");
-Ciphertext c16 = encrypted_inputs.at("c1");
-size_t slot_count = encoder.slot_count();
-evaluator.multiply(c15, c19, c19);
-evaluator.relinearize(c19, relin_keys, c19);
-evaluator.add(c18, c19, c18);
-evaluator.multiply(c15, c18, c15);
-evaluator.relinearize(c15, relin_keys, c15);
-evaluator.add(c17, c15, c17);
-evaluator.sub(c16, c17, c16);
-encrypted_outputs.emplace("c_result", move(c16));
+Ciphertext c17 = encrypted_inputs.at("c4");
+Ciphertext c16 = encrypted_inputs.at("c3");
+Ciphertext c15 = encrypted_inputs.at("c2");
+Ciphertext c13 = encrypted_inputs.at("c0");
+Ciphertext c14 = encrypted_inputs.at("c1");
+evaluator.multiply(c13, c17, c17);
+evaluator.add(c16, c17, c16);
+evaluator.relinearize(c16, relin_keys, c16);
+evaluator.multiply(c13, c16, c13);
+evaluator.add(c15, c13, c15);
+evaluator.sub(c14, c15, c14);
+encrypted_outputs.emplace("c_result", move(c14));
 }
 
 vector<int> get_rotation_steps_poly_reg_opt(){
