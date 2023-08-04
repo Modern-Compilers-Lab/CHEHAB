@@ -28,57 +28,63 @@ size_t lazy_relin_heuristic(const shared_ptr<ir::Func> &func, size_t ctxt_size_t
       continue;
 
     if (term->is_leaf())
-      ctxt_terms_sizes.emplace(term, 2);
-    else
     {
-      vector<size_t> ctxt_args_sizes;
-      for (auto operand : term->operands())
+      ctxt_terms_sizes.emplace(term, 2);
+      continue;
+    }
+
+    vector<size_t> ctxt_args_sizes;
+    for (auto operand : term->operands())
+    {
+      if (operand->type() == ir::Term::Type::cipher)
+        ctxt_args_sizes.push_back(ctxt_terms_sizes.at(operand));
+    }
+    auto ctxt_result_size = get_ctxt_result_size(term->op_code().type(), ctxt_args_sizes);
+
+    auto relin_operands_cond = [&ctxt_result_size, ctxt_size_threshold, term]() {
+      return ctxt_result_size > ctxt_size_threshold ||
+             (term->op_code().type() == ir::OpCode::Type::rotate && ctxt_result_size > 2);
+    };
+    if (relin_operands_cond())
+    {
+      vector<pair<ir::Term *, size_t>> ctxt_terms_with_size;
+      ctxt_terms_with_size.reserve(term->operands().size());
+      for (size_t i = 0; i < term->operands().size(); ++i)
+        ctxt_terms_with_size.push_back({term->operands()[i], ctxt_args_sizes[i]});
+
+      sort(
+        ctxt_terms_with_size.begin(), ctxt_terms_with_size.end(),
+        [](const pair<ir::Term *, size_t> &lhs, const pair<ir::Term *, size_t> &rhs) {
+          return lhs.second > rhs.second;
+        });
+
+      for (size_t i = 0; i < ctxt_terms_with_size.size(); ++i)
+        ctxt_args_sizes[i] = ctxt_terms_with_size[i].second;
+
       {
-        if (operand->type() == ir::Term::Type::cipher)
-          ctxt_args_sizes.push_back(ctxt_terms_sizes.at(operand));
-      }
-      auto ctxt_result_size = get_ctxt_result_size(term->op_code().type(), ctxt_args_sizes);
-      if (ctxt_result_size > ctxt_size_threshold)
-      {
-        vector<pair<ir::Term *, size_t>> ctxt_terms_with_size;
-        ctxt_terms_with_size.reserve(term->operands().size());
-        for (size_t i = 0; i < term->operands().size(); ++i)
-          ctxt_terms_with_size.push_back({term->operands()[i], ctxt_args_sizes[i]});
-
-        sort(
-          ctxt_terms_with_size.begin(), ctxt_terms_with_size.end(),
-          [](const pair<ir::Term *, size_t> &lhs, const pair<ir::Term *, size_t> &rhs) {
-            return lhs.second > rhs.second;
-          });
-
-        for (size_t i = 0; i < ctxt_terms_with_size.size(); ++i)
-          ctxt_args_sizes[i] = ctxt_terms_with_size[i].second;
-
+        size_t i = 0;
+        while (relin_operands_cond())
         {
-          size_t i = 0;
-          while (ctxt_result_size > ctxt_size_threshold)
+          auto relin_operand = func->insert_op_term(ir::OpCode::relin, {ctxt_terms_with_size[i].first});
+          keys_count = max(keys_count, ctxt_terms_with_size[i].second - 2);
+          func->replace_term_with(ctxt_terms_with_size[i].first, relin_operand);
+          ctxt_terms_sizes.erase(ctxt_terms_with_size[i].first);
+          ctxt_terms_sizes.emplace(relin_operand, 2);
+          ctxt_terms_with_size[i].second = 2;
+          ctxt_args_sizes[i] = 2;
+          size_t j = i + 1;
+          while (j < ctxt_terms_with_size.size() && ctxt_terms_with_size[j].first == ctxt_terms_with_size[i].first)
           {
-            auto relin_operand = func->insert_op_term(ir::OpCode::relin, {ctxt_terms_with_size[i].first});
-            keys_count = max(keys_count, ctxt_terms_with_size[i].second - 2);
-            func->replace_term_with(ctxt_terms_with_size[i].first, relin_operand);
-            ctxt_terms_sizes.erase(ctxt_terms_with_size[i].first);
-            ctxt_terms_sizes.emplace(relin_operand, 2);
-            ctxt_terms_with_size[i].second = 2;
-            ctxt_args_sizes[i] = 2;
-            size_t j = i + 1;
-            while (j < ctxt_terms_with_size.size() && ctxt_terms_with_size[j].first == ctxt_terms_with_size[i].first)
-            {
-              ctxt_terms_with_size[j].second = 2;
-              ctxt_args_sizes[j] = 2;
-              ++j;
-            }
-            i = j;
-            ctxt_result_size = get_ctxt_result_size(term->op_code().type(), ctxt_args_sizes);
+            ctxt_terms_with_size[j].second = 2;
+            ctxt_args_sizes[j] = 2;
+            ++j;
           }
+          i = j;
+          ctxt_result_size = get_ctxt_result_size(term->op_code().type(), ctxt_args_sizes);
         }
       }
-      ctxt_terms_sizes.emplace(term, ctxt_result_size);
     }
+    ctxt_terms_sizes.emplace(term, ctxt_result_size);
   }
   return keys_count;
 }

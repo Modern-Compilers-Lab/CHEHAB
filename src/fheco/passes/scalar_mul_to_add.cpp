@@ -20,7 +20,7 @@ void convert_scalar_mul_to_add(const std::shared_ptr<ir::Func> &func, size_t con
 
   trs::TermMatcher const1{trs::TermMatcherType::const_, "const1"};
 
-  auto gen_balan_add = [&c_x, &const1, &func](const trs::Substitution &subst) {
+  auto gen_balan_add = [&c_x, &const1, &func](const trs::Substitution &subst) -> trs::TermMatcher {
     auto const_term = subst.get(const1);
     auto scalar_val = (*func->data_flow().get_const_val(const_term))[0];
     bool is_neg = scalar_val < 0;
@@ -58,7 +58,7 @@ void convert_scalar_mul_to_add(const std::shared_ptr<ir::Func> &func, size_t con
     return is_neg ? -trs::balanced_op(elts, trs::TermOpCode::add) : trs::balanced_op(elts, trs::TermOpCode::add);
   };
 
-  auto const_scalar_cond = [&const1, &func, conv_threshold](const trs::Substitution &subst) {
+  auto const_scalar_cond = [&const1, &func, conv_threshold](const trs::Substitution &subst) -> bool {
     auto const_term = subst.get(const1);
     auto const_info = *func->data_flow().get_const_info(const_term);
     if (!const_info.is_scalar_)

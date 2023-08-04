@@ -48,7 +48,8 @@ function<bool(const Substitution &)> Rule::has_less_ctxt_leaves(TermMatcher x, T
   };
 }
 
-function<bool(const Substitution &)> Rule::has_less_ctxt_leaves(TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &cache)
+function<bool(const Substitution &)> Rule::has_less_ctxt_leaves(
+  TermMatcher x, TermMatcher y1, TermMatcher y2, TermsMetric &cache)
 {
   return [x = move(x), y1 = move(y1), y2 = move(y2), &cache](const Substitution &subst) {
     auto x_term = subst.get(x);
