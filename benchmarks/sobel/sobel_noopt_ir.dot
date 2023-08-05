@@ -1,0 +1,167 @@
+digraph "sobel_noopt" {
+graph [label="sobel_noopt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+1 [label="img" style=solid color=red fontcolor=red]
+2 [label="<< 4032" style=solid color=black fontcolor=black]
+2 -> 1
+5 [label="<< 4095" style=solid color=black fontcolor=black]
+5 -> 2
+4 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
+73 [label="*" style=solid color=black fontcolor=black]
+73 -> 5
+73 -> 4
+7 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+74 [label="*" style=solid color=black fontcolor=black]
+74 -> 2
+74 -> 7
+9 [label="+" style=solid color=black fontcolor=black]
+9 -> 73
+9 -> 74
+11 [label="<< 1" style=solid color=black fontcolor=black]
+11 -> 2
+10 [label="1" style=dashed color=darkgreen fontcolor=darkgreen]
+75 [label="*" style=solid color=black fontcolor=black]
+75 -> 11
+75 -> 10
+13 [label="+" style=solid color=black fontcolor=black]
+13 -> 9
+13 -> 75
+15 [label="<< 4095" style=solid color=black fontcolor=black]
+15 -> 1
+14 [label="-2" style=dashed color=darkgreen fontcolor=darkgreen]
+76 [label="*" style=solid color=black fontcolor=black]
+76 -> 15
+76 -> 14
+17 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+77 [label="*" style=solid color=black fontcolor=black]
+77 -> 1
+77 -> 17
+19 [label="+" style=solid color=black fontcolor=black]
+19 -> 76
+19 -> 77
+21 [label="<< 1" style=solid color=black fontcolor=black]
+21 -> 1
+20 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
+78 [label="*" style=solid color=black fontcolor=black]
+78 -> 21
+78 -> 20
+23 [label="+" style=solid color=black fontcolor=black]
+23 -> 19
+23 -> 78
+34 [label="+" style=solid color=black fontcolor=black]
+34 -> 13
+34 -> 23
+3 [label="<< 64" style=solid color=black fontcolor=black]
+3 -> 1
+25 [label="<< 4095" style=solid color=black fontcolor=black]
+25 -> 3
+24 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
+79 [label="*" style=solid color=black fontcolor=black]
+79 -> 25
+79 -> 24
+27 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+80 [label="*" style=solid color=black fontcolor=black]
+80 -> 3
+80 -> 27
+29 [label="+" style=solid color=black fontcolor=black]
+29 -> 79
+29 -> 80
+31 [label="<< 1" style=solid color=black fontcolor=black]
+31 -> 3
+30 [label="1" style=dashed color=darkgreen fontcolor=darkgreen]
+81 [label="*" style=solid color=black fontcolor=black]
+81 -> 31
+81 -> 30
+33 [label="+" style=solid color=black fontcolor=black]
+33 -> 29
+33 -> 81
+35 [label="+" style=solid color=black fontcolor=black]
+35 -> 34
+35 -> 33
+68 [label="*" style=solid color=black fontcolor=black]
+68 -> 35
+68 -> 35
+71 [label="relin" style=solid color=black fontcolor=black]
+71 -> 68
+37 [label="<< 4095" style=solid color=black fontcolor=black]
+37 -> 2
+36 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
+82 [label="*" style=solid color=black fontcolor=black]
+82 -> 37
+82 -> 36
+39 [label="-2" style=dashed color=darkgreen fontcolor=darkgreen]
+83 [label="*" style=solid color=black fontcolor=black]
+83 -> 2
+83 -> 39
+41 [label="+" style=solid color=black fontcolor=black]
+41 -> 82
+41 -> 83
+43 [label="<< 1" style=solid color=black fontcolor=black]
+43 -> 2
+42 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
+84 [label="*" style=solid color=black fontcolor=black]
+84 -> 43
+84 -> 42
+45 [label="+" style=solid color=black fontcolor=black]
+45 -> 41
+45 -> 84
+47 [label="<< 4095" style=solid color=black fontcolor=black]
+47 -> 1
+46 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+85 [label="*" style=solid color=black fontcolor=black]
+85 -> 47
+85 -> 46
+49 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+86 [label="*" style=solid color=black fontcolor=black]
+86 -> 1
+86 -> 49
+51 [label="+" style=solid color=black fontcolor=black]
+51 -> 85
+51 -> 86
+53 [label="<< 1" style=solid color=black fontcolor=black]
+53 -> 1
+52 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+87 [label="*" style=solid color=black fontcolor=black]
+87 -> 53
+87 -> 52
+55 [label="+" style=solid color=black fontcolor=black]
+55 -> 51
+55 -> 87
+66 [label="+" style=solid color=black fontcolor=black]
+66 -> 45
+66 -> 55
+57 [label="<< 4095" style=solid color=black fontcolor=black]
+57 -> 3
+56 [label="1" style=dashed color=darkgreen fontcolor=darkgreen]
+88 [label="*" style=solid color=black fontcolor=black]
+88 -> 57
+88 -> 56
+59 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
+89 [label="*" style=solid color=black fontcolor=black]
+89 -> 3
+89 -> 59
+61 [label="+" style=solid color=black fontcolor=black]
+61 -> 88
+61 -> 89
+63 [label="<< 1" style=solid color=black fontcolor=black]
+63 -> 3
+62 [label="1" style=dashed color=darkgreen fontcolor=darkgreen]
+90 [label="*" style=solid color=black fontcolor=black]
+90 -> 63
+90 -> 62
+65 [label="+" style=solid color=black fontcolor=black]
+65 -> 61
+65 -> 90
+67 [label="+" style=solid color=black fontcolor=black]
+67 -> 66
+67 -> 65
+69 [label="*" style=solid color=black fontcolor=black]
+69 -> 67
+69 -> 67
+72 [label="relin" style=solid color=black fontcolor=black]
+72 -> 69
+70 [label="+ (result)" style=solid color=blue fontcolor=blue]
+70 -> 71
+70 -> 72
+}

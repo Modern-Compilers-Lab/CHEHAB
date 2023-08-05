@@ -1,24 +1,43 @@
-#include "gen_he_sobel.hpp"
-#include "utils.hpp"
 #include <chrono>
-#include <ctime>
+#include <cstddef>
+#include <fstream>
 #include <iostream>
-#include <vector>
+#include <ostream>
+#include "gen_he_sobel_noopt.hpp"
+#include "gen_he_sobel_opt.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace seal;
 
+void print_bool_arg(bool arg, const string &name, ostream &os)
+{
+  os << (arg ? name : "no" + name);
+}
+
 int main(int argc, char **argv)
 {
-  int repeat = 100;
+  bool opt = true;
   if (argc > 1)
-    repeat = stoi(argv[1]);
+    opt = stoi(argv[1]);
 
-  string func_name = "sobel";
-  clear_args_info_map clear_inputs, clear_outputs;
-  parse_inputs_outputs_file("../" + func_name + "_rand_example.txt", clear_inputs, clear_outputs);
+  print_bool_arg(opt, "opt", clog);
+  clog << '\n';
 
-  SEALContext context = create_context();
+  string app_name = "sobel";
+  ifstream is("../" + app_name + "_io_example.txt");
+  if (!is)
+    throw invalid_argument("failed to open io example file");
+
+  EncryptionParameters params(scheme_type::bfv);
+  size_t n = 8192;
+  params.set_poly_modulus_degree(n);
+  params.set_plain_modulus(PlainModulus::Batching(n, 20));
+  ClearArgsInfo clear_inputs, clear_outputs;
+  size_t func_slot_count;
+  parse_inputs_outputs_file(is, params.plain_modulus().value(), clear_inputs, clear_outputs, func_slot_count);
+  params.set_coeff_modulus(CoeffModulus::Create(n, {60, 60, 60}));
+  SEALContext context(params, true, sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
   const SecretKey &secret_key = keygen.secret_key();
@@ -27,53 +46,39 @@ int main(int argc, char **argv)
   RelinKeys relin_keys;
   keygen.create_relin_keys(relin_keys);
   GaloisKeys galois_keys;
-  keygen.create_galois_keys(get_rotations_steps(), galois_keys);
+  if (opt)
+    keygen.create_galois_keys(get_rotation_steps_sobel_opt(), galois_keys);
+  else
+    keygen.create_galois_keys(get_rotation_steps_sobel_noopt(), galois_keys);
   Encryptor encryptor(context, public_key);
   Evaluator evaluator(context);
   Decryptor decryptor(context, secret_key);
 
-  encrypted_args_map encrypted_inputs;
-  encoded_args_map encoded_inputs;
+  EncryptedArgs encrypted_inputs;
+  EncodedArgs encoded_inputs;
   prepare_he_inputs(batch_encoder, encryptor, clear_inputs, encrypted_inputs, encoded_inputs);
-  encrypted_args_map encrypted_outputs;
-  encoded_args_map encoded_outputs;
+  EncryptedArgs encrypted_outputs;
+  EncodedArgs encoded_outputs;
 
-  chrono::high_resolution_clock::time_point time_start, time_end;
-  chrono::duration<double, milli> time_sum(0);
-  clock_t c_start, c_end;
-  clock_t c_sum = 0;
-  c_start = clock();
-  time_start = chrono::high_resolution_clock::now();
-  sobel(
-    encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-    relin_keys, galois_keys);
-  c_end = clock();
-  time_end = chrono::high_resolution_clock::now();
-  time_sum += time_end - time_start;
-  c_sum += c_end - c_start;
+  chrono::high_resolution_clock::time_point t;
+  chrono::duration<double, milli> elapsed;
+  t = chrono::high_resolution_clock::now();
+  if (opt)
+    sobel_opt(
+      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
+      relin_keys, galois_keys);
+  else
+    sobel_noopt(
+      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
+      relin_keys, galois_keys);
+  elapsed = chrono::high_resolution_clock::now() - t;
 
-  clear_args_info_map obtained_clear_outputs;
+  ClearArgsInfo obtained_clear_outputs;
   get_clear_outputs(
-    batch_encoder, decryptor, encrypted_outputs, encoded_outputs, clear_outputs, obtained_clear_outputs);
-  print_encrypted_outputs_info(context, decryptor, encrypted_outputs);
+    batch_encoder, decryptor, encrypted_outputs, encoded_outputs, func_slot_count, obtained_clear_outputs);
+  print_encrypted_outputs_info(context, decryptor, encrypted_outputs, clog);
   if (clear_outputs != obtained_clear_outputs)
     throw logic_error("clear_outputs != obtained_clear_outputs");
 
-  // get peak memory from /proc
-  getchar();
-
-  c_start = clock();
-  time_start = chrono::high_resolution_clock::now();
-  for (int i = 0; i < repeat - 1; ++i)
-    sobel(
-      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-      relin_keys, galois_keys);
-  c_end = clock();
-  time_end = chrono::high_resolution_clock::now();
-
-  time_sum += time_end - time_start;
-  c_sum += c_end - c_start;
-
-  cout << "time: " << time_sum.count() / repeat << " ms\n";
-  cout << "cpu time: " << 1000.0 * c_sum / CLOCKS_PER_SEC / repeat << " ms\n";
+  cout << elapsed.count() << " ms\n";
 }
