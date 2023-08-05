@@ -1,5 +1,0 @@
-add_executable(poly_reg_porcupine_checks poly_reg_checks.cpp)
-target_link_libraries(poly_reg_porcupine_checks PRIVATE fheco)
-
-add_executable(poly_reg_porcupine poly_reg.cpp)
-target_link_libraries(poly_reg_porcupine PRIVATE fheco)

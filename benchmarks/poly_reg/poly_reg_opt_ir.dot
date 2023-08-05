@@ -1,0 +1,27 @@
+digraph "poly_reg_opt" {
+graph [label="poly_reg_opt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+16 [label="c1" style=solid color=red fontcolor=red]
+17 [label="c2" style=solid color=red fontcolor=red]
+15 [label="c0" style=solid color=red fontcolor=red]
+18 [label="c3" style=solid color=red fontcolor=red]
+19 [label="c4" style=solid color=red fontcolor=red]
+29 [label="*" style=solid color=black fontcolor=black]
+29 -> 15
+29 -> 19
+30 [label="+" style=solid color=black fontcolor=black]
+30 -> 18
+30 -> 29
+32 [label="relin" style=solid color=black fontcolor=black]
+32 -> 30
+31 [label="*" style=solid color=black fontcolor=black]
+31 -> 15
+31 -> 32
+24 [label="+" style=solid color=black fontcolor=black]
+24 -> 17
+24 -> 31
+25 [label="- (c_result)" style=solid color=blue fontcolor=blue]
+25 -> 16
+25 -> 24
+}

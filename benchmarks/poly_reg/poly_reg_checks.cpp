@@ -9,6 +9,17 @@
 using namespace std;
 using namespace fheco;
 
+void poly_reg()
+{
+  Ciphertext c0("c0", -10, 10);
+  Ciphertext c1("c1", -10, 10);
+  Ciphertext c2("c2", -10, 10);
+  Ciphertext c3("c3", -10, 10);
+  Ciphertext c4("c4", -10, 10);
+  Ciphertext c_result = c1 - (c0 * c0 * c4 + c0 * c3 + c2);
+  c_result.set_output("c_result");
+}
+
 void poly_reg_baseline()
 {
   Ciphertext c0("c0", -10, 10);
@@ -17,21 +28,6 @@ void poly_reg_baseline()
   Ciphertext c3("c3", -10, 10);
   Ciphertext c4("c4", -10, 10);
   Ciphertext c_result = c1 - (square(c0) * c4 + c0 * c3 + c2);
-  c_result.set_output("c_result");
-}
-
-void poly_reg_synthesized()
-{
-  Ciphertext c0("c0", -10, 10);
-  Ciphertext c1("c1", -10, 10);
-  Ciphertext c2("c2", -10, 10);
-  Ciphertext c3("c3", -10, 10);
-  Ciphertext c4("c4", -10, 10);
-  Ciphertext c5 = c0 * c4;
-  Ciphertext c6 = c5 + c3;
-  Ciphertext c7 = c0 * c6;
-  Ciphertext c8 = c7 + c2;
-  Ciphertext c_result = c1 - c8;
   c_result.set_output("c_result");
 }
 
@@ -81,7 +77,7 @@ int main(int argc, char **argv)
   string noopt_func_name = app_name + "_noopt";
   const auto &noopt_func =
     Compiler::create_func(noopt_func_name, slot_count, bit_width, signdness, need_cyclic_rotation);
-  poly_reg_baseline();
+  poly_reg();
 
   string noopt_gen_name = "gen_he_" + noopt_func_name;
   string noopt_gen_path = "he/" + noopt_gen_name;

@@ -10,14 +10,14 @@
 using namespace std;
 using namespace fheco;
 
-void poly_reg_baseline()
+void poly_reg()
 {
   Ciphertext c0("c0");
   Ciphertext c1("c1");
   Ciphertext c2("c2");
   Ciphertext c3("c3");
   Ciphertext c4("c4");
-  Ciphertext c_result = c1 - (square(c0) * c4 + c0 * c3 + c2);
+  Ciphertext c_result = c1 - (c0 * c0 * c4 + c0 * c3 + c2);
   c_result.set_output("c_result");
 }
 
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
   t = chrono::high_resolution_clock::now();
   string func_name = "poly_reg";
   const auto &func = Compiler::create_func(func_name, 1024, 20, true, false);
-  poly_reg_baseline();
+  poly_reg();
 
   string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
