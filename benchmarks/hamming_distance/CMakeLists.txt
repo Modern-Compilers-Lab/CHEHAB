@@ -1,2 +1,0 @@
-add_executable(hamming_distance hamming_distance.cpp)
-target_link_libraries(hamming_distance PRIVATE fhecompiler)

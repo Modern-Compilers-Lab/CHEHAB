@@ -1,0 +1,72 @@
+digraph "hamming_dist_opt" {
+graph [label="hamming_dist_opt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+2060 [label="c1" style=solid color=red fontcolor=red]
+2061 [label="c2" style=solid color=red fontcolor=red]
+2062 [label="+" style=solid color=black fontcolor=black]
+2062 -> 2060
+2062 -> 2061
+2064 [label="*" style=solid color=black fontcolor=black]
+2064 -> 2060
+2064 -> 2061
+2063 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
+23526 [label="*" style=solid color=black fontcolor=black]
+23526 -> 2064
+23526 -> 2063
+2066 [label="-" style=solid color=black fontcolor=black]
+2066 -> 2062
+2066 -> 23526
+23525 [label="relin" style=solid color=black fontcolor=black]
+23525 -> 2066
+3092 [label="<< 512" style=solid color=black fontcolor=black]
+3092 -> 23525
+21490 [label="+" style=solid color=black fontcolor=black]
+21490 -> 23525
+21490 -> 3092
+21993 [label="<< 256" style=solid color=black fontcolor=black]
+21993 -> 21490
+22513 [label="+" style=solid color=black fontcolor=black]
+22513 -> 21490
+22513 -> 21993
+22761 [label="<< 128" style=solid color=black fontcolor=black]
+22761 -> 22513
+23024 [label="+" style=solid color=black fontcolor=black]
+23024 -> 22513
+23024 -> 22761
+23145 [label="<< 64" style=solid color=black fontcolor=black]
+23145 -> 23024
+23279 [label="+" style=solid color=black fontcolor=black]
+23279 -> 23024
+23279 -> 23145
+23337 [label="<< 32" style=solid color=black fontcolor=black]
+23337 -> 23279
+23406 [label="+" style=solid color=black fontcolor=black]
+23406 -> 23279
+23406 -> 23337
+23433 [label="<< 16" style=solid color=black fontcolor=black]
+23433 -> 23406
+23469 [label="+" style=solid color=black fontcolor=black]
+23469 -> 23406
+23469 -> 23433
+23481 [label="<< 8" style=solid color=black fontcolor=black]
+23481 -> 23469
+23500 [label="+" style=solid color=black fontcolor=black]
+23500 -> 23469
+23500 -> 23481
+23505 [label="<< 4" style=solid color=black fontcolor=black]
+23505 -> 23500
+23515 [label="+" style=solid color=black fontcolor=black]
+23515 -> 23500
+23515 -> 23505
+23517 [label="<< 2" style=solid color=black fontcolor=black]
+23517 -> 23515
+23522 [label="+" style=solid color=black fontcolor=black]
+23522 -> 23515
+23522 -> 23517
+23523 [label="<< 1" style=solid color=black fontcolor=black]
+23523 -> 23522
+23524 [label="+ (result)" style=solid color=blue fontcolor=blue]
+23524 -> 23522
+23524 -> 23523
+}
