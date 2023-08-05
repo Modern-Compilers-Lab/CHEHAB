@@ -1,0 +1,18 @@
+digraph "linear_reg_opt" {
+graph [label="linear_reg_opt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+10 [label="c1" style=solid color=red fontcolor=red]
+9 [label="c0" style=solid color=red fontcolor=red]
+11 [label="c2" style=solid color=red fontcolor=red]
+13 [label="*" style=solid color=black fontcolor=black]
+13 -> 9
+13 -> 11
+14 [label="-" style=solid color=black fontcolor=black]
+14 -> 10
+14 -> 13
+12 [label="c3" style=solid color=red fontcolor=red]
+15 [label="- (c_result)" style=solid color=blue fontcolor=blue]
+15 -> 14
+15 -> 12
+}
