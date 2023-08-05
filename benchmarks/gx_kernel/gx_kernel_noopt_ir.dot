@@ -1,0 +1,82 @@
+digraph "gx_kernel_noopt" {
+graph [label="gx_kernel_noopt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+1 [label="img" style=solid color=red fontcolor=red]
+2 [label="<< 992" style=solid color=black fontcolor=black]
+2 -> 1
+5 [label="<< 1023" style=solid color=black fontcolor=black]
+5 -> 2
+4 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
+36 [label="*" style=solid color=black fontcolor=black]
+36 -> 5
+36 -> 4
+7 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+37 [label="*" style=solid color=black fontcolor=black]
+37 -> 2
+37 -> 7
+9 [label="+" style=solid color=black fontcolor=black]
+9 -> 36
+9 -> 37
+11 [label="<< 1" style=solid color=black fontcolor=black]
+11 -> 2
+10 [label="1" style=dashed color=darkgreen fontcolor=darkgreen]
+38 [label="*" style=solid color=black fontcolor=black]
+38 -> 11
+38 -> 10
+13 [label="+" style=solid color=black fontcolor=black]
+13 -> 9
+13 -> 38
+15 [label="<< 1023" style=solid color=black fontcolor=black]
+15 -> 1
+14 [label="-2" style=dashed color=darkgreen fontcolor=darkgreen]
+39 [label="*" style=solid color=black fontcolor=black]
+39 -> 15
+39 -> 14
+17 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+40 [label="*" style=solid color=black fontcolor=black]
+40 -> 1
+40 -> 17
+19 [label="+" style=solid color=black fontcolor=black]
+19 -> 39
+19 -> 40
+21 [label="<< 1" style=solid color=black fontcolor=black]
+21 -> 1
+20 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
+41 [label="*" style=solid color=black fontcolor=black]
+41 -> 21
+41 -> 20
+23 [label="+" style=solid color=black fontcolor=black]
+23 -> 19
+23 -> 41
+34 [label="+" style=solid color=black fontcolor=black]
+34 -> 13
+34 -> 23
+3 [label="<< 32" style=solid color=black fontcolor=black]
+3 -> 1
+25 [label="<< 1023" style=solid color=black fontcolor=black]
+25 -> 3
+24 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
+42 [label="*" style=solid color=black fontcolor=black]
+42 -> 25
+42 -> 24
+27 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+43 [label="*" style=solid color=black fontcolor=black]
+43 -> 3
+43 -> 27
+29 [label="+" style=solid color=black fontcolor=black]
+29 -> 42
+29 -> 43
+31 [label="<< 1" style=solid color=black fontcolor=black]
+31 -> 3
+30 [label="1" style=dashed color=darkgreen fontcolor=darkgreen]
+44 [label="*" style=solid color=black fontcolor=black]
+44 -> 31
+44 -> 30
+33 [label="+" style=solid color=black fontcolor=black]
+33 -> 29
+33 -> 44
+35 [label="+ (result)" style=solid color=blue fontcolor=blue]
+35 -> 34
+35 -> 33
+}

@@ -1,0 +1,36 @@
+digraph "gx_kernel_opt" {
+graph [label="gx_kernel_opt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+45 [label="img" style=solid color=red fontcolor=red]
+80 [label="<< 2" style=solid color=black fontcolor=black]
+80 -> 45
+81 [label="-" style=solid color=black fontcolor=black]
+81 -> 80
+81 -> 45
+82 [label="<< 31" style=solid color=black fontcolor=black]
+82 -> 81
+59 [label="<< 1023" style=solid color=black fontcolor=black]
+59 -> 45
+58 [label="-2" style=dashed color=darkgreen fontcolor=darkgreen]
+89 [label="*" style=solid color=black fontcolor=black]
+89 -> 59
+89 -> 58
+64 [label="<< 1" style=solid color=black fontcolor=black]
+64 -> 45
+63 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
+90 [label="*" style=solid color=black fontcolor=black]
+90 -> 64
+90 -> 63
+66 [label="+" style=solid color=black fontcolor=black]
+66 -> 89
+66 -> 90
+87 [label="<< 991" style=solid color=black fontcolor=black]
+87 -> 81
+88 [label="+" style=solid color=black fontcolor=black]
+88 -> 66
+88 -> 87
+75 [label="+ (result)" style=solid color=blue fontcolor=blue]
+75 -> 82
+75 -> 88
+}

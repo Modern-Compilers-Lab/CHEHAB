@@ -44,9 +44,6 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"simplify-add-negate-1-1", x + (-y), x - y},
     {"simplify-add-negate-1-2", (-y) + x, x - y},
 
-    {"simplify-add-mul_m1-1", x + y * m_one, x - y},
-    {"simplify-add-mul_m1-2", x * m_one + y, y - x},
-
     {"simplify-add-mul_negate-1", x * (-y) + z, z - x * y},
     {"simplify-add-mul_negate-2", (-y) * x + z, z - y * x},
     {"simplify-add-mul_negate-3", z + x * (-y), z - x * y},
@@ -161,9 +158,6 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"sub_self", x - x, zero},
 
     {"simplify-sub-negate", x - (-y), x + y},
-
-    {"simplify-sub-mul_m1-1", x - y * m_one, x + y},
-    {"simplify-sub-mul_m1-2", x * m_one - y, x + y},
 
     {"simplify-sub-mul_negate-1", z - x * (-y), z + x * y},
     {"simplify-sub-mul_negate-2", z - (-y) * x, z + y * x},
@@ -419,6 +413,9 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
 
     {"mul_1-1", one * x, x},
     {"mul_1-2", x * one, x},
+
+    {"mul_m1-1", x * m_one, -x},
+    {"mul_m1-2", m_one * x, -x},
 
     {"mul-to-square", x * x, square(x)},
 
