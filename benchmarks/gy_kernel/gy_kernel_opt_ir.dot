@@ -1,0 +1,41 @@
+digraph "gy_kernel_opt" {
+graph [label="gy_kernel_opt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+45 [label="img" style=solid color=red fontcolor=red]
+77 [label="<< 33" style=solid color=black fontcolor=black]
+77 -> 45
+76 [label="<< 31" style=solid color=black fontcolor=black]
+76 -> 45
+47 [label="<< 32" style=solid color=black fontcolor=black]
+47 -> 45
+68 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
+69 [label="*" style=solid color=black fontcolor=black]
+69 -> 47
+69 -> 68
+46 [label="<< 992" style=solid color=black fontcolor=black]
+46 -> 45
+51 [label="-2" style=dashed color=darkgreen fontcolor=darkgreen]
+52 [label="*" style=solid color=black fontcolor=black]
+52 -> 46
+52 -> 51
+78 [label="<< 991" style=solid color=black fontcolor=black]
+78 -> 45
+80 [label="-" style=solid color=black fontcolor=black]
+80 -> 52
+80 -> 78
+81 [label="<< 993" style=solid color=black fontcolor=black]
+81 -> 45
+83 [label="-" style=solid color=black fontcolor=black]
+83 -> 80
+83 -> 81
+86 [label="+" style=solid color=black fontcolor=black]
+86 -> 69
+86 -> 83
+88 [label="+" style=solid color=black fontcolor=black]
+88 -> 76
+88 -> 86
+89 [label="+ (result)" style=solid color=blue fontcolor=blue]
+89 -> 77
+89 -> 88
+}
