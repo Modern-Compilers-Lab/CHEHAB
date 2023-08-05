@@ -15,7 +15,7 @@ using namespace fheco;
 void box_blur(size_t width)
 {
   vector<vector<integer>> kernel = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
-  Ciphertext img("img", 0, 255);
+  Ciphertext img("img");
   Ciphertext top_row = img >> width;
   Ciphertext bottom_row = img << width;
   Ciphertext top_sum = kernel[0][0] * (top_row >> 1) + kernel[0][1] * top_row + kernel[0][2] * (top_row << 1);

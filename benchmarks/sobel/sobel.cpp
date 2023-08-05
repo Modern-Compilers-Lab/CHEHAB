@@ -14,7 +14,7 @@ using namespace fheco;
 
 void sobel(size_t width)
 {
-  Ciphertext img("img", 0, 255);
+  Ciphertext img("img");
   Ciphertext top_row = img >> width;
   Ciphertext bottom_row = img << width;
   // gx

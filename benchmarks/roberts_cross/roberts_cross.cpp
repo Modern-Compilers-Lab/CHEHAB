@@ -14,7 +14,7 @@ using namespace fheco;
 
 void roberts_cross(size_t width)
 {
-  Ciphertext img("img", 0, 255);
+  Ciphertext img("img");
   Ciphertext bottom_row = img << width;
   // gx
   vector<vector<integer>> gx_kernel = {{1, 0}, {0, -1}};
