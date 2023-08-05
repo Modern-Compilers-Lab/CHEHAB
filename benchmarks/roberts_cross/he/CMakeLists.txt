@@ -1,14 +1,29 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(HERobertsCross VERSION 1.0 LANGUAGES CXX)
+project(HEGyKernel VERSION 1.0 LANGUAGES CXX)
+
+SET(SEAL_HEADERS "" CACHE STRING "SEAl headers path")
+SET(SEAL_OBJECT "" CACHE STRING "SEAl object path")
+
+add_library(gen_he_roberts_cross_noopt STATIC gen_he_roberts_cross_noopt.cpp)
+target_compile_features(gen_he_roberts_cross_noopt PUBLIC cxx_std_17)
+set_target_properties(gen_he_roberts_cross_noopt PROPERTIES CXX_EXTENSIONS OFF)
+target_include_directories(gen_he_roberts_cross_noopt PUBLIC ${SEAL_HEADERS})
+target_link_libraries(gen_he_roberts_cross_noopt PUBLIC ${SEAL_OBJECT})
+
+add_library(gen_he_roberts_cross_opt STATIC gen_he_roberts_cross_opt.cpp)
+target_compile_features(gen_he_roberts_cross_opt PUBLIC cxx_std_17)
+set_target_properties(gen_he_roberts_cross_opt PROPERTIES CXX_EXTENSIONS OFF)
+target_include_directories(gen_he_roberts_cross_opt PUBLIC ${SEAL_HEADERS})
+target_link_libraries(gen_he_roberts_cross_opt PUBLIC ${SEAL_OBJECT})
 
 add_library(utils STATIC utils.cpp)
 target_compile_features(utils PUBLIC cxx_std_17)
 set_target_properties(utils PROPERTIES CXX_EXTENSIONS OFF)
+target_include_directories(utils PUBLIC ${SEAL_HEADERS})
+target_link_libraries(utils PUBLIC ${SEAL_OBJECT})
 
-find_package(SEAL 4.1.1 EXACT REQUIRED)
-target_link_libraries(utils PUBLIC SEAL::seal)
-
-
-add_executable(he_roberts_cross main.cpp)
-target_link_libraries(he_roberts_cross PRIVATE utils)
+add_executable(main main.cpp)
+target_link_libraries(main PRIVATE gen_he_roberts_cross_noopt)
+target_link_libraries(main PRIVATE gen_he_roberts_cross_opt)
+target_link_libraries(main PRIVATE utils)

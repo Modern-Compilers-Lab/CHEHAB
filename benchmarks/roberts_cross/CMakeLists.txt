@@ -1,2 +1,6 @@
+add_executable(roberts_cross_checks roberts_cross_checks.cpp)
+target_link_libraries(roberts_cross_checks PRIVATE fheco)
+
 add_executable(roberts_cross roberts_cross.cpp)
-target_link_libraries(roberts_cross PRIVATE fhecompiler)
+target_link_libraries(roberts_cross PRIVATE fheco)
+

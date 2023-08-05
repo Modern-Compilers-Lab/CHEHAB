@@ -1,0 +1,25 @@
+digraph "roberts_cross_opt" {
+graph [label="roberts_cross_opt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+42 [label="img" style=solid color=red fontcolor=red]
+66 [label="<< 65" style=solid color=black fontcolor=black]
+66 -> 42
+68 [label="-" style=solid color=black fontcolor=black]
+68 -> 42
+68 -> 66
+69 [label="square" style=solid color=black fontcolor=black]
+69 -> 68
+72 [label="<< 63" style=solid color=black fontcolor=black]
+72 -> 42
+73 [label="-" style=solid color=black fontcolor=black]
+73 -> 42
+73 -> 72
+74 [label="<< 1" style=solid color=black fontcolor=black]
+74 -> 73
+75 [label="square" style=solid color=black fontcolor=black]
+75 -> 74
+65 [label="+ (result)" style=solid color=blue fontcolor=blue]
+65 -> 69
+65 -> 75
+}

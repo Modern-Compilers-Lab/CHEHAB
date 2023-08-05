@@ -1,66 +1,118 @@
-#include "fhecompiler.hpp"
+#include "fheco/fheco.hpp"
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 using namespace std;
-using namespace fhecompiler;
+using namespace fheco;
 
-void roberts_cross(int width, int height)
+void roberts_cross(size_t width)
 {
   Ciphertext img("img", 0, 255);
   Ciphertext bottom_row = img << width;
-  // Gx
-  Ciphertext gx = img - (bottom_row << 1);
-  // Gy
-  Ciphertext gy = (img << 1) - bottom_row;
+  // gx
+  vector<vector<integer>> gx_kernel = {{1, 0}, {0, -1}};
+  Ciphertext gx_curr_sum = gx_kernel[0][0] * img + gx_kernel[0][1] * (img << 1);
+  Ciphertext gx_bottom_sum = gx_kernel[1][0] * bottom_row + gx_kernel[1][1] * (bottom_row << 1);
+  Ciphertext gx_result = gx_curr_sum + gx_bottom_sum;
+  // gy
+  vector<vector<integer>> gy_kernel = {{0, 1}, {-1, 0}};
+  Ciphertext gy_curr_sum = gy_kernel[0][0] * img + gy_kernel[0][1] * (img << 1);
+  Ciphertext gy_bottom_sum = gy_kernel[1][0] * bottom_row + gy_kernel[1][1] * (bottom_row << 1);
+  Ciphertext gy_result = gy_curr_sum + gy_bottom_sum;
   // combine
-  Ciphertext result = square(gx) + square(gy);
+  Ciphertext result = gx_result * gx_result + gy_result * gy_result;
   result.set_output("result");
+}
+
+void print_bool_arg(bool arg, const string &name, ostream &os)
+{
+  os << (arg ? name : "no_" + name);
 }
 
 int main(int argc, char **argv)
 {
-  int width = 32;
+  bool call_quantifier = false;
   if (argc > 1)
-    width = stoi(argv[1]);
+    call_quantifier = stoi(argv[1]);
 
-  int height = 32;
+  auto ruleset = Compiler::Ruleset::ops_cost;
   if (argc > 2)
-    height = stoi(argv[2]);
+    ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
 
-  int trs_passes = 1;
+  auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
   if (argc > 3)
-    trs_passes = stoi(argv[3]);
+    rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
 
-  bool optimize = trs_passes > 0;
+  bool cse = true;
+  if (argc > 4)
+    cse = stoi(argv[4]);
 
-  cout << "width: " << width << ", "
-       << "height: " << height << ", "
-       << "trs_passes: " << trs_passes << '\n';
+  bool const_folding = true;
+  if (argc > 5)
+    const_folding = stoi(argv[5]);
 
-  string func_name = "roberts_cross";
-  Compiler::create_func(func_name, height * width, 20, true, Scheme::bfv);
-  roberts_cross(width, height);
-  ofstream init_ir_os(func_name + "_init_ir.dot");
-  Compiler::draw_ir(init_ir_os);
-  const auto &rand_inputs = Compiler::get_example_input_values();
-  ofstream gen_code_os("he/gen_he_" + func_name + ".hpp");
-  if (optimize)
-    Compiler::compile(gen_code_os, trs_passes);
+  print_bool_arg(call_quantifier, "quantifier", clog);
+  clog << " ";
+  clog << ruleset << "_trs";
+  clog << " ";
+  clog << rewrite_heuristic;
+  clog << " ";
+  print_bool_arg(cse, "cse", clog);
+  clog << " ";
+  print_bool_arg(const_folding, "constant_folding", clog);
+  clog << '\n';
+
+  if (cse)
+  {
+    Compiler::enable_cse();
+    Compiler::enable_order_operands();
+  }
   else
-    Compiler::compile_noopt(gen_code_os);
-  ofstream final_ir_os(func_name + "_final_ir.dot");
-  Compiler::draw_ir(final_ir_os);
-  auto outputs = Compiler::evaluate_on_clear(rand_inputs);
-  if (outputs != Compiler::get_example_output_values())
-    throw logic_error("compilation correctness-test failed");
+  {
+    Compiler::disable_cse();
+    Compiler::disable_order_operands();
+  }
 
-  ofstream rand_example_os(func_name + "_rand_example.txt");
-  Compiler::print_inputs_outputs(rand_example_os);
+  if (const_folding)
+    Compiler::enable_const_folding();
+  else
+    Compiler::disable_const_folding();
+
+  chrono::high_resolution_clock::time_point t;
+  chrono::duration<double, milli> elapsed;
+  t = chrono::high_resolution_clock::now();
+  string func_name = "roberts_cross";
+  size_t width = 64;
+  size_t height = 64;
+  const auto &func = Compiler::create_func(func_name, width * height, 20, true, true);
+  roberts_cross(width);
+
+  string gen_name = "_gen_he_" + func_name;
+  string gen_path = "he/" + gen_name;
+  ofstream header_os(gen_path + ".hpp");
+  if (!header_os)
+    throw logic_error("failed to create header file");
+
+  ofstream source_os(gen_path + ".cpp");
+  if (!source_os)
+    throw logic_error("failed to create source file");
+
+  Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+  elapsed = chrono::high_resolution_clock::now() - t;
+  cout << elapsed.count() << " ms\n";
+
+  if (call_quantifier)
+  {
+    util::Quantifier quantifier{func};
+    quantifier.run_all_analysis();
+    quantifier.print_info(cout);
+  }
   return 0;
 }
