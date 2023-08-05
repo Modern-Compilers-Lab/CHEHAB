@@ -16,25 +16,25 @@ const Evaluator &evaluator,
 const RelinKeys &relin_keys,
 const GaloisKeys &galois_keys)
 {
-Ciphertext c18 = encrypted_inputs.at("img");
-Ciphertext c26;
-evaluator.rotate_rows(c18, 1, galois_keys, c26);
-Ciphertext c35;
-evaluator.add(c18, c26, c35);
-Ciphertext c37;
-evaluator.rotate_rows(c18, 2, galois_keys, c37);
-evaluator.add(c35, c37, c35);
-evaluator.rotate_rows(c35, 31, galois_keys, c37);
-Ciphertext c24;
-evaluator.rotate_rows(c18, 1023, galois_keys, c24);
-evaluator.add(c18, c24, c18);
-evaluator.add(c18, c26, c18);
-evaluator.rotate_rows(c35, 991, galois_keys, c35);
-evaluator.add(c18, c35, c18);
-evaluator.add(c37, c18, c37);
-encrypted_outputs.emplace("result", move(c37));
+Ciphertext c45 = encrypted_inputs.at("img");
+Ciphertext c60;
+evaluator.rotate_rows(c45, 1, galois_keys, c60);
+Ciphertext c73;
+evaluator.add(c45, c60, c73);
+Ciphertext c76;
+evaluator.rotate_rows(c45, 2, galois_keys, c76);
+evaluator.add(c73, c76, c73);
+evaluator.rotate_rows(c73, 991, galois_keys, c76);
+Ciphertext c56;
+evaluator.rotate_rows(c45, 1023, galois_keys, c56);
+evaluator.add(c45, c56, c45);
+evaluator.add(c60, c45, c60);
+evaluator.add(c76, c60, c76);
+evaluator.rotate_rows(c73, 31, galois_keys, c73);
+evaluator.add(c76, c73, c76);
+encrypted_outputs.emplace("result", move(c76));
 }
 
 vector<int> get_rotation_steps_box_blur_opt(){
-return vector<int>{1, 2, 31, 1023, 991};
+return vector<int>{1, 2, 991, 1023, 31};
 }
