@@ -28,7 +28,7 @@ bool Compiler::scalar_vector_shape_ = true;
 
 void Compiler::compile(
   shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, ostream &header_os,
-  string_view header_name, ostream &source_os)
+  string_view header_name, ostream &source_os, bool log2_reduct)
 {
   switch (ruleset)
   {
@@ -67,23 +67,40 @@ void Compiler::compile(
     break;
   }
 
+  if (log2_reduct)
+  {
+#ifdef FHECO_LOGGING
+    clog << "\nlog2_reduct\n";
+#endif
+    trs::TRS log2_reduct_trs{trs::Ruleset::log2_reduct_opt_ruleset(func)};
+    log2_reduct_trs.run(trs::RewriteHeuristic::top_down);
+  }
+
+#ifdef FHECO_LOGGING
+  clog << "\ncse_commut\n";
+#endif
   passes::cse_commut(func);
-  gen_he_code(func, header_os, header_name, source_os);
+  gen_he_code(func, header_os, header_name, source_os, 29, true);
 }
 
 void Compiler::gen_he_code(
-  const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name, std::ostream &source_os)
+  const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name, std::ostream &source_os,
+  size_t rotation_keys_threshold, bool lazy_relin)
 {
 #ifdef FHECO_LOGGING
   clog << "\nrotation_key_selection\n";
 #endif
   unordered_set<int> rotation_steps_keys;
-  rotation_steps_keys = passes::reduce_rotation_keys(func, 29);
+  rotation_steps_keys = passes::reduce_rotation_keys(func, rotation_keys_threshold);
 
 #ifdef FHECO_LOGGING
   clog << "\nrelin_insertion\n";
 #endif
-  size_t relin_keys_count = passes::lazy_relin_heuristic(func);
+  size_t relin_keys_count;
+  if (lazy_relin)
+    relin_keys_count = passes::lazy_relin_heuristic(func);
+  else
+    relin_keys_count = passes::relin_after_ctxt_ctxt_mul(func);
 
 #ifdef FHECO_LOGGING
   clog << "\ncode_generation\n";

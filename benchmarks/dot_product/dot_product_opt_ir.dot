@@ -1,0 +1,60 @@
+digraph "dot_product_opt" {
+graph [label="dot_product_opt" labelloc="t"]
+node [shape=circle width=1 margin=0]
+edge [dir=back]
+2054 [label="c0" style=solid color=red fontcolor=red]
+2055 [label="v1" style=dashed color=red fontcolor=red]
+2056 [label="*" style=solid color=black fontcolor=black]
+2056 -> 2054
+2056 -> 2055
+3082 [label="<< 512" style=solid color=black fontcolor=black]
+3082 -> 2056
+21480 [label="+" style=solid color=black fontcolor=black]
+21480 -> 2056
+21480 -> 3082
+21983 [label="<< 256" style=solid color=black fontcolor=black]
+21983 -> 21480
+22503 [label="+" style=solid color=black fontcolor=black]
+22503 -> 21480
+22503 -> 21983
+22751 [label="<< 128" style=solid color=black fontcolor=black]
+22751 -> 22503
+23014 [label="+" style=solid color=black fontcolor=black]
+23014 -> 22503
+23014 -> 22751
+23135 [label="<< 64" style=solid color=black fontcolor=black]
+23135 -> 23014
+23269 [label="+" style=solid color=black fontcolor=black]
+23269 -> 23014
+23269 -> 23135
+23327 [label="<< 32" style=solid color=black fontcolor=black]
+23327 -> 23269
+23396 [label="+" style=solid color=black fontcolor=black]
+23396 -> 23269
+23396 -> 23327
+23423 [label="<< 16" style=solid color=black fontcolor=black]
+23423 -> 23396
+23459 [label="+" style=solid color=black fontcolor=black]
+23459 -> 23396
+23459 -> 23423
+23471 [label="<< 8" style=solid color=black fontcolor=black]
+23471 -> 23459
+23490 [label="+" style=solid color=black fontcolor=black]
+23490 -> 23459
+23490 -> 23471
+23495 [label="<< 4" style=solid color=black fontcolor=black]
+23495 -> 23490
+23505 [label="+" style=solid color=black fontcolor=black]
+23505 -> 23490
+23505 -> 23495
+23507 [label="<< 2" style=solid color=black fontcolor=black]
+23507 -> 23505
+23512 [label="+" style=solid color=black fontcolor=black]
+23512 -> 23505
+23512 -> 23507
+23513 [label="<< 1" style=solid color=black fontcolor=black]
+23513 -> 23512
+23514 [label="+ (result)" style=solid color=blue fontcolor=blue]
+23514 -> 23512
+23514 -> 23513
+}

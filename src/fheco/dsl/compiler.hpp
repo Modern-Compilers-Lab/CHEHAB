@@ -3,6 +3,7 @@
 #include "fheco/ir/func.hpp"
 #include "fheco/trs/common.hpp"
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -41,11 +42,12 @@ public:
 
   static void compile(
     std::shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::ostream &header_os,
-    std::string_view header_name, std::ostream &source_os);
+    std::string_view header_name, std::ostream &source_os, bool log2_reduct = false);
 
   static void gen_he_code(
     const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name,
-    std::ostream &source_os);
+    std::ostream &source_os, std::size_t rotation_keys_threshold = std::numeric_limits<std::size_t>::max(),
+    bool lazy_relin = false);
 
   static inline const std::shared_ptr<ir::Func> &active_func()
   {

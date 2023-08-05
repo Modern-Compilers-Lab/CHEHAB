@@ -11,7 +11,7 @@ using namespace std;
 
 namespace fheco::passes
 {
-unordered_set<int> reduce_rotation_keys(const shared_ptr<ir::Func> &func, size_t keys_threshold = 29)
+unordered_set<int> reduce_rotation_keys(const shared_ptr<ir::Func> &func, size_t keys_threshold)
 {
   unordered_map<int, int> steps_freq;
   ir::Term::PtrSet decomp_candidate_terms;
