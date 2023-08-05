@@ -26,19 +26,19 @@ Ciphertext c80;
 evaluator.rotate_rows(c45, 2, galois_keys, c80);
 evaluator.sub(c80, c45, c80);
 Ciphertext c82;
-evaluator.rotate_rows(c80, 31, galois_keys, c82);
+evaluator.rotate_rows(c80, 63, galois_keys, c82);
 Ciphertext c59;
-evaluator.rotate_rows(c45, 1023, galois_keys, c59);
+evaluator.rotate_rows(c45, 4095, galois_keys, c59);
 evaluator.multiply_plain(c59, p58, c59);
 evaluator.rotate_rows(c45, 1, galois_keys, c45);
 evaluator.multiply_plain(c45, p63, c45);
 evaluator.add(c59, c45, c59);
-evaluator.rotate_rows(c80, 991, galois_keys, c80);
+evaluator.rotate_rows(c80, 4031, galois_keys, c80);
 evaluator.add(c59, c80, c59);
 evaluator.add(c82, c59, c82);
 encrypted_outputs.emplace("result", move(c82));
 }
 
 vector<int> get_rotation_steps_gx_kernel_opt(){
-return vector<int>{2, 31, 1023, 1, 991};
+return vector<int>{2, 63, 4095, 1, 4031};
 }

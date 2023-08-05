@@ -30,13 +30,13 @@ int main(int argc, char **argv)
     throw invalid_argument("failed to open io example file");
 
   EncryptionParameters params(scheme_type::bfv);
-  size_t n = 4096;
+  size_t n = 8192;
   params.set_poly_modulus_degree(n);
   params.set_plain_modulus(PlainModulus::Batching(n, 20));
   ClearArgsInfo clear_inputs, clear_outputs;
   size_t func_slot_count;
   parse_inputs_outputs_file(is, params.plain_modulus().value(), clear_inputs, clear_outputs, func_slot_count);
-  params.set_coeff_modulus(CoeffModulus::Create(n, {54, 55}));
+  params.set_coeff_modulus(CoeffModulus::Create(n, {60, 60}));
   SEALContext context(params, true, sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);

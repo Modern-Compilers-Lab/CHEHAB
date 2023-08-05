@@ -74,8 +74,8 @@ int main(int argc, char **argv)
   clog << '\n';
 
   string app_name = "box_blur";
-  size_t width = 32;
-  size_t height = 32;
+  size_t width = 64;
+  size_t height = 64;
   size_t slot_count = width * height;
   int bit_width = 20;
   bool signdness = false;

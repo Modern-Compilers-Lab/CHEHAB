@@ -3,9 +3,9 @@ graph [label="gx_kernel_noopt" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
 1 [label="img" style=solid color=red fontcolor=red]
-2 [label="<< 992" style=solid color=black fontcolor=black]
+2 [label="<< 4032" style=solid color=black fontcolor=black]
 2 -> 1
-5 [label="<< 1023" style=solid color=black fontcolor=black]
+5 [label="<< 4095" style=solid color=black fontcolor=black]
 5 -> 2
 4 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
 36 [label="*" style=solid color=black fontcolor=black]
@@ -27,7 +27,7 @@ edge [dir=back]
 13 [label="+" style=solid color=black fontcolor=black]
 13 -> 9
 13 -> 38
-15 [label="<< 1023" style=solid color=black fontcolor=black]
+15 [label="<< 4095" style=solid color=black fontcolor=black]
 15 -> 1
 14 [label="-2" style=dashed color=darkgreen fontcolor=darkgreen]
 39 [label="*" style=solid color=black fontcolor=black]
@@ -52,9 +52,9 @@ edge [dir=back]
 34 [label="+" style=solid color=black fontcolor=black]
 34 -> 13
 34 -> 23
-3 [label="<< 32" style=solid color=black fontcolor=black]
+3 [label="<< 64" style=solid color=black fontcolor=black]
 3 -> 1
-25 [label="<< 1023" style=solid color=black fontcolor=black]
+25 [label="<< 4095" style=solid color=black fontcolor=black]
 25 -> 3
 24 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
 42 [label="*" style=solid color=black fontcolor=black]

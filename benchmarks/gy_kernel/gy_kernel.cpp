@@ -84,8 +84,8 @@ int main(int argc, char **argv)
   chrono::duration<double, milli> elapsed;
   t = chrono::high_resolution_clock::now();
   string func_name = "gy_kernel";
-  size_t width = 32;
-  size_t height = 32;
+  size_t width = 64;
+  size_t height = 64;
   const auto &func = Compiler::create_func(func_name, width * height, 20, true, true);
   gy_kernel(width);
 

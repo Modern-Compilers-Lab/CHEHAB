@@ -23,18 +23,18 @@ encoder.encode(vector<std::int64_t>(slot_count, 2), p68);
 Plaintext p51;
 encoder.encode(vector<std::int64_t>(slot_count, -2), p51);
 Ciphertext c46;
-evaluator.rotate_rows(c45, 992, galois_keys, c46);
+evaluator.rotate_rows(c45, 4032, galois_keys, c46);
 evaluator.multiply_plain(c46, p51, c46);
 Ciphertext c78;
-evaluator.rotate_rows(c45, 991, galois_keys, c78);
+evaluator.rotate_rows(c45, 4031, galois_keys, c78);
 evaluator.sub(c46, c78, c46);
-evaluator.rotate_rows(c45, 993, galois_keys, c78);
+evaluator.rotate_rows(c45, 4033, galois_keys, c78);
 evaluator.sub(c46, c78, c46);
-evaluator.rotate_rows(c45, 33, galois_keys, c78);
+evaluator.rotate_rows(c45, 65, galois_keys, c78);
 Ciphertext c47;
-evaluator.rotate_rows(c45, 32, galois_keys, c47);
+evaluator.rotate_rows(c45, 64, galois_keys, c47);
 evaluator.multiply_plain(c47, p68, c47);
-evaluator.rotate_rows(c45, 31, galois_keys, c45);
+evaluator.rotate_rows(c45, 63, galois_keys, c45);
 evaluator.add(c47, c45, c47);
 evaluator.add(c78, c47, c78);
 evaluator.add(c46, c78, c46);
@@ -42,5 +42,5 @@ encrypted_outputs.emplace("result", move(c46));
 }
 
 vector<int> get_rotation_steps_gy_kernel_opt(){
-return vector<int>{992, 991, 993, 31, 33, 32};
+return vector<int>{4032, 4031, 4033, 65, 64, 63};
 }

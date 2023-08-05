@@ -13,9 +13,9 @@ edge [dir=back]
 77 [label="+" style=solid color=black fontcolor=black]
 77 -> 73
 77 -> 76
-82 [label="<< 991" style=solid color=black fontcolor=black]
+82 [label="<< 4031" style=solid color=black fontcolor=black]
 82 -> 77
-56 [label="<< 1023" style=solid color=black fontcolor=black]
+56 [label="<< 4095" style=solid color=black fontcolor=black]
 56 -> 45
 83 [label="+" style=solid color=black fontcolor=black]
 83 -> 45
@@ -26,7 +26,7 @@ edge [dir=back]
 70 [label="+" style=solid color=black fontcolor=black]
 70 -> 82
 70 -> 84
-78 [label="<< 31" style=solid color=black fontcolor=black]
+78 [label="<< 63" style=solid color=black fontcolor=black]
 78 -> 77
 85 [label="+ (result)" style=solid color=blue fontcolor=blue]
 85 -> 70
