@@ -2,71 +2,81 @@ digraph "hamming_dist_opt" {
 graph [label="hamming_dist_opt" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
-2060 [label="c1" style=solid color=red fontcolor=red]
-2061 [label="c2" style=solid color=red fontcolor=red]
-2062 [label="+" style=solid color=black fontcolor=black]
-2062 -> 2060
-2062 -> 2061
-2064 [label="*" style=solid color=black fontcolor=black]
-2064 -> 2060
-2064 -> 2061
-2063 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
-23526 [label="*" style=solid color=black fontcolor=black]
-23526 -> 2064
-23526 -> 2063
-2066 [label="-" style=solid color=black fontcolor=black]
-2066 -> 2062
-2066 -> 23526
-23525 [label="relin" style=solid color=black fontcolor=black]
-23525 -> 2066
-3092 [label="<< 512" style=solid color=black fontcolor=black]
-3092 -> 23525
-21490 [label="+" style=solid color=black fontcolor=black]
-21490 -> 23525
-21490 -> 3092
-21993 [label="<< 256" style=solid color=black fontcolor=black]
-21993 -> 21490
-22513 [label="+" style=solid color=black fontcolor=black]
-22513 -> 21490
-22513 -> 21993
-22761 [label="<< 128" style=solid color=black fontcolor=black]
-22761 -> 22513
-23024 [label="+" style=solid color=black fontcolor=black]
-23024 -> 22513
-23024 -> 22761
-23145 [label="<< 64" style=solid color=black fontcolor=black]
-23145 -> 23024
-23279 [label="+" style=solid color=black fontcolor=black]
-23279 -> 23024
-23279 -> 23145
-23337 [label="<< 32" style=solid color=black fontcolor=black]
-23337 -> 23279
-23406 [label="+" style=solid color=black fontcolor=black]
-23406 -> 23279
-23406 -> 23337
-23433 [label="<< 16" style=solid color=black fontcolor=black]
-23433 -> 23406
-23469 [label="+" style=solid color=black fontcolor=black]
-23469 -> 23406
-23469 -> 23433
-23481 [label="<< 8" style=solid color=black fontcolor=black]
-23481 -> 23469
-23500 [label="+" style=solid color=black fontcolor=black]
-23500 -> 23469
-23500 -> 23481
-23505 [label="<< 4" style=solid color=black fontcolor=black]
-23505 -> 23500
-23515 [label="+" style=solid color=black fontcolor=black]
-23515 -> 23500
-23515 -> 23505
-23517 [label="<< 2" style=solid color=black fontcolor=black]
-23517 -> 23515
-23522 [label="+" style=solid color=black fontcolor=black]
-23522 -> 23515
-23522 -> 23517
-23523 [label="<< 1" style=solid color=black fontcolor=black]
-23523 -> 23522
-23524 [label="+ (result)" style=solid color=blue fontcolor=blue]
-23524 -> 23522
-23524 -> 23523
+8204 [label="c1" style=solid color=red fontcolor=red]
+8205 [label="c2" style=solid color=red fontcolor=red]
+8209 [label="+" style=solid color=black fontcolor=black]
+8209 -> 8204
+8209 -> 8205
+8206 [label="*" style=solid color=black fontcolor=black]
+8206 -> 8204
+8206 -> 8205
+8207 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
+8208 [label="*" style=solid color=black fontcolor=black]
+8208 -> 8206
+8208 -> 8207
+8210 [label="-" style=solid color=black fontcolor=black]
+8210 -> 8209
+8210 -> 8208
+110555 [label="relin" style=solid color=black fontcolor=black]
+110555 -> 8210
+12308 [label="<< 2048" style=solid color=black fontcolor=black]
+12308 -> 110555
+102378 [label="+" style=solid color=black fontcolor=black]
+102378 -> 110555
+102378 -> 12308
+104415 [label="<< 1024" style=solid color=black fontcolor=black]
+104415 -> 102378
+106473 [label="+" style=solid color=black fontcolor=black]
+106473 -> 102378
+106473 -> 104415
+107487 [label="<< 512" style=solid color=black fontcolor=black]
+107487 -> 106473
+108520 [label="+" style=solid color=black fontcolor=black]
+108520 -> 106473
+108520 -> 107487
+109023 [label="<< 256" style=solid color=black fontcolor=black]
+109023 -> 108520
+109543 [label="+" style=solid color=black fontcolor=black]
+109543 -> 108520
+109543 -> 109023
+109791 [label="<< 128" style=solid color=black fontcolor=black]
+109791 -> 109543
+110054 [label="+" style=solid color=black fontcolor=black]
+110054 -> 109543
+110054 -> 109791
+110175 [label="<< 64" style=solid color=black fontcolor=black]
+110175 -> 110054
+110309 [label="+" style=solid color=black fontcolor=black]
+110309 -> 110054
+110309 -> 110175
+110367 [label="<< 32" style=solid color=black fontcolor=black]
+110367 -> 110309
+110436 [label="+" style=solid color=black fontcolor=black]
+110436 -> 110309
+110436 -> 110367
+110463 [label="<< 16" style=solid color=black fontcolor=black]
+110463 -> 110436
+110499 [label="+" style=solid color=black fontcolor=black]
+110499 -> 110436
+110499 -> 110463
+110511 [label="<< 8" style=solid color=black fontcolor=black]
+110511 -> 110499
+110530 [label="+" style=solid color=black fontcolor=black]
+110530 -> 110499
+110530 -> 110511
+110535 [label="<< 4" style=solid color=black fontcolor=black]
+110535 -> 110530
+110545 [label="+" style=solid color=black fontcolor=black]
+110545 -> 110530
+110545 -> 110535
+110547 [label="<< 2" style=solid color=black fontcolor=black]
+110547 -> 110545
+110552 [label="+" style=solid color=black fontcolor=black]
+110552 -> 110545
+110552 -> 110547
+110553 [label="<< 1" style=solid color=black fontcolor=black]
+110553 -> 110552
+110554 [label="+ (result)" style=solid color=blue fontcolor=blue]
+110554 -> 110552
+110554 -> 110553
 }

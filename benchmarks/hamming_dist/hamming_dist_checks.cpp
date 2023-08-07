@@ -69,7 +69,7 @@ int main(int argc, char **argv)
   clog << '\n';
 
   string app_name = "hamming_dist";
-  size_t slot_count = 1024;
+  size_t slot_count = 4096;
   int bit_width = 20;
   bool signdness = true;
   bool need_cyclic_rotation = true;

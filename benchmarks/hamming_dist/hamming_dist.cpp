@@ -80,7 +80,7 @@ int main(int argc, char **argv)
   chrono::duration<double, milli> elapsed;
   t = chrono::high_resolution_clock::now();
   string func_name = "hamming_dist";
-  size_t slot_count = 1024;
+  size_t slot_count = 4096;
   const auto &func = Compiler::create_func(func_name, slot_count, 20, true, true);
   hamming_dist(slot_count);
 
