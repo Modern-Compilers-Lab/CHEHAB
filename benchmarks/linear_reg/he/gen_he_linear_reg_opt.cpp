@@ -18,8 +18,8 @@ const GaloisKeys &galois_keys)
 {
 Ciphertext c12 = encrypted_inputs.at("c3");
 Ciphertext c11 = encrypted_inputs.at("c2");
-Ciphertext c10 = encrypted_inputs.at("c1");
 Ciphertext c9 = encrypted_inputs.at("c0");
+Ciphertext c10 = encrypted_inputs.at("c1");
 evaluator.multiply(c9, c11, c9);
 evaluator.sub(c10, c9, c10);
 evaluator.sub(c10, c12, c10);
