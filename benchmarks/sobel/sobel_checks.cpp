@@ -50,7 +50,7 @@ void sobel_baseline(size_t width)
   Ciphertext gy_bottom_sum = (img << (width - 1)) + 2 * (img << width) + (img << (width + 1));
   Ciphertext gy_result = gy_top_sum + gy_bottom_sum;
   // combine
-  Ciphertext result = gx_result * gx_result + gy_result * gy_result;
+  Ciphertext result = square(gx_result) + square(gy_result);
   result.set_output("result");
 }
 

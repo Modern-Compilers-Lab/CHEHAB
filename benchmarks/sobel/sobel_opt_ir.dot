@@ -3,70 +3,70 @@ graph [label="sobel_opt" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
 91 [label="img" style=solid color=red fontcolor=red]
-141 [label="<< 65" style=solid color=black fontcolor=black]
-141 -> 91
-139 [label="<< 63" style=solid color=black fontcolor=black]
-139 -> 91
-142 [label="-" style=solid color=black fontcolor=black]
-142 -> 141
-142 -> 139
-105 [label="<< 4095" style=solid color=black fontcolor=black]
-105 -> 91
-104 [label="-2" style=dashed color=darkgreen fontcolor=darkgreen]
-154 [label="*" style=solid color=black fontcolor=black]
-154 -> 105
-154 -> 104
-110 [label="<< 1" style=solid color=black fontcolor=black]
-110 -> 91
-109 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
-155 [label="*" style=solid color=black fontcolor=black]
-155 -> 110
-155 -> 109
-112 [label="+" style=solid color=black fontcolor=black]
-112 -> 154
-112 -> 155
-145 [label="<< 4033" style=solid color=black fontcolor=black]
-145 -> 91
-143 [label="<< 4031" style=solid color=black fontcolor=black]
-143 -> 91
-146 [label="-" style=solid color=black fontcolor=black]
-146 -> 145
-146 -> 143
-152 [label="+" style=solid color=black fontcolor=black]
-152 -> 112
-152 -> 146
-121 [label="+" style=solid color=black fontcolor=black]
-121 -> 142
-121 -> 152
-147 [label="square" style=solid color=black fontcolor=black]
-147 -> 121
-93 [label="<< 64" style=solid color=black fontcolor=black]
-93 -> 91
-131 [label="*" style=solid color=black fontcolor=black]
-131 -> 93
-131 -> 109
-153 [label="+" style=solid color=black fontcolor=black]
-153 -> 131
-153 -> 139
-133 [label="+" style=solid color=black fontcolor=black]
-133 -> 141
-133 -> 153
 92 [label="<< 4032" style=solid color=black fontcolor=black]
 92 -> 91
-122 [label="*" style=solid color=black fontcolor=black]
-122 -> 92
-122 -> 104
-148 [label="-" style=solid color=black fontcolor=black]
-148 -> 122
-148 -> 143
+109 [label="-2" style=dashed color=darkgreen fontcolor=darkgreen]
+123 [label="*" style=solid color=black fontcolor=black]
+123 -> 92
+123 -> 109
+143 [label="<< 4031" style=solid color=black fontcolor=black]
+143 -> 91
+145 [label="-" style=solid color=black fontcolor=black]
+145 -> 123
+145 -> 143
+141 [label="<< 4033" style=solid color=black fontcolor=black]
+141 -> 91
+146 [label="-" style=solid color=black fontcolor=black]
+146 -> 145
+146 -> 141
+93 [label="<< 64" style=solid color=black fontcolor=black]
+93 -> 91
+105 [label="2" style=dashed color=darkgreen fontcolor=darkgreen]
+130 [label="*" style=solid color=black fontcolor=black]
+130 -> 93
+130 -> 105
+140 [label="<< 63" style=solid color=black fontcolor=black]
+140 -> 91
+132 [label="+" style=solid color=black fontcolor=black]
+132 -> 130
+132 -> 140
+139 [label="<< 65" style=solid color=black fontcolor=black]
+139 -> 91
+152 [label="+" style=solid color=black fontcolor=black]
+152 -> 132
+152 -> 139
+153 [label="+" style=solid color=black fontcolor=black]
+153 -> 146
+153 -> 152
+147 [label="square" style=solid color=black fontcolor=black]
+147 -> 153
+149 [label="-" style=solid color=black fontcolor=black]
+149 -> 139
+149 -> 140
+104 [label="<< 1" style=solid color=black fontcolor=black]
+104 -> 91
+106 [label="*" style=solid color=black fontcolor=black]
+106 -> 104
+106 -> 105
+108 [label="<< 4095" style=solid color=black fontcolor=black]
+108 -> 91
+110 [label="*" style=solid color=black fontcolor=black]
+110 -> 108
+110 -> 109
+112 [label="+" style=solid color=black fontcolor=black]
+112 -> 106
+112 -> 110
 150 [label="-" style=solid color=black fontcolor=black]
-150 -> 148
-150 -> 145
-135 [label="+" style=solid color=black fontcolor=black]
-135 -> 133
-135 -> 150
+150 -> 141
+150 -> 143
+154 [label="+" style=solid color=black fontcolor=black]
+154 -> 112
+154 -> 150
+121 [label="+" style=solid color=black fontcolor=black]
+121 -> 149
+121 -> 154
 151 [label="square" style=solid color=black fontcolor=black]
-151 -> 135
+151 -> 121
 138 [label="+ (result)" style=solid color=blue fontcolor=blue]
 138 -> 147
 138 -> 151
