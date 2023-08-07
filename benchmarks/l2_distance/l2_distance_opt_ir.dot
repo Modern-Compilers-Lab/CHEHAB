@@ -2,63 +2,73 @@ digraph "l2_distance_opt" {
 graph [label="l2_distance_opt" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
-2057 [label="c1" style=solid color=red fontcolor=red]
-2058 [label="c2" style=solid color=red fontcolor=red]
-2059 [label="-" style=solid color=black fontcolor=black]
-2059 -> 2057
-2059 -> 2058
-4110 [label="square" style=solid color=black fontcolor=black]
-4110 -> 2059
-23530 [label="relin" style=solid color=black fontcolor=black]
-23530 -> 4110
-3086 [label="<< 512" style=solid color=black fontcolor=black]
-3086 -> 23530
-23520 [label="+" style=solid color=black fontcolor=black]
-23520 -> 3086
-23520 -> 23530
-21988 [label="<< 256" style=solid color=black fontcolor=black]
-21988 -> 23520
-23521 [label="+" style=solid color=black fontcolor=black]
-23521 -> 21988
-23521 -> 23520
-22756 [label="<< 128" style=solid color=black fontcolor=black]
-22756 -> 23521
-23522 [label="+" style=solid color=black fontcolor=black]
-23522 -> 22756
-23522 -> 23521
-23140 [label="<< 64" style=solid color=black fontcolor=black]
-23140 -> 23522
-23523 [label="+" style=solid color=black fontcolor=black]
-23523 -> 23140
-23523 -> 23522
-23332 [label="<< 32" style=solid color=black fontcolor=black]
-23332 -> 23523
-23524 [label="+" style=solid color=black fontcolor=black]
-23524 -> 23332
-23524 -> 23523
-23428 [label="<< 16" style=solid color=black fontcolor=black]
-23428 -> 23524
-23525 [label="+" style=solid color=black fontcolor=black]
-23525 -> 23428
-23525 -> 23524
-23476 [label="<< 8" style=solid color=black fontcolor=black]
-23476 -> 23525
-23526 [label="+" style=solid color=black fontcolor=black]
-23526 -> 23476
-23526 -> 23525
-23500 [label="<< 4" style=solid color=black fontcolor=black]
-23500 -> 23526
-23527 [label="+" style=solid color=black fontcolor=black]
-23527 -> 23500
-23527 -> 23526
-23512 [label="<< 2" style=solid color=black fontcolor=black]
-23512 -> 23527
-23528 [label="+" style=solid color=black fontcolor=black]
-23528 -> 23512
-23528 -> 23527
-23518 [label="<< 1" style=solid color=black fontcolor=black]
-23518 -> 23528
-23529 [label="+ (result)" style=solid color=blue fontcolor=blue]
-23529 -> 23518
-23529 -> 23528
+8201 [label="c1" style=solid color=red fontcolor=red]
+8202 [label="c2" style=solid color=red fontcolor=red]
+8203 [label="-" style=solid color=black fontcolor=black]
+8203 -> 8201
+8203 -> 8202
+16398 [label="square" style=solid color=black fontcolor=black]
+16398 -> 8203
+110562 [label="relin" style=solid color=black fontcolor=black]
+110562 -> 16398
+12302 [label="<< 2048" style=solid color=black fontcolor=black]
+12302 -> 110562
+110550 [label="+" style=solid color=black fontcolor=black]
+110550 -> 12302
+110550 -> 110562
+104410 [label="<< 1024" style=solid color=black fontcolor=black]
+104410 -> 110550
+110551 [label="+" style=solid color=black fontcolor=black]
+110551 -> 104410
+110551 -> 110550
+107482 [label="<< 512" style=solid color=black fontcolor=black]
+107482 -> 110551
+110552 [label="+" style=solid color=black fontcolor=black]
+110552 -> 107482
+110552 -> 110551
+109018 [label="<< 256" style=solid color=black fontcolor=black]
+109018 -> 110552
+110553 [label="+" style=solid color=black fontcolor=black]
+110553 -> 109018
+110553 -> 110552
+109786 [label="<< 128" style=solid color=black fontcolor=black]
+109786 -> 110553
+110554 [label="+" style=solid color=black fontcolor=black]
+110554 -> 109786
+110554 -> 110553
+110170 [label="<< 64" style=solid color=black fontcolor=black]
+110170 -> 110554
+110555 [label="+" style=solid color=black fontcolor=black]
+110555 -> 110170
+110555 -> 110554
+110362 [label="<< 32" style=solid color=black fontcolor=black]
+110362 -> 110555
+110556 [label="+" style=solid color=black fontcolor=black]
+110556 -> 110362
+110556 -> 110555
+110458 [label="<< 16" style=solid color=black fontcolor=black]
+110458 -> 110556
+110557 [label="+" style=solid color=black fontcolor=black]
+110557 -> 110458
+110557 -> 110556
+110506 [label="<< 8" style=solid color=black fontcolor=black]
+110506 -> 110557
+110558 [label="+" style=solid color=black fontcolor=black]
+110558 -> 110506
+110558 -> 110557
+110530 [label="<< 4" style=solid color=black fontcolor=black]
+110530 -> 110558
+110559 [label="+" style=solid color=black fontcolor=black]
+110559 -> 110530
+110559 -> 110558
+110542 [label="<< 2" style=solid color=black fontcolor=black]
+110542 -> 110559
+110560 [label="+" style=solid color=black fontcolor=black]
+110560 -> 110542
+110560 -> 110559
+110548 [label="<< 1" style=solid color=black fontcolor=black]
+110548 -> 110560
+110561 [label="+ (result)" style=solid color=blue fontcolor=blue]
+110561 -> 110548
+110561 -> 110560
 }
