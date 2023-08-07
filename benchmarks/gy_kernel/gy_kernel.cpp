@@ -101,7 +101,10 @@ int main(int argc, char **argv)
 
   Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
   elapsed = chrono::high_resolution_clock::now() - t;
-  cout << elapsed.count() << " ms\n";
+  cout << elapsed.count() << '\n';
+
+  // cout << "get mem"<<endl;
+  // while(true);
 
   if (call_quantifier)
   {
