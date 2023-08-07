@@ -16,33 +16,37 @@ const Evaluator &evaluator,
 const RelinKeys &relin_keys,
 const GaloisKeys &galois_keys)
 {
-Plaintext p2055 = encoded_inputs.at("v1");
-Ciphertext c2054 = encrypted_inputs.at("c0");
-evaluator.multiply_plain(c2054, p2055, c2054);
-Ciphertext c3082;
-evaluator.rotate_rows(c2054, 512, galois_keys, c3082);
-evaluator.add(c2054, c3082, c2054);
-evaluator.rotate_rows(c2054, 256, galois_keys, c3082);
-evaluator.add(c2054, c3082, c2054);
-evaluator.rotate_rows(c2054, 128, galois_keys, c3082);
-evaluator.add(c2054, c3082, c2054);
-evaluator.rotate_rows(c2054, 64, galois_keys, c3082);
-evaluator.add(c2054, c3082, c2054);
-evaluator.rotate_rows(c2054, 32, galois_keys, c3082);
-evaluator.add(c2054, c3082, c2054);
-evaluator.rotate_rows(c2054, 16, galois_keys, c3082);
-evaluator.add(c2054, c3082, c2054);
-evaluator.rotate_rows(c2054, 8, galois_keys, c3082);
-evaluator.add(c2054, c3082, c2054);
-evaluator.rotate_rows(c2054, 4, galois_keys, c3082);
-evaluator.add(c2054, c3082, c2054);
-evaluator.rotate_rows(c2054, 2, galois_keys, c3082);
-evaluator.add(c2054, c3082, c2054);
-evaluator.rotate_rows(c2054, 1, galois_keys, c3082);
-evaluator.add(c2054, c3082, c2054);
-encrypted_outputs.emplace("result", move(c2054));
+Plaintext p8199 = encoded_inputs.at("v1");
+Ciphertext c8198 = encrypted_inputs.at("c0");
+evaluator.multiply_plain(c8198, p8199, c8198);
+Ciphertext c12298;
+evaluator.rotate_rows(c8198, 2048, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 1024, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 512, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 256, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 128, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 64, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 32, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 16, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 8, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 4, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 2, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+evaluator.rotate_rows(c8198, 1, galois_keys, c12298);
+evaluator.add(c8198, c12298, c8198);
+encrypted_outputs.emplace("result", move(c8198));
 }
 
 vector<int> get_rotation_steps_dot_product_opt(){
-return vector<int>{512, 256, 128, 64, 32, 16, 8, 4, 2, 1};
+return vector<int>{4, 8, 16, 32, 64, 1024, 2, 2048, 1, 128, 512, 256};
 }
