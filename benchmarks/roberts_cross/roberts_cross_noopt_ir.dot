@@ -3,76 +3,76 @@ graph [label="roberts_cross_noopt" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
 1 [label="img" style=solid color=red fontcolor=red]
-3 [label="1" style=dashed color=darkgreen fontcolor=darkgreen]
+6 [label="1" style=dashed color=darkgreen fontcolor=darkgreen]
 34 [label="*" style=solid color=black fontcolor=black]
 34 -> 1
-34 -> 3
-6 [label="<< 1" style=solid color=black fontcolor=black]
-6 -> 1
-5 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+34 -> 6
+3 [label="<< 1" style=solid color=black fontcolor=black]
+3 -> 1
+4 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
 35 [label="*" style=solid color=black fontcolor=black]
-35 -> 6
-35 -> 5
+35 -> 3
+35 -> 4
 8 [label="+" style=solid color=black fontcolor=black]
 8 -> 34
 8 -> 35
 2 [label="<< 64" style=solid color=black fontcolor=black]
 2 -> 1
-9 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+12 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
 36 [label="*" style=solid color=black fontcolor=black]
 36 -> 2
-36 -> 9
-12 [label="<< 1" style=solid color=black fontcolor=black]
-12 -> 2
-11 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
+36 -> 12
+9 [label="<< 1" style=solid color=black fontcolor=black]
+9 -> 2
+10 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
 37 [label="*" style=solid color=black fontcolor=black]
-37 -> 12
-37 -> 11
+37 -> 9
+37 -> 10
 14 [label="+" style=solid color=black fontcolor=black]
 14 -> 36
 14 -> 37
 15 [label="+" style=solid color=black fontcolor=black]
 15 -> 8
 15 -> 14
-29 [label="*" style=solid color=black fontcolor=black]
-29 -> 15
-29 -> 15
+30 [label="*" style=solid color=black fontcolor=black]
+30 -> 15
+30 -> 15
 32 [label="relin" style=solid color=black fontcolor=black]
-32 -> 29
-16 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+32 -> 30
+19 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
 38 [label="*" style=solid color=black fontcolor=black]
 38 -> 1
-38 -> 16
-19 [label="<< 1" style=solid color=black fontcolor=black]
-19 -> 1
-18 [label="1" style=dashed color=darkgreen fontcolor=darkgreen]
+38 -> 19
+16 [label="<< 1" style=solid color=black fontcolor=black]
+16 -> 1
+17 [label="1" style=dashed color=darkgreen fontcolor=darkgreen]
 39 [label="*" style=solid color=black fontcolor=black]
-39 -> 19
-39 -> 18
+39 -> 16
+39 -> 17
 21 [label="+" style=solid color=black fontcolor=black]
 21 -> 38
 21 -> 39
-22 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
+25 [label="-1" style=dashed color=darkgreen fontcolor=darkgreen]
 40 [label="*" style=solid color=black fontcolor=black]
 40 -> 2
-40 -> 22
-25 [label="<< 1" style=solid color=black fontcolor=black]
-25 -> 2
-24 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
+40 -> 25
+22 [label="<< 1" style=solid color=black fontcolor=black]
+22 -> 2
+23 [label="0" style=dashed color=darkgreen fontcolor=darkgreen]
 41 [label="*" style=solid color=black fontcolor=black]
-41 -> 25
-41 -> 24
+41 -> 22
+41 -> 23
 27 [label="+" style=solid color=black fontcolor=black]
 27 -> 40
 27 -> 41
 28 [label="+" style=solid color=black fontcolor=black]
 28 -> 21
 28 -> 27
-30 [label="*" style=solid color=black fontcolor=black]
-30 -> 28
-30 -> 28
+29 [label="*" style=solid color=black fontcolor=black]
+29 -> 28
+29 -> 28
 33 [label="relin" style=solid color=black fontcolor=black]
-33 -> 30
+33 -> 29
 31 [label="+ (result)" style=solid color=blue fontcolor=blue]
 31 -> 32
 31 -> 33

@@ -36,7 +36,7 @@ void roberts_cross_baseline(size_t width)
   // gx
   Ciphertext gx = img - (img << (width + 1));
   // gy
-  Ciphertext gy = (img << 1) - img << width;
+  Ciphertext gy = (img << 1) - (img << width);
   // combine
   Ciphertext result = square(gx) + square(gy);
   result.set_output("result");
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
   if (argc > 1)
     call_quantifier = stoi(argv[1]);
 
-  auto ruleset = Compiler::Ruleset::ops_cost;
+  auto ruleset = Compiler::Ruleset::joined;
   if (argc > 2)
     ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
 
