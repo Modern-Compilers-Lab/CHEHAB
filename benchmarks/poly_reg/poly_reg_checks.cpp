@@ -124,7 +124,7 @@ int main(int argc, char **argv)
 
   string opt_func_name = app_name + "_opt";
   const auto &opt_func = Compiler::create_func(opt_func_name, slot_count, bit_width, signdness, need_cyclic_rotation);
-  poly_reg_baseline();
+  poly_reg();
 
   string opt_gen_name = "gen_he_" + opt_func_name;
   string opt_gen_path = "he/" + opt_gen_name;

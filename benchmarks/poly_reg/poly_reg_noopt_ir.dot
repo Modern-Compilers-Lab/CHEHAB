@@ -4,23 +4,23 @@ node [shape=circle width=1 margin=0]
 edge [dir=back]
 2 [label="c1" style=solid color=red fontcolor=red]
 1 [label="c0" style=solid color=red fontcolor=red]
+7 [label="*" style=solid color=black fontcolor=black]
+7 -> 1
+7 -> 1
+12 [label="relin" style=solid color=black fontcolor=black]
+12 -> 7
+5 [label="c4" style=solid color=red fontcolor=red]
+8 [label="*" style=solid color=black fontcolor=black]
+8 -> 12
+8 -> 5
+13 [label="relin" style=solid color=black fontcolor=black]
+13 -> 8
+4 [label="c3" style=solid color=red fontcolor=red]
 6 [label="*" style=solid color=black fontcolor=black]
 6 -> 1
-6 -> 1
-12 [label="relin" style=solid color=black fontcolor=black]
-12 -> 6
-5 [label="c4" style=solid color=red fontcolor=red]
-7 [label="*" style=solid color=black fontcolor=black]
-7 -> 12
-7 -> 5
-13 [label="relin" style=solid color=black fontcolor=black]
-13 -> 7
-4 [label="c3" style=solid color=red fontcolor=red]
-8 [label="*" style=solid color=black fontcolor=black]
-8 -> 1
-8 -> 4
+6 -> 4
 14 [label="relin" style=solid color=black fontcolor=black]
-14 -> 8
+14 -> 6
 9 [label="+" style=solid color=black fontcolor=black]
 9 -> 13
 9 -> 14
