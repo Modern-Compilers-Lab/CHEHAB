@@ -3,32 +3,32 @@ graph [label="box_blur_opt" labelloc="t"]
 node [shape=circle width=1 margin=0]
 edge [dir=back]
 45 [label="img" style=solid color=red fontcolor=red]
-60 [label="<< 1" style=solid color=black fontcolor=black]
-60 -> 45
-73 [label="+" style=solid color=black fontcolor=black]
-73 -> 45
-73 -> 60
 76 [label="<< 2" style=solid color=black fontcolor=black]
 76 -> 45
-77 [label="+" style=solid color=black fontcolor=black]
-77 -> 73
-77 -> 76
-82 [label="<< 4031" style=solid color=black fontcolor=black]
-82 -> 77
-56 [label="<< 4095" style=solid color=black fontcolor=black]
+56 [label="<< 1" style=solid color=black fontcolor=black]
 56 -> 45
 83 [label="+" style=solid color=black fontcolor=black]
 83 -> 45
 83 -> 56
-84 [label="+" style=solid color=black fontcolor=black]
-84 -> 60
-84 -> 83
-70 [label="+" style=solid color=black fontcolor=black]
-70 -> 82
-70 -> 84
+77 [label="+" style=solid color=black fontcolor=black]
+77 -> 76
+77 -> 83
 78 [label="<< 63" style=solid color=black fontcolor=black]
 78 -> 77
-85 [label="+ (result)" style=solid color=blue fontcolor=blue]
-85 -> 70
-85 -> 78
+59 [label="<< 4095" style=solid color=black fontcolor=black]
+59 -> 45
+61 [label="+" style=solid color=black fontcolor=black]
+61 -> 45
+61 -> 59
+62 [label="+" style=solid color=black fontcolor=black]
+62 -> 56
+62 -> 61
+82 [label="<< 4031" style=solid color=black fontcolor=black]
+82 -> 77
+84 [label="+" style=solid color=black fontcolor=black]
+84 -> 62
+84 -> 82
+71 [label="+ (result)" style=solid color=blue fontcolor=blue]
+71 -> 78
+71 -> 84
 }
