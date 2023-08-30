@@ -10,107 +10,105 @@
 using namespace std;
 using namespace fhecompiler;
 
-void cryptonets(
-  const vector<size_t> &x_shape, const vector<size_t> &w1_shape, const vector<size_t> &b1_shape,
-  const vector<size_t> &w4_shape, const vector<size_t> &b4_shape, const vector<size_t> &w8_shape,
-  const vector<size_t> &b8_shape)
+void cryptonets()
 {
-  // declare inputs
-  vector<vector<vector<Ciphertext>>> x(
-    x_shape[0], vector<vector<Ciphertext>>(x_shape[1], vector<Ciphertext>(x_shape[2])));
+  vector<size_t> x_shape = {28, 28, 1};
+  vector<size_t> w1_shape = {5, 5, 1, 5};
+  vector<size_t> b1_shape = {5};
+  vector<size_t> w4_shape = {5, 5, 5, 10};
+  vector<size_t> b4_shape = {10};
+  vector<size_t> w8_shape = {40, 10};
+  vector<size_t> b8_shape = {10};
+  // load constants
+  int64_t modulus = 65537;
+  string constants_loc = "./constants/plain_mod_" + to_string(modulus) + "/";
+  ifstream w1_is(constants_loc + "w1.txt");
+  if (!w1_is)
+    throw invalid_argument("failed to open w1 file");
 
-  for (int64_t i = 0; i < x_shape[0]; ++i)
+  ifstream w4_is(constants_loc + "w4.txt");
+  if (!w4_is)
+    throw invalid_argument("failed to open w4 file");
+
+  ifstream w8_is(constants_loc + "w8.txt");
+  if (!w8_is)
+    throw invalid_argument("failed to open w8 file");
+
+  ifstream b1_is(constants_loc + "b1.txt");
+  if (!b1_is)
+    throw invalid_argument("failed to open b1 file");
+
+  ifstream b4_is(constants_loc + "b4.txt");
+  if (!b4_is)
+    throw invalid_argument("failed to open b4 file");
+
+  ifstream b8_is(constants_loc + "b8.txt");
+  if (!b8_is)
+    throw invalid_argument("failed to open b8 file");
+
+  char delim = ' ';
+  vector<vector<vector<vector<integer>>>> w1_vals;
   {
-    for (int64_t j = 0; j < x_shape[1]; ++j)
-    {
-      for (int64_t k = 0; k < x_shape[2]; ++k)
-      {
-
-        // Ciphertext xx("x[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "]", VarType::input);
-        Ciphertext xx = Ciphertext::encrypt(std::vector<int64_t>({i + j + k + 1}));
-        x[i][j][k] = xx;
-      }
-    }
+    auto w1_raw = load(w1_is, delim);
+    w1_vals = reshape_4d(w1_raw, w1_shape);
   }
-
+  vector<vector<vector<vector<integer>>>> w4_vals;
+  {
+    auto w4_raw = load(w4_is, delim);
+    w4_vals = reshape_4d(w4_raw, w4_shape);
+  }
+  auto w8_vals = load(w8_is, delim);
+  auto b1_vals = load(b1_is);
+  auto b4_vals = load(b4_is);
+  auto b8_vals = load(b8_is);
+  // declare constants
   vector<vector<vector<vector<Plaintext>>>> w1(
     w1_shape[0], vector<vector<vector<Plaintext>>>(
                    w1_shape[1], vector<vector<Plaintext>>(w1_shape[2], vector<Plaintext>(w1_shape[3]))));
-  for (int64_t i = 0; i < w1_shape[0]; ++i)
-  {
-    for (int64_t j = 0; j < w1_shape[1]; ++j)
-    {
-      for (int64_t k = 0; k < w1_shape[2]; ++k)
-      {
-        for (int64_t l = 0; l < w1_shape[3]; ++l)
-        {
-          /* Plaintext pt(
-            "w1[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]",
-            VarType::input); */
-          Plaintext pt(std::vector<int64_t>({i + j + k + l + 1}));
-          w1[i][j][k][l] = pt;
-        }
-      }
-    }
-  }
-
-  vector<Plaintext> b1(b1_shape[0]);
-  for (int64_t i = 0; i < b1_shape[0]; ++i)
-  {
-    // Plaintext pt("b1[" + to_string(i) + "]", VarType::input);
-    Plaintext pt(std::vector<int64_t>({i}));
-    b1[i] = pt;
-  }
+  for (size_t i = 0; i < w1_shape[0]; ++i)
+    for (size_t j = 0; j < w1_shape[1]; ++j)
+      for (size_t k = 0; k < w1_shape[2]; ++k)
+        for (size_t l = 0; l < w1_shape[3]; ++l)
+          w1[i][j][k][l] = std::vector<int64_t>({w1_vals[i][j][k][l]});
 
   vector<vector<vector<vector<Plaintext>>>> w4(
     w4_shape[0], vector<vector<vector<Plaintext>>>(
                    w4_shape[1], vector<vector<Plaintext>>(w4_shape[2], vector<Plaintext>(w4_shape[3]))));
-  for (int64_t i = 0; i < w4_shape[0]; ++i)
-  {
-    for (int64_t j = 0; j < w4_shape[1]; ++j)
-    {
-      for (int64_t k = 0; k < w4_shape[2]; ++k)
-      {
-        for (int64_t l = 0; l < w4_shape[3]; ++l)
+  for (size_t i = 0; i < w4_shape[0]; ++i)
+    for (size_t j = 0; j < w4_shape[1]; ++j)
+      for (size_t k = 0; k < w4_shape[2]; ++k)
+        for (size_t l = 0; l < w4_shape[3]; ++l)
         {
-          /*
-          Plaintext pt(
-            "w4[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "][" + to_string(l) + "]",
-            VarType::input);
-          */
-          Plaintext pt(std::vector<int64_t>({i + j + k + l + 1}));
-          w4[i][j][k][l] = pt;
+          w4[i][j][k][l] = std::vector<int64_t>({w4_vals[i][j][k][l]});
         }
-      }
-    }
-  }
-
-  vector<Plaintext> b4(b4_shape[0]);
-  for (int64_t i = 0; i < b4_shape[0]; ++i)
-  {
-    // Plaintext pt("b4[" + to_string(i) + "]", VarType::input);
-    Plaintext pt(std::vector<int64_t>({i}));
-    b4[i] = pt;
-  }
 
   vector<vector<Plaintext>> w8(w8_shape[0], vector<Plaintext>(w8_shape[1]));
-  for (int64_t i = 0; i < w8_shape[0]; ++i)
-  {
-    for (int64_t j = 0; j < w8_shape[1]; ++j)
-    {
-      // Plaintext pt("w8[" + to_string(i) + "][" + to_string(j) + "]", VarType::input);
-      Plaintext pt(std::vector<int64_t>({i + j + 1}));
-      w8[i][j] = pt;
-    }
-  }
+  for (size_t i = 0; i < w8_shape[0]; ++i)
+    for (size_t j = 0; j < w8_shape[1]; ++j)
+      w8[i][j] = std::vector<int64_t>({w8_vals[i][j]});
+
+  vector<Plaintext> b1(b1_shape[0]);
+  for (size_t i = 0; i < b1_shape[0]; ++i)
+    b1[i] = std::vector<int64_t>({b1_vals[i]});
+
+  vector<Plaintext> b4(b4_shape[0]);
+  for (size_t i = 0; i < b4_shape[0]; ++i)
+    b4[i] = std::vector<int64_t>({b4_vals[i]});
 
   vector<Plaintext> b8(b8_shape[0]);
-  for (int64_t i = 0; i < b8_shape[0]; ++i)
-  {
-    // Plaintext pt("b8[" + to_string(i) + "]", VarType::input);
-    Plaintext pt(std::vector<int64_t>({i}));
-    b8[i] = pt;
-  }
+  for (size_t i = 0; i < b8_shape[0]; ++i)
+    b8[i] = std::vector<int64_t>({b8_vals[i]});
+
+  // declare inputs
+  vector<vector<vector<Ciphertext>>> x(
+    x_shape[0], vector<vector<Ciphertext>>(x_shape[1], vector<Ciphertext>(x_shape[2])));
+  for (size_t i = 0; i < x_shape[0]; ++i)
+    for (size_t j = 0; j < x_shape[1]; ++j)
+      for (size_t k = 0; k < x_shape[2]; ++k)
+      {
+        Ciphertext input("x[" + to_string(i) + "][" + to_string(j) + "][" + to_string(k) + "]", VarType::input);
+        x[i][j][k] = input;
+      }
   std::cout << "prediction time...\n";
   // predict
   auto y = predict(x, w1, b1, w4, b4, w8, b8);
@@ -137,15 +135,13 @@ int main(int argc, char **argv)
   size_t polynomial_modulus_degree = 4096;
   size_t plaintext_modulus = 786433;
 
-  cryptonets(
-    vector<size_t>{28, 28, 1}, vector<size_t>{5, 5, 1, 5}, vector<size_t>{5}, vector<size_t>{5, 5, 5, 10},
-    vector<size_t>{10}, vector<size_t>{40, 10}, vector<size_t>{10});
+  cryptonets();
 
   params_selector::EncryptionParameters params;
   params.set_plaintext_modulus(plaintext_modulus);
   params.set_polynomial_modulus_degree(polynomial_modulus_degree);
 
-  compile("matrix_mul_poc_log2.hpp", &params);
+  compile("cryptonets.hpp", &params);
 
   return 0;
 }

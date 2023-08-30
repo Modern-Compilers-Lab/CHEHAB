@@ -100,17 +100,19 @@ int main()
     std::vector<std::vector<int64_t>> A;
     std::vector<std::vector<int64_t>> B;
 
-    const int N = 16;
-    const int M = 64;
-    const int P = 64;
-    const int Q = 256;
+    const int N = 8;
+    const int M = 16;
+    const int P = 16;
+    const int Q = 8;
+
+    std::cout << "(" << N << "x" << M << ", " << P << "x" << Q << ")";
 
     for (size_t i = 0; i < N; i++)
     {
       std::vector<int64_t> line;
       for (size_t j = 0; j < M; j++)
       {
-        line.push_back((i + 1) * (j + 1));
+        line.push_back((i + 1) + (j + 1));
       }
       A.push_back(line);
     }
@@ -120,7 +122,7 @@ int main()
       std::vector<int64_t> line;
       for (size_t j = 0; j < Q; j++)
       {
-        line.push_back((i + 1) * (j + 1));
+        line.push_back((i + 1) + (j + 1));
       }
       B.push_back(line);
     }
@@ -140,9 +142,12 @@ int main()
         }
       }
       A_encrypted.push_back(fhecompiler::Ciphertext::encrypt(lines_flattened));
+      // fhecompiler::Ciphertext i_line("input_line_" + std::to_string(i), fhecompiler::VarType::input);
+      // A_encrypted.push_back(i_line);
     }
+    std::cout << A_encrypted.size() << "\n";
     //  encrypt by column for matrix B
-    std::vector<std::vector<int64_t>> B_transpose;
+    std::vector<fhecompiler::Plaintext> B_transpose;
     for (size_t column_index = 0; column_index < B[0].size(); column_index++)
     {
       std::vector<int64_t> column_data;
@@ -156,8 +161,13 @@ int main()
         for (auto &v : column_data)
           column_duplicated.push_back(v);
       }
-      // fhecompiler::Ciphertext column_encrypted = fhecompiler::Ciphertext::encrypt(column_duplicated);
       B_transpose.push_back(column_duplicated);
+      // fhecompiler::Ciphertext column_encrypted = fhecompiler::Ciphertext::encrypt(column_duplicated);
+      /*
+      fhecompiler::Plaintext encoded_column(
+        "encoded_column_" + std::to_string(column_index), fhecompiler::VarType::input);
+      B_transpose.push_back(encoded_column);
+      */
     }
     // C contains result of multiplication
     std::vector<fhecompiler::Ciphertext> C_encrypted;

@@ -28,5 +28,6 @@ void init(
 
 // compile
 void compile(const std::string &output_filename, params_selector::EncryptionParameters *params);
+void compile();
 
 }; // namespace fhecompiler

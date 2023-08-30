@@ -22,6 +22,7 @@ public:
   RotationKeySelctionPass(ir::Program *prgm, params_selector::EncryptionParameters *params)
     : program(prgm), encryption_params(params)
   {}
+  RotationKeySelctionPass(ir::Program *prgm) : program(prgm) {}
   /*
     For now this function targets SEAL backend where instead of generating all power of two keys and in order to avoid
     overhead that comes with rotation steps that are not a power of 2, the functions traverse the program and return

@@ -9,6 +9,8 @@
 #include <variant>
 #include <vector>
 
+using integer = std::int64_t;
+
 std::vector<fhecompiler::Ciphertext> predict(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &x,
   const std::vector<std::vector<std::vector<std::vector<fhecompiler::Plaintext>>>> &w1,
@@ -19,23 +21,23 @@ std::vector<fhecompiler::Ciphertext> predict(
 
 std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> conv_2d(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input,
-  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Plaintext>>>> &filters,
+  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Plaintext>>>> &kernels,
   const std::vector<std::size_t> &strides);
 
 std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> scaled_mean_pool_2d(
-  const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input, const std::vector<size_t> &kernel_size,
+  const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input, const std::vector<size_t> &kernel_shape,
   const std::vector<std::size_t> &strides);
 
 std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> pad_2d(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input,
-  const std::vector<std::size_t> &kernel_size, const std::vector<std::size_t> &strides);
+  const std::vector<std::size_t> &kernel_shape, const std::vector<std::size_t> &strides);
+
+std::vector<fhecompiler::Ciphertext> add(
+  const std::vector<fhecompiler::Ciphertext> &input, const std::vector<fhecompiler::Plaintext> &b);
 
 std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> add(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input,
   const std::vector<fhecompiler::Plaintext> &b);
-
-std::vector<fhecompiler::Ciphertext> add(
-  const std::vector<fhecompiler::Ciphertext> &input, const std::vector<fhecompiler::Plaintext> &b);
 
 std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> square(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input);
@@ -48,10 +50,19 @@ std::vector<fhecompiler::Ciphertext> dot(
 std::vector<fhecompiler::Ciphertext> flatten(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input);
 
+std::vector<integer> load(std::istream &is);
+
+std::vector<std::vector<integer>> load(std::istream &is, char delim);
+
+std::vector<std::string> split(const std::string &str, char delim);
+
+std::vector<std::vector<std::vector<std::vector<integer>>>> reshape_4d(
+  const std::vector<std::vector<integer>> &data, const std::vector<std::size_t> &shape);
+
 template <typename T>
-inline void print_vector(const std::vector<T> &v, std::ostream &os)
+inline void print_vec(const std::vector<T> &v, std::ostream &os)
 {
-  if (v.size() == 0)
+  if (v.empty())
     return;
 
   for (std::size_t i = 0; i < v.size() - 1; ++i)
@@ -59,13 +70,13 @@ inline void print_vector(const std::vector<T> &v, std::ostream &os)
   os << v.back();
 }
 
-template <class T>
+template <typename T>
 inline std::vector<std::size_t> shape(const T &v)
 {
   return std::vector<size_t>();
 }
 
-template <class T>
+template <typename T>
 inline std::vector<size_t> shape(const std::vector<T> &v)
 {
   std::vector<std::size_t> sizes = {v.size()};
@@ -75,13 +86,10 @@ inline std::vector<size_t> shape(const std::vector<T> &v)
   return sizes;
 }
 
-template <class Tensor>
-inline void show_info(
-  const std::string &title, const std::chrono::high_resolution_clock::time_point &t, const Tensor &tensor,
-  const std::string &var_name)
+template <typename Tensor>
+inline void show_info(const std::string &title, const Tensor &tensor, const std::string &var_name, std::ostream &os)
 {
-  std::chrono::duration<double, std::ratio<1>> elapsed = std::chrono::high_resolution_clock::now() - t;
-  std::cout << title << " (" << (elapsed.count()) << " s) " << var_name << " ";
-  print_vector(shape(tensor), std::cout);
-  std::cout << '\n';
+  os << title << " " << var_name << " ";
+  print_vec(shape(tensor), os);
+  os << '\n';
 }
