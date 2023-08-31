@@ -100,9 +100,9 @@ int main()
     std::vector<std::vector<int64_t>> A;
     std::vector<std::vector<int64_t>> B;
 
-    const int N = 8;
-    const int M = 16;
-    const int P = 16;
+    const int N = 64;
+    const int M = 128;
+    const int P = 128;
     const int Q = 8;
 
     std::cout << "(" << N << "x" << M << ", " << P << "x" << Q << ")";
@@ -129,7 +129,7 @@ int main()
 
     std::vector<fhecompiler::Ciphertext> A_encrypted;
     // encoding and encryption of A
-    size_t vector_size = 1024;
+    size_t vector_size = 8192;
     size_t nb_lines_to_pack_in_one_ciphertext = std::min(A.size(), vector_size / A[0].size());
     for (size_t i = 0; i < A.size(); i += nb_lines_to_pack_in_one_ciphertext)
     {

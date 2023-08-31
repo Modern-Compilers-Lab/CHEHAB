@@ -1,3 +1,5 @@
+set(CMAKE_CXX_STANDARD 17)
+
 add_executable(matrix_mul_poc matrix_mul.cpp)
 add_executable(matrix_mul_poc_log2 matrix_mul_poc_log2.cpp)
 

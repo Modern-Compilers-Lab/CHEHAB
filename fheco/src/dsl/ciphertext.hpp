@@ -26,6 +26,7 @@ public:
   Ciphertext(Plaintext) = delete;
 
   static Ciphertext encrypt(const Plaintext &pt);
+  static Ciphertext encrypt(const Scalar &sc);
 
   Ciphertext(const std::string &tag, VarType var_type = VarType::temp);
 

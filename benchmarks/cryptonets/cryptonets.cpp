@@ -61,43 +61,44 @@ void cryptonets()
   auto b1_vals = load(b1_is);
   auto b4_vals = load(b4_is);
   auto b8_vals = load(b8_is);
+
   // declare constants
-  vector<vector<vector<vector<Plaintext>>>> w1(
-    w1_shape[0], vector<vector<vector<Plaintext>>>(
-                   w1_shape[1], vector<vector<Plaintext>>(w1_shape[2], vector<Plaintext>(w1_shape[3]))));
+  vector<vector<vector<vector<Scalar>>>> w1(
+    w1_shape[0],
+    vector<vector<vector<Scalar>>>(w1_shape[1], vector<vector<Scalar>>(w1_shape[2], vector<Scalar>(w1_shape[3]))));
   for (size_t i = 0; i < w1_shape[0]; ++i)
     for (size_t j = 0; j < w1_shape[1]; ++j)
       for (size_t k = 0; k < w1_shape[2]; ++k)
         for (size_t l = 0; l < w1_shape[3]; ++l)
-          w1[i][j][k][l] = std::vector<int64_t>({w1_vals[i][j][k][l]});
+          w1[i][j][k][l] = w1_vals[i][j][k][l];
 
-  vector<vector<vector<vector<Plaintext>>>> w4(
-    w4_shape[0], vector<vector<vector<Plaintext>>>(
-                   w4_shape[1], vector<vector<Plaintext>>(w4_shape[2], vector<Plaintext>(w4_shape[3]))));
+  vector<vector<vector<vector<Scalar>>>> w4(
+    w4_shape[0],
+    vector<vector<vector<Scalar>>>(w4_shape[1], vector<vector<Scalar>>(w4_shape[2], vector<Scalar>(w4_shape[3]))));
   for (size_t i = 0; i < w4_shape[0]; ++i)
     for (size_t j = 0; j < w4_shape[1]; ++j)
       for (size_t k = 0; k < w4_shape[2]; ++k)
         for (size_t l = 0; l < w4_shape[3]; ++l)
         {
-          w4[i][j][k][l] = std::vector<int64_t>({w4_vals[i][j][k][l]});
+          w4[i][j][k][l] = w4_vals[i][j][k][l];
         }
 
-  vector<vector<Plaintext>> w8(w8_shape[0], vector<Plaintext>(w8_shape[1]));
+  vector<vector<Scalar>> w8(w8_shape[0], vector<Scalar>(w8_shape[1]));
   for (size_t i = 0; i < w8_shape[0]; ++i)
     for (size_t j = 0; j < w8_shape[1]; ++j)
-      w8[i][j] = std::vector<int64_t>({w8_vals[i][j]});
+      w8[i][j] = w8_vals[i][j];
 
-  vector<Plaintext> b1(b1_shape[0]);
+  vector<Scalar> b1(b1_shape[0]);
   for (size_t i = 0; i < b1_shape[0]; ++i)
-    b1[i] = std::vector<int64_t>({b1_vals[i]});
+    b1[i] = b1_vals[i];
 
-  vector<Plaintext> b4(b4_shape[0]);
+  vector<Scalar> b4(b4_shape[0]);
   for (size_t i = 0; i < b4_shape[0]; ++i)
-    b4[i] = std::vector<int64_t>({b4_vals[i]});
+    b4[i] = b4_vals[i];
 
-  vector<Plaintext> b8(b8_shape[0]);
+  vector<Scalar> b8(b8_shape[0]);
   for (size_t i = 0; i < b8_shape[0]; ++i)
-    b8[i] = std::vector<int64_t>({b8_vals[i]});
+    b8[i] = b8_vals[i];
 
   // declare inputs
   vector<vector<vector<Ciphertext>>> x(

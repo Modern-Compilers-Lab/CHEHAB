@@ -69,7 +69,7 @@ namespace util_functions
   {
     auto it = matching_map.find(term.get_term_id());
     if (it == matching_map.end())
-      throw("term doesnt exist in matching_map in iszero");
+      throw("term doesnt exist in matching_map in isone");
 
     ir::Program::Ptr ir_node = it->second;
 

@@ -51,18 +51,18 @@ void TRS::apply_rules_on_ir_node(const std::shared_ptr<ir::Term> &node, const st
     */
     bool was_rule_applied = false;
     auto &rule = rules[curr_rule_index];
-    do
-    {
-      apply_rule_on_ir_node(node, rule, was_rule_applied);
-    } while (was_rule_applied == true);
 
-    curr_rule_index += 1;
+    apply_rule_on_ir_node(node, rule, was_rule_applied);
+
+    if (was_rule_applied == true)
+      curr_rule_index = 0;
+    else
+      curr_rule_index += 1;
   }
 }
 
 void TRS::apply_rewrite_rules_on_program_from_static_ruleset()
 {
-
   auto &sorted_nodes = program->get_dataflow_sorted_nodes(true);
   for (auto &node : sorted_nodes)
   {

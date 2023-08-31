@@ -13,15 +13,15 @@ using integer = std::int64_t;
 
 std::vector<fhecompiler::Ciphertext> predict(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &x,
-  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Plaintext>>>> &w1,
-  const std::vector<fhecompiler::Plaintext> &b1,
-  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Plaintext>>>> &w4,
-  const std::vector<fhecompiler::Plaintext> &b4, const std::vector<std::vector<fhecompiler::Plaintext>> &w8,
-  const std::vector<fhecompiler::Plaintext> &b8);
+  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Scalar>>>> &w1,
+  const std::vector<fhecompiler::Scalar> &b1,
+  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Scalar>>>> &w4,
+  const std::vector<fhecompiler::Scalar> &b4, const std::vector<std::vector<fhecompiler::Scalar>> &w8,
+  const std::vector<fhecompiler::Scalar> &b8);
 
 std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> conv_2d(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input,
-  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Plaintext>>>> &kernels,
+  const std::vector<std::vector<std::vector<std::vector<fhecompiler::Scalar>>>> &kernels,
   const std::vector<std::size_t> &strides);
 
 std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> scaled_mean_pool_2d(
@@ -33,11 +33,11 @@ std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> pad_2d(
   const std::vector<std::size_t> &kernel_shape, const std::vector<std::size_t> &strides);
 
 std::vector<fhecompiler::Ciphertext> add(
-  const std::vector<fhecompiler::Ciphertext> &input, const std::vector<fhecompiler::Plaintext> &b);
+  const std::vector<fhecompiler::Ciphertext> &input, const std::vector<fhecompiler::Scalar> &b);
 
 std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> add(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input,
-  const std::vector<fhecompiler::Plaintext> &b);
+  const std::vector<fhecompiler::Scalar> &b);
 
 std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> square(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input);
@@ -45,7 +45,7 @@ std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> square(
 std::vector<fhecompiler::Ciphertext> square(const std::vector<fhecompiler::Ciphertext> &input);
 
 std::vector<fhecompiler::Ciphertext> dot(
-  const std::vector<fhecompiler::Ciphertext> &input, const std::vector<std::vector<fhecompiler::Plaintext>> &w);
+  const std::vector<fhecompiler::Ciphertext> &input, const std::vector<std::vector<fhecompiler::Scalar>> &w);
 
 std::vector<fhecompiler::Ciphertext> flatten(
   const std::vector<std::vector<std::vector<fhecompiler::Ciphertext>>> &input);

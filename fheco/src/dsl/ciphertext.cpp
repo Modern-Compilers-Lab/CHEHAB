@@ -51,6 +51,27 @@ Ciphertext Ciphertext::encrypt(const Plaintext &pt)
   return operate_unary<Ciphertext, Plaintext>(pt, ir::OpCode::encrypt, ir::ciphertextType);
 }
 
+Ciphertext Ciphertext::encrypt(const Scalar &sc)
+{
+  if (program == nullptr)
+    throw(program_not_init_msg);
+
+  auto sc_ptr = program->find_node_in_dataflow(sc.get_label());
+  if (sc_ptr == nullptr)
+    throw std::logic_error("Scalar to encrypt is not defined\n");
+  auto const_value = program->get_entry_value_value(sc_ptr->get_label());
+
+  if (const_value == std::nullopt)
+    throw std::logic_error("const value doesnt exist in constants table\n");
+
+  int64_t sc_value = static_cast<int64_t>(ir::get_constant_value_as_number(*const_value));
+
+  std::vector<int64_t> data(program->get_vector_size(), sc_value);
+
+  Plaintext pt(data);
+  return operate_unary<Ciphertext, Plaintext>(pt, ir::OpCode::encrypt, ir::ciphertextType);
+}
+
 Ciphertext::Ciphertext(const std::string &tag, VarType var_type)
   : label(datatype::ct_label_prefix + std::to_string(Ciphertext::ciphertext_id++))
 {

@@ -120,17 +120,17 @@ int main()
     std::vector<std::vector<int64_t>> A; // = {{1, 2, 3, -2}, {-5, 3, 2, 0}, {1, 0, 1, -3}, {5, 3, 2, 0}, {5, 3, 2, 0}};
     std::vector<std::vector<int64_t>> B; // = {{0, 1, 9}, {-7, -10, 2}, {1, 9, 0}, {-8, 2, 18}};
 
-    const int N = 16;
-    const int M = 64;
-    const int P = 64;
-    const int Q = 256;
+    const int N = 64;
+    const int M = 128;
+    const int P = 128;
+    const int Q = 8;
 
     for (size_t i = 0; i < N; i++)
     {
       std::vector<int64_t> line;
       for (size_t j = 0; j < M; j++)
       {
-        line.push_back(1);
+        line.push_back((i + 1) * (j + 1));
       }
       A.push_back(line);
     }
@@ -139,7 +139,7 @@ int main()
       std::vector<int64_t> line;
       for (size_t j = 0; j < Q; j++)
       {
-        line.push_back(2);
+        line.push_back((i + 1) * (j + 1));
       }
       B.push_back(line);
     }
@@ -147,7 +147,7 @@ int main()
     std::vector<fhecompiler::Ciphertext> A_encrypted;
     // encoding and encryption of A
     size_t vector_size =
-      1024; // this the number of slots from user perspective, compiler later may select n > vector_size
+      8192; // this the number of slots from user perspective, compiler later may select n > vector_size
     size_t nb_lines_to_pack_in_one_ciphertext = std::min(A.size(), vector_size / A[0].size());
     std::cout << nb_lines_to_pack_in_one_ciphertext << "\n";
     /*

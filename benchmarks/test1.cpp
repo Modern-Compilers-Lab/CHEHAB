@@ -59,21 +59,26 @@ int main()
       sum += ciphers_vector[i];
     }
     */
-    std::vector<int64_t> val({1, 2, 3});
-    // PackedVal val2({1, 6, 3});
-    Plaintext pt(val);
-    Plaintext pt_copy = pt;
-    auto ct8 = (ct2 + pt_copy);
-    pt_copy += 6;
-    // Plaintext pt2(val2);
-    auto ct4 = ct1 << 1;
-    auto ct5 = ct1 << 2;
-    auto ct6 = ct1 << 3;
-    auto ct7 = (((ct1 + pt) + pt_copy) + pt_copy) - pt_copy;
-    Ciphertext o1("o1", VarType::output);
-    o1 = ct7;
-    Ciphertext o2("o2", VarType::output);
-    o2 = ct8;
+    /*
+     std::vector<int64_t> val({1, 2, 3});
+     // PackedVal val2({1, 6, 3});
+     Plaintext pt(val);
+     Plaintext pt_copy = pt;
+     auto ct8 = (ct2 + pt_copy);
+     pt_copy += 6;
+     // Plaintext pt2(val2);
+     auto ct4 = ct1 << 1;
+     auto ct5 = ct1 << 2;
+     auto ct6 = ct1 << 3;
+     auto ct7 = ((ct1 + pt + std::vector<int64_t>({0}) + pt_copy) + pt_copy) - pt_copy;
+     Ciphertext o1("o1", VarType::output);
+     o1 = ct7;
+     Ciphertext o2("o2", VarType::output);
+     o2 = ct8;
+     */
+    Ciphertext ct_one = Ciphertext::encrypt(1);
+    Ciphertext o3("o3", VarType::output);
+    o3 = ct1 * ct_one;
 
     fhecompiler::compile();
   }

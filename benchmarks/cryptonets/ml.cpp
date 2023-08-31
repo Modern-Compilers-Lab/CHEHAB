@@ -5,9 +5,9 @@ using namespace std;
 using namespace fhecompiler;
 
 vector<Ciphertext> predict(
-  const vector<vector<vector<Ciphertext>>> &x, const vector<vector<vector<vector<Plaintext>>>> &w1,
-  const vector<Plaintext> &b1, const vector<vector<vector<vector<Plaintext>>>> &w4, const vector<Plaintext> &b4,
-  const vector<vector<Plaintext>> &w8, const vector<Plaintext> &b8)
+  const vector<vector<vector<Ciphertext>>> &x, const vector<vector<vector<vector<Scalar>>>> &w1,
+  const vector<Scalar> &b1, const vector<vector<vector<vector<Scalar>>>> &w4, const vector<Scalar> &b4,
+  const vector<vector<Scalar>> &w8, const vector<Scalar> &b8)
 {
   vector<size_t> conv_strides = {2, 2};
   vector<size_t> mean_pool_kernel_shape = {2, 2};
@@ -25,7 +25,7 @@ vector<Ciphertext> predict(
 
 // HWC, zero padding, mapcount
 vector<vector<vector<Ciphertext>>> conv_2d(
-  const vector<vector<vector<Ciphertext>>> &input, const vector<vector<vector<vector<Plaintext>>>> &kernels,
+  const vector<vector<vector<Ciphertext>>> &input, const vector<vector<vector<vector<Scalar>>>> &kernels,
   const vector<size_t> &strides)
 {
   auto n_channels_in = input[0][0].size();
@@ -44,9 +44,8 @@ vector<vector<vector<Ciphertext>>> conv_2d(
   auto n_rows_out = n_rows_in / row_stride + (n_rows_in % row_stride > 0 ? 1 : 0);
   auto n_cols_out = n_cols_in / col_stride + (n_cols_in % col_stride > 0 ? 1 : 0);
   auto n_channels_out = kernels[0][0][0].size();
-  Ciphertext zero_ct = Ciphertext::encrypt(std::vector<int64_t>({0}));
   vector<vector<vector<Ciphertext>>> output(
-    n_rows_out, vector<vector<Ciphertext>>(n_cols_out, vector<Ciphertext>(n_channels_out, zero_ct)));
+    n_rows_out, vector<vector<Ciphertext>>(n_cols_out, vector<Ciphertext>(n_channels_out, Ciphertext::encrypt(0))));
   size_t row_offset = 0;
   for (size_t i_out = 0; i_out < n_rows_out; ++i_out)
   {
@@ -83,10 +82,8 @@ vector<vector<vector<Ciphertext>>> scaled_mean_pool_2d(
   auto n_rows_out = n_rows_in / row_stride + (n_rows_in % row_stride > 0 ? 1 : 0);
   auto n_cols_out = n_cols_in / col_stride + (n_cols_in % col_stride > 0 ? 1 : 0);
   auto n_channels_output = input[0][0].size();
-  Ciphertext zero_ct = Ciphertext::encrypt(std::vector<int64_t>({0}));
-
   vector<vector<vector<Ciphertext>>> output(
-    n_rows_out, vector<vector<Ciphertext>>(n_cols_out, vector<Ciphertext>(n_channels_output, zero_ct)));
+    n_rows_out, vector<vector<Ciphertext>>(n_cols_out, vector<Ciphertext>(n_channels_output, Ciphertext::encrypt(0))));
   size_t row_offset = 0;
   for (size_t i_output = 0; i_output < n_rows_out; ++i_output)
   {
@@ -127,9 +124,9 @@ vector<vector<vector<Ciphertext>>> pad_2d(
   auto pad_right = pad_cols - pad_left;
   n_rows_out = n_rows_in + pad_rows;
   n_cols_out = n_cols_in + pad_cols;
-  Ciphertext zero_ct = Ciphertext::encrypt(std::vector<int64_t>({0}));
+
   vector<vector<vector<Ciphertext>>> output(
-    n_rows_out, vector<vector<Ciphertext>>(n_cols_out, vector<Ciphertext>(n_channels_in, zero_ct)));
+    n_rows_out, vector<vector<Ciphertext>>(n_cols_out, vector<Ciphertext>(n_channels_in, Ciphertext::encrypt(0))));
   for (size_t i = 0; i < n_rows_in; ++i)
   {
     for (size_t j = 0; j < n_cols_in; ++j)
@@ -138,7 +135,7 @@ vector<vector<vector<Ciphertext>>> pad_2d(
   return output;
 }
 
-vector<Ciphertext> add(const vector<Ciphertext> &input, const vector<Plaintext> &b)
+vector<Ciphertext> add(const vector<Ciphertext> &input, const vector<Scalar> &b)
 {
   if (input.size() != b.size())
     throw invalid_argument("incompatible sizes");
@@ -150,7 +147,7 @@ vector<Ciphertext> add(const vector<Ciphertext> &input, const vector<Plaintext> 
   return output;
 }
 
-vector<vector<vector<Ciphertext>>> add(const vector<vector<vector<Ciphertext>>> &input, const vector<Plaintext> &b)
+vector<vector<vector<Ciphertext>>> add(const vector<vector<vector<Ciphertext>>> &input, const vector<Scalar> &b)
 {
   auto n_channels = input[0][0].size();
   if (n_channels != b.size())
@@ -192,13 +189,12 @@ vector<Ciphertext> square(const vector<Ciphertext> &input)
 
 // mapcount
 // w for weights
-vector<Ciphertext> dot(const vector<Ciphertext> &input, const vector<vector<Plaintext>> &w)
+vector<Ciphertext> dot(const vector<Ciphertext> &input, const vector<vector<Scalar>> &w)
 {
   if (input.size() != w.size())
     throw invalid_argument("incompatible sizes");
 
-  Ciphertext zero_ct = Ciphertext::encrypt(std::vector<int64_t>({0}));
-  vector<Ciphertext> output(w[0].size(), zero_ct);
+  vector<Ciphertext> output(w[0].size(), Ciphertext::encrypt(0));
   for (size_t i = 0; i < w[0].size(); ++i)
     for (size_t j = 0; j < w.size(); ++j)
       output[i] += input[j] * w[j][i];
