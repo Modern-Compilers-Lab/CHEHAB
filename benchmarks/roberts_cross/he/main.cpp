@@ -3,8 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include "gen_he_roberts_cross_noopt.hpp"
-#include "gen_he_roberts_cross_opt.hpp"
+#include "_gen_he_roberts_cross.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -46,10 +45,8 @@ int main(int argc, char **argv)
   RelinKeys relin_keys;
   keygen.create_relin_keys(relin_keys);
   GaloisKeys galois_keys;
-  if (opt)
-    keygen.create_galois_keys(get_rotation_steps_roberts_cross_opt(), galois_keys);
-  else
-    keygen.create_galois_keys(get_rotation_steps_roberts_cross_noopt(), galois_keys);
+
+  keygen.create_galois_keys(get_rotation_steps_roberts_cross(), galois_keys);
   Encryptor encryptor(context, public_key);
   Evaluator evaluator(context);
   Decryptor decryptor(context, secret_key);

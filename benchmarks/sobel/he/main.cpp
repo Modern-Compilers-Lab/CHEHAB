@@ -3,8 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include "gen_he_sobel_noopt.hpp"
-#include "gen_he_sobel_opt.hpp"
+#include "_gen_he_sobel.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -46,10 +45,8 @@ int main(int argc, char **argv)
   RelinKeys relin_keys;
   keygen.create_relin_keys(relin_keys);
   GaloisKeys galois_keys;
-  if (opt)
-    keygen.create_galois_keys(get_rotation_steps_sobel_opt(), galois_keys);
-  else
-    keygen.create_galois_keys(get_rotation_steps_sobel_noopt(), galois_keys);
+  keygen.create_galois_keys(get_rotation_steps_sobel(), galois_keys);
+
   Encryptor encryptor(context, public_key);
   Evaluator evaluator(context);
   Decryptor decryptor(context, secret_key);

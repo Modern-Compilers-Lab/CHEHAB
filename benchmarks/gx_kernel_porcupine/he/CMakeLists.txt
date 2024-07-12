@@ -1,14 +1,28 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(HEGXKernel VERSION 1.0 LANGUAGES CXX)
+project(HEBoxBlur VERSION 1.0 LANGUAGES CXX)
+find_package(SEAL 4.1 REQUIRED)
+
+
+add_library(gen_he_gx_kernel_porcupine STATIC _gen_he_gx_kernel_porcupine.cpp)
+target_compile_features(gen_he_gx_kernel_porcupine PUBLIC cxx_std_17)
+set_target_properties(gen_he_gx_kernel_porcupine PROPERTIES CXX_EXTENSIONS OFF)
+target_link_libraries(gen_he_gx_kernel_porcupine SEAL::seal)
+
 
 add_library(utils STATIC utils.cpp)
 target_compile_features(utils PUBLIC cxx_std_17)
 set_target_properties(utils PROPERTIES CXX_EXTENSIONS OFF)
+target_link_libraries(utils SEAL::seal)
 
-find_package(SEAL 4.1.1 EXACT REQUIRED)
-target_link_libraries(utils PUBLIC SEAL::seal)
+add_executable(main main.cpp)
+target_link_libraries(main PRIVATE gen_he_gx_kernel_porcupine)
+target_link_libraries(main PRIVATE utils)
 
-
-add_executable(he_gx_kernel main.cpp)
-target_link_libraries(he_gx_kernel PRIVATE utils)
+set(SOURCE_FILE_1 ${CMAKE_SOURCE_DIR}/../../../../benchmarks/gx_kernel_porcupine/gx_kernel_porcupine_io_example.txt)
+set(DESTINATION_FILE_1 ${CMAKE_SOURCE_DIR}/build/gx_kernel_porcupine_io_example.txt)
+add_custom_target(copy_input_1gx_kernel_porcupine ALL
+    COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_1} ${DESTINATION_FILE_1}
+    DEPENDS ${SOURCE_FILE}
+    COMMENT "Copying ${SOURCE_FILE_1} to ${DESTINATION_FILE_1}"
+)

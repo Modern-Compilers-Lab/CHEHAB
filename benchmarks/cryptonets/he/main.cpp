@@ -4,16 +4,11 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include "gen/gen_he_cryptonets_114689_noopt.hpp"
-#include "gen/gen_he_cryptonets_114689_opt.hpp"
-#include "gen/gen_he_cryptonets_147457_noopt.hpp"
-#include "gen/gen_he_cryptonets_147457_opt.hpp"
-#include "gen/gen_he_cryptonets_163841_noopt.hpp"
-#include "gen/gen_he_cryptonets_163841_opt.hpp"
-#include "gen/gen_he_cryptonets_557057_noopt.hpp"
-#include "gen/gen_he_cryptonets_557057_opt.hpp"
-#include "gen/gen_he_cryptonets_65537_noopt.hpp"
-#include "gen/gen_he_cryptonets_65537_opt.hpp"
+#include "_gen_he_cryptonets_114689.hpp"
+#include "_gen_he_cryptonets_147457.hpp"
+#include "_gen_he_cryptonets_163841.hpp"
+#include "_gen_he_cryptonets_557057.hpp"
+#include "_gen_he_cryptonets_65537.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -98,20 +93,13 @@ int main(int argc, char **argv)
   x_clear_scaled = reshape_order(x_clear_scaled, {1, 2, 3, 0});
   // prepare data (encode with crt/encrypt) then evaluate
   const vector<uint64_t> coprimes{65537, 114689, 147457, 163841, 557057};
-  const vector<EvalFunc> opt_eval_funcs = {
-    &cryptonets_65537_opt, &cryptonets_114689_opt, &cryptonets_147457_opt, &cryptonets_163841_opt,
-    &cryptonets_557057_opt};
-  const vector<EvalFunc> noopt_eval_funcs = {
-    &cryptonets_65537_noopt, &cryptonets_114689_noopt, &cryptonets_147457_noopt, &cryptonets_163841_noopt,
-    &cryptonets_557057_noopt};
-  const vector<RotationKeyFunc> opt_rotation_key_funcs = {
-    &get_rotation_steps_cryptonets_65537_opt, &get_rotation_steps_cryptonets_114689_opt,
-    &get_rotation_steps_cryptonets_147457_opt, &get_rotation_steps_cryptonets_163841_opt,
-    &get_rotation_steps_cryptonets_557057_opt};
-  const vector<RotationKeyFunc> noopt_rotation_key_funcs = {
-    &get_rotation_steps_cryptonets_65537_noopt, &get_rotation_steps_cryptonets_114689_noopt,
-    &get_rotation_steps_cryptonets_147457_noopt, &get_rotation_steps_cryptonets_163841_noopt,
-    &get_rotation_steps_cryptonets_557057_noopt};
+  const vector<EvalFunc> eval_funcs = {
+    &cryptonets_65537, &cryptonets_114689, &cryptonets_147457, &cryptonets_163841, &cryptonets_557057};
+
+  const vector<RotationKeyFunc> rotation_key_funcs = {
+    &get_rotation_steps_cryptonets_65537, &get_rotation_steps_cryptonets_114689, &get_rotation_steps_cryptonets_147457,
+    &get_rotation_steps_cryptonets_163841, &get_rotation_steps_cryptonets_557057};
+
   Number modulus = 1;
   for (auto prime : coprimes)
     modulus *= prime;
@@ -143,10 +131,9 @@ int main(int argc, char **argv)
       RelinKeys relin_keys;
       keygen.create_relin_keys(relin_keys);
       GaloisKeys galois_keys;
-      if (opt)
-        keygen.create_galois_keys(opt_rotation_key_funcs[i](), galois_keys);
-      else
-        keygen.create_galois_keys(noopt_rotation_key_funcs[i](), galois_keys);
+
+      keygen.create_galois_keys(rotation_key_funcs[i](), galois_keys);
+
       Encryptor encryptor(context, public_key);
       Evaluator evaluator(context);
       decryptors.push_back(make_unique<Decryptor>(context, secret_key));
@@ -164,14 +151,11 @@ int main(int argc, char **argv)
       t = chrono::high_resolution_clock::now();
       EncodedArgs encoded_outputs;
       primes_encrypted_outputs.push_back(EncryptedArgs{});
-      if (opt)
-        opt_eval_funcs[i](
-          encrypted_inputs, encoded_inputs, primes_encrypted_outputs[i], encoded_outputs, *encoders[i], encryptor,
-          evaluator, relin_keys, galois_keys);
-      else
-        noopt_eval_funcs[i](
-          encrypted_inputs, encoded_inputs, primes_encrypted_outputs[i], encoded_outputs, *encoders[i], encryptor,
-          evaluator, relin_keys, galois_keys);
+
+      eval_funcs[i](
+        encrypted_inputs, encoded_inputs, primes_encrypted_outputs[i], encoded_outputs, *encoders[i], encryptor,
+        evaluator, relin_keys, galois_keys);
+
       elapsed = chrono::high_resolution_clock::now() - t;
       eval_time += elapsed;
       clog << "ok (" << elapsed.count() << " ms)\n";

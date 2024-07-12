@@ -3,8 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include "gen_he_l2_distance_noopt.hpp"
-#include "gen_he_l2_distance_opt.hpp"
+#include "_gen_he_l2_distance.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -46,10 +45,8 @@ int main(int argc, char **argv)
   RelinKeys relin_keys;
   keygen.create_relin_keys(relin_keys);
   GaloisKeys galois_keys;
-  if (opt)
-    keygen.create_galois_keys(get_rotation_steps_l2_distance_opt(), galois_keys);
-  else
-    keygen.create_galois_keys(get_rotation_steps_l2_distance_noopt(), galois_keys);
+  keygen.create_galois_keys(get_rotation_steps_l2_distance(), galois_keys);
+
   Encryptor encryptor(context, public_key);
   Evaluator evaluator(context);
   Decryptor decryptor(context, secret_key);
@@ -63,14 +60,11 @@ int main(int argc, char **argv)
   chrono::high_resolution_clock::time_point t;
   chrono::duration<double, milli> elapsed;
   t = chrono::high_resolution_clock::now();
-  if (opt)
-    l2_distance_opt(
-      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-      relin_keys, galois_keys);
-  else
-    l2_distance_noopt(
-      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-      relin_keys, galois_keys);
+
+  l2_distance(
+    encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
+    relin_keys, galois_keys);
+
   elapsed = chrono::high_resolution_clock::now() - t;
 
   ClearArgsInfo obtained_clear_outputs;
