@@ -61,7 +61,7 @@ A benchmark is run in two phases. The first execution triggers our compiler to t
 1. While in the build directory, navigate to the corresponding benchmark directory and run its executable.
 
 ```shell
-cd box_blur
+cd benchmarks/box_blur
 ./box_blur
 ```
 2. Navigate to the `he` directory, where you can find the created files to build the final executable. This automatically links the generated file with the SEAL library.
