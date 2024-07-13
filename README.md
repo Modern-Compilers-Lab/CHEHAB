@@ -4,7 +4,7 @@ Fully Homomorphic Encryption (FHE) is a technique that makes it possible to perf
 
 CHEHAB is an FHE compiler that offers a simple Domain Specific Language (DSL) to define inputs and outputs and describe the desired computations. CHEHAB abstracts FHE complexities by automating the selection of optimal parameters that can support the generated noise and inserting ciphertext maintenance operations. It also supports multiple optimization techniques like Constant Folding (CF), Common Sub-expression Elimination (CSE), and Term Rewriting System (TRS) as the main optimization technique. Currently, CHEHAB supports only the BFV scheme and targets the SEAL library.
 
-## Writing your own benchmark
+## Example
 
 Here is an example written in our compiler's DSL
 
