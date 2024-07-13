@@ -44,6 +44,7 @@ cd fhecompiler_work
 ```
 3. Create a directory to build the compiler in
 ```shell
+mkdir build
 cmake -S . -B build
 ```
 4. Build the compiler
