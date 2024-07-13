@@ -35,7 +35,7 @@ To build CHEHAB, you need to follow these steps:
 1. Clone the repository to your local machine.
 
 ```shell
-git clone https://github.com/Modern-Compilers-Lab/fhecompiler_work.git](https://github.com/Modern-Compilers-Lab/CHEHAB.git
+git clone https://github.com/Modern-Compilers-Lab/CHEHAB.git
 ```
 
 2. Navigate to the cloned repository.
