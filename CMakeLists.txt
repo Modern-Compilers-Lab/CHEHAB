@@ -39,3 +39,19 @@ add_subdirectory(benchmarks/vecto)
 # add_subdirectory(benchmarks/roberts_cross_porcupine)
 # add_subdirectory(benchmarks/sharpening_filter_heco)
 add_subdirectory(benchmarks/sobel)
+
+set(SOURCE_FILE_1 ${CMAKE_SOURCE_DIR}/benchmarks/script.py)
+set(DESTINATION_FILE_1 ${CMAKE_SOURCE_DIR}/build/benchmarks/script.py)
+set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/declarations.py)
+set(DESTINATION_FILE_2 ${CMAKE_SOURCE_DIR}/build/benchmarks/declarations.py)
+
+add_custom_target(copy_my_file_1_script ALL
+    COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_1} ${DESTINATION_FILE_1}
+    DEPENDS ${SOURCE_FILE}
+    COMMENT "Copying ${SOURCE_FILE_1} to ${DESTINATION_FILE_1}"
+)
+add_custom_target(copy_my_file_2_script ALL
+    COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_2} ${DESTINATION_FILE_2}
+    DEPENDS ${SOURCE_FILE}
+    COMMENT "Copying ${SOURCE_FILE_2} to ${DESTINATION_FILE_2}"
+)
