@@ -280,8 +280,6 @@ pub fn rules(no_ac: bool, no_vec: bool) -> Vec<Rewrite<VecLang, ConstantFold>> {
         rw!("add-0"; "(+ 0 ?a)" => "?a"),
         rw!("mul-0"; "(* 0 ?a)" => "0"),
         rw!("mul-1"; "(* 1 ?a)" => "?a"),
-        rw!("add-0-inv"; "?a" => "(+ 0 ?a)"),
-        rw!("mul-1-inv"; "?a" => "(* 1 ?a)"),
     ];
 
     // let rotation_rules = rotation_rules();
@@ -290,13 +288,6 @@ pub fn rules(no_ac: bool, no_vec: bool) -> Vec<Rewrite<VecLang, ConstantFold>> {
     // rules.extend(rotation_rules);
     // rules.extend(operations_rules);
     // rules.extend(split_vectors);
-    // Bidirectional rules
-    let some_rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![
-        // Sign and negate
-        rw!("neg-neg"; "(- (- ?a))" => "?a"),
-        rw!("neg-minus"; "(- ?a)" => "(- 0 ?a)"),
-    ];
-    rules.extend(some_rules);
 
     // Vector rules
     if !no_vec {
@@ -320,10 +311,6 @@ pub fn rules(no_ac: bool, no_vec: bool) -> Vec<Rewrite<VecLang, ConstantFold>> {
             rw!("commute-vecmul"; "(VecMul ?a ?b)" => "(VecMul ?b ?a)"),
             rw!("assoc-vecadd"; "(VecAdd (VecAdd ?a ?b) ?c)" => "(VecAdd ?a (VecAdd ?b ?c))"),
             rw!("assoc-vecmul"; "(VecMul (VecMul ?a ?b) ?c)" => "(VecMul ?a (VecMul ?b ?c))"),
-            rw!("commute-add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
-            rw!("commute-mul"; "(* ?a ?b)" => "(* ?b ?a)"),
-            rw!("assoc-add"; "(+ (+ ?a ?b) ?c)" => "(+ ?a (+ ?b ?c))"),
-            rw!("assoc-mul"; "(* (* ?a ?b) ?c)" => "(* ?a (* ?b ?c))"),
         ]);
     }
 
