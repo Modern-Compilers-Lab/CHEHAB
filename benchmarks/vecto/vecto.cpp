@@ -8,24 +8,28 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
 using namespace std;
 using namespace fheco;
 
-void gy_kernel(size_t width)
+void vecto()
 {
-  vector<vector<integer>> kernel = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
-  Ciphertext img("img");
-  Ciphertext top_row = img >> width;
-  Ciphertext bottom_row = img << width;
-  Ciphertext top_sum = kernel[0][0] * (top_row >> 1) + kernel[0][1] * top_row + kernel[0][2] * (top_row << 1);
-  Ciphertext curr_sum = kernel[1][0] * (img >> 1) + kernel[1][1] * img + kernel[1][2] * (img << 1);
-  Ciphertext bottom_sum =
-    kernel[2][0] * (bottom_row >> 1) + kernel[2][1] * bottom_row + kernel[2][2] * (bottom_row << 1);
-  Ciphertext result = top_sum + curr_sum + bottom_sum;
-  result.set_output("result");
+  Ciphertext a0("a0");
+  Ciphertext a1("a1");
+  Ciphertext a2("a2");
+  Ciphertext a3("a3");
+  Ciphertext b0("b0");
+  Ciphertext b1("b1");
+  Ciphertext b2("b2");
+  Ciphertext b3("b3");
+  Ciphertext c0 = a0 * b0;
+  Ciphertext c1 = a1 * b1;
+  Ciphertext c2 = a2 * b2;
+  Ciphertext c3 = a3 * b3;
+  c0.set_output("c0");
+  c1.set_output("c1");
+  c2.set_output("c2");
+  c3.set_output("c3");
 }
-
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
   os << (arg ? name : "no_" + name);
@@ -37,7 +41,7 @@ int main(int argc, char **argv)
   if (argc > 1)
     call_quantifier = stoi(argv[1]);
 
-  auto ruleset = Compiler::Ruleset::joined;
+  auto ruleset = Compiler::Ruleset::ops_cost;
   if (argc > 2)
     ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
 
@@ -83,12 +87,12 @@ int main(int argc, char **argv)
   chrono::high_resolution_clock::time_point t;
   chrono::duration<double, milli> elapsed;
   t = chrono::high_resolution_clock::now();
-  string func_name = "gy_kernel";
+  string func_name = "vecto";
   size_t width = 64;
   size_t height = 64;
-  const auto &func = Compiler::create_func(func_name, width * height, 20, true, true);
-  gy_kernel(width);
-
+  const auto &func = Compiler::create_func(func_name, width * height, 20, false, true);
+  vecto();
+  // ofstream source_os("../../../benchmarks/" + func_name + "/" + func_name + "_optimized" + ".cpp");
   string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
@@ -98,14 +102,10 @@ int main(int argc, char **argv)
   ofstream source_os(gen_path + ".cpp");
   if (!source_os)
     throw logic_error("failed to create source file");
-https: // daily.jstor.org/the-power-of-the-veil-for-spanish-women/
 
-  Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+  Compiler::gen_vectorized_code(func);
   elapsed = chrono::high_resolution_clock::now() - t;
-  cout << elapsed.count() << '\n';
-
-  // cout << "get mem"<<endl;
-  // while(true);
+  cout << elapsed.count() << " ms\n";
 
   if (call_quantifier)
   {

@@ -1,16 +1,26 @@
 #include "fheco/code_gen/gen_func.hpp"
 #include "fheco/dsl/compiler.hpp"
+#include "fheco/ir/term.hpp"
 #include "fheco/trs/trs.hpp"
 #include "fheco/passes/passes.hpp"
 #include "fheco/util/common.hpp"
-#ifdef FHECO_LOGGING
+#include "fheco/util/expr_printer.hpp"
+#include <cstring>
+#include <ctime>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
-#endif
+#include <map>
+#include <ostream>
+#include <queue>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
 
 using namespace std;
+using std::queue;
+using std::string;
+using std::vector;
 
 namespace fheco
 {
@@ -26,59 +36,17 @@ bool Compiler::const_folding_enabled_ = false;
 
 bool Compiler::scalar_vector_shape_ = true;
 
+extern "C"
+{
+  void modify_string(char *str, size_t len);
+}
 void Compiler::compile(
   shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, ostream &header_os,
   string_view header_name, ostream &source_os, bool log2_reduct)
 {
-  switch (ruleset)
-  {
-  case Ruleset::depth:
-  {
-#ifdef FHECO_LOGGING
-    clog << '\n' << ruleset << "_trs" << '\n';
-#endif
-    trs::TRS depth_trs{trs::Ruleset::depth_ruleset(func)};
-    depth_trs.run(rewrite_heuristic);
-    break;
-  }
-
-  case Ruleset::ops_cost:
-  {
-#ifdef FHECO_LOGGING
-    clog << '\n' << ruleset << "_trs" << '\n';
-#endif
-    trs::TRS ops_cost_trs{trs::Ruleset::ops_cost_ruleset(func)};
-    ops_cost_trs.run(rewrite_heuristic);
-    break;
-  }
-
-  case Ruleset::joined:
-  {
-#ifdef FHECO_LOGGING
-    clog << '\n' << ruleset << "_trs" << '\n';
-#endif
-    trs::TRS joined_trs{trs::Ruleset::joined_ruleset(func)};
-    joined_trs.run(rewrite_heuristic);
-    break;
-  }
-
-  default:
-    throw invalid_argument("invalid ruleset selector");
-    break;
-  }
-
-  if (log2_reduct)
-  {
-#ifdef FHECO_LOGGING
-    clog << "\nlog2_reduct\n";
-#endif
-    trs::TRS log2_reduct_trs{trs::Ruleset::log2_reduct_opt_ruleset(func)};
-    log2_reduct_trs.run(trs::RewriteHeuristic::top_down);
-  }
-
-#ifdef FHECO_LOGGING
-  clog << "\ncse_commut\n";
-#endif
+  auto rewrite_heuristicc = trs::RewriteHeuristic::bottom_up;
+  trs::TRS joined_trs{trs::Ruleset::joined_ruleset(func)};
+  joined_trs.run(rewrite_heuristicc);
   passes::cse_commut(func);
   gen_he_code(func, header_os, header_name, source_os, 29, true);
 }
@@ -162,5 +130,84 @@ ostream &operator<<(ostream &os, Compiler::Ruleset ruleset)
   }
 
   return os;
+}
+void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
+{
+
+  util ::ExprPrinter pr(func);
+  int slot_count = 0;
+  pr.make_terms_str_expr(util::ExprPrinter::Mode::prefix);
+  ofstream inputs_file("../inputs.txt");
+  string inputs_names = "";
+  string inputs_type = "";
+  vector<const ir::Term *> input_terms;
+  for (auto input_info : func->data_flow().inputs_info())
+  {
+    input_terms.push_back(input_info.first);
+  }
+  for (auto it = input_terms.rbegin(); it != input_terms.rend(); ++it)
+  {
+    auto input_term = *it;
+    inputs_names += pr.terms_str_exprs().at(input_term->id()) + " ";
+    if (input_term->type() == ir::Term::Type::cipher)
+    {
+      inputs_type += "1 ";
+    }
+    else
+      inputs_type += "0 ";
+  }
+  inputs_file << inputs_names << endl;
+  inputs_file << inputs_type << endl;
+  inputs_file.close();
+  vector<const ir::Term *> output_terms;
+  for (auto output_info : func->data_flow().outputs_info())
+  {
+    output_terms.push_back(output_info.first);
+  }
+  ofstream expression_file("../expression.txt");
+  string expression = "(Vec ";
+  for (auto it = output_terms.rbegin(); it != output_terms.rend(); ++it)
+  {
+    auto output_term = *it;
+    slot_count += 1;
+    expression = expression + " " + pr.terms_str_exprs().at(output_term->id()) + " ";
+  }
+
+  expression += ")";
+  expression_file << expression;
+  expression_file.close();
+  if (setenv("VECTOR_WIDTH", to_string(slot_count).c_str(), 1) != 0)
+  {
+    std::cerr << "Failed to set environment variable" << std::endl;
+    exit(1);
+  }
+  call_vectorizer();
+  call_script();
+}
+void Compiler::call_vectorizer()
+{
+  const char *command = "cargo run --release --manifest-path ../../../egraphs/Cargo.toml -- ../expression.txt "
+                        "--no-ac > ../vectorized_code.txt";
+
+  // Use the system function to run the executable
+  int result = system(command);
+
+  // Check the result of the system call
+  if (result != 0)
+  {
+    // The executable did not run successfully
+    std::cout << "Failed to call the vectorizer engine!" << std::endl;
+  }
+}
+
+void Compiler::call_script()
+{
+  const char *command = "python3 ../script.py ";
+  int result = system(command);
+  if (result != 0)
+  {
+    // The executable did not run successfully
+    std::cout << "Failed to call the script " << std::endl;
+  }
 }
 } // namespace fheco
