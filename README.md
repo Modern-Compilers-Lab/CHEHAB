@@ -30,6 +30,8 @@ In order to build and use the compiler, you need to have installed:
 - Cmake
 - GCC compiler
 - SEAL library
+- Rust
+- Python
 
 To build CHEHAB, you need to follow these steps:
 1. Clone the repository to your local machine.
