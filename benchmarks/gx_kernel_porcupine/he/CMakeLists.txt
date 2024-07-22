@@ -20,7 +20,7 @@ target_link_libraries(main PRIVATE gen_he_gx_kernel_porcupine)
 target_link_libraries(main PRIVATE utils)
 
 set(SOURCE_FILE_1 ${CMAKE_SOURCE_DIR}/../../../../benchmarks/gx_kernel_porcupine/gx_kernel_porcupine_io_example.txt)
-set(DESTINATION_FILE_1 ${CMAKE_SOURCE_DIR}/build/gx_kernel_porcupine_io_example.txt)
+set(DESTINATION_FILE_1 ${CMAKE_SOURCE_DIR}/gx_kernel_porcupine_io_example.txt)
 add_custom_target(copy_input_1gx_kernel_porcupine ALL
     COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_1} ${DESTINATION_FILE_1}
     DEPENDS ${SOURCE_FILE}

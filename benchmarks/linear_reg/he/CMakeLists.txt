@@ -21,7 +21,7 @@ target_link_libraries(main PRIVATE utils)
 
 
 set(SOURCE_FILE_1 ${CMAKE_SOURCE_DIR}/../../../../benchmarks/linear_reg/linear_reg_io_example.txt)
-set(DESTINATION_FILE_1 ${CMAKE_SOURCE_DIR}/build/linear_reg_io_example.txt)
+set(DESTINATION_FILE_1 ${CMAKE_SOURCE_DIR}/linear_reg_io_example.txt)
 add_custom_target(copy_input_1linear_reg ALL
     COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_1} ${DESTINATION_FILE_1}
     DEPENDS ${SOURCE_FILE}
