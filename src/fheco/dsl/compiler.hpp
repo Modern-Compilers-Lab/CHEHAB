@@ -4,26 +4,25 @@
 #include "fheco/trs/common.hpp"
 #include <cstddef>
 #include <limits>
+#include <map>
 #include <memory>
 #include <ostream>
+#include <queue>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
+using std::queue;
+using std::string;
+using namespace std;
 namespace fheco
 {
 class Compiler
 {
 public:
-  enum class Ruleset
-  {
-    depth,
-    ops_cost,
-    joined
-  };
-
   static inline const std::shared_ptr<ir::Func> &create_func(
     std::string name, std::size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
     bool need_cyclic_rotation, bool overflow_warnings = false)
@@ -41,8 +40,8 @@ public:
   }
 
   static void compile(
-    std::shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::ostream &header_os,
-    std::string_view header_name, std::ostream &source_os, bool log2_reduct = false);
+    shared_ptr<ir::Func> func, ostream &header_os, string_view header_name, ostream &source_os, bool axiomatic,
+    int window);
 
   static void gen_he_code(
     const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name,
@@ -62,6 +61,16 @@ public:
   static const std::shared_ptr<ir::Func> &get_func(const std::string &name);
 
   static void delete_func(const std::string &name);
+  static queue<string> split(const string &s);
+  static void call_equality_saturation(int slot_count, bool axiomatic);
+  static ir::Term *build_expression(
+    const std::shared_ptr<ir::Func> &func, std::map<string, ir::Term *> map, queue<string> &tokens);
+  static ir::Term *build_expression(
+    const std::shared_ptr<ir::Func> &func, std::map<string, ir::Term *> map, queue<string> &tokens, int window,
+    int depth, bool axiomatic);
+  static ir::OpCode operationFromString(string operation);
+  static void equality_saturation_optimizer(const std::shared_ptr<ir::Func> &func, bool axiomatic);
+  static void equality_saturation_optimizer(const std::shared_ptr<ir::Func> &func, bool axiomatic, int window);
 
   static inline bool cse_enabled() { return cse_enabled_; }
 
@@ -105,5 +114,4 @@ private:
   static bool scalar_vector_shape_;
 };
 
-std::ostream &operator<<(std::ostream &os, Compiler::Ruleset ruleset);
 } // namespace fheco

@@ -46,27 +46,19 @@ int main(int argc, char **argv)
   if (argc > 1)
     call_quantifier = stoi(argv[1]);
 
-  auto ruleset = Compiler::Ruleset::ops_cost;
+  auto axiomatic = false;
   if (argc > 2)
-    ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
-
-  auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-  if (argc > 3)
-    rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
+    axiomatic = stoi(argv[2]) ? true : false;
 
   bool cse = true;
-  if (argc > 4)
-    cse = stoi(argv[4]);
+  if (argc > 3)
+    cse = stoi(argv[3]);
 
   bool const_folding = true;
-  if (argc > 5)
-    const_folding = stoi(argv[5]);
+  if (argc > 4)
+    const_folding = stoi(argv[4]);
 
   print_bool_arg(call_quantifier, "quantifier", clog);
-  clog << " ";
-  clog << ruleset << "_trs";
-  clog << " ";
-  clog << rewrite_heuristic;
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
@@ -144,7 +136,7 @@ int main(int argc, char **argv)
   if (!opt_source_os)
     throw logic_error("failed to create opt_source file");
 
-  Compiler::compile(opt_func, ruleset, rewrite_heuristic, opt_header_os, opt_gen_name + ".hpp", opt_source_os);
+  Compiler::compile(opt_func, opt_header_os, opt_gen_name + ".hpp", opt_source_os, axiomatic);
 
   auto noopt_obtained_outputs = util::evaluate_on_clear(noopt_func, opt_func->get_inputs_example_values());
   auto opt_obtained_outputs = util::evaluate_on_clear(opt_func, noopt_func->get_inputs_example_values());

@@ -33,17 +33,17 @@ void print_bool_arg(bool arg, const string &name, ostream &os)
 
 int main(int argc, char **argv)
 {
-  bool call_quantifier = false;
+  auto axiomatic = false;
   if (argc > 1)
-    call_quantifier = stoi(argv[1]);
+    axiomatic = stoi(argv[1]) ? true : false;
 
-  auto ruleset = Compiler::Ruleset::ops_cost;
+  auto window = 0;
   if (argc > 2)
-    ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
+    window = stoi(argv[2]);
 
-  auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+  bool call_quantifier = false;
   if (argc > 3)
-    rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
+    call_quantifier = stoi(argv[3]);
 
   bool cse = true;
   if (argc > 4)
@@ -54,10 +54,6 @@ int main(int argc, char **argv)
     const_folding = stoi(argv[5]);
 
   print_bool_arg(call_quantifier, "quantifier", clog);
-  clog << " ";
-  clog << ruleset << "_trs";
-  clog << " ";
-  clog << rewrite_heuristic;
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
@@ -99,7 +95,7 @@ int main(int argc, char **argv)
   if (!source_os)
     throw logic_error("failed to create source file");
 
-  Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+  Compiler::compile(func, header_os, gen_name + ".hpp", source_os, axiomatic, window);
   elapsed = chrono::high_resolution_clock::now() - t;
   cout << elapsed.count() << " ms\n";
 

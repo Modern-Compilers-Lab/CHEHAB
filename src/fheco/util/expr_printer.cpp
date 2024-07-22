@@ -2,6 +2,8 @@
 #include "fheco/ir/term.hpp"
 #include "fheco/util/common.hpp"
 #include "fheco/util/expr_printer.hpp"
+#include <iostream>
+#include <sstream>
 #include <stack>
 #include <stdexcept>
 #include <utility>
@@ -10,6 +12,31 @@ using namespace std;
 
 namespace fheco::util
 {
+bool startsWith(const std::string &str, const std::string &prefix)
+{
+  // Check if the prefix is longer than the string
+  if (str.length() < prefix.length())
+  {
+    return false;
+  }
+
+  // Compare the first 'prefix.length()' characters of the string with the prefix
+  return str.compare(0, prefix.length(), prefix) == 0;
+}
+std::vector<std::string> split(const std::string &str, char delimiter)
+{
+  std::vector<std::string> tokens;
+  std::istringstream stream(str);
+  std::string token;
+
+  while (std::getline(stream, token, delimiter))
+  {
+    tokens.push_back(token);
+  }
+
+  return tokens;
+}
+
 // for infix representation to reduce unnecessary parenthesis
 const unordered_map<ir::OpCode::Type, int> ExprPrinter::ops_precedence_ = {
   {ir::OpCode::Type::encrypt, 1}, {ir::OpCode::Type::mod_switch, 1}, {ir::OpCode::Type::relin, 1},
@@ -200,7 +227,10 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
   for (auto term : func_->get_top_sorted_terms())
   {
     if (term->is_leaf())
+    {
+
       terms_str_exprs_.emplace(term->id(), make_leaf_str_expr(term));
+    }
     else
     {
       if (mode_ == Mode::infix || mode_ == Mode::infix_expl_paren)
@@ -250,9 +280,29 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
       }
       else if (mode == Mode::prefix)
       {
-        string tmp_str_expr = term->op_code().str_repr();
+        string opcode = term->op_code().str_repr();
+        string tmp_str_expr;
+        vector<string> operands;
         for (auto operand : term->operands())
-          tmp_str_expr += " " + terms_str_exprs_.at(operand->id());
+          operands.push_back(terms_str_exprs_.at(operand->id()));
+        if (startsWith(opcode, "<<"))
+        {
+          auto op = split(opcode, ' ');
+          tmp_str_expr = "( " + op[0] + " " + operands[0] + " " + op[1] + " )";
+        }
+        else
+        {
+          if (opcode == "negate")
+          {
+            opcode = "-";
+          }
+          tmp_str_expr = "( " + opcode;
+          for (auto operand : operands)
+          {
+            tmp_str_expr += " " + operand;
+          }
+          tmp_str_expr += " )";
+        }
         terms_str_exprs_.emplace(term->id(), move(tmp_str_expr));
       }
       else if (mode == Mode::posfix)

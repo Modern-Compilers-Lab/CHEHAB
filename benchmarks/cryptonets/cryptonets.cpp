@@ -125,17 +125,17 @@ int main(int argc, char **argv)
   if (argc > 1)
     modulus = static_cast<integer>(stoull(argv[1]));
 
-  bool call_quantifier = false;
+  auto axiomatic = false;
   if (argc > 2)
-    call_quantifier = stoi(argv[2]);
+    axiomatic = stoi(argv[2]) ? true : false;
 
-  auto ruleset = Compiler::Ruleset::joined;
+  auto window = 0;
   if (argc > 3)
-    ruleset = static_cast<Compiler::Ruleset>(stoi(argv[3]));
+    window = stoi(argv[3]);
 
-  auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+  bool call_quantifier = false;
   if (argc > 4)
-    rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[4]));
+    call_quantifier = stoi(argv[4]);
 
   bool cse = true;
   if (argc > 5)
@@ -145,13 +145,7 @@ int main(int argc, char **argv)
   if (argc > 6)
     const_folding = stoi(argv[6]);
 
-  clog << modulus;
-  clog << " ";
   print_bool_arg(call_quantifier, "quantifier", clog);
-  clog << " ";
-  clog << ruleset << "_trs";
-  clog << " ";
-  clog << rewrite_heuristic;
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";

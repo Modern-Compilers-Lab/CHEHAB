@@ -45,47 +45,37 @@ void print_bool_arg(bool arg, const string &name, ostream &os)
 
 int main(int argc, char **argv)
 {
-  bool call_quantifier = false;
+  auto axiomatic = false;
   if (argc > 1)
-    call_quantifier = stoi(argv[1]);
+    axiomatic = stoi(argv[1]) ? true : false;
 
-  auto ruleset = Compiler::Ruleset::joined;
+  auto window = 0;
   if (argc > 2)
-    ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
+    window = stoi(argv[2]);
 
-  auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+  bool call_quantifier = false;
   if (argc > 3)
-    rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
-
-  int64_t max_iter = 400000;
-  if (argc > 4)
-    max_iter = stoull(argv[4]);
-
-  bool rewrite_created_sub_terms = true;
-  if (argc > 5)
-    rewrite_created_sub_terms = stoi(argv[5]);
+    call_quantifier = stoi(argv[3]);
 
   bool cse = true;
-  if (argc > 6)
-    cse = stoi(argv[6]);
-
-  bool cse_order_operands = true;
-  if (argc > 7)
-    cse_order_operands = stoi(argv[7]);
+  if (argc > 4)
+    cse = stoi(argv[4]);
 
   bool const_folding = true;
-  if (argc > 8)
-    const_folding = stoi(argv[8]);
+  if (argc > 5)
+    const_folding = stoi(argv[5]);
+
+  print_bool_arg(call_quantifier, "quantifier", clog);
+  clog << " ";
+  print_bool_arg(cse, "cse", clog);
+  clog << " ";
+  print_bool_arg(const_folding, "constant_folding", clog);
+  clog << '\n';
 
   if (cse)
     Compiler::enable_cse();
   else
     Compiler::disable_cse();
-
-  if (cse_order_operands)
-    Compiler::enable_order_operands();
-  else
-    Compiler::disable_order_operands();
 
   if (const_folding)
     Compiler::enable_const_folding();
@@ -94,13 +84,11 @@ int main(int argc, char **argv)
 
   print_bool_arg(call_quantifier, "call_quantifier", clog);
   clog << " ";
-  clog << ruleset << " " << rewrite_heuristic << " " << max_iter << " ";
-  print_bool_arg(rewrite_created_sub_terms, "rewrite_created_sub_terms", clog);
+
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
-  print_bool_arg(cse_order_operands, "cse_order_operands", clog);
-  clog << " ";
+
   print_bool_arg(const_folding, "const_folding", clog);
   clog << '\n';
 
@@ -115,7 +103,7 @@ int main(int argc, char **argv)
 
   const auto &rand_inputs = Compiler::active_func()->data_flow().inputs_info();
 
-  Compiler::compile(ruleset, rewrite_heuristic, max_iter, rewrite_created_sub_terms);
+  Compiler::compile(func, header_os, gen_name + ".hpp", source_os, axiomatic, window);
 
   auto outputs = util::evaluate_on_clear(Compiler::active_func(), rand_inputs);
   if (outputs != Compiler::active_func()->data_flow().outputs_info())
