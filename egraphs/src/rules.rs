@@ -1,6 +1,5 @@
 use crate::{
     binopsearcher::build_binop_or_zero_rule,
-    config::*,
     cost::VecCostFn,
     extractor::Extractor,
     searchutils::*,
@@ -10,42 +9,10 @@ use egg::rewrite as rw;
 use egg::*;
 
 // Check if all the variables, in this case memories, are equivalent
-fn filter_applicable_rules(
-    rules: &mut Vec<Rewrite<VecLang, ConstantFold>>,
-    prog: &RecExpr<VecLang>,
-) {
-    let prog_str: String = prog.pretty(80);
-    let ops_to_filter = vec!["neg", "sqrt", "/"];
-    let unused_ops: Vec<&&str> = ops_to_filter
-        .iter()
-        .filter(|&op| !prog_str.contains(op))
-        .collect();
-
-    let mut dropped = "".to_string();
-    rules.retain(|r| {
-        let drop = unused_ops.iter().any(|&op| {
-            let rule_sr = format!("{:?}", r);
-            rule_sr.contains(op)
-        });
-        if drop {
-            dropped = format!("{} {}", dropped, r.name())
-        };
-        !drop
-    });
-    if dropped != "" {
-        eprintln!("Dropping inapplicable rules:{}", dropped);
-    }
-}
 
 /// Run the rewrite rules over the input program and return the best (cost, program)
-pub fn run(
-    prog: &RecExpr<VecLang>,
-    timeout: u64,
-    no_ac: bool,
-    no_vec: bool,
-) -> (f64, RecExpr<VecLang>) {
-    let mut rules = rules(no_ac, no_vec);
-    filter_applicable_rules(&mut rules, prog);
+pub fn run(prog: &RecExpr<VecLang>, timeout: u64, vector_width: usize) -> (f64, RecExpr<VecLang>) {
+    let rules = rules(vector_width);
     let mut init_eg: Egraph = Egraph::new(ConstantFold);
     init_eg.add(VecLang::Num(0));
 
@@ -72,17 +39,25 @@ pub fn run(
     extractor.find_best(root)
 }
 
-pub fn build_binop_rule(op_str: &str, vec_str: &str) -> Rewrite<VecLang, ConstantFold> {
-    let searcher: Pattern<VecLang> =
-        vec_fold_op(&op_str.to_string(), &"a".to_string(), &"b".to_string())
-            .parse()
-            .unwrap();
+pub fn build_binop_rule(
+    op_str: &str,
+    vec_str: &str,
+    vector_width: usize,
+) -> Rewrite<VecLang, ConstantFold> {
+    let searcher: Pattern<VecLang> = vec_fold_op(
+        &op_str.to_string(),
+        &"a".to_string(),
+        &"b".to_string(),
+        vector_width,
+    )
+    .parse()
+    .unwrap();
 
     let applier: Pattern<VecLang> = format!(
         "({} {} {})",
         vec_str,
-        vec_with_var(&"a".to_string()),
-        vec_with_var(&"b".to_string())
+        vec_with_var(&"a".to_string(), vector_width),
+        vec_with_var(&"b".to_string(), vector_width)
     )
     .parse()
     .unwrap();
@@ -90,25 +65,34 @@ pub fn build_binop_rule(op_str: &str, vec_str: &str) -> Rewrite<VecLang, Constan
     rw!(format!("{}_binop", op_str); { searcher } => { applier })
 }
 
-pub fn build_unop_rule(op_str: &str, vec_str: &str) -> Rewrite<VecLang, ConstantFold> {
-    let searcher: Pattern<VecLang> = vec_map_op(&op_str.to_string(), &"a".to_string())
-        .parse()
-        .unwrap();
-    let applier: Pattern<VecLang> = format!("({} {})", vec_str, vec_with_var(&"a".to_string()))
-        .parse()
-        .unwrap();
+pub fn build_unop_rule(
+    op_str: &str,
+    vec_str: &str,
+    vector_width: usize,
+) -> Rewrite<VecLang, ConstantFold> {
+    let searcher: Pattern<VecLang> =
+        vec_map_op(&op_str.to_string(), &"a".to_string(), vector_width)
+            .parse()
+            .unwrap();
+    let applier: Pattern<VecLang> = format!(
+        "({} {})",
+        vec_str,
+        vec_with_var(&"a".to_string(), vector_width)
+    )
+    .parse()
+    .unwrap();
 
     rw!(format!("{}_unop", op_str); { searcher } => { applier })
 }
 
-pub fn rotation_rules() -> Vec<Rewrite<VecLang, ConstantFold>> {
+pub fn rotation_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
     // let searcher_combine: Pattern<VecLang> = "( << ( << ?a ?b ) ?c)".parse().unwrap();
     // let applier_combine: Pattern<VecLang> = " (<< ?a ( + ?b ?c) )".parse().unwrap();
     // let rule_combine: Vec<Rewrite<VecLang, ConstantFold>> =
     //     rw!("rotation_combine" ; {searcher_combine.clone()} <=> {applier_combine.clone()});
     // rules.extend(rule_combine);
-    let vector_width: usize = vector_width(); // Store vector width in a constant
+    let vector_width: usize = vector_width; // Store vector width in a constant
 
     let lhs = format!(
         "(Vec {})",
@@ -135,10 +119,10 @@ pub fn rotation_rules() -> Vec<Rewrite<VecLang, ConstantFold>> {
     rules
 }
 
-pub fn split_vectors() -> Vec<Rewrite<VecLang, ConstantFold>> {
+pub fn split_vectors(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
 
-    let vector_width: usize = vector_width(); // Store vector width in a constant
+    // Store vector width in a constant
 
     let lhs = format!(
         "(Vec {})",
@@ -181,10 +165,10 @@ pub fn split_vectors() -> Vec<Rewrite<VecLang, ConstantFold>> {
     rules
 }
 
-pub fn operations_rules() -> Vec<Rewrite<VecLang, ConstantFold>> {
+pub fn operations_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
 
-    let vector_width: usize = vector_width(); // Store vector width in a constant
+    // Store vector width in a constant
 
     // Iterate over each possible position in the vector
     for i in 0..vector_width {
@@ -206,7 +190,7 @@ pub fn operations_rules() -> Vec<Rewrite<VecLang, ConstantFold>> {
                 vector_add.push(format!("( + ?a{}1 ?a{}2) ", j, j));
                 vector_mul.push(format!("( * ?a{}1 ?a{}2) ", j, j));
                 vector_sub.push(format!("( - ?a{}1 ?a{}2) ", j, j));
-                vector_neg.push(format!("( neg ?a{}) ", j));
+                vector_neg.push(format!("( - ?a{}) ", j));
                 vector1_neg.push("0 ".to_string());
                 vector2_neg.push(format!("?a{}  ", j));
                 vector1.push(format!("?a{}1 ", j));
@@ -218,7 +202,7 @@ pub fn operations_rules() -> Vec<Rewrite<VecLang, ConstantFold>> {
                 vector_mul.push(format!("?a{} ", j));
                 vector_sub.push(format!("?a{} ", j));
                 vector_neg.push(format!("?a{} ", j));
-                vector1.push(format!("?a{}1 ", j));
+                vector1.push(format!("?a{} ", j));
                 vector1_neg.push(format!("?a{} ", j));
                 vector2_neg.push("0 ".to_string());
                 vector2_mul.push("1 ".to_string());
@@ -275,44 +259,39 @@ pub fn operations_rules() -> Vec<Rewrite<VecLang, ConstantFold>> {
     rules
 }
 
-pub fn rules(no_ac: bool, no_vec: bool) -> Vec<Rewrite<VecLang, ConstantFold>> {
+pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![
         rw!("add-0"; "(+ 0 ?a)" => "?a"),
         rw!("mul-0"; "(* 0 ?a)" => "0"),
         rw!("mul-1"; "(* 1 ?a)" => "?a"),
     ];
 
-    // let rotation_rules = rotation_rules();
-    // let operations_rules = operations_rules();
-    // let split_vectors = split_vectors();
-    // rules.extend(rotation_rules);
-    // rules.extend(operations_rules);
-    // rules.extend(split_vectors);
+    let rotation_rules = rotation_rules(vector_width);
+    let operations_rules = operations_rules(vector_width);
+    let split_vectors = split_vectors(vector_width);
+    rules.extend(rotation_rules);
+    rules.extend(operations_rules);
+    rules.extend(split_vectors);
 
     // Vector rules
-    if !no_vec {
-        rules.extend(vec![
-            // Special MAC fusion rule
 
-            // Custom searchers
-            build_unop_rule("-", "VecNeg"),
-            build_binop_or_zero_rule("+", "VecAdd"),
-            build_binop_or_zero_rule("*", "VecMul"),
-            build_binop_or_zero_rule("-", "VecMinus"),
-        ]);
-    } else {
-        eprintln!("Skipping vector rules")
-    }
+    rules.extend(vec![
+        // Special MAC fusion rule
 
-    if !no_ac {
-        rules.extend(vec![
-            //  Basic associativity/commutativity/identities
-            rw!("commute-vecadd"; "(VecAdd ?a ?b)" => "(VecAdd ?b ?a)"),
-            rw!("commute-vecmul"; "(VecMul ?a ?b)" => "(VecMul ?b ?a)"),
-            rw!("assoc-vecadd"; "(VecAdd (VecAdd ?a ?b) ?c)" => "(VecAdd ?a (VecAdd ?b ?c))"),
-            rw!("assoc-vecmul"; "(VecMul (VecMul ?a ?b) ?c)" => "(VecMul ?a (VecMul ?b ?c))"),
-        ]);
-    }
+        // Custom searchers
+        build_unop_rule("-", "VecNeg", vector_width),
+        build_binop_or_zero_rule("+", "VecAdd", vector_width),
+        build_binop_or_zero_rule("*", "VecMul", vector_width),
+        build_binop_or_zero_rule("-", "VecMinus", vector_width),
+    ]);
+
+    // rules.extend(vec![
+    //     //  Basic associativity/commutativity/identities
+    //     rw!("commute-vecadd"; "(VecAdd ?a ?b)" => "(VecAdd ?b ?a)"),
+    //     rw!("commute-vecmul"; "(VecMul ?a ?b)" => "(VecMul ?b ?a)"),
+    //     rw!("assoc-vecadd"; "(VecAdd (VecAdd ?a ?b) ?c)" => "(VecAdd ?a (VecAdd ?b ?c))"),
+    //     rw!("assoc-vecmul"; "(VecMul (VecMul ?a ?b) ?c)" => "(VecMul ?a (VecMul ?b ?c))"),
+    // ]);
 
     rules
 }

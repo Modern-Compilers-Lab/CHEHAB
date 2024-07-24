@@ -2,7 +2,7 @@ from typing import List, Tuple, Dict
 from declarations import file_content
 
 
-def process_vectorized_code(filename: str) -> List[str]:
+def process_vectorized_code(content: str) -> List[str]:
     """
     Parameters:
     filename (str): The path to the file.
@@ -10,8 +10,7 @@ def process_vectorized_code(filename: str) -> List[str]:
     Returns:
     List[str]: The cleaned and split content of the file.
     """
-    with open(filename, "r") as file:
-        content = file.read()
+
     cleaned_content = content.replace("(", "( ").replace(")", " )").replace("\n", " ")
     return [token for token in cleaned_content.split(" ") if token]
 
@@ -73,10 +72,11 @@ def process(
                         if not is_literal(element):
                             all_literals = False
                             new_input += "@" + str(inputs.index(element)) + " "
+                            if inputs_types[inputs.index(element)] == "1":
+                                all_literals = False
                         else:
                             new_input += element + " "
-                        if inputs_types[inputs.index(element)] == "1":
-                            all_literals = False
+
                     if all_literals:
                         label_type = "Plaintext "
                         label = "p" + str(id_counter)
@@ -136,17 +136,33 @@ def create_file(filename: str, content: str) -> None:
 if __name__ == "__main__":
     id_counter = 0
     declarations, computations, new_inputs = "", "", ""
-    with open("../inputs.txt") as f:
+    inputs_file = "../inputs.txt"
+    with open(inputs_file) as f:
         inputs, inputs_types = f.readlines()
     inputs, inputs_types = inputs.split(), inputs_types.split()
-    filename = "../vectorized_code.txt"
-    tokens = process_vectorized_code(filename)
-    process(tokens, 0, {}, inputs, inputs_types)
-    output = "c" + str(id_counter - 1)
-    computations += f'{output}.set_output("{output}");\n'
+    vectorized_file = "../vectorized_code.txt"
+    with open(vectorized_file, "r") as file:
+        vectorized_content = file.read()
+    expressions = vectorized_content.split("\n")
+    slot_count, sub_vector_size = expressions[-1].split(" ")
+    outputs = []
+    for expression in expressions[:-1]:
+        tokens = process_vectorized_code(expression)
+        process(tokens, 0, {}, inputs, inputs_types)
+        outputs.append("c" + str(id_counter - 1))
+    final_output_label = "c" + str(id_counter)
+    final_output = "Ciphertext " + final_output_label + " = " + outputs[0]
+    step = 1
+    sub_vector_size = int(sub_vector_size)
+    for output in outputs[1:]:
+        final_output += " + " + output + ">>" + str(sub_vector_size * step)
+        step += 1
+    final_output += ";\n"
+    computations += final_output
+    computations += f'{final_output_label}.set_output("{final_output_label}");\n'
     content = file_content.format(
         function_definition=f"void fhe() {{\n{declarations}{computations}}}\n",
-        slot_count="20",
+        slot_count=slot_count,
     )
     create_file("fhe_vectorized.cpp", content)
-    create_file("new_inputs_outputs.txt", new_inputs + output)
+    create_file("new_inputs_outputs.txt", new_inputs + final_output_label)

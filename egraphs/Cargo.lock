@@ -62,18 +62,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dios-egraphs"
-version = "0.1.0"
-dependencies = [
- "assert_approx_eq",
- "clap",
- "egg",
- "itertools",
- "lexpr",
- "libc",
-]
-
-[[package]]
 name = "egg"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -85,6 +73,18 @@ dependencies = [
  "once_cell",
  "smallvec",
  "symbolic_expressions",
+]
+
+[[package]]
+name = "egraphs-vectorization"
+version = "0.1.0"
+dependencies = [
+ "assert_approx_eq",
+ "clap",
+ "egg",
+ "itertools",
+ "lexpr",
+ "libc",
 ]
 
 [[package]]

@@ -14,14 +14,18 @@ pub struct BinOpSearcher {
     pub zero_pattern: Pattern<VecLang>,
 }
 
-pub fn build_binop_or_zero_rule(op_str: &str, vec_str: &str) -> Rewrite<VecLang, ConstantFold> {
+pub fn build_binop_or_zero_rule(
+    op_str: &str,
+    vec_str: &str,
+    vector_width: usize,
+) -> Rewrite<VecLang, ConstantFold> {
     let left_var = "a".to_string();
     let right_var = "b".to_string();
-    let full_pattern = vec_fold_op(&op_str.to_string(), &left_var, &right_var)
+    let full_pattern = vec_fold_op(&op_str.to_string(), &left_var, &right_var, vector_width)
         .parse::<Pattern<VecLang>>()
         .unwrap();
 
-    let vec_pattern = vec_with_var(&"x".to_string())
+    let vec_pattern = vec_with_var(&"x".to_string(), vector_width)
         .parse::<Pattern<VecLang>>()
         .unwrap();
 
@@ -34,8 +38,8 @@ pub fn build_binop_or_zero_rule(op_str: &str, vec_str: &str) -> Rewrite<VecLang,
     let applier: Pattern<VecLang> = format!(
         "({} {} {})",
         vec_str,
-        vec_with_var(&left_var),
-        vec_with_var(&right_var)
+        vec_with_var(&left_var, vector_width),
+        vec_with_var(&right_var, vector_width)
     )
     .parse()
     .unwrap();

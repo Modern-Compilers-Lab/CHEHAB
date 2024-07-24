@@ -5,6 +5,7 @@
 #include "fheco/passes/passes.hpp"
 #include "fheco/util/common.hpp"
 #include "fheco/util/expr_printer.hpp"
+#include "compiler.hpp"
 #include <cstring>
 #include <ctime>
 #include <filesystem>
@@ -135,7 +136,7 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
 {
 
   util ::ExprPrinter pr(func);
-  int slot_count = 0;
+  int vector_width = 0;
   pr.make_terms_str_expr(util::ExprPrinter::Mode::prefix);
   ofstream inputs_file("../inputs.txt");
   string inputs_names = "";
@@ -169,28 +170,116 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   for (auto it = output_terms.rbegin(); it != output_terms.rend(); ++it)
   {
     auto output_term = *it;
-    slot_count += 1;
+    vector_width += 1;
     expression = expression + " " + pr.terms_str_exprs().at(output_term->id()) + " ";
   }
+  const char *env_var = std::getenv("VECTOR_WIDTH");
 
+  if (env_var != nullptr)
+  {
+    std::string vector_width_env(env_var);
+    int vector_width_env_int = std::stoi(vector_width_env);
+    if (vector_width_env_int > vector_width)
+    {
+      for (int i = 0; i < vector_width_env_int - vector_width; i++)
+      {
+        expression = expression + " 0 ";
+      }
+      vector_width = vector_width_env_int;
+    }
+  }
   expression += ")";
   expression_file << expression;
   expression_file.close();
-  if (setenv("VECTOR_WIDTH", to_string(slot_count).c_str(), 1) != 0)
-  {
-    std::cerr << "Failed to set environment variable" << std::endl;
-    exit(1);
-  }
-  call_vectorizer();
+  ofstream vectorized_code_file("../vectorized_code.txt");
+  vectorized_code_file << "";
+  vectorized_code_file.close();
+  call_vectorizer(vector_width);
+  std::ofstream vectorized_code_file_2("../vectorized_code.txt", std::ios::app);
+  vectorized_code_file_2 << vector_width << " " << vector_width;
+  vectorized_code_file_2.close();
   call_script();
 }
-void Compiler::call_vectorizer()
+void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window)
 {
-  const char *command = "cargo run --release --manifest-path ../../../egraphs/Cargo.toml -- ../expression.txt "
-                        "--no-ac > ../vectorized_code.txt";
+  util ::ExprPrinter pr(func);
+
+  pr.make_terms_str_expr(util::ExprPrinter::Mode::prefix);
+  ofstream inputs_file("../inputs.txt");
+  string inputs_names = "";
+  string inputs_type = "";
+  vector<const ir::Term *> input_terms;
+  for (auto input_info : func->data_flow().inputs_info())
+  {
+    input_terms.push_back(input_info.first);
+  }
+  for (auto it = input_terms.rbegin(); it != input_terms.rend(); ++it)
+  {
+    auto input_term = *it;
+    inputs_names += pr.terms_str_exprs().at(input_term->id()) + " ";
+    if (input_term->type() == ir::Term::Type::cipher)
+    {
+      inputs_type += "1 ";
+    }
+    else
+      inputs_type += "0 ";
+  }
+  inputs_file << inputs_names << endl;
+  inputs_file << inputs_type << endl;
+  inputs_file.close();
+  vector<const ir::Term *> output_terms;
+  int vector_full_width = 0;
+  for (auto output_info : func->data_flow().outputs_info())
+  {
+    output_terms.push_back(output_info.first);
+    vector_full_width += 1;
+  }
+  int sub_vectors_size = vector_full_width / window;
+  int index = 0;
+  string expression = "(Vec ";
+  const char *env_var = std::getenv("VECTOR_WIDTH");
+  int vector_width = 0;
+  if (env_var != nullptr)
+  {
+    std::string vector_width_env(env_var);
+    int vector_width = std::stoi(vector_width_env);
+  }
+  ofstream vectorized_code_file("../vectorized_code.txt");
+  vectorized_code_file << "";
+  vectorized_code_file.close();
+  for (auto it = output_terms.rbegin(); it != output_terms.rend(); ++it)
+  {
+    auto output_term = *it;
+    expression += pr.terms_str_exprs().at(output_term->id()) + " ";
+    index = (index + 1) % sub_vectors_size;
+    if ((!index && it != output_terms.rbegin()) || it == output_terms.rend() - 1)
+    {
+      int current_vector_width = (index == 0) ? sub_vectors_size : index + 1;
+      for (int i = 0; i < vector_width - current_vector_width; i++)
+      {
+        expression += " 0 ";
+        current_vector_width++;
+      }
+      expression += " )";
+      ofstream expression_file("../expression.txt");
+      expression_file << expression;
+      expression_file.close();
+      call_vectorizer(current_vector_width);
+      expression = "(Vec ";
+    }
+  }
+  std::ofstream vectorized_code_file_2("../vectorized_code.txt", std::ios::app);
+  vectorized_code_file_2 << vector_full_width << " " << sub_vectors_size;
+  vectorized_code_file_2.close();
+  call_script();
+}
+void Compiler::call_vectorizer(int vector_width)
+{
+  string command = "cargo run --release --manifest-path ../../../egraphs/Cargo.toml -- ../expression.txt " +
+                   to_string(vector_width) + " >> ../vectorized_code.txt";
 
   // Use the system function to run the executable
-  int result = system(command);
+  int result = system(command.c_str());
 
   // Check the result of the system call
   if (result != 0)

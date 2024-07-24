@@ -1,28 +1,31 @@
 use egg::*;
 
-use crate::config::*;
-
-pub fn vec_with_op(op: &String, pre: &String) -> String {
-    let joined = ids_with_prefix(pre, vector_width()).join(" ");
+pub fn vec_with_op(op: &String, pre: &String, vector_width: usize) -> String {
+    let joined = ids_with_prefix(pre, vector_width).join(" ");
     format!("({} {})", op, joined)
 }
 
-pub fn vec_with_var(pre: &String) -> String {
-    vec_with_op(&"Vec".to_string(), pre)
+pub fn vec_with_var(pre: &String, vector_width: usize) -> String {
+    vec_with_op(&"Vec".to_string(), pre, vector_width)
 }
 
-pub fn vec_fold_op(op: &String, pre_left: &String, pre_right: &String) -> String {
-    let mut ops: Vec<String> = Vec::with_capacity(vector_width());
-    for i in 0..vector_width() {
+pub fn vec_fold_op(
+    op: &String,
+    pre_left: &String,
+    pre_right: &String,
+    vector_width: usize,
+) -> String {
+    let mut ops: Vec<String> = Vec::with_capacity(vector_width);
+    for i in 0..vector_width {
         ops.push(format!("({} ?{}{} ?{}{})", op, pre_left, i, pre_right, i))
     }
     let joined = ops.join(" ");
     format!("(Vec {})", joined)
 }
 
-pub fn vec_map_op(op: &String, pre: &String) -> String {
-    let mut ops: Vec<String> = Vec::with_capacity(vector_width());
-    for i in 0..vector_width() {
+pub fn vec_map_op(op: &String, pre: &String, vector_width: usize) -> String {
+    let mut ops: Vec<String> = Vec::with_capacity(vector_width);
+    for i in 0..vector_width {
         ops.push(format!("({} ?{}{})", op, pre, i))
     }
     let joined = ops.join(" ");
