@@ -7,7 +7,7 @@ use std::{
 use crate::cost;
 pub struct Extractor<'a, CF: cost::CostFunction<L>, L: Language, N: Analysis<L>> {
     cost_function: CF,
-    costs: HashMap<Id, (f64, L)>,
+    costs: HashMap<Id, (usize, L)>,
     egraph: &'a egg::EGraph<L, N>,
 }
 
@@ -31,13 +31,13 @@ where
 
     /// Find the cheapest (lowest cost) represented `RecExpr` in the
     /// given eclass.
-    pub fn find_best(&mut self, eclass: Id) -> (f64, RecExpr<L>) {
+    pub fn find_best(&mut self, eclass: Id) -> (usize, RecExpr<L>) {
         let mut expr = RecExpr::default();
         let (_, cost) = self.find_best_rec(&mut expr, eclass);
         (cost, expr)
     }
 
-    fn find_best_rec(&mut self, expr: &mut RecExpr<L>, eclass: Id) -> (Id, f64) {
+    fn find_best_rec(&mut self, expr: &mut RecExpr<L>, eclass: Id) -> (Id, usize) {
         let id = self.egraph.find(eclass);
         let (best_cost, best_node) = match self.costs.get(&id) {
             Some(result) => result.clone(),
@@ -69,9 +69,9 @@ where
     /// - `map`: A mapping of e-class IDs to their respective sub-classes.
     ///
     /// Returns:
-    /// - `Some(f64)`: The total cost of the node if all child costs are available.
+    /// - `Some(usize)`: The total cost of the node if all child costs are available.
     /// - `None`: If the cost of the node cannot be calculated due to missing child costs.
-    fn node_total_cost(&mut self, node: &L, map: &mut HashMap<Id, HashSet<Id>>) -> Option<f64> {
+    fn node_total_cost(&mut self, node: &L, map: &mut HashMap<Id, HashSet<Id>>) -> Option<usize> {
         let eg = &self.egraph;
 
         // Check if all children have their costs calculated
@@ -121,18 +121,18 @@ where
                     let node = costs[&eg.find(id)].1.clone();
 
                     // Define costs for different operations
-                    const LITERAL: f64 = 0.001;
-                    const STRUCTURE: f64 = 2000.0;
-                    const VEC_OP: f64 = 1.0;
-                    const OP: f64 = 1.0;
+                    const LITERAL: usize = 0;
+                    const STRUCTURE: usize = 2000;
+                    const VEC_OP: usize = 1;
+                    const OP: usize = 1;
 
                     let op = node.display_op().to_string();
-                    let op_costs: f64 = match op.as_str() {
+                    let op_costs: usize = match op.as_str() {
                         "+" | "*" | "-" | "neg" => OP,
-                        "<<" => VEC_OP * 10.0,
+                        "<<" => VEC_OP * 10,
                         "Vec" => STRUCTURE,
                         "VecAdd" | "VecMinus" => VEC_OP,
-                        "VecMul" => VEC_OP * 100.0,
+                        "VecMul" => VEC_OP * 100,
                         _ => LITERAL,
                     };
 
@@ -210,7 +210,7 @@ where
         }
     }
 
-    fn cmp(a: &Option<f64>, b: &Option<f64>) -> Ordering {
+    fn cmp(a: &Option<usize>, b: &Option<usize>) -> Ordering {
         match (a, b) {
             (None, None) => Ordering::Equal,
             (None, Some(_)) => Ordering::Greater,
@@ -229,13 +229,13 @@ where
     /// - `eclass`: A reference to the e-class for which the cost is to be calculated.
     ///
     /// Returns:
-    /// - `Some((f64, L))`: A tuple containing the minimum cost and the corresponding best e-node.
+    /// - `Some((usize, L))`: A tuple containing the minimum cost and the corresponding best e-node.
     /// - `None`: If no valid cost could be calculated for any e-node within the e-class.
     fn make_pass(
         &mut self,
         sub_classes: &mut HashMap<Id, HashSet<Id>>,
         eclass: &EClass<L, N::Data>,
-    ) -> Option<(f64, L)> {
+    ) -> Option<(usize, L)> {
         let mut node_sub_classes: HashSet<Id> = HashSet::new();
         let nodes = eclass.nodes.clone();
 

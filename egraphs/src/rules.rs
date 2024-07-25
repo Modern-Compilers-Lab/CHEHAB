@@ -11,7 +11,11 @@ use egg::*;
 // Check if all the variables, in this case memories, are equivalent
 
 /// Run the rewrite rules over the input program and return the best (cost, program)
-pub fn run(prog: &RecExpr<VecLang>, timeout: u64, vector_width: usize) -> (f64, RecExpr<VecLang>) {
+pub fn run(
+    prog: &RecExpr<VecLang>,
+    timeout: u64,
+    vector_width: usize,
+) -> (usize, RecExpr<VecLang>) {
     let rules = rules(vector_width);
     let mut init_eg: Egraph = Egraph::new(ConstantFold);
     init_eg.add(VecLang::Num(0));
