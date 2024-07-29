@@ -134,35 +134,63 @@ def create_file(filename: str, content: str) -> None:
 
 
 if __name__ == "__main__":
-    id_counter = 0
-    declarations, computations, new_inputs = "", "", ""
-    inputs_file = "../inputs.txt"
+    id_counter = 0  # Counter for labeling each new declared ciphertext or plaintext
+    declarations, computations, new_inputs = (
+        "",
+        "",
+        "",
+    )  # Initializations for the declarations, computations, and new inputs
+    inputs_file = "../inputs.txt"  # Path to the scalar inputs file
+
+    # Read the input file and split the contents by spaces
     with open(inputs_file) as f:
-        inputs, inputs_types = f.readlines()
-    inputs, inputs_types = inputs.split(), inputs_types.split()
-    vectorized_file = "../vectorized_code.txt"
+        inputs, input_types = f.readlines()
+    inputs = inputs.split()
+    input_types = input_types.split()
+
+    vectorized_file = (
+        "../vectorized_code.txt"  # Path to the vectorized expressions file
+    )
+
+    # Read the vectorized file content
     with open(vectorized_file, "r") as file:
         vectorized_content = file.read()
+
+    # Split vectorized expressions by new lines
     expressions = vectorized_content.split("\n")
+    # The last line contains two values: the size of the final vector and the size of each sub vector
     slot_count, sub_vector_size = expressions[-1].split(" ")
-    outputs = []
+    outputs = []  # List to store the outputs of sub-programs
+
+    # Process each expression except the last line
     for expression in expressions[:-1]:
-        tokens = process_vectorized_code(expression)
-        process(tokens, 0, {}, inputs, inputs_types)
-        outputs.append("c" + str(id_counter - 1))
-    final_output_label = "c" + str(id_counter)
-    final_output = "Ciphertext " + final_output_label + " = " + outputs[0]
+        tokens = process_vectorized_code(expression)  # Split the expression into tokens
+        process(
+            tokens, 0, {}, inputs, input_types
+        )  # Process tokens to determine new vectorized inputs and necessary computations for sub outputs
+        outputs.append(f"c{id_counter - 1}")  # Append the output label
+
+    final_output_label = f"c{id_counter}"  # Label for the final output
+    final_output = f"Ciphertext {final_output_label} = {outputs[0]}"  # Initialize the final output with the first sub output
+
     step = 1
     sub_vector_size = int(sub_vector_size)
+
+    # Calculate the final output using sub outputs with shift operations
     for output in outputs[1:]:
-        final_output += " + " + output + ">>" + str(sub_vector_size * step)
+        final_output += f" + {output}>>{sub_vector_size * step}"
         step += 1
+
     final_output += ";\n"
-    computations += final_output
-    computations += f'{final_output_label}.set_output("{final_output_label}");\n'
+    computations += final_output  # Add the final output to computations
+    computations += f'{final_output_label}.set_output("{final_output_label}");\n'  # Set the output label
+
+    # Format the final source code content
     content = file_content.format(
         function_definition=f"void fhe() {{\n{declarations}{computations}}}\n",
         slot_count=slot_count,
     )
+
+    # Create the new source file and the mapping file for inputs and outputs
     create_file("fhe_vectorized.cpp", content)
     create_file("new_inputs_outputs.txt", new_inputs + final_output_label)

@@ -56,7 +56,6 @@ impl CostFunction<VecLang> for VecCostFn<'_> {
             VecLang::Add(..) => OP * 10000,
             VecLang::Mul(..) => OP * 10000,
             VecLang::Minus(..) => OP * 10000,
-
             VecLang::Neg(..) => 10000 * OP,
 
             VecLang::Rot(..) => VEC_OP * 50,

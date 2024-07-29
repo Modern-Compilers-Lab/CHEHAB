@@ -16,14 +16,16 @@ void box_blur(size_t width)
 {
   vector<vector<integer>> kernel = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
   Ciphertext img("img");
-  Ciphertext top_row = img >> width;
-  Ciphertext bottom_row = img << width;
-  Ciphertext top_sum = kernel[0][0] * (top_row >> 1) + kernel[0][1] * top_row + kernel[0][2] * (top_row << 1);
-  Ciphertext curr_sum = kernel[1][0] * (img >> 1) + kernel[1][1] * img + kernel[1][2] * (img << 1);
-  Ciphertext bottom_sum =
-    kernel[2][0] * (bottom_row >> 1) + kernel[2][1] * bottom_row + kernel[2][2] * (bottom_row << 1);
-  Ciphertext result = top_sum + curr_sum + bottom_sum;
-  result.set_output("result");
+  // Ciphertext top_row = img >> width;
+  // Ciphertext bottom_row = img << width;
+  // Ciphertext top_sum = kernel[0][0] * (top_row >> 1) + kernel[0][1] * top_row + kernel[0][2] * (top_row << 1);
+  // Ciphertext curr_sum = kernel[1][0] * (img >> 1) + kernel[1][1] * img + kernel[1][2] * (img << 1);
+  // Ciphertext bottom_sum =
+  //   kernel[2][0] * (bottom_row >> 1) + kernel[2][1] * bottom_row + kernel[2][2] * (bottom_row << 1);
+  Ciphertext result1 = img + img;
+  Ciphertext result2 = img * img;
+  result1.set_output("result1");
+  result2.set_output("result2");
 }
 
 void print_bool_arg(bool arg, const string &name, ostream &os)
@@ -99,7 +101,7 @@ int main(int argc, char **argv)
   if (!source_os)
     throw logic_error("failed to create source file");
 
-  Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+  Compiler::gen_vectorized_code(func);
   elapsed = chrono::high_resolution_clock::now() - t;
   cout << elapsed.count() << " ms\n";
 
