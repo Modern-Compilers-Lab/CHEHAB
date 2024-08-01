@@ -1,10 +1,14 @@
+use crate::cost::VecCostFn;
 use egg::*;
 use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
 };
 
-use crate::cost;
+use crate::{
+    cost,
+    veclang::{ConstantFold, Egraph, VecLang},
+};
 pub struct Extractor<'a, CF: cost::CostFunction<L>, L: Language, N: Analysis<L>> {
     cost_function: CF,
     costs: HashMap<Id, (usize, L)>,
@@ -17,15 +21,16 @@ where
     L: Language,
     N: Analysis<L>,
 {
-    pub fn new(egraph: &'a EGraph<L, N>, cost_function: CF) -> Self {
+    pub fn new(egraph: &'a EGraph<L, N>, cost_function: CF, cost: bool) -> Self {
         let costs = HashMap::default();
         let mut extractor = Extractor {
             costs,
             egraph,
             cost_function,
         };
-        extractor.find_costs();
-
+        if cost {
+            extractor.find_costs();
+        }
         extractor
     }
 
@@ -39,6 +44,7 @@ where
 
     fn find_best_rec(&mut self, expr: &mut RecExpr<L>, eclass: Id) -> (Id, usize) {
         let id = self.egraph.find(eclass);
+
         let (best_cost, best_node) = match self.costs.get(&id) {
             Some(result) => result.clone(),
             None => panic!("Failed to extract from eclass {}", id),
@@ -128,8 +134,8 @@ where
 
                     let op = node.display_op().to_string();
                     let op_costs: usize = match op.as_str() {
-                        "+" | "*" | "-" | "neg" => OP,
-                        "<<" => VEC_OP * 10,
+                        "+" | "*" | "-" | "neg" => 10_000 * OP,
+                        "<<" => VEC_OP * 50,
                         "Vec" => STRUCTURE,
                         "VecAdd" | "VecMinus" => VEC_OP,
                         "VecMul" => VEC_OP * 100,
@@ -171,6 +177,98 @@ where
     ///
     /// Returns:
     /// - None
+    ///
+    ///
+    fn is_correct_combination(&mut self) -> bool {
+        let mut is_correct = true;
+        let mut did_something = true;
+        let mut sub_classes: HashMap<Id, HashSet<Id>> = HashMap::new();
+        while did_something {
+            did_something = false;
+            for class in self.egraph.classes() {
+                let sub_classes_class: HashSet<Id> = match sub_classes.get(&class.id) {
+                    Some(sub_classes) => sub_classes.clone(),
+                    None => HashSet::new(),
+                };
+                let enode = self.costs.get(&class.id).unwrap().1.clone();
+                let mut new_sub_classes_class = sub_classes_class.clone();
+                enode.for_each(|id| {
+                    new_sub_classes_class.insert(id);
+                    let operand_sub_classes = match sub_classes.get(&id) {
+                        Some(sub_classes) => sub_classes.clone(),
+                        None => HashSet::new(),
+                    };
+                    new_sub_classes_class = new_sub_classes_class
+                        .union(&operand_sub_classes)
+                        .cloned()
+                        .collect();
+                });
+                if new_sub_classes_class.len() != sub_classes_class.len() {
+                    sub_classes.insert(class.id, new_sub_classes_class);
+                    did_something = true;
+                }
+            }
+        }
+        for class in self.egraph.classes() {
+            let sub_classes_class: HashSet<Id> = match sub_classes.get(&class.id) {
+                Some(sub_classes) => sub_classes.clone(),
+                None => HashSet::new(),
+            };
+
+            if sub_classes_class.contains(&class.id) {
+                is_correct = false;
+                break;
+            }
+        }
+        return is_correct;
+    }
+    pub fn try_all_combinations(
+        &mut self,
+        iterator: &mut std::slice::Iter<'a, &'a EClass<L, N::Data>>,
+        root: Id,
+        eclass: &'a EClass<L, N::Data>,
+        cost: &mut usize,
+        expr: &mut RecExpr<VecLang>,
+    ) {
+        for node in &eclass.nodes {
+            self.costs.insert(eclass.id, (0, node.clone()));
+            match iterator.next() {
+                Some(next_eclass) => {
+                    self.try_all_combinations(iterator, root, next_eclass, cost, expr);
+                }
+                None => {
+                    if !self.is_correct_combination() {
+                        continue;
+                    }
+                    let (_, expression) = self.find_best(root);
+                    let string_expression = expression.to_string();
+                    let mut init_eg: Egraph = Egraph::new(ConstantFold);
+                    init_eg.add(VecLang::Num(0));
+                    let prog = string_expression.parse().unwrap();
+                    let runner = Runner::default()
+                        .with_egraph(init_eg)
+                        .with_expr(&prog)
+                        .with_node_limit(10_000_000)
+                        .with_time_limit(std::time::Duration::from_secs(300))
+                        .with_iter_limit(10_000);
+                    let mut extractor = Extractor::new(
+                        &runner.egraph,
+                        VecCostFn {
+                            egraph: &runner.egraph,
+                        },
+                        true,
+                    );
+                    let root = runner.roots[0];
+                    let (new_cost, new_expr) = extractor.find_best(root);
+                    if new_cost < *cost {
+                        *cost = new_cost;
+                        *expr = new_expr.clone();
+                    }
+                }
+            }
+        }
+    }
+
     fn find_costs(&mut self) {
         let mut did_something = true;
         let mut sub_classes: HashMap<Id, HashSet<Id>> = HashMap::new();

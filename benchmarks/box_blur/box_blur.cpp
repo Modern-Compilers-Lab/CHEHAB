@@ -22,10 +22,8 @@ void box_blur(size_t width)
   // Ciphertext curr_sum = kernel[1][0] * (img >> 1) + kernel[1][1] * img + kernel[1][2] * (img << 1);
   // Ciphertext bottom_sum =
   //   kernel[2][0] * (bottom_row >> 1) + kernel[2][1] * bottom_row + kernel[2][2] * (bottom_row << 1);
-  Ciphertext result1 = img + img;
-  Ciphertext result2 = img * img;
-  result1.set_output("result1");
-  result2.set_output("result2");
+  Ciphertext result = img * img * img * img;
+  result.set_output("result");
 }
 
 void print_bool_arg(bool arg, const string &name, ostream &os)

@@ -1,3 +1,5 @@
+use std::usize;
+
 use crate::{
     binopsearcher::build_binop_or_zero_rule,
     cost::VecCostFn,
@@ -16,10 +18,14 @@ pub fn run(
     timeout: u64,
     vector_width: usize,
 ) -> (usize, RecExpr<VecLang>) {
+    // Initialize the rule set based on the vector width
     let rules = rules(vector_width);
-    let mut init_eg: Egraph = Egraph::new(ConstantFold);
+
+    // Initialize the e-graph with constant folding enabled and add a zero literal
+    let mut init_eg = Egraph::new(ConstantFold);
     init_eg.add(VecLang::Num(0));
 
+    // Configure the runner with given limits
     let runner = Runner::default()
         .with_egraph(init_eg)
         .with_expr(&prog)
@@ -28,19 +34,44 @@ pub fn run(
         .with_iter_limit(10_000)
         .run(&rules);
 
-    // print reason to STDERR.
-    // print reason to STDERR.
+    // Print the reason for stopping to STDERR
     eprintln!(
         "Stopped after {} iterations, reason: {:?}",
         runner.iterations.len(),
         runner.stop_reason
     );
 
+    // Extract the e-graph and the root node
     let (eg, root) = (runner.egraph, runner.roots[0]);
 
-    // Always add the literal zero
-    let mut extractor = Extractor::new(&eg, VecCostFn { egraph: &eg });
-    extractor.find_best(root)
+    // Prepare for extraction, always add the literal zero
+    let mut extractor = Extractor::new(&eg, VecCostFn { egraph: &eg }, false);
+
+    // Collect all e-classes
+    let eclasses: Vec<&EClass<VecLang, Option<i32>>> = eg.classes().collect();
+
+    // Check if there are any e-classes
+    if eclasses.is_empty() {
+        eprintln!("No e-classes found.");
+        return (usize::MAX, RecExpr::default());
+    }
+
+    // Initialize cost and expression for extraction
+    let mut cost = usize::MAX;
+    let mut expr = RecExpr::default();
+
+    // Perform extraction from all combinations of e-nodes
+
+    extractor.try_all_combinations(
+        &mut eclasses.iter(),
+        root,
+        eclasses[0],
+        &mut cost,
+        &mut expr,
+    );
+
+    // Return the extracted cost and expression
+    (cost, expr)
 }
 
 pub fn build_binop_rule(
@@ -104,6 +135,7 @@ pub fn rotation_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>
             .map(|i| format!("?a{} ", i))
             .collect::<String>()
     );
+
     let searcher: Pattern<VecLang> = lhs.parse().unwrap();
 
     for i in 1..vector_width {
@@ -134,6 +166,7 @@ pub fn split_vectors(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>>
             .map(|i| format!("?a{} ", i))
             .collect::<String>()
     );
+
     let searcher: Pattern<VecLang> = lhs.parse().unwrap();
 
     for i in 0..vector_width {
@@ -161,9 +194,9 @@ pub fn split_vectors(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>>
 
         let rhs = format!("(VecAdd {} {})", vector1, vector2);
         let applier: Pattern<VecLang> = rhs.parse().unwrap();
-        let rule: Vec<Rewrite<VecLang, ConstantFold>> =
-            rw!(format!("split-{}", i); { searcher.clone() } <=> { applier.clone() });
-        rules.extend(rule);
+        let rule: Rewrite<VecLang, ConstantFold> =
+            rw!(format!("split-{}", i); { searcher.clone() } => { applier.clone() });
+        rules.push(rule);
     }
 
     rules
@@ -275,7 +308,7 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let split_vectors = split_vectors(vector_width);
     rules.extend(rotation_rules);
     rules.extend(operations_rules);
-    rules.extend(split_vectors);
+    // rules.extend(split_vectors);
 
     // Vector rules
 
@@ -289,13 +322,17 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
         build_binop_or_zero_rule("-", "VecMinus", vector_width),
     ]);
 
-    // rules.extend(vec![
-    //     //  Basic associativity/commutativity/identities
-    //     rw!("commute-vecadd"; "(VecAdd ?a ?b)" => "(VecAdd ?b ?a)"),
-    //     rw!("commute-vecmul"; "(VecMul ?a ?b)" => "(VecMul ?b ?a)"),
-    //     rw!("assoc-vecadd"; "(VecAdd (VecAdd ?a ?b) ?c)" => "(VecAdd ?a (VecAdd ?b ?c))"),
-    //     rw!("assoc-vecmul"; "(VecMul (VecMul ?a ?b) ?c)" => "(VecMul ?a (VecMul ?b ?c))"),
-    // ]);
+    rules.extend(vec![
+        //  Basic associativity/commutativity/identities
+        // rw!("commute-Add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
+        // rw!("commute-Mul"; "(- ?a ?b)" => "(- ?b ?a)"),
+        // rw!("assoc-Add"; "(+ (+ ?a ?b) ?c)" => "(+ ?a ( + ?b ?c))"),
+        // rw!("assoc-Mul"; "(* ( * ?a ?b) ?c)" => "(* ?a ( * ?b ?c))"),
+        rw!("commute-vecadd"; "(VecAdd ?a ?b)" => "(VecAdd ?b ?a)"),
+        rw!("commute-vecmul"; "(VecMul ?a ?b)" => "(VecMul ?b ?a)"),
+        rw!("assoc-vecadd"; "(VecAdd (VecAdd ?a ?b) ?c)" => "(VecAdd ?a (VecAdd ?b ?c))"),
+        rw!("assoc-vecmul"; "(VecMul (VecMul ?a ?b) ?c)" => "(VecMul ?a (VecMul ?b ?c))"),
+    ]);
 
     rules
 }

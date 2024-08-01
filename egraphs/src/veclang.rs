@@ -46,7 +46,27 @@ impl Analysis<VecLang> for ConstantFold {
         })
     }
 
-    fn merge(&self, _to: &mut Self::Data, _from: Self::Data) -> bool {
-        false
+    fn merge(&self, to: &mut Self::Data, from: Self::Data) -> bool {
+        match (to.as_mut(), &from) {
+            (None, Some(_)) => true,
+            (_, _) => false,
+        }
+    }
+    fn modify(egraph: &mut Egraph, id: Id) {
+        let class = &mut egraph[id];
+        if let Some(c) = class.data.clone() {
+            let added = egraph.add(VecLang::Num(c.clone()));
+            let (id, _did_something) = egraph.union(id, added);
+            // to not prune, comment this out
+            egraph[id].nodes.retain(|n| n.is_leaf());
+
+            assert!(
+                !egraph[id].nodes.is_empty(),
+                "empty eclass! {:#?}",
+                egraph[id]
+            );
+            #[cfg(debug_assertions)]
+            egraph[id].assert_unique_leaves();
+        }
     }
 }
