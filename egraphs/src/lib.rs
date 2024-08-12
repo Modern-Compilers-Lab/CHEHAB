@@ -5,5 +5,4 @@ pub mod extractor;
 pub mod macsearcher;
 pub mod rules;
 pub mod searchutils;
-pub mod stringconversion;
 pub mod veclang;

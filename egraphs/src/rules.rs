@@ -2,7 +2,6 @@ use std::{collections::HashMap, usize};
 
 use crate::{
     binopsearcher::build_binop_or_zero_rule,
-    cost::VecCostFn,
     extractor::Extractor,
     searchutils::*,
     veclang::{ConstantFold, Egraph, VecLang},
@@ -45,7 +44,7 @@ pub fn run(
     let (eg, root) = (runner.egraph, runner.roots[0]);
 
     // Prepare for extraction, always add the literal zero
-    let mut extractor = Extractor::new(&eg, VecCostFn { egraph: &eg }, false);
+    let mut extractor = Extractor::new(&eg);
 
     // Collect all e-classes
     let eclasses = eg.classes();
@@ -68,7 +67,7 @@ pub fn run(
 
     // Perform extraction from all combinations of e-nodes
 
-    extractor.try_all_combinations(
+    extractor.find_best(
         vec![root],
         HashMap::new(),
         root,
