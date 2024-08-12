@@ -1,8 +1,12 @@
-// Compile-time vector width, default to 4
+pub const LITERAL: usize = 0;
+pub const STRUCTURE: usize = 2000;
+pub const VEC_OP: usize = 1;
+pub const OP: usize = 1;
+// Compile-time vector width
 use std::env;
 pub fn vector_width() -> usize {
     env::var("VECTOR_WIDTH")
         .ok()
         .and_then(|width_str| width_str.parse().ok())
-        .unwrap_or(4) // Default to 4 if the variable is not set or parsing fails
+        .unwrap_or(0)
 }

@@ -1,14 +1,10 @@
-use crate::cost::VecCostFn;
 use egg::*;
 use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
 };
 
-use crate::{
-    cost,
-    veclang::{ConstantFold, Egraph, VecLang},
-};
+use crate::{config::*, cost};
 pub struct Extractor<'a, CF: cost::CostFunction<L>, L: Language, N: Analysis<L>> {
     cost_function: CF,
     costs: HashMap<Id, (usize, L)>,
@@ -126,15 +122,9 @@ where
                 for id in shared_sub_classes {
                     let node = costs[&eg.find(id)].1.clone();
 
-                    // Define costs for different operations
-                    const LITERAL: usize = 0;
-                    const STRUCTURE: usize = 2000;
-                    const VEC_OP: usize = 1;
-                    const OP: usize = 1;
-
                     let op = node.display_op().to_string();
                     let op_costs: usize = match op.as_str() {
-                        "+" | "*" | "-" | "neg" => 10_000 * OP,
+                        "+" | "*" | "-" | "neg" => OP * 10000,
                         "<<" => VEC_OP * 50,
                         "Vec" => STRUCTURE,
                         "VecAdd" | "VecMinus" => VEC_OP,
@@ -179,90 +169,90 @@ where
     /// - None
     ///
     ///
-    fn is_correct_combination(&mut self) -> bool {
-        let mut is_correct = true;
-        let mut did_something = true;
-        let mut sub_classes: HashMap<Id, HashSet<Id>> = HashMap::new();
-        while did_something {
-            did_something = false;
-            for class in self.egraph.classes() {
-                let sub_classes_class: HashSet<Id> = match sub_classes.get(&class.id) {
-                    Some(sub_classes) => sub_classes.clone(),
-                    None => HashSet::new(),
-                };
-                let enode = self.costs.get(&class.id).unwrap().1.clone();
-                let mut new_sub_classes_class = sub_classes_class.clone();
-                enode.for_each(|id| {
-                    new_sub_classes_class.insert(id);
-                    let operand_sub_classes = match sub_classes.get(&id) {
-                        Some(sub_classes) => sub_classes.clone(),
-                        None => HashSet::new(),
-                    };
-                    new_sub_classes_class = new_sub_classes_class
-                        .union(&operand_sub_classes)
-                        .cloned()
-                        .collect();
-                });
-                if new_sub_classes_class.len() != sub_classes_class.len() {
-                    sub_classes.insert(class.id, new_sub_classes_class);
-                    did_something = true;
-                }
-            }
-        }
-        for class in self.egraph.classes() {
-            let sub_classes_class: HashSet<Id> = match sub_classes.get(&class.id) {
-                Some(sub_classes) => sub_classes.clone(),
-                None => HashSet::new(),
-            };
 
-            if sub_classes_class.contains(&class.id) {
-                is_correct = false;
-                break;
-            }
-        }
-        return is_correct;
-    }
     pub fn try_all_combinations(
         &mut self,
-        iterator: &mut std::slice::Iter<'a, &'a EClass<L, N::Data>>,
-        root: Id,
-        eclass: &'a EClass<L, N::Data>,
-        cost: &mut usize,
-        expr: &mut RecExpr<VecLang>,
+        eclass_ids: Vec<Id>,
+        dependency_map: HashMap<Id, HashSet<Id>>,
+        root_id: Id,
+        current_index: usize,
+        current_cost: usize,
+        current_nodes: Vec<L>,
+        best_cost: &mut usize,
+        best_expr: &mut RecExpr<L>,
     ) {
-        for node in &eclass.nodes {
-            self.costs.insert(eclass.id, (0, node.clone()));
-            match iterator.next() {
-                Some(next_eclass) => {
-                    self.try_all_combinations(iterator, root, next_eclass, cost, expr);
-                }
-                None => {
-                    if !self.is_correct_combination() {
-                        continue;
+        let current_eclass = &self.egraph[eclass_ids[current_index]];
+
+        'node_loop: for node in &current_eclass.nodes {
+            // Create new variables for each iteration to avoid unnecessary cloning
+            let mut next_eclass_ids = eclass_ids.clone();
+            let mut next_dependency_map = dependency_map.clone();
+            let mut next_nodes = current_nodes.clone();
+            let mut next_cost = current_cost;
+
+            let operation = node.display_op().to_string();
+            match operation.as_str() {
+                "+" | "*" | "-" | "neg" => continue 'node_loop,
+                "<<" => next_cost += VEC_OP * 50,
+                "Vec" => next_cost += STRUCTURE,
+                "VecAdd" | "VecMinus" | "VecNeg" => next_cost += VEC_OP,
+                "VecMul" => next_cost += VEC_OP * 100,
+                _ => next_cost += LITERAL,
+            }
+
+            let mut dependent_ids: HashSet<Id> = HashSet::new();
+            let node = node.clone();
+            let mapped_node = node.map_children(|child_id| {
+                dependent_ids.insert(child_id);
+                match next_eclass_ids.iter().position(|&id| id == child_id) {
+                    Some(pos) => pos.into(),
+                    None => {
+                        next_eclass_ids.push(child_id);
+                        (next_eclass_ids.len() - 1).into()
                     }
-                    let (_, expression) = self.find_best(root);
-                    let string_expression = expression.to_string();
-                    let mut init_eg: Egraph = Egraph::new(ConstantFold);
-                    init_eg.add(VecLang::Num(0));
-                    let prog = string_expression.parse().unwrap();
-                    let runner = Runner::default()
-                        .with_egraph(init_eg)
-                        .with_expr(&prog)
-                        .with_node_limit(10_000_000)
-                        .with_time_limit(std::time::Duration::from_secs(300))
-                        .with_iter_limit(10_000);
-                    let mut extractor = Extractor::new(
-                        &runner.egraph,
-                        VecCostFn {
-                            egraph: &runner.egraph,
-                        },
-                        true,
-                    );
-                    let root = runner.roots[0];
-                    let (new_cost, new_expr) = extractor.find_best(root);
-                    if new_cost < *cost {
-                        *cost = new_cost;
-                        *expr = new_expr.clone();
+                }
+            });
+
+            next_dependency_map.insert(current_eclass.id, dependent_ids.clone());
+
+            let mut updated_map = next_dependency_map.clone();
+            for (&key, deps) in &next_dependency_map {
+                if deps.contains(&current_eclass.id) {
+                    let merged_deps: HashSet<Id> = deps.union(&dependent_ids).cloned().collect();
+                    if merged_deps.contains(&key) {
+                        continue 'node_loop;
+                    }
+                    updated_map.insert(key, merged_deps);
+                }
+            }
+
+            next_dependency_map = updated_map;
+            next_nodes.push(mapped_node);
+
+            if current_index < next_eclass_ids.len() - 1 {
+                // Recursively try all combinations with the next eclass
+                self.try_all_combinations(
+                    next_eclass_ids,
+                    next_dependency_map,
+                    root_id,
+                    current_index + 1,
+                    next_cost,
+                    next_nodes,
+                    best_cost,
+                    best_expr,
+                );
+            } else {
+                // Update the best cost and expression if the new cost is better
+                if next_cost < *best_cost {
+                    *best_cost = next_cost;
+                    *best_expr = RecExpr::default();
+
+                    let total_nodes = next_nodes.len();
+                    for node in next_nodes.iter().rev() {
+                        let node = node.clone();
+                        let new_node =
+                            node.map_children(|id| (total_nodes - usize::from(id) - 1).into());
+                        best_expr.add(new_node);
                     }
                 }
             }
