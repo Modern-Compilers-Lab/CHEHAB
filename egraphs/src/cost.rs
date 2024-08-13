@@ -55,7 +55,8 @@ impl CostFunction<FheLang> for CostFn<'_> {
         C: FnMut(Id) -> Self::Cost,
     {
         let op_cost = match enode {
-            FheLang::Mul(..) | FheLang::Square(..) => 1.0,
+            FheLang::Mul(..) => 1.0,
+            FheLang::Square(..) => 1.0,
             _ => 0.0,
         };
         op_cost + enode.fold(0.0, |max: f64, id| max.max(costs(id)))
@@ -73,6 +74,6 @@ impl CostFunction<FheLang> for CostFn<'_> {
             FheLang::Square(..) => OP * 80.0,
             _ => LITERAL,
         };
-        enode.fold(op_cost, |sum, id| sum + costs(id))
+        op_cost + enode.fold(0.0, |sum, id| sum + costs(id))
     }
 }

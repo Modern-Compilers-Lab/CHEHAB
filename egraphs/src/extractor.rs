@@ -4,21 +4,20 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use crate::config::*;
 use crate::cost;
-pub struct Extractor<'a, CF: cost::CostFunction<L>, L: Language, N: Analysis<L>> {
+use crate::{config::*, fhelang::FheLang};
+pub struct Extractor<'a, CF: cost::CostFunction<FheLang>, N: Analysis<FheLang>> {
     cost_function: CF,
-    costs: HashMap<Id, (f64, f64, f64, L)>,
-    egraph: &'a egg::EGraph<L, N>,
+    costs: HashMap<Id, (f64, f64, f64, FheLang)>,
+    egraph: &'a egg::EGraph<FheLang, N>,
 }
 
-impl<'a, CF, L, N> Extractor<'a, CF, L, N>
+impl<'a, CF, N> Extractor<'a, CF, N>
 where
-    CF: cost::CostFunction<L>,
-    L: Language,
-    N: Analysis<L>,
+    CF: cost::CostFunction<FheLang>,
+    N: Analysis<FheLang>,
 {
-    pub fn new(egraph: &'a EGraph<L, N>, cost_function: CF) -> Self {
+    pub fn new(egraph: &'a EGraph<FheLang, N>, cost_function: CF) -> Self {
         let costs = HashMap::default();
         let mut extractor = Extractor {
             costs,
@@ -32,13 +31,13 @@ where
 
     /// Find the cheapest (lowest cost) represented `RecExpr` in the
     /// given eclass.
-    pub fn find_best(&mut self, eclass: Id) -> (f64, RecExpr<L>) {
+    pub fn find_best(&mut self, eclass: Id) -> (f64, RecExpr<FheLang>) {
         let mut expr = RecExpr::default();
         let (_, cost) = self.find_best_rec(&mut expr, eclass);
         (cost, expr)
     }
 
-    fn find_best_rec(&mut self, expr: &mut RecExpr<L>, eclass: Id) -> (Id, f64) {
+    fn find_best_rec(&mut self, expr: &mut RecExpr<FheLang>, eclass: Id) -> (Id, f64) {
         let id = self.egraph.find(eclass);
         let (best_cost, best_node) = match self
             .costs
@@ -53,6 +52,22 @@ where
         (expr.add(node), best_cost)
     }
 
+    fn is_constant_multiplication(&self, node: &FheLang) -> bool {
+        match node {
+            FheLang::Mul([a, b]) => {
+                let a = self.costs[&a].3.clone();
+                let b = self.costs[&b].3.clone();
+                if let FheLang::Constant(_) = a {
+                    return true;
+                }
+                if let FheLang::Constant(_) = b {
+                    return true;
+                }
+                return false;
+            }
+            _ => false,
+        }
+    }
     /// Calculates the total cost of a node within an e-graph.
     ///
     /// This function calculates the cost of a given node by considering the costs of its child e-classes.
@@ -78,7 +93,7 @@ where
     /// - `None`: If the cost of the node cannot be calculated due to missing child costs.
     fn node_total_cost(
         &mut self,
-        node: &L,
+        node: &FheLang,
         map: &mut HashMap<Id, HashSet<Id>>,
     ) -> Option<(f64, f64, f64)> {
         let eg = &self.egraph;
@@ -95,7 +110,7 @@ where
 
             // Calculate the initial cost of the node using the cost function
             let depth = self.cost_function.depth(&node, depth_f);
-            let mul_depth = self.cost_function.mul_depth(&node, mul_depth_f);
+            let mut mul_depth = self.cost_function.mul_depth(&node, mul_depth_f);
             let mut op_costs = self.cost_function.op_costs(&node, op_costs_f);
 
             // Handle nodes with one child
@@ -105,38 +120,14 @@ where
 
             // Handle nodes with two children
             if node.children().len() == 2 {
-                // Get the operation of the current node
-                let op = node.display_op().to_string();
-
                 // Check if the operation is multiplication
-                if op == "*" {
+                if let FheLang::Mul(..) = node {
                     // Get the first and second child nodes
-                    let child_0 = node.children().iter().nth(0).unwrap();
-                    let child_1 = node.children().iter().nth(1).unwrap();
-
-                    // Find the corresponding enodes for the children in the e-graph
-                    let child_0_enode = costs[&eg.find(*child_0)].3.clone();
-                    let child_1_enode = costs[&eg.find(*child_1)].3.clone();
-
-                    // Get the operations of the child enodes
-                    let op_child_0 = child_0_enode.display_op().to_string();
-                    let op_child_1 = child_1_enode.display_op().to_string();
-
-                    // Determine if the operation is constant
-                    let is_constant_op = |op: &str| match op {
-                        "+" | "<<" | "*" | "-" | "square" => false,
-                        _ => true,
-                    };
-
-                    // Check if one of the children is constant
-                    let is_constant = is_constant_op(&op_child_0) || is_constant_op(&op_child_1);
-
-                    // Apply cost adjustment if one of the children is constant
-                    if is_constant {
+                    if self.is_constant_multiplication(node) {
                         op_costs -= 99.0 * OP;
+                        mul_depth -= 1.0;
                     }
                 }
-
                 let child_0 = node.children().iter().nth(0).unwrap();
                 let child_1 = node.children().iter().nth(1).unwrap();
 
@@ -167,12 +158,17 @@ where
 
                     // Define costs for different operations
 
-                    let op = node.display_op().to_string();
-                    let op_cost: f64 = match op.as_str() {
-                        "+" | "-" | "neg" => OP,
-                        "<<" => OP * 50.0,
-                        "square" => OP * 80.0,
-                        "*" => OP * 100.0,
+                    let op_cost: f64 = match node {
+                        FheLang::Add(..) | FheLang::Minus(..) | FheLang::Neg(..) => OP,
+                        FheLang::Rot(..) => OP * 50.0,
+                        FheLang::Square(..) => OP * 80.0,
+                        FheLang::Mul(..) => {
+                            if self.is_constant_multiplication(&node) {
+                                OP * 1.0
+                            } else {
+                                OP * 100.0
+                            }
+                        }
                         _ => LITERAL,
                     };
 
@@ -184,7 +180,6 @@ where
                 return Some((depth, mul_depth, op_costs));
             }
         }
-
         // Return None if the cost cannot be calculated
         None
     }
@@ -280,8 +275,8 @@ where
     fn make_pass(
         &mut self,
         sub_classes: &mut HashMap<Id, HashSet<Id>>,
-        eclass: &EClass<L, N::Data>,
-    ) -> Option<(f64, f64, f64, L)> {
+        eclass: &EClass<FheLang, N::Data>,
+    ) -> Option<(f64, f64, f64, FheLang)> {
         let mut node_sub_classes: HashSet<Id> = HashSet::new();
         let nodes = eclass.nodes.clone();
 
