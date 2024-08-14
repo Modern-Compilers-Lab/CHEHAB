@@ -1,7 +1,9 @@
-add_executable(matrix_mul matrix_mul.cpp)
-target_link_libraries(matrix_mul PRIVATE fhecompiler)
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/benchmarks/matrix_mul/he)
 
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/benchmarks/matrix_mul/he)
+add_executable(matrix_mul matrix_mul.cpp)
+target_link_libraries(matrix_mul PRIVATE fheco)
+
+# Define the source file and destination file
 
 set(SOURCE_FILE_1 ${CMAKE_SOURCE_DIR}/benchmarks/matrix_mul/he/main.cpp)
 set(DESTINATION_FILE_1 ${CMAKE_SOURCE_DIR}/build/benchmarks/matrix_mul/he/main.cpp)
@@ -9,6 +11,8 @@ set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/matrix_mul/he/utils.cpp)
 set(DESTINATION_FILE_2 ${CMAKE_SOURCE_DIR}/build/benchmarks/matrix_mul/he/utils.cpp)
 set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/matrix_mul/he/utils.hpp)
 set(DESTINATION_FILE_3 ${CMAKE_SOURCE_DIR}/build/benchmarks/matrix_mul/he/utils.hpp)
+set(SOURCE_FILE_4 ${CMAKE_SOURCE_DIR}/benchmarks/matrix_mul/he/CMakeLists.txt)
+set(DESTINATION_FILE_4 ${CMAKE_SOURCE_DIR}/build/benchmarks/matrix_mul/he/CMakeLists.txt)
 
 add_custom_target(copy_my_file_1matrix_mul ALL
     COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_1} ${DESTINATION_FILE_1}

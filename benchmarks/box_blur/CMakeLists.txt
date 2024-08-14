@@ -1,5 +1,4 @@
-add_executable(box_blur_checks box_blur_checks.cpp)
-target_link_libraries(box_blur_checks PRIVATE fheco)
+
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/benchmarks/box_blur/he)
 add_executable(box_blur box_blur.cpp)
 target_link_libraries(box_blur PRIVATE fheco)

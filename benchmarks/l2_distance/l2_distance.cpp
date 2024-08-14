@@ -1,59 +1,57 @@
 #include "fheco/fheco.hpp"
-#include <chrono>
-#include <cstddef>
-#include <cstdint>
-#include <fstream>
-#include <iostream>
-#include <ostream>
-#include <stdexcept>
-#include <string>
 
 using namespace std;
 using namespace fheco;
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
 
-void l2_distance(size_t slot_count)
+void fhe()
 {
-  Ciphertext c1("c1");
-  Ciphertext c2("c2");
-  Ciphertext slot_wise_diff = (c1 - c2) * (c1 - c2);
-  Ciphertext sum = encrypt(0);
-  for (size_t i = 0; i < slot_count; ++i)
-    sum += slot_wise_diff << i;
-  sum.set_output("result");
-}
+  size_t size = 4;
+  std::vector<Ciphertext> v1(size);
+  std::vector<Ciphertext> v2(size);
+  std::vector<Ciphertext> output(size);
+  for (int i = 0; i < size; i++)
+  {
+    v1[i] = Ciphertext("v1_" + std::to_string(i));
+  }
+  for (int i = 0; i < size; i++)
+  {
+    v2[i] = Ciphertext("v2_" + std::to_string(i));
+    output[i] = (v2[i] - v1[i]) * (v2[i] - v1[i]);
+  }
 
+  for (int i = 0; i < size; i++)
+  {
+    output[i].set_output("output_" + std::to_string(i));
+  }
+}
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
   os << (arg ? name : "no_" + name);
 }
-
 int main(int argc, char **argv)
 {
   bool call_quantifier = false;
   if (argc > 1)
     call_quantifier = stoi(argv[1]);
 
-  auto ruleset = Compiler::Ruleset::joined;
-  if (argc > 2)
-    ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
-
-  auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+  bool window = 0;
   if (argc > 3)
-    rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
+    window = stoi(argv[2]);
 
   bool cse = true;
-  if (argc > 4)
-    cse = stoi(argv[4]);
+  if (argc > 3)
+    cse = stoi(argv[3]);
 
   bool const_folding = true;
-  if (argc > 5)
-    const_folding = stoi(argv[5]);
+  if (argc > 4)
+    const_folding = stoi(argv[4]);
 
   print_bool_arg(call_quantifier, "quantifier", clog);
-  clog << " ";
-  clog << ruleset << "_trs";
-  clog << " ";
-  clog << rewrite_heuristic;
   clog << " ";
   print_bool_arg(cse, "cse", clog);
   clog << " ";
@@ -79,11 +77,9 @@ int main(int argc, char **argv)
   chrono::high_resolution_clock::time_point t;
   chrono::duration<double, milli> elapsed;
   t = chrono::high_resolution_clock::now();
-  string func_name = "l2_distance";
-  size_t slot_count = 4096;
-  const auto &func = Compiler::create_func(func_name, slot_count, 20, true, true);
-  l2_distance(slot_count);
-
+  string func_name = "fhe";
+  const auto &func = Compiler::create_func(func_name, 1, 20, false, true);
+  fhe();
   string gen_name = "_gen_he_" + func_name;
   string gen_path = "he/" + gen_name;
   ofstream header_os(gen_path + ".hpp");
@@ -94,7 +90,7 @@ int main(int argc, char **argv)
   if (!source_os)
     throw logic_error("failed to create source file");
 
-  Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os, true);
+  Compiler::gen_vectorized_code(func, window);
   elapsed = chrono::high_resolution_clock::now() - t;
   cout << elapsed.count() << " ms\n";
 
