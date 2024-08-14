@@ -36,28 +36,25 @@ void print_bool_arg(bool arg, const string &name, ostream &os)
 }
 int main(int argc, char **argv)
 {
-  bool call_quantifier = false;
+  bool vectorized = true;
   if (argc > 1)
-    call_quantifier = stoi(argv[1]);
+    vectorized = stoi(argv[1]);
 
-  bool window = 0;
-  if (argc > 3)
+  int window = 1;
+  if (argc > 2)
     window = stoi(argv[2]);
 
-  bool cse = true;
+  bool call_quantifier = false;
   if (argc > 3)
-    cse = stoi(argv[3]);
+    call_quantifier = stoi(argv[3]);
+
+  bool cse = true;
+  if (argc > 4)
+    cse = stoi(argv[4]);
 
   bool const_folding = true;
-  if (argc > 4)
-    const_folding = stoi(argv[4]);
-
-  print_bool_arg(call_quantifier, "quantifier", clog);
-  clog << " ";
-  print_bool_arg(cse, "cse", clog);
-  clog << " ";
-  print_bool_arg(const_folding, "constant_folding", clog);
-  clog << '\n';
+  if (argc > 5)
+    const_folding = stoi(argv[5]);
 
   if (cse)
   {
@@ -81,25 +78,34 @@ int main(int argc, char **argv)
   string func_name = "fhe";
   const auto &func = Compiler::create_func(func_name, 1, 20, false, true);
   fhe();
-  string gen_name = "_gen_he_" + func_name;
-  string gen_path = "he/" + gen_name;
-  ofstream header_os(gen_path + ".hpp");
-  if (!header_os)
-    throw logic_error("failed to create header file");
 
-  ofstream source_os(gen_path + ".cpp");
-  if (!source_os)
-    throw logic_error("failed to create source file");
+  if (vectorized)
+  {
+    cout << " window is " << window << endl;
+    Compiler::gen_vectorized_code(func, window);
+  }
+  else
+  {
+    string gen_name = "_gen_he_" + func_name;
+    string gen_path = "he/" + gen_name;
+    ofstream header_os(gen_path + ".hpp");
+    if (!header_os)
+      throw logic_error("failed to create header file");
 
-  Compiler::gen_vectorized_code(func, window);
+    ofstream source_os(gen_path + ".cpp");
+    if (!source_os)
+      throw logic_error("failed to create source file");
+
+    if (call_quantifier)
+    {
+      util::Quantifier quantifier{func};
+      quantifier.run_all_analysis();
+      quantifier.print_info(cout);
+    }
+  }
+
   elapsed = chrono::high_resolution_clock::now() - t;
   cout << elapsed.count() << " ms\n";
 
-  if (call_quantifier)
-  {
-    util::Quantifier quantifier{func};
-    quantifier.run_all_analysis();
-    quantifier.print_info(cout);
-  }
   return 0;
 }

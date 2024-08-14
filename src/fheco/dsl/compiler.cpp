@@ -282,121 +282,135 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
  */
 void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window)
 {
-  // Utility function to print expressions in prefix notation
-  util::ExprPrinter expr_printer(func);
-  expr_printer.make_terms_str_expr(util::ExprPrinter::Mode::prefix);
 
-  // Initialize files to store inputs and vectorized code
-  std::ofstream inputs_file("../inputs.txt");
-  std::ofstream vectorized_code_file("../vectorized_code.txt");
-
-  // Check if any of the files failed to open
-  if (!inputs_file || !vectorized_code_file)
+  if (window <= 0)
   {
-    std::cerr << "Error opening one of the output files." << std::endl;
+    std::cerr << "Window size must be greater than 0." << std::endl;
     return;
   }
-
-  // Strings to store input names and types
-  std::string input_names;
-  std::string input_types;
-
-  // Process input terms and store their names and types
-  std::vector<const ir::Term *> input_terms;
-  for (const auto &input_info : func->data_flow().inputs_info())
+  else if (window == 1)
   {
-    input_terms.push_back(input_info.first);
-  }
-  for (auto it = input_terms.rbegin(); it != input_terms.rend(); ++it)
-  {
-    auto input_term = *it;
-    input_names += expr_printer.terms_str_exprs().at(input_term->id()) + " ";
-    input_types += (input_term->type() == ir::Term::Type::cipher) ? "1 " : "0 ";
-  }
-  inputs_file << input_names << std::endl;
-  inputs_file << input_types << std::endl;
-  inputs_file.close();
-
-  // Process output terms and compute the total number of outputs
-  std::vector<const ir::Term *> output_terms;
-  int vector_full_width = 0;
-  for (const auto &output_info : func->data_flow().outputs_info())
-  {
-    output_terms.push_back(output_info.first);
-    vector_full_width++;
-  }
-
-  // Compute the size of each subvector based on the window parameter
-  int sub_vector_size = vector_full_width / window;
-  int index = 0;
-  std::string expression = "(Vec ";
-  int vector_width = 0;
-
-  // Get the vector width from the environment variable
-  const char *env_var = std::getenv("VECTOR_WIDTH");
-  if (env_var)
-  {
-    try
-    {
-      vector_width = std::stoi(env_var);
-    }
-    catch (const std::exception &e)
-    {
-      std::cerr << "Error parsing VECTOR_WIDTH: " << e.what() << std::endl;
-    }
-  }
-
-  // Clear the content of vectorized_code_file
-  vectorized_code_file << "";
-  vectorized_code_file.close();
-
-  // Generate vectorized code
-  for (auto it = output_terms.rbegin(); it != output_terms.rend(); ++it)
-  {
-    auto output_term = *it;
-    expression += expr_printer.terms_str_exprs().at(output_term->id()) + " ";
-    index = (index + 1) % sub_vector_size;
-
-    // When a subvector is complete or all outputs are consumed
-    if (!index || it == output_terms.rend() - 1)
-    {
-      int current_vector_width = (index == 0) ? sub_vector_size : index + 1;
-
-      // Pad the subvector with zeros if necessary
-      for (int i = 0; i < vector_width - current_vector_width; ++i)
-      {
-        expression += " 0 ";
-        current_vector_width++;
-      }
-      expression += " )";
-
-      // Write the expression to expression_file and call the vectorizer
-      std::ofstream expression_file("../expression.txt");
-      if (!expression_file)
-      {
-        std::cerr << "Error opening expression file." << std::endl;
-        return;
-      }
-      expression_file << expression;
-      expression_file.close();
-
-      call_vectorizer(current_vector_width);
-      expression = "(Vec ";
-    }
-  }
-
-  // Append vector_full_width and sub_vector_size to vectorized_code.txt
-  std::ofstream vectorized_code_file_2("../vectorized_code.txt", std::ios::app);
-  if (!vectorized_code_file_2)
-  {
-    std::cerr << "Error opening vectorized code file." << std::endl;
+    gen_vectorized_code(func);
     return;
   }
-  vectorized_code_file_2 << vector_full_width << " " << sub_vector_size;
-  vectorized_code_file_2.close();
+  else
+  {
+    // Utility function to print expressions in prefix notation
+    util::ExprPrinter expr_printer(func);
+    expr_printer.make_terms_str_expr(util::ExprPrinter::Mode::prefix);
 
-  // Call the script to construct the source code
-  call_script();
+    // Initialize files to store inputs and vectorized code
+    std::ofstream inputs_file("../inputs.txt");
+    std::ofstream vectorized_code_file("../vectorized_code.txt");
+
+    // Check if any of the files failed to open
+    if (!inputs_file || !vectorized_code_file)
+    {
+      std::cerr << "Error opening one of the output files." << std::endl;
+      return;
+    }
+
+    // Strings to store input names and types
+    std::string input_names;
+    std::string input_types;
+
+    // Process input terms and store their names and types
+    std::vector<const ir::Term *> input_terms;
+    for (const auto &input_info : func->data_flow().inputs_info())
+    {
+      input_terms.push_back(input_info.first);
+    }
+    for (auto it = input_terms.rbegin(); it != input_terms.rend(); ++it)
+    {
+      auto input_term = *it;
+      input_names += expr_printer.terms_str_exprs().at(input_term->id()) + " ";
+      input_types += (input_term->type() == ir::Term::Type::cipher) ? "1 " : "0 ";
+    }
+    inputs_file << input_names << std::endl;
+    inputs_file << input_types << std::endl;
+    inputs_file.close();
+
+    // Process output terms and compute the total number of outputs
+    std::vector<const ir::Term *> output_terms;
+    int vector_full_width = 0;
+    for (const auto &output_info : func->data_flow().outputs_info())
+    {
+      output_terms.push_back(output_info.first);
+      vector_full_width++;
+    }
+
+    // Compute the size of each subvector based on the window parameter
+    int sub_vector_size = vector_full_width / window;
+    int index = 0;
+    std::string expression = "(Vec ";
+    int vector_width = 0;
+
+    // Get the vector width from the environment variable
+    const char *env_var = std::getenv("VECTOR_WIDTH");
+    if (env_var)
+    {
+      try
+      {
+        vector_width = std::stoi(env_var);
+      }
+      catch (const std::exception &e)
+      {
+        std::cerr << "Error parsing VECTOR_WIDTH: " << e.what() << std::endl;
+      }
+    }
+
+    // Clear the content of vectorized_code_file
+    vectorized_code_file << "";
+    vectorized_code_file.close();
+
+    // Generate vectorized code
+    for (auto it = output_terms.rbegin(); it != output_terms.rend(); ++it)
+    {
+      auto output_term = *it;
+      expression += expr_printer.terms_str_exprs().at(output_term->id()) + " ";
+      index = (index + 1) % sub_vector_size;
+
+      // When a subvector is complete or all outputs are consumed
+      if (!index || it == output_terms.rend() - 1)
+      {
+        int current_vector_width = (index == 0) ? sub_vector_size : index + 1;
+
+        // Pad the subvector with zeros if necessary
+        for (int i = 0; i < vector_width - current_vector_width; ++i)
+        {
+          expression += " 0 ";
+          current_vector_width++;
+        }
+        expression += " )";
+
+        // Write the expression to expression_file and call the vectorizer
+        std::ofstream expression_file("../expression.txt");
+        if (!expression_file)
+        {
+          std::cerr << "Error opening expression file." << std::endl;
+          return;
+        }
+        expression_file << expression;
+        expression_file.close();
+
+        call_vectorizer(current_vector_width);
+        expression = "(Vec ";
+      }
+    }
+
+    // Append vector_full_width and sub_vector_size to vectorized_code.txt
+    std::ofstream vectorized_code_file_2("../vectorized_code.txt", std::ios::app);
+    if (!vectorized_code_file_2)
+    {
+      std::cerr << "Error opening vectorized code file." << std::endl;
+      return;
+    }
+    vectorized_code_file_2 << vector_full_width << " " << sub_vector_size;
+    vectorized_code_file_2.close();
+
+    // Call the script to construct the source code
+    call_script();
+  }
 }
 
 void Compiler::call_vectorizer(int vector_width)
