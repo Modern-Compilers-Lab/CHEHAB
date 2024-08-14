@@ -11,32 +11,23 @@ using namespace fheco;
 void fhe()
 {
   size_t size = 4;
-  std::vector<std::vector<Ciphertext>> a = std::vector<std::vector<Ciphertext>>(size, std::vector<Ciphertext>(size));
-  std::vector<std::vector<Ciphertext>> b = std::vector<std::vector<Ciphertext>>(size, std::vector<Ciphertext>(size));
-  std::vector<std::vector<Ciphertext>> c(size, std::vector<Ciphertext>(size));
-  for (int i = 0; i < size; ++i)
+  int m = 5, b = 2;
+  std::vector<Ciphertext> v1(size);
+  std::vector<Ciphertext> v2(size);
+  std::vector<Ciphertext> output(size);
+  for (int i = 0; i < size; i++)
   {
-    for (int j = 0; j < size; ++j)
-    {
-      a[i][j] = Ciphertext("a_" + std::to_string(i) + "_" + std::to_string(j));
-    }
+    v1[i] = Ciphertext("v1_" + std::to_string(i));
   }
-  for (int i = 0; i < size; ++i)
+  for (int i = 0; i < size; i++)
   {
-    for (int j = 0; j < size; ++j)
-    {
-      b[i][j] = Ciphertext("b_" + std::to_string(i) + "_" + std::to_string(j));
-    }
+    v2[i] = Ciphertext("v2_" + std::to_string(i));
+    output[i] = v2[i] - (m * v1[i] + b);
   }
-  for (int i = 0; i < size; ++i)
+
+  for (int i = 0; i < size; i++)
   {
-    for (int j = 0; j < size; ++j)
-    {
-      c[i][j] = a[i][0] * b[0][j];
-      for (size_t k = 1; k < size; k++)
-        c[i][j] += a[i][k] * b[k][j];
-      c[i][j].set_output("c_" + std::to_string(i) + "_" + std::to_string(j));
-    }
+    output[i].set_output("output_" + std::to_string(i));
   }
 }
 void print_bool_arg(bool arg, const string &name, ostream &os)

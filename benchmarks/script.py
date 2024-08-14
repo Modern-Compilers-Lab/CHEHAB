@@ -6,7 +6,6 @@ def process_vectorized_code(content: str) -> List[str]:
     """
     Parameters:
     filename (str): The path to the file.
-
     Returns:
     List[str]: The cleaned and split content of the file.
     """
@@ -19,10 +18,8 @@ def is_literal(token: str) -> bool:
     """
     Checks if a string represents a literal or a variable.
     A string is considered a literal if it does not contain any letters.
-
     Parameters:
     token (str): The string to check.
-
     Returns:
     bool: True if the string is a literal, False if it is a variable.
     """
@@ -38,14 +35,12 @@ def process(
 ) -> Tuple[str, int]:
     """
     Processes the tokens recursively and builds the necessary computation and declaration strings.
-
     Parameters:
     tokens (List[str]): The list of tokens to process.
     index (int): The current index in the tokens list.
     dictionary (Dict[str, str]): A dictionary to store processed vectors.
     inputs (List[str]): The list of input variables.
     inputs_types (List[str]): The list of input variable types.
-
     Returns:
     Tuple[str, int]: The processed label and the updated index.
     """
@@ -124,7 +119,6 @@ def process(
 def create_file(filename: str, content: str) -> None:
     """
     Creates a file and writes the content to it.
-
     Parameters:
     filename (str): The path to the file.
     content (str): The content to write to the file.
