@@ -1,9 +1,7 @@
 use std::{collections::HashMap, usize};
 
 use crate::{
-    binopsearcher::build_binop_or_zero_rule,
     extractor::Extractor,
-    searchutils::*,
     veclang::{ConstantFold, Egraph, VecLang},
 };
 use egg::rewrite as rw;
@@ -81,60 +79,76 @@ pub fn run(
     // Return the extracted cost and expression
     (best_cost, best_expr)
 }
+pub fn vectorization_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
+    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
 
-pub fn build_binop_rule(
-    op_str: &str,
-    vec_str: &str,
-    vector_width: usize,
-) -> Rewrite<VecLang, ConstantFold> {
-    let searcher: Pattern<VecLang> = vec_fold_op(
-        &op_str.to_string(),
-        &"a".to_string(),
-        &"b".to_string(),
-        vector_width,
+    let mut searcher_add = Vec::new();
+    let mut searcher_mul = Vec::new();
+    let mut searcher_sub = Vec::new();
+    let mut searcher_neg = Vec::new();
+
+    let mut applier_1 = Vec::new();
+    let mut applier_2 = Vec::new();
+
+    for i in 0..vector_width {
+        searcher_add.push(format!("( + ?a{} ?b{}) ", i, i));
+        searcher_mul.push(format!("( * ?a{} ?b{}) ", i, i));
+        searcher_sub.push(format!("( - ?a{} ?b{}) ", i, i));
+        searcher_neg.push(format!("( - ?a{}) ", i));
+
+        applier_1.push(format!("?a{} ", i));
+        applier_2.push(format!("?b{} ", i));
+    }
+
+    let lhs_add: Pattern<VecLang> = format!("(Vec {})", searcher_add.concat()).parse().unwrap();
+    let lhs_mul: Pattern<VecLang> = format!("(Vec {})", searcher_mul.concat()).parse().unwrap();
+    let lhs_sub: Pattern<VecLang> = format!("(Vec {})", searcher_sub.concat()).parse().unwrap();
+    let lhs_neg: Pattern<VecLang> = format!("(Vec {})", searcher_neg.concat()).parse().unwrap();
+
+    // Parse the right-hand side patterns
+    let rhs_add: Pattern<VecLang> = format!(
+        "(VecAdd (Vec {}) (Vec {}))",
+        applier_1.concat(),
+        applier_2.concat()
+    )
+    .parse()
+    .unwrap();
+    eprintln!("{} => {}", lhs_add, rhs_add);
+    let rhs_mul: Pattern<VecLang> = format!(
+        "(VecMul (Vec {}) (Vec {}))",
+        applier_1.concat(),
+        applier_2.concat()
     )
     .parse()
     .unwrap();
 
-    let applier: Pattern<VecLang> = format!(
-        "({} {} {})",
-        vec_str,
-        vec_with_var(&"a".to_string(), vector_width),
-        vec_with_var(&"b".to_string(), vector_width)
+    let rhs_sub: Pattern<VecLang> = format!(
+        "(VecMinus (Vec {}) (Vec {}))",
+        applier_1.concat(),
+        applier_2.concat()
     )
     .parse()
     .unwrap();
 
-    rw!(format!("{}_binop", op_str); { searcher } => { applier })
+    let rhs_neg: Pattern<VecLang> = format!("(VecNeg (Vec {}) )", applier_1.concat(),)
+        .parse()
+        .unwrap();
+
+    // Push the rewrite rules into the rules vector
+
+    rules.push(rw!(format!("add-vectorize" ); { lhs_add.clone() } => { rhs_add.clone() }));
+    rules.push(rw!(format!("mul-vectorize"); { lhs_mul.clone() } => { rhs_mul.clone() }));
+    rules.push(rw!(format!("sub-vectorize"); { lhs_sub.clone() } => { rhs_sub.clone() }));
+    rules.push(rw!(format!("neg-vectorize"); { lhs_neg.clone() } => { rhs_neg.clone() }));
+    rules
 }
-
-pub fn build_unop_rule(
-    op_str: &str,
-    vec_str: &str,
-    vector_width: usize,
-) -> Rewrite<VecLang, ConstantFold> {
-    let searcher: Pattern<VecLang> =
-        vec_map_op(&op_str.to_string(), &"a".to_string(), vector_width)
-            .parse()
-            .unwrap();
-    let applier: Pattern<VecLang> = format!(
-        "({} {})",
-        vec_str,
-        vec_with_var(&"a".to_string(), vector_width)
-    )
-    .parse()
-    .unwrap();
-
-    rw!(format!("{}_unop", op_str); { searcher } => { applier })
-}
-
 pub fn rotation_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
     // let searcher_combine: Pattern<VecLang> = "( << ( << ?a ?b ) ?c)".parse().unwrap();
     // let applier_combine: Pattern<VecLang> = " (<< ?a ( + ?b ?c) )".parse().unwrap();
-    // let rule_combine: Vec<Rewrite<VecLang, ConstantFold>> =
-    //     rw!("rotation_combine" ; {searcher_combine.clone()} <=> {applier_combine.clone()});
-    // rules.extend(rule_combine);
+    // let rule_combine: Rewrite<VecLang, ConstantFold> =
+    //     rw!("rotation_combine" ; {searcher_combine} => {applier_combine});
+    // rules.push(rule_combine);
     let vector_width: usize = vector_width; // Store vector width in a constant
 
     let lhs = format!(
@@ -225,12 +239,8 @@ pub fn split_vectors(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>>
         let applier_add: Pattern<VecLang> = rhs_add.parse().unwrap();
         let applier_mul: Pattern<VecLang> = rhs_mul.parse().unwrap();
 
-        rules.extend(
-            rw!(format!("split-add-{}", i); {  searcher.clone()} <=> {  applier_add.clone()}),
-        );
-        rules.extend(
-            rw!(format!("split-mul-{}", i); {  searcher.clone()} <=> {  applier_mul.clone()}),
-        )
+        rules.push(rw!(format!("split-add-{}", i); {  searcher.clone()} => {  applier_add}));
+        rules.push(rw!(format!("split-mul-{}", i); {  searcher.clone()} => {  applier_mul}))
     }
 
     rules
@@ -333,9 +343,15 @@ pub fn operations_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFol
 pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![
         rw!("add-0"; "(+ 0 ?a)" => "?a"),
+        rw!("add-0-2"; "(+ ?a 0)" => "?a"),
         rw!("mul-0"; "(* 0 ?a)" => "0"),
+        rw!("mul-0-2"; "(* ?a 0)" => "0"),
         rw!("mul-1"; "(* 1 ?a)" => "?a"),
+        rw!("mul-1-2"; "(* ?a 1)" => "?a"),
     ];
+
+    // Vector rules
+    rules.extend(vectorization_rules(vector_width));
 
     let rotation_rules = rotation_rules(vector_width);
     let operations_rules = operations_rules(vector_width);
@@ -343,18 +359,6 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     rules.extend(rotation_rules);
     rules.extend(operations_rules);
     rules.extend(split_vectors);
-
-    // Vector rules
-
-    rules.extend(vec![
-        // Special MAC fusion rule
-
-        // Custom searchers
-        build_unop_rule("-", "VecNeg", vector_width),
-        build_binop_or_zero_rule("+", "VecAdd", vector_width),
-        build_binop_or_zero_rule("*", "VecMul", vector_width),
-        build_binop_or_zero_rule("-", "VecMinus", vector_width),
-    ]);
 
     rules.extend(vec![
         //  Basic associativity/commutativity/identities

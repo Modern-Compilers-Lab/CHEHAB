@@ -283,12 +283,12 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
 void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window)
 {
 
-  if (window <= 0)
+  if (window < 0)
   {
     std::cerr << "Window size must be greater than 0." << std::endl;
     return;
   }
-  else if (window == 1)
+  else if (window == 0)
   {
     gen_vectorized_code(func);
     return;
@@ -339,8 +339,6 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
       vector_full_width++;
     }
 
-    // Compute the size of each subvector based on the window parameter
-    int sub_vector_size = vector_full_width / window;
     int index = 0;
     std::string expression = "(Vec ";
     int vector_width = 0;
@@ -358,6 +356,10 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
         std::cerr << "Error parsing VECTOR_WIDTH: " << e.what() << std::endl;
       }
     }
+    else
+    {
+      vector_width = window;
+    }
 
     // Clear the content of vectorized_code_file
     vectorized_code_file << "";
@@ -368,12 +370,12 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
     {
       auto output_term = *it;
       expression += expr_printer.terms_str_exprs().at(output_term->id()) + " ";
-      index = (index + 1) % sub_vector_size;
+      index = (index + 1) % window;
 
       // When a subvector is complete or all outputs are consumed
       if (!index || it == output_terms.rend() - 1)
       {
-        int current_vector_width = (index == 0) ? sub_vector_size : index + 1;
+        int current_vector_width = (index == 0) ? window : index + 1;
 
         // Pad the subvector with zeros if necessary
         for (int i = 0; i < vector_width - current_vector_width; ++i)
@@ -405,7 +407,7 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
       std::cerr << "Error opening vectorized code file." << std::endl;
       return;
     }
-    vectorized_code_file_2 << vector_full_width << " " << sub_vector_size;
+    vectorized_code_file_2 << vector_full_width << " " << window;
     vectorized_code_file_2.close();
 
     // Call the script to construct the source code
