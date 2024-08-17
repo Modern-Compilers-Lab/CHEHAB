@@ -331,9 +331,9 @@ pub fn operations_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFol
         .unwrap();
 
         // Push the rewrite rules into the rules vector
-        rules.push(rw!(format!("add-split-{}", i); { lhs_add } => { rhs_add }));
-        rules.push(rw!(format!("mul-split-{}", i); { lhs_mul } => { rhs_mul }));
-        rules.push(rw!(format!("sub-split-{}", i); { lhs_sub } => { rhs_sub }));
+        rules.extend(rw!(format!("add-split-{}", i); { lhs_add.clone() } <=> { rhs_add.clone() }));
+        rules.extend(rw!(format!("mul-split-{}", i); { lhs_mul.clone() } <=> { rhs_mul.clone() }));
+        rules.extend(rw!(format!("sub-split-{}", i); { lhs_sub.clone() } <=> { rhs_sub.clone() }));
         rules.push(rw!(format!("neg-split-{}", i); { lhs_neg } => { rhs_neg }));
     }
 
