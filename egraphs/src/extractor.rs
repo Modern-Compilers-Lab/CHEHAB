@@ -200,14 +200,14 @@ where
         }
 
         // Log an error message for any e-class that failed to compute a cost
-        for class in self.egraph.classes() {
-            if !self.costs.contains_key(&class.id) {
-                eprintln!(
-                    "Failed to compute cost for eclass {}: {:?}",
-                    class.id, class.nodes
-                )
-            }
-        }
+        // for class in self.egraph.classes() {
+        //     if !self.costs.contains_key(&class.id) {
+        //         eprintln!(
+        //             "Failed to compute cost for eclass {}: {:?}",
+        //             class.id, class.nodes
+        //         )
+        //     }
+        // }
     }
 
     fn cmp(a: &Option<usize>, b: &Option<usize>) -> Ordering {
@@ -237,14 +237,23 @@ where
         eclass: &EClass<L, N::Data>,
     ) -> Option<(usize, L)> {
         let mut node_sub_classes: HashSet<Id> = HashSet::new();
-        let nodes = eclass.nodes.clone();
-
+        let mut nodes: Vec<L> = vec![];
+        for node in eclass.iter() {
+            let op = node.display_op().to_string();
+            match op.as_str() {
+                "+" | "*" | "-" | "neg" => continue,
+                _ => nodes.push(node.clone()),
+            }
+        }
+        if nodes.is_empty() {
+            return None;
+        }
         // Find the e-node with the minimum cost
         let (cost, node) = nodes
             .iter()
             .map(|n| (self.node_total_cost(n, sub_classes), n))
             .min_by(|a, b| Self::cmp(&a.0, &b.0))
-            .unwrap_or_else(|| panic!("Can't extract, eclass is empty: {:#?}", eclass));
+            .unwrap();
 
         match cost {
             // If no valid cost could be calculated, return None
