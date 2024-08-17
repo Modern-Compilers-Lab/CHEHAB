@@ -364,7 +364,6 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
     // Clear the content of vectorized_code_file
     vectorized_code_file << "";
     vectorized_code_file.close();
-
     // Generate vectorized code
     for (auto it = output_terms.rbegin(); it != output_terms.rend(); ++it)
     {
@@ -375,13 +374,11 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
       // When a subvector is complete or all outputs are consumed
       if (!index || it == output_terms.rend() - 1)
       {
-        int current_vector_width = (index == 0) ? window : index + 1;
-
+        int current_vector_width = (index == 0) ? window : index;
         // Pad the subvector with zeros if necessary
         for (int i = 0; i < vector_width - current_vector_width; ++i)
         {
           expression += " 0 ";
-          current_vector_width++;
         }
         expression += " )";
 
@@ -395,7 +392,7 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
         expression_file << expression;
         expression_file.close();
 
-        call_vectorizer(current_vector_width);
+        call_vectorizer(vector_width);
         expression = "(Vec ";
       }
     }
