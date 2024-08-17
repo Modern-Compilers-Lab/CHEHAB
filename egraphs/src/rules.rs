@@ -96,10 +96,10 @@ pub fn vectorization_rules(vector_width: usize) -> Vec<Rewrite<VecLang, Constant
 
     // Push the rewrite rules into the rules vector
 
-    rules.push(rw!(format!("add-vectorize" ); { lhs_add.clone() } => { rhs_add.clone() }));
-    rules.push(rw!(format!("mul-vectorize"); { lhs_mul.clone() } => { rhs_mul.clone() }));
-    rules.push(rw!(format!("sub-vectorize"); { lhs_sub.clone() } => { rhs_sub.clone() }));
-    rules.push(rw!(format!("neg-vectorize"); { lhs_neg.clone() } => { rhs_neg.clone() }));
+    rules.extend(rw!(format!("add-vectorize" ); { lhs_add.clone() } <=> { rhs_add.clone() }));
+    rules.extend(rw!(format!("mul-vectorize"); { lhs_mul.clone() } <=> { rhs_mul.clone() }));
+    rules.extend(rw!(format!("sub-vectorize"); { lhs_sub.clone() } <=> { rhs_sub.clone() }));
+    rules.push(rw!(format!("neg-vectorize"); { lhs_neg } => { rhs_neg }));
     rules
 }
 pub fn rotation_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
@@ -291,10 +291,10 @@ pub fn operations_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFol
         .unwrap();
 
         // Push the rewrite rules into the rules vector
-        rules.extend(rw!(format!("add-split-{}", i); { lhs_add.clone() } <=> { rhs_add.clone() }));
-        rules.extend(rw!(format!("mul-split-{}", i); { lhs_mul.clone() } <=> { rhs_mul.clone() }));
-        rules.extend(rw!(format!("sub-split-{}", i); { lhs_sub.clone() } <=> { rhs_sub.clone() }));
-        rules.extend(rw!(format!("neg-split-{}", i); { lhs_neg.clone() } <=> { rhs_neg.clone() }));
+        rules.push(rw!(format!("add-split-{}", i); { lhs_add } => { rhs_add }));
+        rules.push(rw!(format!("mul-split-{}", i); { lhs_mul } => { rhs_mul }));
+        rules.push(rw!(format!("sub-split-{}", i); { lhs_sub } => { rhs_sub }));
+        rules.push(rw!(format!("neg-split-{}", i); { lhs_neg } => { rhs_neg}));
     }
 
     rules
@@ -308,6 +308,7 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
         rw!("mul-0-2"; "(* ?a 0)" => "0"),
         rw!("mul-1"; "(* 1 ?a)" => "?a"),
         rw!("mul-1-2"; "(* ?a 1)" => "?a"),
+        rw!("neg-neg" ; "(- (- ?a))" => "?a"),
     ];
 
     // Vector rules
@@ -315,10 +316,10 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
 
     let rotation_rules = rotation_rules(vector_width);
     let operations_rules = operations_rules(vector_width);
-    let split_vectors = split_vectors(vector_width);
+    // let split_vectors = split_vectors(vector_width);
     rules.extend(rotation_rules);
     rules.extend(operations_rules);
-    rules.extend(split_vectors);
+    // rules.extend(split_vectors);
 
     rules.extend(vec![
         //  Basic associativity/commutativity/identities
