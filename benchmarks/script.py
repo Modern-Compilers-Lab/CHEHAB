@@ -44,7 +44,7 @@ def process(
     Returns:
     Tuple[str, int]: The processed label and the updated index.
     """
-    global id_counter, computations, declarations, new_inputs
+    global id_counter, computations, declarations, new_inputs, labels_map
     while index < len(tokens):
         if tokens[index] == "(":
             index += 1
@@ -80,6 +80,7 @@ def process(
                         label_type = "Ciphertext "
                         label = "c" + str(id_counter)
                         new_input = "1 1 " + new_input
+                    labels_map[id_counter] = label
                     new_inputs += new_input + "\n"
                     id_counter += 1
                     declarations += f'{label_type}{label}("{label}");\n'
@@ -101,6 +102,7 @@ def process(
                         else "-" if operation == "VecMinus" else "*"
                     )
                     label = "c" + str(id_counter)
+                    labels_map[id_counter] = label
                     id_counter += 1
                     computations += (
                         f"Ciphertext {label} = {operand_1} {op} {operand_2};\n"
@@ -110,6 +112,7 @@ def process(
                 else:
                     index += 1
                     label = "c" + str(id_counter)
+                    labels_map[id_counter] = label
                     id_counter += 1
                     computations += f"Ciphertext {label} = -{operand_1};\n"
                     return label, index
@@ -128,6 +131,9 @@ def create_file(filename: str, content: str) -> None:
 
 
 if __name__ == "__main__":
+    labels_map = (
+        {}
+    )  # Dictionary to store labels for inputs, outputs and intermediate results
     id_counter = 0  # Counter for labeling each new declared ciphertext or plaintext
     declarations, computations, new_inputs = (
         "",
@@ -162,7 +168,7 @@ if __name__ == "__main__":
         process(
             tokens, 0, {}, inputs, input_types
         )  # Process tokens to determine new vectorized inputs and necessary computations for sub outputs
-        outputs.append(f"c{id_counter - 1}")  # Append the output label
+        outputs.append(labels_map[id_counter - 1])  # Append the output label
 
     final_output_label = f"c{id_counter}"  # Label for the final output
     final_output = f"Ciphertext {final_output_label} = {outputs[0]}"  # Initialize the final output with the first sub output
@@ -172,7 +178,7 @@ if __name__ == "__main__":
 
     # Calculate the final output using sub outputs with shift operations
     for output in outputs[1:]:
-        final_output += f" + {output}>>{sub_vector_size * step}"
+        final_output += f" + ({output}>>{sub_vector_size * step})"
         step += 1
 
     final_output += ";\n"
