@@ -65,7 +65,6 @@ def process(
                     all_literals = True
                     for element in elements:
                         if not is_literal(element):
-                            all_literals = False
                             new_input += "@" + str(inputs.index(element)) + " "
                             if inputs_types[inputs.index(element)] == "1":
                                 all_literals = False
