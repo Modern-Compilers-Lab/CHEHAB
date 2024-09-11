@@ -32,6 +32,8 @@ def process(
     dictionary: Dict[str, str],
     inputs: List[str],
     inputs_types: List[str],
+    slot_count: int,
+    sub_vector_size: int,
 ) -> Tuple[str, int]:
     """
     Processes the tokens recursively and builds the necessary computation and declaration strings.
@@ -70,7 +72,9 @@ def process(
                                 all_literals = False
                         else:
                             new_input += element + " "
-
+                    number_of_sub_vectors = slot_count // sub_vector_size
+                    new_input = (" " + new_input) * number_of_sub_vectors
+                    new_input = new_input.strip()
                     if all_literals:
                         label_type = "Plaintext "
                         label = "p" + str(id_counter)
@@ -89,11 +93,23 @@ def process(
                 operation = tokens[index]
                 index += 1
                 operand_1, index = process(
-                    tokens, index, dictionary, inputs, inputs_types
+                    tokens,
+                    index,
+                    dictionary,
+                    inputs,
+                    inputs_types,
+                    slot_count,
+                    sub_vector_size,
                 )
                 if tokens[index] == "(":
                     operand_2, index = process(
-                        tokens, index, dictionary, inputs, inputs_types
+                        tokens,
+                        index,
+                        dictionary,
+                        inputs,
+                        inputs_types,
+                        slot_count,
+                        sub_vector_size,
                     )
                     op = (
                         "+"
@@ -158,27 +174,41 @@ if __name__ == "__main__":
     # Split vectorized expressions by new lines
     expressions = vectorized_content.split("\n")
     # The last line contains two values: the size of the final vector and the size of each sub vector
-    slot_count, sub_vector_size = expressions[-1].split(" ")
+    slot_count, sub_vector_size = int(expressions[-1].split(" ")[0]), int(
+        expressions[-1].split(" ")[1]
+    )
     outputs = []  # List to store the outputs of sub-programs
 
     # Process each expression except the last line
     for expression in expressions[:-1]:
         tokens = process_vectorized_code(expression)  # Split the expression into tokens
         process(
-            tokens, 0, {}, inputs, input_types
+            tokens, 0, {}, inputs, input_types, slot_count, sub_vector_size
         )  # Process tokens to determine new vectorized inputs and necessary computations for sub outputs
         outputs.append(labels_map[id_counter - 1])  # Append the output label
 
-    final_output_label = f"c{id_counter}"  # Label for the final output
-    final_output = f"Ciphertext {final_output_label} = {outputs[0]}"  # Initialize the final output with the first sub output
+    if len(outputs) == 1:
+        # If there is only one sub output, no need to calculate the final output
+        final_output_label = outputs[0]
+    else:
+        final_output_label = f"c{id_counter}"  # Label for the final output
 
-    step = 1
-    sub_vector_size = int(sub_vector_size)
+        for i in range(len(outputs)):
+            declarations += f'Plaintext mask_{i}("mask_{i}");\n'
+            new_input = "0 1"  # Declare mask
+            for j in range(0, i * sub_vector_size):
+                new_input += " 0"
+            for j in range(i * sub_vector_size, (i + 1) * sub_vector_size):
+                new_input += " 1"
+            for j in range((i + 1) * sub_vector_size, slot_count):
+                new_input += " 0"
+            new_inputs += new_input + "\n"
 
-    # Calculate the final output using sub outputs with shift operations
-    for output in outputs[1:]:
-        final_output += f" + ({output}>>{sub_vector_size * step})"
-        step += 1
+        final_output = f"Ciphertext {final_output_label} = "  # Initialize the final output with the first sub output
+
+        # Calculate the final output using sub outputs with mask multiplication
+        for i in range(len(outputs)):
+            final_output += f" + ({outputs[i]}*mask_{i})"
 
     final_output += ";\n"
     computations += final_output  # Add the final output to computations
@@ -187,7 +217,7 @@ if __name__ == "__main__":
     # Format the final source code content
     content = file_content.format(
         function_definition=f"void fhe() {{\n{declarations}{computations}}}\n",
-        slot_count=slot_count,
+        slot_count=str(slot_count),
     )
 
     # Create the new source file and the mapping file for inputs and outputs
