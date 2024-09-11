@@ -204,14 +204,14 @@ if __name__ == "__main__":
                 new_input += " 0"
             new_inputs += new_input + "\n"
 
-        final_output = f"Ciphertext {final_output_label} = "  # Initialize the final output with the first sub output
+        final_output = f"Ciphertext {final_output_label} = ({outputs[0]}*mask_{0})"  # Initialize the final output with the first sub output
 
         # Calculate the final output using sub outputs with mask multiplication
-        for i in range(len(outputs)):
+        for i in range(1, len(outputs)):
             final_output += f" + ({outputs[i]}*mask_{i})"
 
-    final_output += ";\n"
-    computations += final_output  # Add the final output to computations
+        final_output += ";\n"
+        computations += final_output  # Add the final output to computations
     computations += f'{final_output_label}.set_output("{final_output_label}");\n'  # Set the output label
 
     # Format the final source code content
