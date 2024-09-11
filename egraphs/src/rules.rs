@@ -53,12 +53,6 @@ pub fn run(
     }
     eprintln!("number of combinations : {}", combinations);
 
-    // // Check if there are any e-classes
-    // if eclasses.is_empty() {
-    //     eprintln!("No e-classes found.");
-    //     return (usize::MAX, RecExpr::default());
-    // }
-
     // Initialize cost and expression for extraction
     let mut best_cost = usize::MAX;
     let mut best_expr: RecExpr<VecLang> = RecExpr::default();
@@ -113,7 +107,7 @@ pub fn vectorization_rules(vector_width: usize) -> Vec<Rewrite<VecLang, Constant
     )
     .parse()
     .unwrap();
-    eprintln!("{} => {}", lhs_add, rhs_add);
+
     let rhs_mul: Pattern<VecLang> = format!(
         "(VecMul (Vec {}) (Vec {}))",
         applier_1.concat(),
@@ -136,10 +130,10 @@ pub fn vectorization_rules(vector_width: usize) -> Vec<Rewrite<VecLang, Constant
 
     // Push the rewrite rules into the rules vector
 
-    rules.push(rw!(format!("add-vectorize" ); { lhs_add.clone() } => { rhs_add.clone() }));
-    rules.push(rw!(format!("mul-vectorize"); { lhs_mul.clone() } => { rhs_mul.clone() }));
-    rules.push(rw!(format!("sub-vectorize"); { lhs_sub.clone() } => { rhs_sub.clone() }));
-    rules.push(rw!(format!("neg-vectorize"); { lhs_neg.clone() } => { rhs_neg.clone() }));
+    rules.extend(rw!(format!("add-vectorize" ); { lhs_add.clone() } <=> { rhs_add.clone() }));
+    rules.extend(rw!(format!("mul-vectorize"); { lhs_mul.clone() } <=> { rhs_mul.clone() }));
+    rules.extend(rw!(format!("sub-vectorize"); { lhs_sub.clone() } <=> { rhs_sub.clone() }));
+    rules.extend(rw!(format!("neg-vectorize"); { lhs_neg.clone() } <=> { rhs_neg.clone() }));
     rules
 }
 pub fn rotation_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
@@ -331,9 +325,9 @@ pub fn operations_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFol
         .unwrap();
 
         // Push the rewrite rules into the rules vector
-        rules.extend(rw!(format!("add-split-{}", i); { lhs_add.clone() } <=> { rhs_add.clone() }));
-        rules.extend(rw!(format!("mul-split-{}", i); { lhs_mul.clone() } <=> { rhs_mul.clone() }));
-        rules.extend(rw!(format!("sub-split-{}", i); { lhs_sub.clone() } <=> { rhs_sub.clone() }));
+        rules.push(rw!(format!("add-split-{}", i); { lhs_add.clone() } => { rhs_add.clone() }));
+        rules.push(rw!(format!("mul-split-{}", i); { lhs_mul.clone() } => { rhs_mul.clone() }));
+        rules.push(rw!(format!("sub-split-{}", i); { lhs_sub.clone() } => { rhs_sub.clone() }));
         rules.push(rw!(format!("neg-split-{}", i); { lhs_neg } => { rhs_neg }));
     }
 
@@ -355,10 +349,10 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
 
     let rotation_rules = rotation_rules(vector_width);
     let operations_rules = operations_rules(vector_width);
-    let split_vectors = split_vectors(vector_width);
+    // let split_vectors = split_vectors(vector_width);
     rules.extend(rotation_rules);
     rules.extend(operations_rules);
-    rules.extend(split_vectors);
+    // rules.extend(split_vectors);
 
     rules.extend(vec![
         //  Basic associativity/commutativity/identities
