@@ -20,7 +20,7 @@ void fhe()
   {
     for (int j = 0; j < width; j++)
     {
-      img[i][j] = Ciphertext(std::to_string(i) + std::to_string(j));
+      img[i][j] = Ciphertext("in_" + std::to_string(i) + std::to_string(j));
     }
   }
 
@@ -49,7 +49,7 @@ void fhe()
   {
     for (int j = 0; j < width; j++)
     {
-      output[i][j].set_output(std::to_string(i) + std::to_string(j));
+      output[i][j].set_output("out_" + std::to_string(i) + std::to_string(j));
     }
   }
 }
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
   if (argc > 1)
     vectorized = stoi(argv[1]);
 
-  int window = 1;
+  int window = 0;
   if (argc > 2)
     window = stoi(argv[2]);
 
