@@ -40,7 +40,7 @@ int main(int argc, char **argv)
   if (argc > 1)
     vectorized = stoi(argv[1]);
 
-  int window = 1;
+  int window = 0;
   if (argc > 2)
     window = stoi(argv[2]);
 
