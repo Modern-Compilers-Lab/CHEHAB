@@ -129,7 +129,7 @@ where
                     let op = node.display_op().to_string();
                     let op_costs: usize = match op.as_str() {
                         "+" | "*" | "-" | "neg" => OP,
-                        "<<" => VEC_OP * 10,
+                        "<<" => VEC_OP * 50,
                         "Vec" => STRUCTURE,
                         "VecAdd" | "VecMinus" => VEC_OP,
                         "VecMul" => VEC_OP * 100,
