@@ -210,8 +210,9 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   // Process output terms
   std::vector<const ir::Term *> output_terms = process_output_terms(func->data_flow().outputs_info());
   std::string expression = "(Vec ";
-  for (const auto &output_term : output_terms)
+  for (auto it = output_terms.rbegin(); it != output_terms.rend(); ++it)
   {
+    auto output_term = *it;
     expression += expr_printer.terms_str_exprs().at(output_term->id()) + " ";
     ++vector_width;
   }
