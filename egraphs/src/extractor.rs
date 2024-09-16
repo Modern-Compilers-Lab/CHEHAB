@@ -63,7 +63,7 @@ where
             let operation = node.display_op().to_string();
             match operation.as_str() {
                 // Skip scalar operations since they are not useful for vectorization
-                "+" | "*" | "-" | "neg" => continue 'node_loop,
+                "+" | "*" | "-" => continue 'node_loop,
 
                 // Add specific costs for vector operations and structures
                 "<<" => next_cost += VEC_OP * 50, // Cost for vector shift operation
@@ -83,6 +83,14 @@ where
             let mapped_node = node.map_children(|child_id| {
                 // Insert the child ID into the set of dependencies
                 dependent_ids.insert(child_id);
+                dependent_ids = dependent_ids
+                    .union(
+                        next_dependency_map
+                            .get(&child_id)
+                            .unwrap_or(&HashSet::new()),
+                    )
+                    .cloned()
+                    .collect();
                 // Check if the child ID is already in the list of e-class IDs
                 match next_eclass_ids.iter().position(|&id| id == child_id) {
                     // If found, return its position
@@ -129,12 +137,14 @@ where
                 );
             } else {
                 // If the current expression's cost is lower than the best cost found so far, update the best cost
+
                 if next_cost < *best_cost {
                     *best_cost = next_cost;
                     *best_expr = RecExpr::default(); // Reset the best expression to start building the new one
 
                     let total_nodes = next_nodes.len();
                     // Iterate through the nodes in reverse order to build the expression bottom-up
+
                     for node in next_nodes.iter().rev() {
                         let node = node.clone();
                         // Adjust the IDs of the children to reflect the reversed order
