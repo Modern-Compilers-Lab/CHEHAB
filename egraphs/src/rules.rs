@@ -102,21 +102,44 @@ pub fn vectorization_rules(vector_width: usize) -> Vec<Rewrite<VecLang, Constant
     rules.push(rw!(format!("neg-vectorize"); { lhs_neg } => { rhs_neg }));
     rules
 }
+pub fn is_not_vector_of_scalar_operations(
+    vars: &'static str, // Make vars static
+) -> impl Fn(&mut Egraph, Id, &Subst) -> bool + 'static {
+    let vars = &vars[5..vars.len() - 2];
+    let vars_vector = vars.split(" ").collect::<Vec<&str>>();
+    move |egraph, _, subst| {
+        let mut no_scalar_operations = true;
+        for var in &vars_vector {
+            let var = var.parse().unwrap();
+            no_scalar_operations = no_scalar_operations
+                && egraph[subst[var]].nodes.iter().any(|n| match n {
+                    VecLang::Num(..) | VecLang::Symbol(..) => true,
+                    _ => false,
+                });
+            if !no_scalar_operations {
+                break;
+            }
+        }
+        return no_scalar_operations;
+    }
+}
 pub fn rotation_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
-    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
-    // let searcher_combine: Pattern<VecLang> = "( << ( << ?a ?b ) ?c)".parse().unwrap();
-    // let applier_combine: Pattern<VecLang> = " (<< ?a ( + ?b ?c) )".parse().unwrap();
-    // let rule_combine: Rewrite<VecLang, ConstantFold> =
-    //     rw!("rotation_combine" ; {searcher_combine} => {applier_combine});
-    // rules.push(rule_combine);
-    let vector_width: usize = vector_width; // Store vector width in a constant
+    // Modify the function to take a static string
 
-    let lhs = format!(
-        "(Vec {})",
-        (0..vector_width)
-            .map(|i| format!("?a{} ", i))
-            .collect::<String>()
-    );
+    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
+
+    let vector_width: usize = vector_width;
+
+    // Create `lhs` as a static str directly
+    let lhs = Box::leak(
+        format!(
+            "(Vec {})",
+            (0..vector_width)
+                .map(|i| format!("?a{} ", i))
+                .collect::<String>()
+        )
+        .into_boxed_str(),
+    ); // Convert String to &'static str using Box::leak
 
     let searcher: Pattern<VecLang> = lhs.parse().unwrap();
 
@@ -129,8 +152,10 @@ pub fn rotation_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>
             vector_width - i
         );
         let applier: Pattern<VecLang> = rhs.parse().unwrap();
-        let rule: Vec<Rewrite<VecLang, ConstantFold>> =
-            rw!(format!("rotations-{}", i); { searcher.clone() } <=> { applier.clone() });
+
+        // Pass `lhs` as a &'static str, no need for clone
+        let rule: Vec<Rewrite<VecLang, ConstantFold>> = rw!(format!("rotations-{}", i); { searcher.clone() } <=> { applier.clone() } if is_not_vector_of_scalar_operations(lhs));
+
         rules.extend(rule);
     }
 
