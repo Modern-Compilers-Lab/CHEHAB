@@ -19,8 +19,7 @@ pub fn run(
     let rules = rules(vector_width);
 
     // Initialize the e-graph with constant folding enabled and add a zero literal
-    let mut init_eg = Egraph::new(ConstantFold);
-    init_eg.add(VecLang::Num(0));
+    let init_eg = Egraph::new(ConstantFold);
 
     // Configure the runner with given limits
     let runner = Runner::default()
@@ -43,15 +42,6 @@ pub fn run(
 
     // Prepare for extraction, always add the literal zero
     let mut extractor = Extractor::new(&eg);
-
-    // Collect all e-classes
-    let eclasses = eg.classes();
-
-    let mut combinations = 1;
-    for eclass in eclasses {
-        combinations *= eclass.nodes.len();
-    }
-    eprintln!("number of combinations : {}", combinations);
 
     // Initialize cost and expression for extraction
     let mut best_cost = usize::MAX;
@@ -136,21 +126,44 @@ pub fn vectorization_rules(vector_width: usize) -> Vec<Rewrite<VecLang, Constant
     rules.extend(rw!(format!("neg-vectorize"); { lhs_neg.clone() } <=> { rhs_neg.clone() }));
     rules
 }
+pub fn is_not_vector_of_scalar_operations(
+    vars: &'static str, // Make vars static
+) -> impl Fn(&mut Egraph, Id, &Subst) -> bool + 'static {
+    let vars = &vars[5..vars.len() - 2];
+    let vars_vector = vars.split(" ").collect::<Vec<&str>>();
+    move |egraph, _, subst| {
+        let mut no_scalar_operations = true;
+        for var in &vars_vector {
+            let var = var.parse().unwrap();
+            no_scalar_operations = no_scalar_operations
+                && egraph[subst[var]].nodes.iter().any(|n| match n {
+                    VecLang::Num(..) | VecLang::Symbol(..) => true,
+                    _ => false,
+                });
+            if !no_scalar_operations {
+                break;
+            }
+        }
+        return no_scalar_operations;
+    }
+}
 pub fn rotation_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
-    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
-    // let searcher_combine: Pattern<VecLang> = "( << ( << ?a ?b ) ?c)".parse().unwrap();
-    // let applier_combine: Pattern<VecLang> = " (<< ?a ( + ?b ?c) )".parse().unwrap();
-    // let rule_combine: Rewrite<VecLang, ConstantFold> =
-    //     rw!("rotation_combine" ; {searcher_combine} => {applier_combine});
-    // rules.push(rule_combine);
-    let vector_width: usize = vector_width; // Store vector width in a constant
+    // Modify the function to take a static string
 
-    let lhs = format!(
-        "(Vec {})",
-        (0..vector_width)
-            .map(|i| format!("?a{} ", i))
-            .collect::<String>()
-    );
+    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
+
+    let vector_width: usize = vector_width;
+
+    // Create `lhs` as a static str directly
+    let lhs = Box::leak(
+        format!(
+            "(Vec {})",
+            (0..vector_width)
+                .map(|i| format!("?a{} ", i))
+                .collect::<String>()
+        )
+        .into_boxed_str(),
+    ); // Convert String to &'static str using Box::leak
 
     let searcher: Pattern<VecLang> = lhs.parse().unwrap();
 
@@ -163,8 +176,10 @@ pub fn rotation_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>
             vector_width - i
         );
         let applier: Pattern<VecLang> = rhs.parse().unwrap();
-        let rule: Vec<Rewrite<VecLang, ConstantFold>> =
-            rw!(format!("rotations-{}", i); { searcher.clone() } <=> { applier.clone() });
+
+        // Pass `lhs` as a &'static str, no need for clone
+        let rule: Vec<Rewrite<VecLang, ConstantFold>> = rw!(format!("rotations-{}", i); { searcher.clone() } <=> { applier.clone() } if is_not_vector_of_scalar_operations(lhs));
+
         rules.extend(rule);
     }
 
@@ -324,7 +339,7 @@ pub fn operations_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFol
         .parse()
         .unwrap();
 
-        // Push the rewrite rules into the rules vector
+        // Push  rewrite rules into the rules vector
         rules.push(rw!(format!("add-split-{}", i); { lhs_add.clone() } => { rhs_add.clone() }));
         rules.push(rw!(format!("mul-split-{}", i); { lhs_mul.clone() } => { rhs_mul.clone() }));
         rules.push(rw!(format!("sub-split-{}", i); { lhs_sub.clone() } => { rhs_sub.clone() }));
@@ -348,15 +363,15 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     rules.extend(vectorization_rules(vector_width));
 
     let rotation_rules = rotation_rules(vector_width);
-    let operations_rules = operations_rules(vector_width);
+    // let operations_rules = operations_rules(vector_width);
     // let split_vectors = split_vectors(vector_width);
     rules.extend(rotation_rules);
-    rules.extend(operations_rules);
+    //rules.extend(operations_rules);
     // rules.extend(split_vectors);
 
     rules.extend(vec![
         //  Basic associativity/commutativity/identities
-        // rw!("commute-Add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
+        rw!("commute-Add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
         // rw!("commute-Mul"; "(* ?a ?b)" => "(* ?b ?a)"),
         // rw!("assoc-Add"; "(+ (+ ?a ?b) ?c)" => "(+ ?a ( + ?b ?c))"),
         // rw!("assoc-Mul"; "(* ( * ?a ?b) ?c)" => "(* ?a ( * ?b ?c))"),
@@ -365,6 +380,5 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
         // rw!("assoc-vecadd"; "(VecAdd (VecAdd ?a ?b) ?c)" => "(VecAdd ?a (VecAdd ?b ?c))"),
         // rw!("assoc-vecmul"; "(VecMul (VecMul ?a ?b) ?c)" => "(VecMul ?a (VecMul ?b ?c))"),
     ]);
-
     rules
 }
