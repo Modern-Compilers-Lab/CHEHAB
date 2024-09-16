@@ -89,18 +89,19 @@ def process(
                     declarations += f'{label_type}{label}("{label}");\n'
                     dictionary[vector] = label
                 return dictionary[vector], index
-            if len(tokens[index]) > 3:
-                operation = tokens[index]
-                index += 1
-                operand_1, index = process(
-                    tokens,
-                    index,
-                    dictionary,
-                    inputs,
-                    inputs_types,
-                    slot_count,
-                    sub_vector_size,
-                )
+
+            operation = tokens[index]
+            index += 1
+            operand_1, index = process(
+                tokens,
+                index,
+                dictionary,
+                inputs,
+                inputs_types,
+                slot_count,
+                sub_vector_size,
+            )
+            if tokens[index] != ")":
                 if tokens[index] == "(":
                     operand_2, index = process(
                         tokens,
@@ -111,26 +112,31 @@ def process(
                         slot_count,
                         sub_vector_size,
                     )
-                    op = (
-                        "+"
-                        if operation == "VecAdd"
-                        else "-" if operation == "VecMinus" else "*"
-                    )
-                    label = "c" + str(id_counter)
-                    labels_map[id_counter] = label
-                    id_counter += 1
-                    computations += (
-                        f"Ciphertext {label} = {operand_1} {op} {operand_2};\n"
-                    )
-                    index += 1
-                    return label, index
                 else:
+                    operand_2 = tokens[index]
                     index += 1
-                    label = "c" + str(id_counter)
-                    labels_map[id_counter] = label
-                    id_counter += 1
-                    computations += f"Ciphertext {label} = -{operand_1};\n"
-                    return label, index
+                op = (
+                    "+"
+                    if operation == "VecAdd"
+                    else (
+                        "-"
+                        if operation == "VecMinus"
+                        else "*" if operation == "VecMul" else "<<"
+                    )
+                )
+                label = "c" + str(id_counter)
+                labels_map[id_counter] = label
+                id_counter += 1
+                computations += f"Ciphertext {label} = {operand_1} {op} {operand_2};\n"
+                index += 1
+                return label, index
+            else:
+                index += 1
+                label = "c" + str(id_counter)
+                labels_map[id_counter] = label
+                id_counter += 1
+                computations += f"Ciphertext {label} = -{operand_1};\n"
+                return label, index
     return "", index
 
 

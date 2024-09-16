@@ -13,46 +13,22 @@ using namespace fheco;
 
 void fhe()
 {
-  std::vector<std::vector<Ciphertext>> img =
-    std::vector<std::vector<Ciphertext>>(height, std::vector<Ciphertext>(width));
-  std::vector<std::vector<Ciphertext>> output(height, std::vector<Ciphertext>(width));
-  for (int i = 0; i < height; i++)
-  {
-    for (int j = 0; j < width; j++)
-    {
-      img[i][j] = Ciphertext("in_" + std::to_string(i) + std::to_string(j));
-    }
-  }
+  Ciphertext a0("a0");
+  Ciphertext a1("a1");
+  Ciphertext a2("a2");
+  Ciphertext a3("a3");
 
-  for (int i = 0; i < height; ++i)
-  {
-    for (int j = 0; j < width; ++j)
-    {
-      if (i == 0 || i == height - 1 || j == 0 || j == width - 1)
-      {
-        output[i][j] = img[i][j];
-        continue;
-      }
-      output[i][j] = img[i - 1][j + 1] + // Top left
-                     img[i + 0][j + 1] + // Top center
-                     img[i + 1][j + 1] + // Top right
-                     img[i - 1][j + 0] + // Mid left
-                     img[i + 0][j + 0] + // Current pixel
-                     img[i + 1][j + 0] + // Mid right
-                     img[i - 1][j - 1] + // Low left
-                     img[i + 0][j - 1] + // Low center
-                     img[i + 1][j - 1]; // Low right
-    }
-  }
+  Ciphertext b0 = a0 + a1;
+  Ciphertext b1 = a1 + a2;
+  Ciphertext b2 = a2 + a3;
+  Ciphertext b3 = a3 + a0;
 
-  for (int i = 0; i < height; i++)
-  {
-    for (int j = 0; j < width; j++)
-    {
-      output[i][j].set_output("out_" + std::to_string(i) + std::to_string(j));
-    }
-  }
+  b0.set_output("b0");
+  b1.set_output("b1");
+  b2.set_output("b2");
+  b3.set_output("b3");
 }
+
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
   os << (arg ? name : "no_" + name);
