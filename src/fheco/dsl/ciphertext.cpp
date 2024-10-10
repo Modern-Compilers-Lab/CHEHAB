@@ -14,7 +14,7 @@ Ciphertext::Ciphertext(vector<size_t> shape) : id_{0}, shape_{move(shape)}, idx_
 
 Ciphertext::Ciphertext(string label, vector<size_t> shape) : Ciphertext(move(shape))
 {
-  Compiler::active_func()->init_input(*this, move(label));
+  Compiler::active_func()->init_input(*this, move(label)); 
 }
 
 Ciphertext::Ciphertext(string label, PackedVal example_val, vector<size_t> shape) : Ciphertext(move(shape))

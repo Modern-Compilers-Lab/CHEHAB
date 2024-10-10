@@ -4,14 +4,20 @@
 #include "fheco/trs/common.hpp"
 #include <cstddef>
 #include <limits>
+#include <map>
 #include <memory>
 #include <ostream>
+#include <queue>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
+using std::queue;
+using std::string;
+using std::vector;
 namespace fheco
 {
 class Compiler
@@ -23,7 +29,7 @@ public:
     ops_cost,
     joined
   };
-
+ 
   static inline const std::shared_ptr<ir::Func> &create_func(
     std::string name, std::size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
     bool need_cyclic_rotation, bool overflow_warnings = false)
@@ -43,12 +49,19 @@ public:
   static void compile(
     std::shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::ostream &header_os,
     std::string_view header_name, std::ostream &source_os, bool log2_reduct = false);
+  
+  static ir::Term *build_expression(
+  const std::shared_ptr<ir::Func> &func, std::map<string, ir::Term *> map, queue<string> &tokens);
+  static ir::OpCode operationFromString(string operation);
+  
+  static void gen_vectorized_code(const std::shared_ptr<ir::Func> &func);
+  static void format_vectorized_code(const std::shared_ptr<ir::Func> &func);
 
+  static void gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window);
   static void gen_he_code(
     const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name,
     std::ostream &source_os, std::size_t rotation_keys_threshold = std::numeric_limits<std::size_t>::max(),
     bool lazy_relin = false);
-
   static inline const std::shared_ptr<ir::Func> &active_func()
   {
     if (active_func_it_ == funcs_table_.cend())
@@ -58,6 +71,8 @@ public:
   }
 
   static void set_active_func(const std::string &name);
+  static void call_vectorizer(int vector_width);
+  static void call_script();
 
   static const std::shared_ptr<ir::Func> &get_func(const std::string &name);
 

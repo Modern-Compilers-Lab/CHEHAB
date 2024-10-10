@@ -8,6 +8,7 @@
 #include <iostream>
 #endif
 #include <stack>
+#include <iostream>
 #include <stdexcept>
 #include <type_traits>
 #include <unordered_set>
@@ -35,6 +36,7 @@ void Func::init_input(T &input, string label)
     term_type = Term::Type::cipher;
   else
     term_type = Term::Type::plain;
+  //std::cout<<"===>insert_input in data_flow \n";
   input.id_ = data_flow_.insert_input(term_type, InputTermInfo{move(label), input.example_val_})->id();
 }
 

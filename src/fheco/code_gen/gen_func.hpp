@@ -77,3 +77,4 @@ void gen_sequence(Iter begin, Iter end, std::size_t line_threshold, std::ostream
   }
 }
 } // namespace fheco::code_gen
+ 

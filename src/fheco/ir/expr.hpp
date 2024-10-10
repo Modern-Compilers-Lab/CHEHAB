@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <unordered_map>
 #include <utility>
-#include <vector>
+#include <vector> 
 
 namespace fheco::ir
 {
@@ -87,7 +87,16 @@ public:
   bool valid_top_sort() const { return valid_top_sort_; }
 
   const Term::PtrSet &terms() const { return terms_; }
-
+  
+  void clear(){
+    const_terms_info_.clear();
+    inputs_info_.clear();
+    op_terms_.clear();
+    outputs_info_.clear();
+    sorted_terms_.clear();
+    terms_.clear();
+  }
+  
 private:
   struct OpTermKey
   {

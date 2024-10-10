@@ -83,13 +83,17 @@ public:
   inline const std::string &name() const { return name_; }
 
   inline const std::size_t &slot_count() const { return slot_count_; }
-
+  void set_slot_count(size_t slot_count){
+      slot_count_ = slot_count ;
+  }
   inline const util::ClearDataEval &clear_data_evaluator() const { return clear_data_eval_; }
-
+   
   inline bool need_cyclic_rotation() const { return need_cyclic_rotation_; }
 
   inline const Expr &data_flow() const { return data_flow_; }
-
+  void reset_data_flow(){
+    data_flow_.clear(); 
+  }
 private:
   std::string name_;
 

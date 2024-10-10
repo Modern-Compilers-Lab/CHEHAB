@@ -7,6 +7,7 @@
 #endif
 #include <algorithm>
 #include <stack>
+#include <iostream>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -103,6 +104,7 @@ Term *Expr::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
 Term *Expr::insert_input(Term::Type type, InputTermInfo input_term_info)
 {
   Term *term = new Term(move(type));
+  //cout<<"place term in inputs_infos \n";
   inputs_info_.emplace(term, move(input_term_info));
   terms_.insert(term);
   return term;

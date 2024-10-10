@@ -2,7 +2,7 @@
 
 #include "fheco/dsl/ciphertext.hpp"
 #include "fheco/dsl/plaintext.hpp"
-#include <cstdint>
+#include <cstdint> 
 
 namespace fheco
 {
@@ -89,4 +89,6 @@ Plaintext reduce_add(const Plaintext &arg);
 // reduce_mul
 Ciphertext reduce_mul(const Ciphertext &arg);
 Plaintext reduce_mul(const Plaintext &arg);
+/*************************************************/
+Ciphertext SumVec(const Ciphertext &arg, int size);
 } // namespace fheco

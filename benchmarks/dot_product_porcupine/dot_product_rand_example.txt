@@ -1,4 +1,0 @@
-8 2 1
-v1 false true -10 -4 0 10 9 -1 0 -10
-c0 true true -10 -4 9 2 -1 1 0 7
-c_result true true 56 56 56 56 56 56 56 56

@@ -42,7 +42,7 @@ void gen_func(
 
 void gen_func_decl(const string &func_name, ostream &os)
 {
-  os << "void " << func_name << "(";
+  os << "void " << func_name << "("; 
   os << "const " << header_encrypted_io_type << " &" << encrypted_inputs_container_id << ",\n";
   os << "const " << header_encoded_io_type << " &" << encoded_inputs_container_id << ",\n";
   os << header_encrypted_io_type << " &" << encrypted_outputs_container_id << ",\n";
