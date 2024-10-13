@@ -2,7 +2,7 @@
 #include "fheco/util/common.hpp"
 #include <stdexcept>
 
-using namespace std;
+using namespace std; 
 
 namespace fheco::ir
 { 

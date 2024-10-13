@@ -1,44 +1,59 @@
 #include "fheco/code_gen/constants.hpp"
 #include "fheco/code_gen/gen_func.hpp"
+#include "fheco/param_select/enc_params.hpp"
+#include "fheco/param_select/param_selector.hpp"
 #include "fheco/ir/common.hpp"
 #include "fheco/ir/func.hpp"
 #include "fheco/passes/prepare_code_gen.hpp"
 #include <algorithm>
 #include <iterator>
-
+#include <iostream>
 using namespace std;
 
 namespace fheco::code_gen
 {
-void gen_func(
-  const shared_ptr<ir::Func> &func, const unordered_set<int> &rotataion_steps, ostream &header_os,
-  string_view header_name, ostream &source_os)
-{
-  passes::prepare_code_gen(func);
-  header_os << header_includes;
-  header_os << '\n';
-  gen_func_decl(func->name(), header_os);
-  header_os << '\n';
-  gen_rotation_steps_getter_decl(func->name(), header_os);
+  void gen_func(
+    const shared_ptr<ir::Func> &func, const unordered_set<int> &rotataion_steps, ostream &header_os,
+    string_view header_name, ostream &source_os)
+  {
+    passes::prepare_code_gen(func);
+    header_os << header_includes;
+    header_os << '\n';
+    gen_func_decl(func->name(), header_os);
+    header_os << '\n';
+    gen_rotation_steps_getter_decl(func->name(), header_os);
 
-  source_os << source_includes;
-  source_os << "#include \"" << header_name << "\"\n";
-  source_os << '\n';
-  source_os << source_usings;
-  source_os << '\n';
-  gen_func_def_signature(func->name(), source_os);
-  source_os << "\n{\n";
+    source_os << source_includes;
+    source_os << "#include \"" << header_name << "\"\n";
+    source_os << '\n';
+    source_os << source_usings;
+    source_os << '\n';
+    gen_func_def_signature(func->name(), source_os);
+    source_os << "\n{\n";
 
-  TermsCtxtObjectsInfo terms_ctxt_objects_info;
-  gen_input_terms(func->data_flow().inputs_info(), source_os, terms_ctxt_objects_info);
-  gen_const_terms(func->data_flow().constants_info(), func->clear_data_evaluator().signedness(), source_os);
-  gen_op_terms(func, source_os, terms_ctxt_objects_info);
-  gen_output_terms(func->data_flow().outputs_info(), source_os, terms_ctxt_objects_info);
+    TermsCtxtObjectsInfo terms_ctxt_objects_info;
+    gen_input_terms(func->data_flow().inputs_info(), source_os, terms_ctxt_objects_info);
+    gen_const_terms(func->data_flow().constants_info(), func->clear_data_evaluator().signedness(), source_os);
+    gen_op_terms(func, source_os, terms_ctxt_objects_info);
+    gen_output_terms(func->data_flow().outputs_info(), source_os, terms_ctxt_objects_info);
 
-  source_os << "}\n";
-  source_os << '\n';
-  gen_rotation_steps_getter_def(func->name(), rotataion_steps, source_os);
-}
+    source_os << "}\n";
+    source_os << '\n';
+    gen_rotation_steps_getter_def(func->name(), rotataion_steps, source_os);
+    source_os << '\n';
+    /**************************************************************************/
+    /**************************************************************************/
+
+    std::cout<<"\n ==>Welcome in encryption params selection : \n";
+    param_select::ParameterSelector selector(func, param_select::EncParams::SecurityLevel::tc128);
+    bool use_mod_switch = false ;
+    param_select::EncParams params = selector.select_params(use_mod_switch); 
+    params.print_params(std::cout); 
+    //gen_encryption_params_def(func->name(),params, source_os);
+  }
+
+/**************************************************************************************/
+/**************************************************************************************/
 
 void gen_func_decl(const string &func_name, ostream &os)
 {
@@ -60,7 +75,7 @@ void gen_rotation_steps_getter_decl(const string &func_name, ostream &os)
 }
 
 void gen_func_def_signature(const string &func_name, ostream &os)
-{
+{ 
   os << "void " << func_name << "(";
   os << "const " << source_encrypted_io_type << " &" << encrypted_inputs_container_id << ",\n";
   os << "const " << source_encoded_io_type << " &" << encoded_inputs_container_id << ",\n";
@@ -312,4 +327,9 @@ void gen_rotation_steps_getter_def(const string &func_name, const unordered_set<
   os << "};\n";
   os << "}\n";
 }
+
+/*void gen_encryption_params_def(const string &func_name,fheco::param_select::EncParams params, ostream &os)
+{
+
+}*/
 } // namespace fheco::code_gen

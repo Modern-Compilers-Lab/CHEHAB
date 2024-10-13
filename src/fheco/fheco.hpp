@@ -2,6 +2,7 @@
 
 #include "fheco/code_gen/gen_func.hpp"
 #include "fheco/param_select/enc_params.hpp"
+#include "fheco/param_select/param_selector.hpp"
 #include "fheco/dsl/ciphertext.hpp"
 #include "fheco/dsl/common.hpp"
 #include "fheco/dsl/compiler.hpp"

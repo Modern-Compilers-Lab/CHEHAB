@@ -81,10 +81,13 @@ void print_bool_arg(bool arg, const string &name, ostream &os)
 int main(int argc, char **argv) {
     auto axiomatic = false;
     auto window = 0;
-    bool call_quantifier = true;
     bool cse = true;
     bool const_folding = true;
-    bool vectorized = false;
+    /***************************/
+    /**************************/
+    bool call_quantifier = true;
+    bool vectorized = true;
+    /**************************/
     // Argument validation
     if (argc < 4) {
         throw invalid_argument("Some arguments are lacking, needed arguments are: depth, iteration, regime");

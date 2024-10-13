@@ -2,7 +2,7 @@
 
 #include "fheco/ir/op_code.hpp"
 #include <cstddef>
-#include <ostream>
+#include <ostream> 
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -33,7 +33,8 @@ public:
   enum class Type
   {
     cipher,
-    plain
+    plain,
+    undefined
   };
 
   static std::string term_type_str_repr(Type);

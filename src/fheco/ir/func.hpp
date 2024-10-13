@@ -16,7 +16,7 @@ class Term;
 
 class Func
 {
-public:
+public: 
   Func(
     std::string name, std::size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
     bool need_cyclic_rotation, bool overflow_warnings);
@@ -67,7 +67,7 @@ public:
   Term *insert_const_term(PackedVal packed_val, bool &inserted);
 
   void replace_term_with(Term *term1, Term *term2);
-
+ 
   inline void remove_dead_code() { data_flow_.prune_unreachabe_terms(); }
 
   inline void delete_term_cascade(Term *term) { data_flow_.delete_term_cascade(term); }

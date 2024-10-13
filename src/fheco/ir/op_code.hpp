@@ -26,7 +26,7 @@ public:
     SumVec,
   };
 
-  static const OpCode nop;
+  static const OpCode nop; 
   static const OpCode encrypt;
   static const OpCode add;
   static const OpCode sub;

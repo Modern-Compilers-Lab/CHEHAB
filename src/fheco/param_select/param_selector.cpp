@@ -1,18 +1,17 @@
-#include "param_selector.hpp"
-#include "fhecompiler_const.hpp"
-#include "term.hpp"
+#include "fheco/param_select/param_selector.hpp"
+#include "fheco/ir/term.hpp"
 #include <iostream>
 #include <stdexcept>
 #define MOD_BIT_COUNT_MAX 60
 using namespace std; 
 
-namespace param_selector
+namespace fheco::param_select
 {
-
-const unordered_map<fhecompiler::SecurityLevel, unordered_map<size_t, int>> ParameterSelector::security_standard = {
-  {fhecompiler::SecurityLevel::tc128, {{1024, 27}, {2048, 54}, {4096, 109}, {8192, 218}, {16384, 438}, {32768, 881}}},
-  {fhecompiler::SecurityLevel::tc192, {{1024, 19}, {2048, 37}, {4096, 75}, {8192, 152}, {16384, 305}, {32768, 612}}},
-  {fhecompiler::SecurityLevel::tc256, {{1024, 14}, {2048, 29}, {4096, 58}, {8192, 118}, {16384, 237}, {32768, 476}}}};
+const unordered_map<EncParams::SecurityLevel, unordered_map<size_t, int>> ParameterSelector::security_standard = {
+  {EncParams::SecurityLevel::tc128, {{1024, 27}, {2048, 54}, {4096, 109}, {8192, 218}, {16384, 438}, {32768, 881}}},
+  {EncParams::SecurityLevel::tc192, {{1024, 19}, {2048, 37}, {4096, 75}, {8192, 152}, {16384, 305}, {32768, 612}}},
+  {EncParams::SecurityLevel::tc256, {{1024, 14}, {2048, 29}, {4096, 58}, {8192, 118}, {16384, 237}, {32768, 476}}}
+};
 
 const map<int, map<size_t, ParameterSelector::NoiseEstimatesValue>> ParameterSelector::bfv_noise_estimates_seal = {
   {14, {{1024, {6, 25, 18}}, {2048, {7, 26, 18}}}},
@@ -315,31 +314,15 @@ const map<int, map<size_t, ParameterSelector::NoiseEstimatesValue>> ParameterSel
     {16384, {9, 75, 66}},
     {32768, {9, 76, 66}}}}};
 
-EncryptionParameters ParameterSelector::select_params(bool &use_mod_switch)
+EncParams ParameterSelector::select_params(bool &use_mod_switch)
 {
-  program_->get_dataflow_sorted_nodes(true);
-
-  switch (program_->get_encryption_scheme())
-  {
-  case fhecompiler::Scheme::bfv:
-    return select_params_bfv(use_mod_switch);
-    break;
-
-  case fhecompiler::Scheme::none:
-    throw logic_error("no shceme was specified");
-
-  default:
-    throw logic_error("parameter selection unsupported for the scheme");
-    break;
-  }
+  select_params_bfv(use_mod_switch);
 }
 /*********************************************************************************/
 /*********************************************************************************/
-EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
+EncParams ParameterSelector::select_params_bfv(bool &use_mod_switch)
 {
-  int plain_mod_size = program_->get_bit_width() + 1;
-  if (program_->get_signedness())
-    ++plain_mod_size;;
+  int plain_mod_size = 40 ;
 
   auto plain_mod_noise_estimates_it = bfv_noise_estimates_seal.find(plain_mod_size);
   while (plain_mod_noise_estimates_it == bfv_noise_estimates_seal.end() &&
@@ -354,7 +337,7 @@ EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
   if (plain_mod_noise_estimates_it->second.empty())
     throw logic_error("empty per polynomial modulus degree estimates map for the given plaintext modulus size");
 
-  size_t poly_modulus_degree = program_->get_vector_size() << 1;
+  size_t poly_modulus_degree = program_->slot_count() << 1;
   auto poly_modulus_degree_noise_estimates_it = plain_mod_noise_estimates_it->second.find(poly_modulus_degree);
 
   while (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end() &&
@@ -368,8 +351,8 @@ EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
                       "size is smaller than vector_size");
   /**************************/
   int circuit_noise = 0;
-  EncryptionParameters params;
-  unordered_map<string, int> nodes_noise;
+  EncParams params;
+  unordered_map<std::size_t, int> nodes_noise;
   while (poly_modulus_degree_noise_estimates_it != plain_mod_noise_estimates_it->second.end())
   {
     poly_modulus_degree = poly_modulus_degree_noise_estimates_it->first;
@@ -378,9 +361,9 @@ EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
     circuit_noise = simulate_noise_bfv(noise_estimates_value, nodes_noise);
 
     int coeff_mod_data_level_size = plain_mod_size + circuit_noise;
-    params = EncryptionParameters(poly_modulus_degree, plain_mod_size, coeff_mod_data_level_size);
+    params = EncParams(poly_modulus_degree, plain_mod_size, coeff_mod_data_level_size);
 
-    if (sec_level_ == fhecompiler::SecurityLevel::none)
+    if (sec_level_ == EncParams::SecurityLevel::none)
       break;
 
     auto sec_level_he_standard_it = security_standard.find(sec_level_);
@@ -396,97 +379,91 @@ EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
 
     ++poly_modulus_degree_noise_estimates_it;
   }
-  /**************************/
+  /**********************************/
   if (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end())
     throw logic_error("could not find suitable parameters");
 
-  cout << "estimated circuit_noise: " << circuit_noise << '\n';
-  cout << "-> q: "
-       << "nb_primes=" << params.coeff_mod_bit_sizes().size() << ", "
-       << "min_total_bit_count=" << params.coeff_mod_bit_count() << '\n';
-
-  if (sec_level_ != fhecompiler::SecurityLevel::none)
+  cout<<"estimated circuit_noise: " << circuit_noise << '\n';
+  cout<<"-> q: " ;
+  cout<<"nb_primes=" << params.coeff_mod_bit_sizes().size() << ", ";
+  cout<<"min_total_bit_count=" << params.coeff_mod_bit_count() << '\n';
+  /***********************************************************/
+  if (sec_level_ != EncParams::SecurityLevel::none)
   {
+    std::cout<<"==> welcome\n";
     auto security_standard_sec_level_it = security_standard.find(sec_level_);
     if (security_standard_sec_level_it == security_standard.end())
       throw logic_error("sec_level_ not included in security_standard");
-
+    std::cout<<"==> welcome1\n";
     auto security_standard_poly_modulus_degree_it = security_standard_sec_level_it->second.find(poly_modulus_degree);
     if (security_standard_poly_modulus_degree_it == security_standard_sec_level_it->second.end())
       throw logic_error("poly_modulus_degree not included in security_standard");
-
+    std::cout<<"==> welcome2\n";
     int max_coeff_mod_bit_count = security_standard_poly_modulus_degree_it->second;
     params.increase_coeff_mod_bit_sizes(max_coeff_mod_bit_count - params.coeff_mod_bit_count());
   }
-  else
+  else{
+    std::cout<<"welcome3\n";
     params.increase_coeff_mod_bit_sizes(MOD_BIT_COUNT_MAX);
-
+  }
+  std::cout<<"return ==>\n";
+  /*
   if (use_mod_switch)
     use_mod_switch = insert_mod_switch_bfv(
-      params.coeff_mod_data_level_bit_sizes(), nodes_noise, poly_modulus_degree_noise_estimates_it->second.fresh_noise);
+      params.coeff_mod_data_level_bit_sizes(), nodes_noise, poly_modulus_degree_noise_estimates_it->second.fresh_noise);*/
 
   return params;
 }
 /*********************************************************************************/
 /*********************************************************************************/
 int ParameterSelector::simulate_noise_bfv(
-  NoiseEstimatesValue noise_estimates, unordered_map<string, int> &nodes_noise) const
+  NoiseEstimatesValue noise_estimates, unordered_map<std::size_t, int> &nodes_noise) const
 {
   int fresh_noise = noise_estimates.fresh_noise;
   int mul_noise_growth = noise_estimates.mul_noise_growth;
   int mul_plain_noise_growth = noise_estimates.mul_plain_noise_growth;
 
-  map<tuple<ir::OpCode, ir::TermType, ir::TermType>, int> operations_noise_growth = {
-    {{ir::OpCode::mul, ir::TermType::ciphertext, ir::TermType::ciphertext}, mul_noise_growth},
-    {{ir::OpCode::square, ir::TermType::ciphertext, ir::TermType::undefined}, mul_noise_growth},
-    {{ir::OpCode::mul, ir::TermType::ciphertext, ir::TermType::plaintext}, mul_plain_noise_growth},
-    {{ir::OpCode::mul, ir::TermType::plaintext, ir::TermType::ciphertext}, mul_plain_noise_growth},
-    {{ir::OpCode::mul, ir::TermType::ciphertext, ir::TermType::scalar}, mul_plain_noise_growth},
-    {{ir::OpCode::mul, ir::TermType::scalar, ir::TermType::ciphertext}, mul_plain_noise_growth},
-    {{ir::OpCode::add, ir::TermType::ciphertext, ir::TermType::ciphertext}, 1},
-    {{ir::OpCode::add, ir::TermType::ciphertext, ir::TermType::plaintext}, 0},
-    {{ir::OpCode::add, ir::TermType::plaintext, ir::TermType::ciphertext}, 0},
-    {{ir::OpCode::add, ir::TermType::ciphertext, ir::TermType::scalar}, 0},
-    {{ir::OpCode::add, ir::TermType::scalar, ir::TermType::ciphertext}, 0},
-    {{ir::OpCode::negate, ir::TermType::ciphertext, ir::TermType::undefined}, 1},
-    {{ir::OpCode::sub, ir::TermType::ciphertext, ir::TermType::ciphertext}, 1},
-    {{ir::OpCode::sub, ir::TermType::ciphertext, ir::TermType::plaintext}, 0},
-    {{ir::OpCode::sub, ir::TermType::plaintext, ir::TermType::ciphertext}, 0},
-    {{ir::OpCode::sub, ir::TermType::ciphertext, ir::TermType::scalar}, 0},
-    {{ir::OpCode::sub, ir::TermType::scalar, ir::TermType::ciphertext}, 0},
-    {{ir::OpCode::rotate, ir::TermType::ciphertext, ir::TermType::rawData}, 5},
-    {{ir::OpCode::rotate, ir::TermType::rawData, ir::TermType::ciphertext}, 5},
-    {{ir::OpCode::assign, ir::TermType::ciphertext, ir::TermType::undefined}, 0},
-    {{ir::OpCode::encrypt, ir::TermType::plaintext, ir::TermType::undefined}, fresh_noise},
-    {{ir::OpCode::encrypt, ir::TermType::scalar, ir::TermType::undefined}, fresh_noise},
-    {{ir::OpCode::relinearize, ir::TermType::ciphertext, ir::TermType::undefined}, 0}
+  map<tuple<ir::OpCode, ir::Term::Type, ir::Term::Type>, int> operations_noise_growth = {
+    {{ir::OpCode::mul, ir::Term::Type::cipher, ir::Term::Type::cipher}, mul_noise_growth},
+    {{ir::OpCode::square, ir::Term::Type::cipher, ir::Term::Type::undefined}, mul_noise_growth},
+    {{ir::OpCode::mul, ir::Term::Type::cipher, ir::Term::Type::plain}, mul_plain_noise_growth},
+    {{ir::OpCode::mul, ir::Term::Type::plain, ir::Term::Type::cipher}, mul_plain_noise_growth},
+    {{ir::OpCode::add, ir::Term::Type::cipher, ir::Term::Type::cipher}, 1},
+    {{ir::OpCode::add, ir::Term::Type::cipher, ir::Term::Type::plain}, 0},
+    {{ir::OpCode::add, ir::Term::Type::plain, ir::Term::Type::cipher}, 0},
+    {{ir::OpCode::negate, ir::Term::Type::cipher, ir::Term::Type::undefined}, 1},
+    {{ir::OpCode::sub, ir::Term::Type::cipher, ir::Term::Type::cipher}, 1},
+    {{ir::OpCode::sub, ir::Term::Type::cipher, ir::Term::Type::plain}, 0},
+    {{ir::OpCode::sub, ir::Term::Type::plain, ir::Term::Type::cipher}, 0},
+    {{ir::OpCode::encrypt, ir::Term::Type::plain, ir::Term::Type::undefined}, fresh_noise},
+    {{ir::OpCode::relin, ir::Term::Type::cipher, ir::Term::Type::undefined}, 0}
   };
 
   int circuit_noise = fresh_noise;
 
-  const auto &nodes = program_->get_dataflow_sorted_nodes(false);
+  const auto &nodes = program_->get_top_sorted_terms();
   for (const auto &node : nodes)
   {
-    if (node->get_term_type() != ir::TermType::ciphertext)
+    if (node->type() != ir::Term::Type::cipher)
       continue;
 
-    if (nodes_noise.find(node->get_label()) != nodes_noise.end())
+    if (nodes_noise.find(node->id()) != nodes_noise.end())
       throw logic_error("repeated node in dataflow_sorted_nodes");
 
-    if (!node->is_operation_node())
-      nodes_noise.insert({node->get_label(), fresh_noise});
-    else
-    {
+    if (!node->is_operation()){
+      nodes_noise.insert({node->id(), fresh_noise});
+    }
+    else{
       int result_noise = 0;
-      if (node->get_operands().size() == 2)
+      if (node->operands().size() == 2)
       {
-        const auto &arg1 = node->get_operands()[0];
-        const auto &arg2 = node->get_operands()[1];
+        const auto &arg1 = node->operands()[0];
+        const auto &arg2 = node->operands()[1];
 
         bool is_cipher = false;
         int arg1_noise = 0;
-        auto arg1_it = nodes_noise.find(arg1->get_label());
-        if (arg1->get_term_type() == ir::TermType::ciphertext)
+        auto arg1_it = nodes_noise.find(arg1->id());
+        if (arg1->type() == ir::Term::Type::cipher)
         {
           if (arg1_it == nodes_noise.end())
             throw logic_error("parent handled before child");
@@ -495,8 +472,8 @@ int ParameterSelector::simulate_noise_bfv(
           arg1_noise = arg1_it->second;
         }
         int arg2_noise = 0;
-        auto arg2_it = nodes_noise.find(arg2->get_label());
-        if (arg2->get_term_type() == ir::TermType::ciphertext)
+        auto arg2_it = nodes_noise.find(arg2->id());
+        if (arg2->type() == ir::Term::Type::cipher)
         {
           if (arg2_it == nodes_noise.end())
             throw logic_error("parent handled before child");
@@ -509,40 +486,40 @@ int ParameterSelector::simulate_noise_bfv(
           throw logic_error("binary operation ciphertext node with two non-ciphertext operands");
 
         auto noise_growth_it =
-          operations_noise_growth.find({node->get_opcode(), arg1->get_term_type(), arg2->get_term_type()});
+          operations_noise_growth.find({node->op_code(), arg1->type(), arg2->type()});
         if (noise_growth_it == operations_noise_growth.end())
           throw logic_error("unhandled operation (opcode + operands types)");
 
         result_noise = max(arg1_noise, arg2_noise) + noise_growth_it->second;
       }
-      else if (node->get_operands().size() == 1)
+      else if (node->operands().size() == 1)
       {
-        const auto &arg1 = node->get_operands()[0];
+        const auto &arg1 = node->operands()[0];
         int arg1_noise;
-        if (arg1->get_term_type() != ir::TermType::ciphertext)
+        if (arg1->type() != ir::Term::Type::cipher)
         {
-          if (node->get_opcode() != ir::OpCode::encrypt)
+          if (node->op_code() != ir::OpCode::encrypt)
             throw logic_error("unary operation ciphertext node (not encrypt) with non-ciphertext operand");
 
           arg1_noise = 0;
         }
         else
         {
-          auto arg1_it = nodes_noise.find(arg1->get_label());
+          auto arg1_it = nodes_noise.find(arg1->id());
           if (arg1_it == nodes_noise.end())
             throw logic_error("parent handled before child");
 
           arg1_noise = arg1_it->second;
         }
         auto noise_growth_it =
-          operations_noise_growth.find({node->get_opcode(), arg1->get_term_type(), ir::TermType::undefined});
+          operations_noise_growth.find({node->op_code(), arg1->type(), ir::Term::Type::undefined});
         if (noise_growth_it == operations_noise_growth.end())
           throw logic_error("unhandled operation (opcode + operands types)");
 
         result_noise = arg1_noise + noise_growth_it->second;
       }
 
-      nodes_noise.insert({node->get_label(), result_noise});
+      nodes_noise.insert({node->id(), result_noise});
       if (circuit_noise < result_noise)
         circuit_noise = result_noise;
     }
@@ -550,7 +527,7 @@ int ParameterSelector::simulate_noise_bfv(
   return circuit_noise;
 }
 /*********************************************************************************/
-/*********************************************************************************/
+/*********************************************************************************
 bool ParameterSelector::insert_mod_switch_bfv(
   const vector<int> &data_level_primes_sizes, unordered_map<string, int> &nodes_noise, int safety_margin)
 {
@@ -770,7 +747,7 @@ bool ParameterSelector::insert_mod_switch_bfv(
   return used_mod_switch;
 }
 /*********************************************************************************/
-/*********************************************************************************/
+/*********************************************************************************
 void apply_mod_switch_schedule(
   ir::Program *program, const unordered_map<string, tuple<size_t, size_t>> &nodes_noise,
   const unordered_map<string, unordered_map<string, size_t>> &nodes_level_matching_mod_switch)
@@ -857,7 +834,7 @@ void apply_mod_switch_schedule(
   }
 }
 /*********************************************************************************/
-/*********************************************************************************/
+/*********************************************************************************
 unordered_map<string, unordered_set<string>> ParameterSelector::get_outputs_composing_nodes() const
 {
   unordered_map<string, unordered_set<string>> outputs_composing_nodes;
@@ -924,5 +901,5 @@ unordered_map<string, unordered_set<string>> ParameterSelector::get_outputs_comp
   }
   return outputs_composing_nodes;
 }
-
+/**************************************************************/
 } // namespace param_selector

@@ -41,7 +41,7 @@ Ciphertext &Ciphertext::operator=(const Ciphertext &other)
 {
   if (idx_.size())
     emulate_subscripted_write(*this, other);
-  else
+  else 
   {
     id_ = other.id_;
     shape_ = other.shape_;
