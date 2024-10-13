@@ -5,8 +5,6 @@ target_link_libraries(polynomials_coyote PRIVATE fheco)
 
 # Define the source file and destination file
 
-set(SOURCE_FILE_1 ${CMAKE_SOURCE_DIR}/benchmarks/polynomials_coyote/he/main.cpp)
-set(DESTINATION_FILE_1 ${CMAKE_SOURCE_DIR}/build/benchmarks/polynomials_coyote/he/main.cpp)
 set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/polynomials_coyote/he/utils.cpp)
 set(DESTINATION_FILE_2 ${CMAKE_SOURCE_DIR}/build/benchmarks/polynomials_coyote/he/utils.cpp)
 set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/polynomials_coyote/he/utils.hpp)
@@ -18,11 +16,7 @@ set(DESTINATION_FILE_4 ${CMAKE_SOURCE_DIR}/build/benchmarks/polynomials_coyote/h
 set(SOURCE_FILE_5 ${CMAKE_SOURCE_DIR}/benchmarks/polynomials_coyote/fhe_io_example.txt)
 set(DESTINATION_FILE_5 ${CMAKE_SOURCE_DIR}/build/benchmarks/polynomials_coyote/fhe_io_example.txt)
 
-add_custom_target(copy_my_file_1polynomials_coyote ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_1} ${DESTINATION_FILE_1}
-    DEPENDS ${SOURCE_FILE}
-    COMMENT "Copying ${SOURCE_FILE_1} to ${DESTINATION_FILE_1}"
-)
+
 add_custom_target(copy_my_file_2polynomials_coyote ALL
     COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_2} ${DESTINATION_FILE_2}
     DEPENDS ${SOURCE_FILE}

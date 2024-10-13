@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fheco/ir/func.hpp"
+#include "fheco/param_select/enc_params.hpp"
 #include "fheco/trs/common.hpp"
 #include <cstddef>
 #include <limits>
@@ -48,7 +49,7 @@ public:
 
   static void compile(
     std::shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::ostream &header_os,
-    std::string_view header_name, std::ostream &source_os, bool log2_reduct = false);
+    std::string_view header_name, std::ostream &source_os, bool log2_reduct = false, param_select::EncParams::SecurityLevel security_level=param_select::EncParams::SecurityLevel::tc128);
   
   static ir::Term *build_expression(
   const std::shared_ptr<ir::Func> &func, std::map<string, ir::Term *> map, queue<string> &tokens);
@@ -61,12 +62,11 @@ public:
   static void gen_he_code(
     const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name,
     std::ostream &source_os, std::size_t rotation_keys_threshold = std::numeric_limits<std::size_t>::max(),
-    bool lazy_relin = false);
+    bool lazy_relin = false,param_select::EncParams::SecurityLevel security_level=param_select::EncParams::SecurityLevel::tc128);
   static inline const std::shared_ptr<ir::Func> &active_func()
   {
     if (active_func_it_ == funcs_table_.cend())
       throw std::logic_error("active_func is null");
-
     return active_func_it_->second;
   }
 

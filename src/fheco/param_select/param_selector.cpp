@@ -316,14 +316,13 @@ const map<int, map<size_t, ParameterSelector::NoiseEstimatesValue>> ParameterSel
 
 EncParams ParameterSelector::select_params(bool &use_mod_switch)
 {
-  select_params_bfv(use_mod_switch);
+  return select_params_bfv(use_mod_switch);
 }
 /*********************************************************************************/
 /*********************************************************************************/
 EncParams ParameterSelector::select_params_bfv(bool &use_mod_switch)
 {
-  int plain_mod_size = 40 ;
-
+  /**********/int plain_mod_size = 20 ;
   auto plain_mod_noise_estimates_it = bfv_noise_estimates_seal.find(plain_mod_size);
   while (plain_mod_noise_estimates_it == bfv_noise_estimates_seal.end() &&
          plain_mod_size < bfv_noise_estimates_seal.rbegin()->first && plain_mod_size < MOD_BIT_COUNT_MAX)
@@ -383,30 +382,25 @@ EncParams ParameterSelector::select_params_bfv(bool &use_mod_switch)
   if (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end())
     throw logic_error("could not find suitable parameters");
 
-  cout<<"estimated circuit_noise: " << circuit_noise << '\n';
+  /*cout<<"estimated circuit_noise: " << circuit_noise << '\n';
   cout<<"-> q: " ;
   cout<<"nb_primes=" << params.coeff_mod_bit_sizes().size() << ", ";
   cout<<"min_total_bit_count=" << params.coeff_mod_bit_count() << '\n';
   /***********************************************************/
   if (sec_level_ != EncParams::SecurityLevel::none)
   {
-    std::cout<<"==> welcome\n";
     auto security_standard_sec_level_it = security_standard.find(sec_level_);
     if (security_standard_sec_level_it == security_standard.end())
       throw logic_error("sec_level_ not included in security_standard");
-    std::cout<<"==> welcome1\n";
     auto security_standard_poly_modulus_degree_it = security_standard_sec_level_it->second.find(poly_modulus_degree);
     if (security_standard_poly_modulus_degree_it == security_standard_sec_level_it->second.end())
       throw logic_error("poly_modulus_degree not included in security_standard");
-    std::cout<<"==> welcome2\n";
     int max_coeff_mod_bit_count = security_standard_poly_modulus_degree_it->second;
     params.increase_coeff_mod_bit_sizes(max_coeff_mod_bit_count - params.coeff_mod_bit_count());
   }
   else{
-    std::cout<<"welcome3\n";
     params.increase_coeff_mod_bit_sizes(MOD_BIT_COUNT_MAX);
   }
-  std::cout<<"return ==>\n";
   /*
   if (use_mod_switch)
     use_mod_switch = insert_mod_switch_bfv(

@@ -151,7 +151,7 @@ int main(int argc, char **argv)
       int width = static_cast<int>(squareRoot);
       fhe(width);
       string gen_name = "_gen_he_" + func_name;
-      string gen_path = "he/" + gen_name;
+      string gen_path = "he/" + gen_name; 
       ofstream header_os(gen_path + ".hpp");
       if (!header_os)
         throw logic_error("failed to create header file");

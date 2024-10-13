@@ -57,7 +57,7 @@ namespace fheco::param_select
   private:
     std::size_t poly_mod_degree_;
 
-    int plain_mod_bit_size_;
+    int plain_mod_bit_size_; 
 
     std::vector<int> coeff_mod_bit_sizes_;
 

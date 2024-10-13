@@ -121,7 +121,7 @@ void EncParams::print_params(ostream &os) const
     ++it;
     if (it == coeff_mod_bit_sizes_.cend())
     {
-      os << ") bits\n";
+      os << ") bits\n"; 
       break;
     }
     os << " + ";

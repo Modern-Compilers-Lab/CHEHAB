@@ -48,8 +48,9 @@ extern "C"
 }
 void Compiler::compile(
   shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, ostream &header_os,
-  string_view header_name, ostream &source_os, bool log2_reduct)
-{
+  string_view header_name, ostream &source_os, bool log2_reduct,
+  param_select::EncParams::SecurityLevel security_level)
+{ 
   auto rewrite_heuristicc = trs::RewriteHeuristic::bottom_up;
   trs::TRS joined_trs{trs::Ruleset::joined_ruleset(func)};
   joined_trs.run(rewrite_heuristicc); 
@@ -63,7 +64,8 @@ void Compiler::compile(
 
 void Compiler::gen_he_code(
   const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name, std::ostream &source_os,
-  size_t rotation_keys_threshold, bool lazy_relin)
+  size_t rotation_keys_threshold, bool lazy_relin,
+  param_select::EncParams::SecurityLevel security_level)
 {
 #ifdef FHECO_LOGGING
   clog << "\nrotation_key_selection\n";
@@ -83,7 +85,7 @@ void Compiler::gen_he_code(
 #ifdef FHECO_LOGGING
   clog << "\ncode_generation\n";
 #endif
-  code_gen::gen_func(func, rotation_steps_keys, header_os, header_name, source_os);
+  code_gen::gen_func(func, rotation_steps_keys, header_os, header_name, source_os,security_level);
 }
 
 const shared_ptr<ir::Func> &Compiler::add_func(shared_ptr<ir::Func> func)

@@ -1,51 +1,4 @@
-#include<iostream>
-#include<map>
-#include <cstddef>
-#include <cstdint>
-#include <vector>
-#include <string>
-#include <string_view>
-#include <fstream>
-#define MOD_BIT_COUNT_MAX 60 
-using namespace std ; 
-struct NoiseEstimatesValue
-{
-  int fresh_noise = 0;
-  int mul_noise_growth = 0;
-  int mul_plain_noise_growth = 0;
-};
-/************************************************************************************/
-template <typename Iter>
-void gen_sequence(Iter begin, Iter end, std::size_t line_threshold, std::ostream &os)
-{
-  if (begin == end)
-    return;
-
-  size_t i = 0;
-  for (Iter it = begin;;)
-  {
-    os << *it;
-    ++it;
-    ++i;
-    if (it == end)
-      break;
-
-    if (i == line_threshold)
-    {
-      os << ",\n";
-      i = 0;
-    }
-    else
-      os << ", ";
-  }
-}
-/****************************************************************************************/
-/******************************************************************************************/
-int main(){
-ofstream out("main.cpp");
-
-string_view str_1{ 
-        R"(#include <chrono>
+#include <chrono>
 #include <cstddef>
 #include <fstream>
 #include <iostream>
@@ -74,22 +27,13 @@ int main(int argc, char **argv)
   ifstream is("../" + app_name + \"_io_example_adapted.txt\");
   if (!is)
     throw invalid_argument(\"failed to open io example file\");
-  )"
-  };
-  string str_1_converted{str_1};
-  std::vector<int> coeff_mod_bit_sizes ={60,50,40,40};
-  out<<str_1_converted ;
-  out<<"EncryptionParameters params(scheme_type::bfv); \n";
-  out<<"size_t n ="<<8192<<" ;\n";
-  out<<"params.set_poly_modulus_degree(n);\n";
-  out<<"params.set_plain_modulus(PlainModulus::Batching(n, "<<20<<")); \n";
-  out<<"params.set_coeff_modulus(CoeffModulus::Create(n, {";
-  size_t line_threshold = 16 ;
-  gen_sequence(coeff_mod_bit_sizes.cbegin(),coeff_mod_bit_sizes.cend(), line_threshold, out);
-  out<<"}));\n";
-  out<<"SEALContext context(params, true, sec_level_type::tc128);\n";
-  string_view str_2{ 
-        R"(
+  EncryptionParameters params(scheme_type::bfv); 
+size_t n =8192 ;
+params.set_poly_modulus_degree(n);
+params.set_plain_modulus(PlainModulus::Batching(n, 20)); 
+params.set_coeff_modulus(CoeffModulus::Create(n, {60, 50, 40, 40}));
+SEALContext context(params, true, sec_level_type::tc128);
+
   ClearArgsInfo clear_inputs, clear_outputs;
   size_t func_slot_count;
   parse_inputs_outputs_file(is, params.plain_modulus().value(), clear_inputs, clear_outputs, func_slot_count);
@@ -129,10 +73,4 @@ int main(int argc, char **argv)
     batch_encoder, decryptor, encrypted_outputs, encoded_outputs, func_slot_count, obtained_clear_outputs);
   print_encrypted_outputs_info(context, decryptor, encrypted_outputs, clog);
   cout << elapsed.count() << \" ms\n\";
-}
-)"
-};
-  string str_2_converted{str_2};
-  out<<str_2_converted ;
-  out.close();
 }
