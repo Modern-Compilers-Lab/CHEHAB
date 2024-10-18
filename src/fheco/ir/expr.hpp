@@ -80,6 +80,8 @@ public:
 
   inline const OutputTermsInfo &outputs_info() const { return outputs_info_; }
 
+  inline const orderedOutputTermsKeys &output_keys() const { return output_keys_ ;}
+
   const std::vector<const Term *> &get_top_sorted_terms();
 
   const std::vector<std::size_t> &get_top_sorted_terms_ids();
@@ -123,6 +125,8 @@ private:
   std::unordered_map<PackedVal, Term *, HashPackedVal> values_to_const_terms_{};
 
   OutputTermsInfo outputs_info_{};
+
+  orderedOutputTermsKeys output_keys_{};
 
   std::vector<const Term *> sorted_terms_{};
 

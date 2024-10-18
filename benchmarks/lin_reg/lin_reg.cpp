@@ -7,7 +7,8 @@ using namespace fheco;
 #include <iostream>
 #include <string>
 #include <vector>
-void fhe(int slot_count){
+/*******************/
+void fhe_vectorized(int slot_count){
   Ciphertext c0("c0");
   Ciphertext c1("c1");
   Ciphertext c2("c2");
@@ -15,10 +16,10 @@ void fhe(int slot_count){
   Ciphertext c_result = c1 - (c2 * c0) - c3;
   c_result.set_output("c_result");
 }
-/*************
-void fhe()
+/************************************/
+void fhe(int slot_count)
 {
-  size_t size = 4; 
+  size_t size = slot_count; 
   int m = 5, b = 2;
   std::vector<Ciphertext> v1(size);
   std::vector<Ciphertext> v2(size);
@@ -30,7 +31,7 @@ void fhe()
   for (int i = 0; i < size; i++)
   {
     v2[i] = Ciphertext("v2_" + std::to_string(i));
-    output[i] = v2[i] - (m * v1[i] + b);
+    output[i] = v2[i] + (m * v1[i] + b);
   }
 
   for (int i = 0; i < size; i++)
@@ -105,9 +106,7 @@ int main(int argc, char **argv)
       cout << " window is " << window << endl;
       Compiler::gen_vectorized_code(func, window);
       Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
-      
       /************/elapsed = chrono::high_resolution_clock::now() - t;
-      
       cout << elapsed.count() << " ms\n";
       if (call_quantifier)
       {
@@ -119,7 +118,7 @@ int main(int argc, char **argv)
   else
   {
       const auto &func = Compiler::create_func(func_name, slot_count, 20, false, true);
-      fhe(slot_count);
+      fhe_vectorized(slot_count);
       string gen_name = "_gen_he_" + func_name;
       string gen_path = "he/" + gen_name;
       ofstream header_os(gen_path + ".hpp");

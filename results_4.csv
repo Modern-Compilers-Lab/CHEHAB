@@ -1,0 +1,6 @@
+benchmark,compile_time( ms ),execution_time (ms),add,sub,multiply_plain,rotate_rows,square,multiply,Depth,Multplicative Depth
+box_blur,2018.25,1.01438,10,0,0,1,0,0,0,0,7,0
+l2_distance,68.1547,9.1903,2,2,0,0,0,2,0,0,4,1
+lin_reg,1219.36,0.201561,2,0,1,0,0,1,0,0,3,1
+poly_reg,916.495,46.3926,10,0,0,1,0,5,0,0,8,2
+matrix_mul,12563.9,16.8135,3,0,0,0,0,4,0,0,4,1

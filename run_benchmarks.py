@@ -7,8 +7,8 @@ import re
 # Specify the parent folder containing the benchmarks and build subfolders
 benchmarks_folder = "benchmarks"
 build_folder = os.path.join("build", "benchmarks")
-slot_count = 64
-output_csv = format("results_{}.csv", str(slot_count))
+slot_count = 8
+output_csv = "results_{}.csv".format(str(slot_count))
 # vectorization_csv = "vectorization.csv"
 operations = ["add", "sub", "multiply_plain", "rotate_rows", "square", "multiply", "Depth", "Multplicative Depth"]
 infos = ["benchmark", "compile_time( ms )", "execution_time (ms)"]
@@ -39,7 +39,7 @@ except subprocess.CalledProcessError as e:
     print(f"Command failed with error:\n{e.stderr.decode('utf-8')}")    
 
 # Iterate through each item in the benchmarks folder
-benchmark_folders = ["box_blur", "gx_kernel", "l2_distance", "lin_reg", "poly_reg", "matrix_mul"] 
+benchmark_folders = ["box_blur","l2_distance","lin_reg","poly_reg","matrix_mul"] 
 for subfolder_name in benchmark_folders:
     benchmark_path = os.path.join(benchmarks_folder, subfolder_name)
     build_path = os.path.join(build_folder, subfolder_name)
@@ -50,7 +50,7 @@ for subfolder_name in benchmark_folders:
     multiplicative_depth = ""
 
     if os.path.isdir(build_path):
-        command = f"./{subfolder_name} 0 0 1 1 {slot_count}"
+        command = f"./{subfolder_name} 1 0 1 1 {slot_count}"
         print(f"Benchmark '{subfolder_name}' will be run...")
 
         try:
@@ -63,6 +63,7 @@ for subfolder_name in benchmark_folders:
             )
             lines = result.stdout.splitlines()
             for line in lines:
+                print(line)
                 if 'ms' in line:
                     optimization_time = line.split()[0]
                     break
@@ -130,4 +131,4 @@ for subfolder_name in benchmark_folders:
                 writer.writerow(row)
 
         except subprocess.CalledProcessError as e:
-            print(f"Command for {subfolder_name} failed with error:\n{e.stderr.decode('utf-8')}")
+            print(f"Command for {subfolder_name} failed with error:\n{e.stderr.encode('utf-8')}")

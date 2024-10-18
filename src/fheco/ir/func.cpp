@@ -19,10 +19,10 @@ using namespace std;
 namespace fheco::ir
 {
 Func::Func(
-  string name, size_t slot_count, bool delayed_reduct, integer modulus, bool signedness, bool need_cyclic_rotation,
+  string name, size_t slot_count, bool delayed_reduct, int plain_modulus_bit_size, bool signedness, bool need_cyclic_rotation,
   bool overflow_warnings)
-  : name_{move(name)}, slot_count_{slot_count}, need_cyclic_rotation_{need_cyclic_rotation},
-    clear_data_eval_{slot_count_, modulus, signedness, delayed_reduct, overflow_warnings}
+  : name_{move(name)}, slot_count_{slot_count} ,plain_modulus_{plain_modulus_bit_size}, need_cyclic_rotation_{need_cyclic_rotation},
+    clear_data_eval_{slot_count_, 1<<plain_modulus_bit_size, signedness, delayed_reduct, overflow_warnings}
 {
   if (need_cyclic_rotation && !util::is_power_of_two(slot_count_))
     throw invalid_argument("when need_cyclic_rotation, slot_count must be a power of two");
@@ -36,7 +36,7 @@ void Func::init_input(T &input, string label)
     term_type = Term::Type::cipher;
   else
     term_type = Term::Type::plain;
-  //std::cout<<"===>insert_input in data_flow \n";
+  //std::cout<<"===>insert_input in data_flow :"<<label<<" \n";
   input.id_ = data_flow_.insert_input(term_type, InputTermInfo{move(label), input.example_val_})->id();
 }
 

@@ -232,7 +232,7 @@ Ciphertext rotate(const Ciphertext &arg, int steps)
 
   auto signed_slot_count = static_cast<int64_t>(Compiler::active_func()->slot_count());
   int abs_rotation = abs(steps);
-  int real_slot_count = 4096 ;
+  int real_slot_count = 2048 ;
   if (steps >= signed_slot_count || steps < 0)
   {
     steps %= signed_slot_count;

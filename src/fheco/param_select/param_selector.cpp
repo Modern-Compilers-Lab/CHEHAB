@@ -322,7 +322,7 @@ EncParams ParameterSelector::select_params(bool &use_mod_switch)
 /*********************************************************************************/
 EncParams ParameterSelector::select_params_bfv(bool &use_mod_switch)
 {
-  /**********/int plain_mod_size = 20 ;
+  /**********/int plain_mod_size = program_->plain_modulus();
   auto plain_mod_noise_estimates_it = bfv_noise_estimates_seal.find(plain_mod_size);
   while (plain_mod_noise_estimates_it == bfv_noise_estimates_seal.end() &&
          plain_mod_size < bfv_noise_estimates_seal.rbegin()->first && plain_mod_size < MOD_BIT_COUNT_MAX)
@@ -335,8 +335,14 @@ EncParams ParameterSelector::select_params_bfv(bool &use_mod_switch)
 
   if (plain_mod_noise_estimates_it->second.empty())
     throw logic_error("empty per polynomial modulus degree estimates map for the given plaintext modulus size");
-
-  size_t poly_modulus_degree = program_->slot_count() << 1;
+  /*************************************************/
+  size_t prog_slot_count = program_->slot_count();
+  size_t poly_modulus_degree = 2 ;
+  while(poly_modulus_degree<prog_slot_count){
+    poly_modulus_degree=poly_modulus_degree<< 1;
+  }
+  poly_modulus_degree=poly_modulus_degree<< 1;
+  /********************************************************/
   auto poly_modulus_degree_noise_estimates_it = plain_mod_noise_estimates_it->second.find(poly_modulus_degree);
 
   while (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end() &&
@@ -481,10 +487,14 @@ int ParameterSelector::simulate_noise_bfv(
 
         auto noise_growth_it =
           operations_noise_growth.find({node->op_code(), arg1->type(), arg2->type()});
-        if (noise_growth_it == operations_noise_growth.end())
-          throw logic_error("unhandled operation (opcode + operands types)");
+        
+        if (noise_growth_it == operations_noise_growth.end()){
+            result_noise =0 ;
+            //throw logic_error("unhandled operation (opcode + operands types)");
+        }else{
+          result_noise = max(arg1_noise, arg2_noise) + noise_growth_it->second;
+        }
 
-        result_noise = max(arg1_noise, arg2_noise) + noise_growth_it->second;
       }
       else if (node->operands().size() == 1)
       {
@@ -507,10 +517,12 @@ int ParameterSelector::simulate_noise_bfv(
         }
         auto noise_growth_it =
           operations_noise_growth.find({node->op_code(), arg1->type(), ir::Term::Type::undefined});
-        if (noise_growth_it == operations_noise_growth.end())
-          throw logic_error("unhandled operation (opcode + operands types)");
-
-        result_noise = arg1_noise + noise_growth_it->second;
+        if (noise_growth_it == operations_noise_growth.end()){
+          result_noise=0;
+          //throw logic_error("unhandled operation (opcode + operands types)");
+        }else{
+          result_noise = arg1_noise + noise_growth_it->second;
+        }
       }
 
       nodes_noise.insert({node->id(), result_noise});

@@ -37,7 +37,7 @@ pub fn run(
     let runner = MyRunner::new(Default::default())
         .with_egraph(init_eg)
         .with_expr(&prog)
-        .with_node_limit(100_000)
+        .with_node_limit(10_000)
         .with_time_limit(std::time::Duration::from_secs(timeout))
         .with_iter_limit(10_000)
         .with_hook({
@@ -566,7 +566,8 @@ pub fn operations_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFol
 
     rules
 }
-
+/****************************************************************************************/
+/****************************************************************************************/
 pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![
         rw!("add-0"; "(+ 0 ?a)" => "?a"),
@@ -586,10 +587,10 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let operations_rules = operations_rules(vector_width);
     let split_vectors = split_vectors(vector_width);
     let assoc = commutativity_rules(vector_width);
-    rules.extend(rotation_rules);
+    //rules.extend(rotation_rules);
     rules.extend(operations_rules);
-    rules.extend(split_vectors);
-    rules.extend(assoc);
+    //rules.extend(split_vectors);
+    //rules.extend(assoc);
 
     rules.extend(vec![
         //  Basic associativity/commutativity/identities 8102 / expensive rules
@@ -605,6 +606,5 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
         rw!("associativity"; "(* ?a0 (* ?b0 ?c0))" => "(* (* ?b0 ?c0) ?a0)"),
         rw!("commutativity"; "(+ ?a0 (+ ?b0 ?c0))" => "(+ (+ ?b0 ?c0) ?c0)"),
     ]);
-
     rules
 }

@@ -18,13 +18,13 @@ class Func
 {
 public: 
   Func(
-    std::string name, std::size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
+    std::string name, std::size_t slot_count, bool delayed_reduct, int plain_modulus_bit_size, bool signedness,
     bool need_cyclic_rotation, bool overflow_warnings);
 
   Func(
     std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_cyclic_rotation,
     bool overflow_warnings)
-    : Func(std::move(name), slot_count, true, 1 << bit_width, signedness, need_cyclic_rotation, overflow_warnings)
+    : Func(std::move(name), slot_count, true, bit_width, signedness, need_cyclic_rotation, overflow_warnings)
   {}
 
   template <typename T>
@@ -83,6 +83,9 @@ public:
   inline const std::string &name() const { return name_; }
 
   inline const std::size_t &slot_count() const { return slot_count_; }
+
+  inline const int &plain_modulus() const { return plain_modulus_; }
+
   void set_slot_count(size_t slot_count){
       slot_count_ = slot_count ;
   }
@@ -98,6 +101,8 @@ private:
   std::string name_;
 
   std::size_t slot_count_;
+
+  int plain_modulus_ ;
 
   bool need_cyclic_rotation_;
 

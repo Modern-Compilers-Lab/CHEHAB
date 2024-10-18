@@ -7,8 +7,9 @@ using namespace fheco;
 #include <iostream>
 #include <string>
 #include <vector>
-void fhe(int slot_count){
-  Ciphertext c0("c0");
+/***************************/
+void fhe_vectorized(int slot_count){
+  Ciphertext c0("c0"); 
   Ciphertext c1("c1");
   Ciphertext c2("c2");
   Ciphertext c3("c3");
@@ -16,10 +17,10 @@ void fhe(int slot_count){
   Ciphertext c_result = c1 - (c0 * c0 * c4 + c0 * c3 + c2);
   c_result.set_output("c_result");
 }
-/*********
-void fhe()
+/*******************************************/
+void fhe(int slot_count)
 {
-    size_t size = 4;
+    size_t size = slot_count;
     std::vector<Ciphertext> v0(size);
     std::vector<Ciphertext> v1(size);
     std::vector<Ciphertext> v2(size);
@@ -28,31 +29,30 @@ void fhe()
     std::vector<Ciphertext> output(size);
     for (int i = 0; i < size; i++)
     {
-      v0[i] = Ciphertext("v0_" + std::to_string(i));
+      v0[i] = Ciphertext("c0_" + std::to_string(i));
     }
     for (int i = 0; i < size; i++)
     {
-      v1[i] = Ciphertext("v1_" + std::to_string(i));
+      v1[i] = Ciphertext("c1_" + std::to_string(i));
     }
     for (int i = 0; i < size; i++)
     {
-      v2[i] = Ciphertext("v2_" + std::to_string(i));
+      v2[i] = Ciphertext("c2_" + std::to_string(i));
     }
     for (int i = 0; i < size; i++)
     {
-      v3[i] = Ciphertext("v3_" + std::to_string(i));
-    }
-
-    for (int i = 0; i < size; i++)
-    {
-
-      v4[i] = Ciphertext("v4_" + std::to_string(i));
-      output[i] = v1[i] - (v4[0] * v0[i] * v0[i] + v3[0] * v0[i] + v2[0]);
+      v3[i] = Ciphertext("c3_" + std::to_string(i));
     }
 
     for (int i = 0; i < size; i++)
     {
-      output[i].set_output("output_" + std::to_string(i));
+      v4[i] = Ciphertext("c4_" + std::to_string(i));
+      output[i] = v1[i] + (v4[i] * v0[i] * v0[i] + v3[i] * v0[i] + v2[i]);
+    }
+
+    for (int i = 0; i < size; i++)
+    {
+      output[i].set_output("c_result_" + std::to_string(i));
     }
 }
 /*************/
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     slot_count = stoi(argv[5]);
 
   bool const_folding = true;
-  if (argc > 5)
+  if (argc > 6)
     const_folding = stoi(argv[5]);
 
   if (cse)
@@ -121,9 +121,7 @@ int main(int argc, char **argv)
       cout << " window is " << window << endl;
       Compiler::gen_vectorized_code(func, window);
       Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
-      
       /************/elapsed = chrono::high_resolution_clock::now() - t;
-      
       cout << elapsed.count() << " ms\n";
       if (call_quantifier)
       {
@@ -135,7 +133,7 @@ int main(int argc, char **argv)
   else
   {
       const auto &func = Compiler::create_func(func_name, slot_count, 20, false, true);
-      fhe(slot_count);
+      fhe_vectorized(slot_count);
       string gen_name = "_gen_he_" + func_name;
       string gen_path = "he/" + gen_name;
       ofstream header_os(gen_path + ".hpp");
@@ -147,9 +145,7 @@ int main(int argc, char **argv)
       auto ruleset = Compiler::Ruleset::ops_cost;
       auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
       Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
-      
       /************/elapsed = chrono::high_resolution_clock::now() - t;
-
       cout << elapsed.count() << " ms\n";
       if (call_quantifier)
       {

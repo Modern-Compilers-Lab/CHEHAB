@@ -7,66 +7,8 @@ using namespace fheco;
 #include <iostream>
 #include <string>
 #include <vector>
-
-
-/*#define height 3
-#define width 3
-void fhe(int slot_count)
-{
-  size_t size = (height + 1) * (width + 2) + width + 1 + 6 + 1;
-  std::vector<Ciphertext> v(size);
-  std::vector<Ciphertext> output(size);
-  for (int i = 0; i < size; i++)
-  {
-    v[i] = Ciphertext("v_" + std::to_string(i));
-    output[i] = v[i];
-  }
-  for (int i = 0; i < height + 2; i++)
-  {
-
-    for (int j = 0; j < width + 2; j++)
-    {
-      int ii = i * (width + 2) + j;
-      Ciphertext temp_out = encrypt(0);
-
-      // Top left
-      if (ii - 6 > 0)
-      {
-        temp_out -= v[ii - 6];
-      }
-      // Top right
-      if (ii - 4 > 0)
-      {
-        temp_out += v[ii - 4];
-      }
-      
-      // Middle left
-      if (ii - 1 > 0)
-      {
-        temp_out = temp_out - 2 * v[ii - 1];
-      }
-      // Middle right
-      temp_out = temp_out + 2 * v[ii + 1];
-
-      // Bottom left
-      temp_out = temp_out - v[ii + 4];
-
-      // Bottom right
-      temp_out = temp_out + v[ii + 6];
-      output[ii] = temp_out;
-      // cout << result[ii] << " ";
-      // cout << temp_out << " ";
-    }
-    // cout << endl;
-  }
-
-  for (int i = 0; i < size; i++)
-  {
-    output[i].set_output("output_" + std::to_string(i));
-  }
-}
-*/
-void fhe(int width){
+/*****************************/
+void fhe_vectorized(int width){
   vector<vector<integer>> kernel = {{1, 0, 1}, {2, 0, 2}, {1, 0, 1}};
   Ciphertext img("img");
   Ciphertext top_row = img >> width;
@@ -77,7 +19,49 @@ void fhe(int width){
   Ciphertext result = top_sum + curr_sum + bottom_sum;
   result.set_output("result"); 
 }
-
+/**********************************************************************************/
+void fhe(int width){
+  vector<vector<integer>> kernel = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+  std::vector<std::vector<Ciphertext>> img = std::vector<std::vector<Ciphertext>>(width, std::vector<Ciphertext>(width));
+  std::vector<std::vector<Ciphertext>> output(width, std::vector<Ciphertext>(width));
+  std::cout<<"welcome in fhe \n";
+  for (int i = 0; i < width; i++)
+  {
+    for (int j = 0; j < width; j++) 
+    {
+      img[i][j] = Ciphertext("in_" + std::to_string(i) + std::to_string(j));
+    } 
+  }
+  int rows = width;
+  int cols = width;
+  int halfKernel = 1 ;
+  // Traverse each pixel in the output image
+  for (int i = 0; i < rows; ++i) {
+    for (int j = 0; j < cols; ++j) {
+      Ciphertext sum = encrypt(0);
+      // Traverse the kernel window centered around (i, j)
+      for (int ki = -halfKernel; ki <= halfKernel; ++ki) {
+          for (int kj = -halfKernel; kj <= halfKernel; ++kj) {
+              int ni = i + ki;
+              int nj = j + kj;
+              if (ni >= 0 && ni < rows && nj >= 0 && nj < cols) {
+                  sum += kernel[ki+1][kj+1]*img[ni][nj];
+              }
+          }
+      }
+      output[i][j] = sum ;
+    }
+  }
+  for (int i = 0; i < rows; i++)
+  {
+    for (int j = 0; j < cols; j++)
+    {
+      output[i][j].set_output("out_" + std::to_string(i) + std::to_string(j));
+    }
+  }
+}
+/*******************************************************************************************/
+/*******************************************************************************************/
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
   os << (arg ? name : "no_" + name);
@@ -159,7 +143,7 @@ int main(int argc, char **argv)
       const auto &func = Compiler::create_func(func_name, slot_count, 20, false, true);
       double squareRoot = sqrt(slot_count);
       int width = static_cast<int>(squareRoot);
-      fhe(width);
+      fhe_vectorized(width);
       string gen_name = "_gen_he_" + func_name;
       string gen_path = "he/" + gen_name;
       ofstream header_os(gen_path + ".hpp");
@@ -184,3 +168,62 @@ int main(int argc, char **argv)
   }
   return 0;
 }
+/*
+void fhe(int slot_count)
+{
+  size_t size = (slot_count + 1) * (slot_count + 2) + slot_count + 1 + 6 + 1;
+  std::vector<Ciphertext> v(size);
+  std::vector<Ciphertext> output(size);
+  std::cout<<"welcome in fhe \n";
+  std::cout<<"size is : "<<size<<"\n";
+  for (int i = 0; i < size; i++)
+  {
+    std::cout<<i<<"\n";
+    v[i] = Ciphertext("v_" + std::to_string(i));
+    //output[i] = v[i];
+  }
+  for (int i = 0; i < size; i++)
+  {
+    output[i] = v[i];
+  }
+  for (int i = 0; i < slot_count + 2; i++)
+  {
+    for (int j = 0; j < slot_count + 2; j++)
+    {
+      int ii = i * (slot_count + 2) + j;
+      Ciphertext temp_out = Ciphertext(Plaintext(0));
+
+      // Top left
+      if (ii - 6 > 0)
+      {
+        temp_out -= v[ii - 6];
+      }
+      // Top right
+      if (ii - 4 > 0)
+      {
+        temp_out += v[ii - 4];
+      }
+      
+      // Middle left
+      if (ii - 1 > 0)
+      {
+        temp_out = temp_out - 2 * v[ii - 1];
+      }
+      // Middle right
+      temp_out = temp_out + 2 * v[ii + 1];
+
+      // Bottom left
+      temp_out = temp_out - v[ii + 4];
+
+      // Bottom right
+      temp_out = temp_out + v[ii + 6];
+      output[ii] = temp_out;
+    }
+    // cout << endl;
+  }
+  for (int i = 0; i < size; i++)
+  {
+    output[i].set_output("output_" + std::to_string(i));
+  }
+}
+*/

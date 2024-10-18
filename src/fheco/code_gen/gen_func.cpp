@@ -44,7 +44,7 @@ namespace fheco::code_gen
     gen_rotation_steps_getter_def(func->name(), rotataion_steps, source_os);
     source_os << '\n';
     /****************************************************************/
-    std::cout<<"\n ==>Welcome in encryption params selection : \n";
+    //std::cout<<"\n ==>Welcome in encryption params selection : \n";
     param_select::ParameterSelector selector(func, param_select::EncParams::SecurityLevel::tc128);
     bool use_mod_switch = false ;
     param_select::EncParams params = selector.select_params(use_mod_switch); 

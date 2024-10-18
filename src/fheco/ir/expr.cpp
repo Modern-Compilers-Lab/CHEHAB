@@ -104,8 +104,13 @@ Term *Expr::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
 Term *Expr::insert_input(Term::Type type, InputTermInfo input_term_info)
 {
   Term *term = new Term(move(type));
-  //cout<<"place term in inputs_infos \n";
-  inputs_info_.emplace(term, move(input_term_info));
+  //cout<<"place term in inputs_infos ==> ";
+  bool inserted = inputs_info_.emplace(term, move(input_term_info)).second;
+  //if (inserted){
+  //  std::cout<<"element has been inserted \n";
+  //}else{
+  // std::cout<<"element Not been inserted \n";
+  //}
   terms_.insert(term);
   return term;
 }
@@ -271,10 +276,12 @@ void Expr::update_term_type_cascade(Term *term)
 
 void Expr::set_output(const Term *term, OutputTermInfo output_term_info)
 {
-  if (outputs_info_.insert_or_assign(term, move(output_term_info)).second)
+  if (outputs_info_.insert_or_assign(term, move(output_term_info)).second){
+    output_keys_.push_back(term);  
     valid_top_sort_ = false;
+  }
 }
-
+/*************Need updates ***************/
 void Expr::unset_output(const Term *term)
 {
   if (outputs_info_.erase(term))

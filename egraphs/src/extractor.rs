@@ -225,7 +225,7 @@ where
 
             // Measure the time for the current iteration
             let duration = start_time.elapsed();
-            eprintln!("Iteration {} took {:?}", i, duration);
+            //eprintln!("Iteration {} took {:?}", i, duration);
         }
 
         eprintln!("Total number of iterations: {}", i);

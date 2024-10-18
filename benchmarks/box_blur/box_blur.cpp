@@ -9,9 +9,9 @@ using namespace fheco;
 #include <vector>
 #include <cmath>
 
-
-void fhe(int width){
-  vector<vector<integer>> kernel = {{1, 1, 1}, {1, 8, 1}, {1, 1, 1}};
+/**************************/
+void fhe_vectorized(int width){
+  vector<vector<integer>> kernel = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
   Ciphertext img("img");
   Ciphertext top_row = img >> width; 
   Ciphertext bottom_row = img << width;
@@ -22,52 +22,53 @@ void fhe(int width){
   Ciphertext result = top_sum + curr_sum + bottom_sum;
   result.set_output("result");
 }
-
-/*
-#define height 3
-#define width 3
-void fhe()
+/************************************/
+void fhe(int width)
 { 
   std::vector<std::vector<Ciphertext>> img =
-    std::vector<std::vector<Ciphertext>>(height, std::vector<Ciphertext>(width));
-  std::vector<std::vector<Ciphertext>> output(height, std::vector<Ciphertext>(width));
-  for (int i = 0; i < height; i++)
+    std::vector<std::vector<Ciphertext>>(width, std::vector<Ciphertext>(width));
+  std::vector<std::vector<Ciphertext>> output(width, std::vector<Ciphertext>(width));
+  for (int i = 0; i < width; i++)
   {
     for (int j = 0; j < width; j++)
     {
       img[i][j] = Ciphertext("in_" + std::to_string(i) + std::to_string(j));
-    }
+    } 
   }
+  /*********************************************/
+  int rows = width;
+  int cols = width;
+  int halfKernel = 1;
+  // Traverse each pixel in the output image
+  for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            Ciphertext sum = encrypt(0);
+            // Traverse the kernel window centered around (i, j)
+            for (int ki = -halfKernel; ki <= halfKernel; ++ki) {
+                for (int kj = -halfKernel; kj <= halfKernel; ++kj) {
+                    int ni = i + ki;
+                    int nj = j + kj;
 
-  for (int i = 0; i < height; ++i)
-  {
-    for (int j = 0; j < width; ++j)
-    {
-      if (i == 0 || i == height - 1 || j == 0 || j == width - 1)
-      {
-        output[i][j] = img[i][j];
-        continue;
-      }
-      output[i][j] = img[i - 1][j + 1] + // Top left
-                     img[i + 0][j + 1] + // Top center
-                     img[i + 1][j + 1] + // Top right
-                     img[i - 1][j + 0] + // Mid left
-                     img[i + 0][j + 0] + // Current pixel
-                     img[i + 1][j + 0] + // Mid right
-                     img[i - 1][j - 1] + // Low left
-                     img[i + 0][j - 1] + // Low center
-                     img[i + 1][j - 1]; // Low right
-    }
+                    // Ensure the indices are within the image bounds
+                    if (ni >= 0 && ni < rows && nj >= 0 && nj < cols) {
+                        sum += img[ni][nj];
+                    }
+                }
+            }
+            // Calculate the average for the output pixel
+            output[i][j] = sum ;
+        }
   }
-
-  for (int i = 0; i < height; i++)
+  for (int i = 0; i < width; i++)
   {
     for (int j = 0; j < width; j++)
     {
       output[i][j].set_output("out_" + std::to_string(i) + std::to_string(j));
     }
   }
-}*/
+}
+/******************************************************************************************/
+/******************************************************************************************/
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
   os << (arg ? name : "no_" + name);
@@ -146,10 +147,10 @@ int main(int argc, char **argv)
   }
   else
   {
-      const auto &func = Compiler::create_func(func_name, slot_count, 20, false, true);
-      double squareRoot = sqrt(slot_count);
-      int width = static_cast<int>(squareRoot);
-      fhe(width);
+      const auto &func = Compiler::create_func(func_name, slot_count*slot_count, 20, false, true);
+      //double squareRoot = sqrt(slot_count);
+      //int width = static_cast<int>(squareRoot);
+      fhe_vectorized(slot_count);
       string gen_name = "_gen_he_" + func_name;
       string gen_path = "he/" + gen_name; 
       ofstream header_os(gen_path + ".hpp");

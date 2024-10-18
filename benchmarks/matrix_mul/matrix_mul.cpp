@@ -8,7 +8,7 @@ using namespace fheco;
 #include <string>
 #include <vector> 
 /************/
-void fhe(int slot_count){
+void fhe_vectorized(int slot_count){
   int m_a = slot_count ;
   int n_b = slot_count ;
   vector<Ciphertext> A_row_encrypted ;
@@ -44,7 +44,7 @@ void fhe(int slot_count){
     C_row_encrypted.push_back(cline);
   }  
 }
-/*************** 
+/***********************************************/
 void fhe(int slot_count)
 {
   size_t size = slot_count;
@@ -143,9 +143,7 @@ int main(int argc, char **argv)
       cout << " window is " << window << endl;
       Compiler::gen_vectorized_code(func, window);
       Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
-      
       /************/elapsed = chrono::high_resolution_clock::now() - t;
-      
       cout << elapsed.count() << " ms\n";
       if (call_quantifier)
       {
@@ -157,7 +155,7 @@ int main(int argc, char **argv)
   else
   {
       const auto &func = Compiler::create_func(func_name, slot_count, 20, false, true);
-      fhe(slot_count);
+      fhe_vectorized(slot_count);
       string gen_name = "_gen_he_" + func_name;
       string gen_path = "he/" + gen_name;
       ofstream header_os(gen_path + ".hpp");
@@ -169,9 +167,7 @@ int main(int argc, char **argv)
       auto ruleset = Compiler::Ruleset::ops_cost;
       auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
       Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
-      
       /************/elapsed = chrono::high_resolution_clock::now() - t;
-
       cout << elapsed.count() << " ms\n";
       if (call_quantifier)
       {

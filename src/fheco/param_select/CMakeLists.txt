@@ -6,7 +6,7 @@ set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
 install(
     FILES
         ${CMAKE_CURRENT_LIST_DIR}/enc_params.hpp
-        # ${CMAKE_CURRENT_LIST_DIR}/param_selector.hpp 
+        ${CMAKE_CURRENT_LIST_DIR}/param_selector.hpp 
     DESTINATION
         ${FHECO_INCLUDES_INSTALL_DIR}/param_select
 )

@@ -7,34 +7,36 @@ using namespace fheco;
 #include <iostream>
 #include <string>
 #include <vector>
-void fhe(int slot_count){
+/********************/
+void fhe_vectorized(int slot_count){
   Ciphertext c1("c1");
   Ciphertext c2("c2");
   Ciphertext slot_wise_diff = (c1 - c2) * (c1 - c2);
   Ciphertext sum = SumVec(slot_wise_diff,slot_count);
   sum.set_output("result"); 
 }
-/*********
-void fhe()
+/***************************/
+void fhe(int slot_count)
 {
-  size_t size = 4;
+  size_t size = slot_count;
   std::vector<Ciphertext> v1(size);
   std::vector<Ciphertext> v2(size);
-  std::vector<Ciphertext> output(size);
+  //std::vector<Ciphertext> output(size);
+  Ciphertext output = Ciphertext(Plaintext(0));
   for (int i = 0; i < size; i++)
   {
-    v1[i] = Ciphertext("v1_" + std::to_string(i));
+    v1[i] = Ciphertext("c1_" + std::to_string(i));
   }
   for (int i = 0; i < size; i++)
   { 
-    v2[i] = Ciphertext("v2_" + std::to_string(i));
-    output[i] = (v2[i] - v1[i]) * (v2[i] - v1[i]);
+    v2[i] = Ciphertext("c2_" + std::to_string(i));
+    if(i==0){
+        output = (v2[i] - v1[i]) * (v2[i] - v1[i]); 
+    }else{
+      output += (v2[i] - v1[i]) * (v2[i] - v1[i]);
+    }
   }
-
-  for (int i = 0; i < size; i++)
-  {
-    output[i].set_output("output_" + std::to_string(i));
-  }
+  output.set_output("result");
 }
 /********************************************/
 void print_bool_arg(bool arg, const string &name, ostream &os)
@@ -101,10 +103,8 @@ int main(int argc, char **argv)
         throw logic_error("failed to create source file");
       cout << " window is " << window << endl;
       Compiler::gen_vectorized_code(func, window);
-      Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
-      
-      /************/elapsed = chrono::high_resolution_clock::now() - t;
-      
+      Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);      
+      /************/elapsed = chrono::high_resolution_clock::now() - t;   
       cout << elapsed.count() << " ms\n";
       if (call_quantifier)
       {
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
   else
   {
       const auto &func = Compiler::create_func(func_name, slot_count, 20, true, true);
-      fhe(slot_count);
+      fhe_vectorized(slot_count);
       string gen_name = "_gen_he_" + func_name;
       string gen_path = "he/" + gen_name;
       ofstream header_os(gen_path + ".hpp");
