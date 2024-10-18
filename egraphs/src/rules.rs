@@ -241,7 +241,17 @@ pub fn vectorization_rules(vector_width: usize) -> Vec<Rewrite<VecLang, Constant
         .unwrap();
 
     // Push the rewrite rules into the rules vector
+    /*
+        (Vec ( + ?a0 ?b0 ) ( + ?a1 ?b1 ) ( + ?a2 ?b2 ) ( + ?a3 ?b3 )) =>
+        (VecAdd (Vec ?a0 ?a1 ?a2 ?a3) (Vec ?b0 ?b1 ?b2 ?b3))
+        
+        (Vec ( - ?a0 ?b0 ) ( - ?a1 ?b1 ) ( - ?a2 ?b2 ) ( - ?a3 ?b3 )) =>
+        (VecMinus (Vec ?a0 ?a1 ?a2 ?a3) (Vec ?b0 ?b1 ?b2 ?b3))
 
+        (Vec ( - ?a0 ) ( - ?a1 ) ( - ?a2 ) ( - ?a3 )) =>
+        (VecNeg (Vec ?a0 ?a1 ?a2 ?a3))
+
+    */
     rules.push(rw!(format!("add-vectorize" ); { lhs_add.clone() } => { rhs_add.clone() }));
     rules.push(rw!(format!("mul-vectorize"); { lhs_mul.clone() } => { rhs_mul.clone() }));
     rules.push(rw!(format!("sub-vectorize"); { lhs_sub.clone() } => { rhs_sub.clone() }));
@@ -582,13 +592,12 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
 
     // Vector rules
     rules.extend(vectorization_rules(vector_width));
-
     let rotation_rules = rotation_rules(vector_width, 2);
     let operations_rules = operations_rules(vector_width);
     let split_vectors = split_vectors(vector_width);
     let assoc = commutativity_rules(vector_width);
     //rules.extend(rotation_rules);
-    rules.extend(operations_rules);
+    //rules.extend(operations_rules);
     //rules.extend(split_vectors);
     //rules.extend(assoc);
 
