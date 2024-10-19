@@ -4,7 +4,7 @@ use std::{
     collections::{HashMap, HashSet},
 };
 use std::time::Instant;
-
+use std::vec::Vec;
 use crate::cost;
 pub struct Extractor<'a, CF: cost::CostFunction<L>, L: Language, N: Analysis<L>> {
     cost_function: CF,
@@ -32,7 +32,15 @@ where
                 egraph,
                 cost_function,
             };
-            extractor.find_costs();
+
+            let start = Instant::now();
+            let ordered = Self::topological_sort_with_max_order(egraph, root);
+            let end = start.elapsed();
+
+            //eprintln!("time to sort is : {:?}", end);
+            // eprintln!("the order is : {:?}", ordered);
+
+            extractor.find_costs(ordered);
             extractor
     }
 
@@ -64,7 +72,48 @@ where
         // Return the new node and the best cost
         (expr.add(node), best_cost)
     }
+
+    pub fn topological_sort_with_max_order(egraph: &'a EGraph<L, N>, root: Id) -> Vec<(Id, usize)> {
+        let mut order_map: HashMap<Id, usize> = HashMap::new();  // Store the order of each e-class
+        let mut stack: Vec<(Id, usize)> = vec![(root, 0)];  // Stack to simulate DFS traversal (ID, current order)
+        
+        // Use this set to avoid revisiting eclasses
+        let mut visited: HashSet<Id> = HashSet::new();
     
+        while let Some((id, current_order)) = stack.pop() {
+            // If this eclass has been visited before, skip it
+            if visited.contains(&id) {
+                continue;
+                // eprintln!("visited: {:?} with order : {:?}", id, current_order);
+            }
+    
+            visited.insert(id);  // Mark this eclass as visited
+    
+            // If this eclass has been visited before, update its order with the maximum of current and previous orders
+            let existing_order = order_map.get(&id).copied();
+            let new_order = existing_order.map_or(current_order, |prev_order| prev_order.max(current_order));
+    
+            // Assign the highest order to this eclass
+            order_map.insert(id, new_order);
+    
+            let eclass = &egraph[id];  // Access the eclass once, instead of inside the loop
+    
+            // Traverse through all the enodes in this eclass
+            for enode in eclass.iter() {
+                // For each enode, traverse its children (which are eclasses)
+                for &child_id in enode.children() {
+                    // Push the child eclass to the stack with the incremented order
+                    stack.push((child_id, new_order + 1));
+                }
+            }
+        }
+    
+        // Collect the order_map into a vector and sort it by order in descending order
+        let mut sorted_orders: Vec<(Id, usize)> = order_map.into_iter().collect();
+        sorted_orders.sort_by(|a, b| b.1.cmp(&a.1));  // Sort by the order, high to low
+    
+        sorted_orders  // Return the sorted vector with eclass Ids and their assigned order
+    }
 
     /// Calculates the total cost of a node within an e-graph.
     ///
@@ -188,10 +237,15 @@ where
     ///
     /// Returns:
     /// - None
-    fn find_costs(&mut self) {
+    fn find_costs(&mut self, ordered : Vec<(Id, usize)>) {
         let mut did_something = true;
         let mut sub_classes: HashMap<Id, HashSet<Id>> = HashMap::new();
         let mut i = 0;
+        let mut eclasses: Vec<&EClass<L, N::Data>> = Vec::new();
+        for e in ordered{
+            let eclass = &self.egraph[e.0];
+            eclasses.push(eclass);
+        }
 
         // let mut enode_descendents : HashMap<(L, Id), HashSet<Id>> = Default::default();
         // enode_descendents = Self::find_enode_descendents(self.egraph);
@@ -204,7 +258,7 @@ where
             did_something = false;
             i += 1;
 
-            for class in self.egraph.classes() {
+            for class in &eclasses {
                 let pass = self.make_pass(&mut sub_classes, class);
                 match (self.costs.get(&class.id), pass) {
                     // If the cost is calculated for the first time
@@ -228,7 +282,7 @@ where
             //eprintln!("Iteration {} took {:?}", i, duration);
         }
 
-        eprintln!("Total number of iterations: {}", i);
+        //eprintln!("Total number of iterations: {}", i);
 
         // Log an error message for any e-class that failed to compute a cost
         for class in self.egraph.classes() {

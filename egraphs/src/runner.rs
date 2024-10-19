@@ -7,6 +7,8 @@ use indexmap::IndexMap;
 use std::time::Duration;
 use std::time::Instant;
 use std::collections::hash_map::RandomState;
+use std::collections::HashMap;
+
 
 pub struct Runner<L: Language, N: Analysis<L>, IterData = ()> {
     /// The [`EGraph`] used.
@@ -40,7 +42,7 @@ where
     N: Analysis<L> + Default,
 {
     fn default() -> Self {
-        eprintln!("Hello runner");
+        //eprintln!("Hello runner");
         Runner::new(N::default())
     }
 }
@@ -178,7 +180,7 @@ where
 {
     /// Create a new `Runner` with the given analysis and default parameters.
     pub fn new(analysis: N) -> Self {
-        debug!("Hello runner");
+        //eprintln!("Hello runner");
         Self {
             iter_limit: 30,
             node_limit: 10_000,
@@ -331,14 +333,19 @@ where
 
         let mut matches = Vec::new();
         let mut applied = IndexMap::default();
-        let sample_size = 5;
+        let sample_size = 10;
 
         result = result.and_then(|_| {
             rules.iter().try_for_each(|rw| {
+               
+
+                let start = Instant::now();
+
                 let ms = self.scheduler.search_rewrite(i, &self.egraph, rw);
                 let total_matches: usize = ms.iter().map(|m| m.substs.len()).sum();
 
                 debug!("Rewrite rule '{}' matched {} times.", rw.name, ms.len());
+
 
                 if rw.name.as_str().starts_with("exp"){
                     // Expansive rule: sample matches
@@ -351,17 +358,24 @@ where
                     debug!("Applied all {} matches for rule {}", total_matches, rw.name);
                 }
 
+                let end = start.elapsed();
+
+                // eprintln!("time for searching the rewrte rule {:?} is {:?}", rw.name, end);
+
                 self.check_limits()
             })
         });
 
         let search_time = start_time.elapsed().as_secs_f64();
-        info!("Search time: {}", search_time);
+        // eprintln!("Total Search time: {}", search_time);
 
         let apply_time = Instant::now();
 
         result = result.and_then(|_| {
             rules.iter().zip(matches).try_for_each(|(rw, ms)| {
+
+                let start = Instant::now();
+
                 let total_matches: usize = ms.iter().map(|m| m.substs.len()).sum();
 
                 debug!("Applying {} {} times", rw.name, total_matches);
@@ -379,19 +393,23 @@ where
                     }
                     debug!("Applied {} {} times", rw.name, actually_matched);
                 }
+
+                let end = start.elapsed();
+                // eprintln!("time for applying the rewrte rule {:?} is {:?}", rw.name, end);
+
                 self.check_limits()
             })
         });
 
         let apply_time = apply_time.elapsed().as_secs_f64();
-        info!("Apply time: {}", apply_time);
+        // eprintln!("Total Apply time: {}", apply_time);
 
         let rebuild_time = Instant::now();
         let n_rebuilds = self.egraph.rebuild();
         
 
         let rebuild_time = rebuild_time.elapsed().as_secs_f64();
-        info!("Rebuild time: {}", rebuild_time);
+        // eprintln!("Rebuild time: {}", rebuild_time);
         info!(
             "Size: n={}, e={}",
             self.egraph.total_size(),
@@ -628,7 +646,9 @@ where
     ) -> Vec<SearchMatches<'a, L>> {
         let stats = self.rule_stats(rewrite.name);
         let exp_rule = rewrite.name.as_str().starts_with("exp");
-
+        // Define the limit for the number of matches for expensive rules
+        let max_expensive_matches = 10; // Set this to your desired limit
+    
         if iteration < stats.banned_until {
             debug!(
                 "Skipping {} ({}-{}), banned until {}...",
@@ -636,25 +656,37 @@ where
             );
             return vec![];
         }
-
+    
         let threshold = stats
             .match_limit
             .checked_shl(stats.times_banned as u32)
             .unwrap();
-        let matches = rewrite.search_with_limit(egraph, threshold.saturating_add(1));
+    
+        // For expensive rules, adjust the limit
+        let limit = if exp_rule {
+            threshold.saturating_add(1).min(max_expensive_matches) // Limit matches for expensive rules
+        } else {
+            threshold.saturating_add(1) // No limit for non-expensive rules
+        };
+    
+        // Search for matches with the adjusted limit
+        let matches = rewrite.search_with_limit(egraph, limit);
         let total_len: usize = matches.iter().map(|m| m.substs.len()).sum();
+        // eprintln!("name of rw is : {:?}", rewrite.name.as_str());
+        matches.iter().for_each(|rw| {
+            debug!("new matches : {:?}", rw.substs);
+        });
+        
         if total_len > threshold {
-
             if exp_rule {
-                 // For expensive rules that exceed the threshold, return the matches directly
-                 debug!(
-                    "Returning matches for {} without banning: {} matches exceed threshold {}",
-                    rewrite.name, total_len, threshold
+                // Returning the collected matches for expensive rules
+                debug!(
+                    "Returning limited matches for {}: {} matches exceed threshold {}, limited to {} matches.",
+                    rewrite.name, total_len, threshold, max_expensive_matches
                 );
-                return matches; // Return the matches immediately
-
+                return matches; // Return the matches directly
             } else {
-                // Dealing non-expensive rules by the standard implementation
+                // Dealing with non-expensive rules by the standard implementation
                 let ban_length = stats.ban_length << stats.times_banned;
                 stats.times_banned += 1;
                 stats.banned_until = iteration + ban_length;
@@ -667,13 +699,14 @@ where
                     threshold,
                     total_len,
                 );
-                vec![]
+                return vec![]; // Return an empty vector to indicate banning
             }
         } else {
             stats.times_applied += 1;
-            matches
+            matches // Return all matches for non-expensive rules
         }
     }
+
 }
 
 

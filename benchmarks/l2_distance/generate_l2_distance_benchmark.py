@@ -5,7 +5,7 @@ c1 = np.random.randint(0,10,(function_slot_count))
 c2 = np.random.randint(0,10,(function_slot_count))
 result = np.zeros((function_slot_count)) 
 res = 0 
-for i in range(function_slot_count):
+for i in range(function_slot_count): 
     res+= (c1[i] - c2[i])*(c1[i] - c2[i]) 
 for i in range(function_slot_count):
     result[i]=res 

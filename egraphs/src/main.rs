@@ -50,6 +50,6 @@ fn main() {
 
     // Print the results
     println!("{}", best.to_string()); /* Pretty print with width 80 */
-    //eprintln!("\nCost: {}", cost);
+    eprintln!("\nCost: {}", cost);
     //eprintln!("Time taken: {:?} to finish", duration);
 }

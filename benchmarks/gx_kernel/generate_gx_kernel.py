@@ -1,5 +1,5 @@
 import numpy as np
-from math import sqrt
+from math import sqrt 
 is_vectorization_activated = True
 slot_count = 16 #  4 64 
 n_rows_image = int(sqrt(slot_count))

@@ -4,11 +4,11 @@ using namespace std;
 using namespace fheco;
 #include <chrono>
 #include <fstream>
-#include <iostream>
+#include <iostream> 
 #include <string>
 #include <vector>
 #include <cmath>
-
+ 
 /**************************/
 void fhe_vectorized(int width){
   vector<vector<integer>> kernel = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};

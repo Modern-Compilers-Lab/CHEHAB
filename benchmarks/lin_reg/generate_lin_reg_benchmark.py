@@ -1,7 +1,7 @@
 import numpy as np
 is_vectorization_activated = True 
-function_slot_count= 8
-is_cipher = 1 
+function_slot_count= 4
+is_cipher = 1  
 is_signed = 1
 if is_vectorization_activated :
     m = 5

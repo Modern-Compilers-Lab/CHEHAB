@@ -4,7 +4,7 @@ use egg::*;
 
 use crate::veclang::{Egraph, VecLang};
 
-pub struct VecCostFn<'a> {
+pub struct VecCostFn<'a> { 
     pub egraph: &'a Egraph,
 }
 

@@ -6,7 +6,7 @@ use crate::{
     runner::Runner,
     cost::VecCostFn,
 };
-use std::collections::HashMap; 
+use std::collections::HashMap;
 use std::collections::HashSet;
 use egg::rewrite as rw;
 use egg::*;
@@ -24,6 +24,23 @@ pub fn run(
     let rules = rules(vector_width);
     let mut iteration_count = 0;
     //let mut stop_flag = false;
+    // let start = "(Vec 
+    //     (+ (+ (* a0 (* b0 c0)) d0) (+ (* a1 (* b1 c1)) (* a3 (* b3 c3))))
+    //     (+ (* a2 (* b2 c2)) d1)
+    //     (+ d2 (* a4 (* b4 c4)))
+    //     )".parse().unwrap();
+
+    // let start = "(Vec 
+    // (+ (+ (* a0 b0) c0) d0)
+    // (+ f0 (* g0 e0))
+    // )".parse().unwrap();
+
+    // let start = "(Vec
+    // (+ a b)
+    // (+ d e)
+    // )
+    // ".parse().unwrap();
+
 
     // Start timing the e-graph building process
     let start_time = Instant::now();
@@ -37,24 +54,26 @@ pub fn run(
     let runner = MyRunner::new(Default::default())
         .with_egraph(init_eg)
         .with_expr(&prog)
-        .with_node_limit(10_000)
+        .with_node_limit(200_000)
         .with_time_limit(std::time::Duration::from_secs(timeout))
         .with_iter_limit(10_000)
         .with_hook({
             move |runner| {
                 /* print the egraph after each iteration */
-                iteration_count += 1;
-                // eprintln!("egraph in iteration : {:} ***********", iteration_count);
+                //  eprintln!("egraph in iteration : {:} ***********", iteration_count);
                 // print_egraph(runner.egraph.clone());
                 Ok(())
             }
-        }).run(&rules);
+        })
+        .run(&rules);
 
+        let report = runner.report();
+        //eprintln!("report : {:?}", report);
         /* for the rules , if the rule is expensive we add the prefix exp to its name */
 
     // Stop timing after the e-graph is built
     let build_time = start_time.elapsed();
-    //eprintln!("E-graph built in {:?}", build_time);
+    eprintln!("E-graph built in {:?}", build_time);
 
     // Print the reason for stopping to STDERR
     eprintln!(
@@ -63,13 +82,20 @@ pub fn run(
         runner.stop_reason
     );
 
+   
+
     // Extract the e-graph and the root node
     let (eg, root) = (runner.egraph, runner.roots[0]);
-    //eprintln!("final number of enodes : {:?}", eg.total_size());
+    eprintln!("final number of enodes : {:?}", eg.total_size());
+
+    let find_cycle = Instant::now();
+    find_cycles(&eg);
+    let time_end_cycles = find_cycle.elapsed();
+    //eprintln!("time for finding cyclse is : {:?}", time_end_cycles);
 
     let mut best_cost = usize::MAX;
     let mut best_expr: RecExpr<VecLang> = RecExpr::default();
-    //eprintln!("begining of extraction 0 .... ");
+    eprintln!("begining of extraction 0 .... ");
 
     /* we have 3 ways fot the extraction:
         1) greedy_extraction: takes decisions locally
@@ -77,6 +103,7 @@ pub fn run(
         3) sa_extraction: based on simulating annealing metaheuristic
     */
 
+   
     /************************************ greedy extraction ******************************************/
     let start_extract_time = Instant::now();
     let mut extractor = Extractor::new(&eg, VecCostFn { egraph: &eg }, root);
@@ -105,9 +132,9 @@ pub fn run(
     // let mut n_cost:usize = 0;
 
     // // Parameters for simulated annealing
-    // let max_iteration = 500000;
-    // let initial_temp = 100000.0;
-    // let cooling_rate = 0.95;
+    // let max_iteration = 99900;
+    // let initial_temp = 99990.0;
+    // let cooling_rate = 0.99;
 
     // (best_cost, best_expr) = extractor.find_best(
     //     &eg,
@@ -120,7 +147,7 @@ pub fn run(
     // let extract_time = start_extract_time.elapsed();
 
     // Stop timing after the extraction is complete
-    //eprintln!("display final results");
+    eprintln!("display final results");
     //eprintln!("Expression extraction took {:?}", extract_time);
     //eprintln!("Final cost is {}", best_cost);
     //eprintln!("Extracted Expression : {}", best_expr);
@@ -129,6 +156,56 @@ pub fn run(
     (best_cost, best_expr)
 
 }
+
+fn find_cycles<L, N>(egraph: &EGraph<L, N>) -> Vec<(Id, usize)>
+where
+    L: Language,
+    N: Analysis<L>,
+{
+    enum Color {
+        White,
+        Gray,
+        Black,
+    }
+    type Enter = bool;
+
+    // Structure to store the detected cycles
+    let mut cycles: Vec<(Id, usize)> = Vec::new();
+
+    // Color map to track the state of each e-class
+    let mut color: HashMap<Id, Color> = egraph.classes().map(|c| (c.id, Color::White)).collect();
+
+    // Stack for the depth-first search
+    let mut stack: Vec<(Enter, Id)> = egraph.classes().map(|c| (true, c.id)).collect();
+
+    // Traverse the e-graph
+    while let Some((enter, id)) = stack.pop() {
+        if enter {
+            *color.get_mut(&id).unwrap() = Color::Gray;
+            stack.push((false, id));  // Mark the node for completion after exploring its children
+            
+            // Iterate over each node in the e-class
+            for (i, node) in egraph[id].iter().enumerate() {
+                // Iterate over children of the node
+                for child in node.children() {
+                    match &color[child] {
+                        Color::White => stack.push((true, *child)),  // Traverse deeper if unvisited
+                        Color::Gray => cycles.push((id, i)),  // Cycle detected, push to the result
+                        Color::Black => (),  // Already fully explored
+                    }
+                }
+            }
+        } else {
+            *color.get_mut(&id).unwrap() = Color::Black;  // Mark node as fully processed
+        }
+    }
+
+    //eprintln!("cycles are : {:?}", cycles);
+
+    // Return the detected cycles
+    cycles
+}
+
 
 pub fn print_egraph(
     egraph: Egraph
@@ -241,17 +318,7 @@ pub fn vectorization_rules(vector_width: usize) -> Vec<Rewrite<VecLang, Constant
         .unwrap();
 
     // Push the rewrite rules into the rules vector
-    /*
-        (Vec ( + ?a0 ?b0 ) ( + ?a1 ?b1 ) ( + ?a2 ?b2 ) ( + ?a3 ?b3 )) =>
-        (VecAdd (Vec ?a0 ?a1 ?a2 ?a3) (Vec ?b0 ?b1 ?b2 ?b3))
-        
-        (Vec ( - ?a0 ?b0 ) ( - ?a1 ?b1 ) ( - ?a2 ?b2 ) ( - ?a3 ?b3 )) =>
-        (VecMinus (Vec ?a0 ?a1 ?a2 ?a3) (Vec ?b0 ?b1 ?b2 ?b3))
 
-        (Vec ( - ?a0 ) ( - ?a1 ) ( - ?a2 ) ( - ?a3 )) =>
-        (VecNeg (Vec ?a0 ?a1 ?a2 ?a3))
-
-    */
     rules.push(rw!(format!("add-vectorize" ); { lhs_add.clone() } => { rhs_add.clone() }));
     rules.push(rw!(format!("mul-vectorize"); { lhs_mul.clone() } => { rhs_mul.clone() }));
     rules.push(rw!(format!("sub-vectorize"); { lhs_sub.clone() } => { rhs_sub.clone() }));
@@ -259,23 +326,45 @@ pub fn vectorization_rules(vector_width: usize) -> Vec<Rewrite<VecLang, Constant
     rules
 }
 
-pub fn rotation_rules(vector_width: usize, rotation_amount: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
+pub fn is_not_vector_of_scalar_operations(
+    vars: &'static str, // Make vars static
+) -> impl Fn(&mut Egraph, Id, &Subst) -> bool + 'static {
+    let vars = &vars[5..vars.len() - 2];
+    let vars_vector = vars.split(" ").collect::<Vec<&str>>();
+    move |egraph, _, subst| {
+        let mut no_scalar_operations = true;
+        for var in &vars_vector {
+            let var = var.parse().unwrap();
+            no_scalar_operations = no_scalar_operations
+                && egraph[subst[var]].nodes.iter().any(|n| match n {
+                    VecLang::Num(..) | VecLang::Symbol(..) => true,
+                    _ => false,
+                });
+            if !no_scalar_operations {
+                break;
+            }
+        }
+        return no_scalar_operations;
+    }
+}
+
+pub fn rotation_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
+    // Modify the function to take a static string
+
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
 
-    /****************** zakaria implementation *******************************/
-    // let searcher_combine: Pattern<VecLang> = "( << ( << ?a ?b ) ?c)".parse().unwrap();
-    // let applier_combine: Pattern<VecLang> = " (<< ?a ( + ?b ?c) )".parse().unwrap();
-    // let rule_combine: Rewrite<VecLang, ConstantFold> =
-    //     rw!("rotation_combine" ; {searcher_combine} => {applier_combine});
-    // rules.push(rule_combine);
-    let vector_width: usize = vector_width; // Store vector width in a constant
+    let vector_width: usize = vector_width;
 
-    let lhs = format!(
-        "(Vec {})",
-        (0..vector_width)
-            .map(|i| format!("?a{} ", i))
-            .collect::<String>()
-    );
+    // Create `lhs` as a static str directly
+    let lhs = Box::leak(
+        format!(
+            "(Vec {})",
+            (0..vector_width)
+                .map(|i| format!("?a{} ", i))
+                .collect::<String>()
+        )
+        .into_boxed_str(),
+    ); // Convert String to &'static str using Box::leak
 
     let searcher: Pattern<VecLang> = lhs.parse().unwrap();
 
@@ -288,43 +377,16 @@ pub fn rotation_rules(vector_width: usize, rotation_amount: usize) -> Vec<Rewrit
             vector_width - i
         );
         let applier: Pattern<VecLang> = rhs.parse().unwrap();
-        let rule: Vec<Rewrite<VecLang, ConstantFold>> =
-            rw!(format!("exp-rotations-{}", i); { searcher.clone() } <=> { applier.clone() });
+
+        // Pass `lhs` as a &'static str, no need for clone
+        let rule: Vec<Rewrite<VecLang, ConstantFold>> = rw!(format!("rotations-{}", i); { searcher.clone() } <=> { applier.clone() } if is_not_vector_of_scalar_operations(lhs));
+
         rules.extend(rule);
     }
 
     rules
-    
-
-    /*****************************  my implementation ********************************************/
-    // let vector_width: usize = vector_width;
-
-    // let actual_rotation_amount = if rotation_amount >= vector_width {
-    //     vector_width - 1
-    // } else {
-    //     rotation_amount
-    // };
-
-    // let lhs = format!(
-    //     "(Vec {})",
-    //     (0..vector_width)
-    //         .map(|i| format!("?a{} ", i))
-    //         .collect::<String>()
-    // );
-
-    // let searcher: Pattern<VecLang> = lhs.parse().unwrap();
-    // let rhs = format!(
-    //     "(<< (Vec {}) {})",
-    //     (0..vector_width)
-    //         .map(|j| format!("?a{} ", (actual_rotation_amount + j) % vector_width))
-    //         .collect::<String>(),
-    //         actual_rotation_amount
-    // );
-    // let applier: Pattern<VecLang> = rhs.parse().unwrap();
-    // let rule: Vec<Rewrite<VecLang, ConstantFold>> = rw!(format!("rotations-{}", actual_rotation_amount); { searcher.clone() } <=> { applier.clone() });
-    // rules.extend(rule);
-    // rules
 }
+
 
 pub fn split_vectors(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
@@ -483,122 +545,122 @@ pub fn commutativity_rules(vector_width: usize) -> Vec<Rewrite<VecLang, Constant
 }
 
 
-pub fn operations_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
-    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
+    pub fn operations_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
+        let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
 
-    // Store vector width in a constant
+        // Store vector width in a constant
 
-    // Iterate over each possible position in the vector
-    for i in 0..vector_width {
-        // Initialize vectors to store different patterns
-        let mut vector_add = Vec::new();
-        let mut vector_mul = Vec::new();
-        let mut vector_sub = Vec::new();
-        let mut vector_neg = Vec::new();
-        let mut vector1 = Vec::new();
-        let mut vector2 = Vec::new();
-        let mut vector1_neg = Vec::new();
-        let mut vector2_neg = Vec::new();
-        let mut vector2_mul = Vec::new();
+        // Iterate over each possible position in the vector
+        for i in 0..vector_width {
+            // Initialize vectors to store different patterns
+            let mut vector_add = Vec::new();
+            let mut vector_mul = Vec::new();
+            let mut vector_sub = Vec::new();
+            let mut vector_neg = Vec::new();
+            let mut vector1 = Vec::new();
+            let mut vector2 = Vec::new();
+            let mut vector1_neg = Vec::new();
+            let mut vector2_neg = Vec::new();
+            let mut vector2_mul = Vec::new();
 
-        // Iterate over each element in the vector
-        for j in 0..vector_width {
-            if i == j {
-                // When i equals j, insert the operations
-                vector_add.push(format!("( + ?a{}1 ?a{}2) ", j, j));
-                vector_mul.push(format!("( * ?a{}1 ?a{}2) ", j, j));
-                vector_sub.push(format!("( - ?a{}1 ?a{}2) ", j, j));
-                vector_neg.push(format!("( - ?a{}) ", j));
-                vector1_neg.push("0 ".to_string());
-                vector2_neg.push(format!("?a{}  ", j));
-                vector1.push(format!("?a{}1 ", j));
-                vector2.push(format!("?a{}2 ", j));
-                vector2_mul.push(format!("?a{}2 ", j));
-            } else {
-                // When i does not equal j, insert the vector elements
-                vector_add.push(format!("?a{} ", j));
-                vector_mul.push(format!("?a{} ", j));
-                vector_sub.push(format!("?a{} ", j));
-                vector_neg.push(format!("?a{} ", j));
-                vector1.push(format!("?a{} ", j));
-                vector1_neg.push(format!("?a{} ", j));
-                vector2_neg.push("0 ".to_string());
-                vector2_mul.push("1 ".to_string());
-                vector2.push("0 ".to_string());
+            // Iterate over each element in the vector
+            for j in 0..vector_width {
+                if i == j {
+                    // When i equals j, insert the operations
+                    vector_add.push(format!("( + ?a{}1 ?a{}2) ", j, j));
+                    vector_mul.push(format!("( * ?a{}1 ?a{}2) ", j, j));
+                    vector_sub.push(format!("( - ?a{}1 ?a{}2) ", j, j));
+                    vector_neg.push(format!("( - ?a{}) ", j));
+                    vector1_neg.push("0 ".to_string());
+                    vector2_neg.push(format!("?a{}  ", j));
+                    vector1.push(format!("?a{}1 ", j));
+                    vector2.push(format!("?a{}2 ", j));
+                    vector2_mul.push(format!("?a{}2 ", j));
+                } else {
+                    // When i does not equal j, insert the vector elements
+                    vector_add.push(format!("?a{} ", j));
+                    vector_mul.push(format!("?a{} ", j));
+                    vector_sub.push(format!("?a{} ", j));
+                    vector_neg.push(format!("?a{} ", j));
+                    vector1.push(format!("?a{} ", j));
+                    vector1_neg.push(format!("?a{} ", j));
+                    vector2_neg.push("0 ".to_string());
+                    vector2_mul.push("1 ".to_string());
+                    vector2.push("0 ".to_string());
+                }
             }
+
+            // Parse the left-hand side patterns
+            let lhs_add: Pattern<VecLang> = format!("(Vec {})", vector_add.concat()).parse().unwrap();
+            let lhs_mul: Pattern<VecLang> = format!("(Vec {})", vector_mul.concat()).parse().unwrap();
+            let lhs_sub: Pattern<VecLang> = format!("(Vec {})", vector_sub.concat()).parse().unwrap();
+            let lhs_neg: Pattern<VecLang> = format!("(Vec {})", vector_neg.concat()).parse().unwrap();
+
+            // Parse the right-hand side patterns
+            let rhs_add: Pattern<VecLang> = format!(
+                "(VecAdd (Vec {}) (Vec {}))",
+                vector1.concat(),
+                vector2.concat()
+            )
+            .parse()
+            .unwrap();
+
+            let rhs_mul: Pattern<VecLang> = format!(
+                "(VecMul (Vec {}) (Vec {}))",
+                vector1.concat(),
+                vector2_mul.concat()
+            )
+            .parse()
+            .unwrap();
+
+            let rhs_sub: Pattern<VecLang> = format!(
+                "(VecMinus (Vec {}) (Vec {}))",
+                vector1.concat(),
+                vector2.concat()
+            )
+            .parse()
+            .unwrap();
+
+            let rhs_neg: Pattern<VecLang> = format!(
+                "(VecMinus (Vec {}) (Vec {}))",
+                vector1_neg.concat(),
+                vector2_neg.concat()
+            )
+            .parse()
+            .unwrap();
+
+            // Push the rewrite rules into the rules vector
+            rules.push(rw!(format!("add-split-{}", i); { lhs_add.clone() } => { rhs_add.clone() }));
+            rules.push(rw!(format!("mul-split-{}", i); { lhs_mul.clone() } => { rhs_mul.clone() }));
+            rules.push(rw!(format!("sub-split-{}", i); { lhs_sub.clone() } => { rhs_sub.clone() }));
+            rules.push(rw!(format!("neg-split-{}", i); { lhs_neg } => { rhs_neg }));
         }
 
-        // Parse the left-hand side patterns
-        let lhs_add: Pattern<VecLang> = format!("(Vec {})", vector_add.concat()).parse().unwrap();
-        let lhs_mul: Pattern<VecLang> = format!("(Vec {})", vector_mul.concat()).parse().unwrap();
-        let lhs_sub: Pattern<VecLang> = format!("(Vec {})", vector_sub.concat()).parse().unwrap();
-        let lhs_neg: Pattern<VecLang> = format!("(Vec {})", vector_neg.concat()).parse().unwrap();
-
-        // Parse the right-hand side patterns
-        let rhs_add: Pattern<VecLang> = format!(
-            "(VecAdd (Vec {}) (Vec {}))",
-            vector1.concat(),
-            vector2.concat()
-        )
-        .parse()
-        .unwrap();
-
-        let rhs_mul: Pattern<VecLang> = format!(
-            "(VecMul (Vec {}) (Vec {}))",
-            vector1.concat(),
-            vector2_mul.concat()
-        )
-        .parse()
-        .unwrap();
-
-        let rhs_sub: Pattern<VecLang> = format!(
-            "(VecMinus (Vec {}) (Vec {}))",
-            vector1.concat(),
-            vector2.concat()
-        )
-        .parse()
-        .unwrap();
-
-        let rhs_neg: Pattern<VecLang> = format!(
-            "(VecMinus (Vec {}) (Vec {}))",
-            vector1_neg.concat(),
-            vector2_neg.concat()
-        )
-        .parse()
-        .unwrap();
-
-        // Push the rewrite rules into the rules vector
-        rules.push(rw!(format!("add-split-{}", i); { lhs_add.clone() } => { rhs_add.clone() }));
-        rules.push(rw!(format!("mul-split-{}", i); { lhs_mul.clone() } => { rhs_mul.clone() }));
-        rules.push(rw!(format!("sub-split-{}", i); { lhs_sub.clone() } => { rhs_sub.clone() }));
-        rules.push(rw!(format!("neg-split-{}", i); { lhs_neg } => { rhs_neg }));
+        rules
     }
 
-    rules
-}
-/****************************************************************************************/
-/****************************************************************************************/
 pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![
-        rw!("add-0"; "(+ 0 ?a)" => "?a"),
-        rw!("add-0-2"; "(+ ?a 0)" => "?a"),
-        rw!("mul-0"; "(* 0 ?a)" => "0"),
-        rw!("mul-0-2"; "(* ?a 0)" => "0"),
-        rw!("mul-1"; "(* 1 ?a)" => "?a"),
-        rw!("mul-1-2"; "(* ?a 1)" => "?a"),
-        rw!("comm-factor-1"; "(+ (* ?a0 ?b0) (* ?a0 ?c0))" => "(* ?a0 (+ ?b0 ?c0))"),
-        rw!("comm-factor-2"; "(+ (* ?b0 ?a0) (* ?c0 ?a0))" => "(* ?a0 (+ ?b0 ?c0))"),
+        // rw!("add-0"; "(+ 0 ?a)" => "?a"),
+        // rw!("add-0-2"; "(+ ?a 0)" => "?a"),
+        // rw!("mul-0"; "(* 0 ?a)" => "0"),
+        // rw!("mul-0-2"; "(* ?a 0)" => "0"),
+        // rw!("mul-1"; "(* 1 ?a)" => "?a"),
+        // rw!("mul-1-2"; "(* ?a 1)" => "?a"),
+        // rw!("comm-factor-1"; "(+ (* ?a0 ?b0) (* ?a0 ?c0))" => "(* ?a0 (+ ?b0 ?c0))"),
+        // rw!("comm-factor-2"; "(+ (* ?b0 ?a0) (* ?c0 ?a0))" => "(* ?a0 (+ ?b0 ?c0))"),
     ];
 
     // Vector rules
     rules.extend(vectorization_rules(vector_width));
-    let rotation_rules = rotation_rules(vector_width, 2);
+
+    let rotation_rules = rotation_rules(vector_width);
     let operations_rules = operations_rules(vector_width);
-    let split_vectors = split_vectors(vector_width);
-    let assoc = commutativity_rules(vector_width);
-    //rules.extend(rotation_rules);
-    //rules.extend(operations_rules);
-    //rules.extend(split_vectors);
+    // let split_vectors = split_vectors(vector_width);
+    // let assoc = commutativity_rules(vector_width);
+    // rules.extend(rotation_rules);
+    rules.extend(operations_rules);
+    // rules.extend(split_vectors);
     //rules.extend(assoc);
 
     rules.extend(vec![
@@ -611,9 +673,10 @@ pub fn rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
         // rw!("commute-vecmul"; "(VecMul ?a ?b)" => "(VecMul ?b ?a)"),
         // rw!("assoc-vecadd"; "(VecAdd (VecAdd ?a ?b) ?c)" => "(VecAdd ?a (VecAdd ?b ?c))"),
         // rw!("assoc-vecmul"; "(VecMul (VecMul ?a ?b) ?c)" => "(VecMul ?a (VecMul ?b ?c))"),
-        rw!("exp-comm-mul-add"; "(+ ?c0 (* ?a0 ?b0))" => "(+ (* ?a0 ?b0 ) ?c0)"),   // this is an optimization of the commutativiy rule
-        rw!("associativity"; "(* ?a0 (* ?b0 ?c0))" => "(* (* ?b0 ?c0) ?a0)"),
-        rw!("commutativity"; "(+ ?a0 (+ ?b0 ?c0))" => "(+ (+ ?b0 ?c0) ?c0)"),
+        rw!("exp-comm-mul-add"; "(+ ?c0 (* ?a0 ?b0))" => "(+ (* ?a0 ?b0 ) ?c0)"),
+        // rw!("associativity"; "(* ?a0 (* ?b0 ?c0))" => "(* (* ?b0 ?c0) ?a0)"),
+        // rw!("commutativity"; "(+ ?a0 (+ ?b0 ?c0))" => "(+ (+ ?b0 ?c0) ?c0)"),
     ]);
+
     rules
 }

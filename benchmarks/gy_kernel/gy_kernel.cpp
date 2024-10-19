@@ -7,7 +7,7 @@ using namespace fheco;
 #include <iostream>
 #include <string>
 #include <vector>
-/*****************************/
+/*****************************/ 
 void fhe_vectorized(int width){
   vector<vector<integer>> kernel = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
   Ciphertext img("img");
@@ -141,9 +141,8 @@ int main(int argc, char **argv)
   }
   else
   {
-      const auto &func = Compiler::create_func(func_name, slot_count, 20, false, true);
-      double squareRoot = sqrt(slot_count);
-      int width = static_cast<int>(squareRoot);
+      const auto &func = Compiler::create_func(func_name, slot_count*slot_count , 20, false, true);
+      int width = slot_count;
       fhe_vectorized(width);
       string gen_name = "_gen_he_" + func_name;
       string gen_path = "he/" + gen_name;

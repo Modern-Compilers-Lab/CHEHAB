@@ -276,7 +276,7 @@ pub fn run(
                         &mut cycles
                     );
 
-                    eprintln!("All detected cycles: {:?}", cycles);
+                    //eprintln!("All detected cycles: {:?}", cycles);
 
     // Extract the e-graph and the root node
     let (eg, root) = (runner.egraph, runner.roots[0]);

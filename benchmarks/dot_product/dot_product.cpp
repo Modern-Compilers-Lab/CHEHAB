@@ -6,7 +6,7 @@ using namespace fheco;
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <vector>
+#include <vector> 
 #include <cmath>
 
 /****************/

@@ -9,7 +9,7 @@ def generate_matrix(mat : Matrix):
     result = []
     for i in range(mat.nb_rows): 
         temp = []
-        for j in range(mat.nb_cols): 
+        for j in range(mat.nb_cols):  
             temp.append(random.randrange(0,10))
         result.append(temp)
     return result 
@@ -22,7 +22,7 @@ def multiply_matrixes(A : Matrix,B : Matrix):
 #############################################################################################################
 #############################################################################################################
 is_vectorization_activated = True
-function_slot_count= 8
+function_slot_count= 4
 is_cipher = 1 
 is_signed = 0
 matrix_A = Matrix(nb_rows=function_slot_count,nb_cols=function_slot_count)

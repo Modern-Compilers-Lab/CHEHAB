@@ -471,7 +471,6 @@ void Compiler::call_vectorizer(int vector_width)
 /**************************************************************************************/
 using namespace std ;
 std::unordered_map<int, std::string> labels_map;
-string new_inputs;
 std::vector<string> new_inputs_labels ;
 int id_counter = 0;
 /**************************************************************************/
@@ -559,6 +558,8 @@ ir::Term *Compiler::build_expression(const std::shared_ptr<ir::Func> &func, map<
           return func->insert_op_term(move(operation), move(operands));
         }else{
           vector<ir::Term *> operands = {operand1, operand2};
+          // we need to add addditional treatments if they both plaintexts 
+          // we need to evaluate they and insterm the new resulted term 
           return func->insert_op_term(move(operation), move(operands));
         }
       }
@@ -625,6 +626,7 @@ std::pair<std::string, int> process(
     const std::vector<std::string>& tokens,
     int index,
     std::unordered_map<std::string, std::string>& dictionary,
+    std::unordered_map<std::string, std::string>& inputs_entries,
     const std::vector<std::string>& inputs,
     const std::vector<std::string>& inputs_types,
     int slot_count,
@@ -699,7 +701,8 @@ std::pair<std::string, int> process(
                                       new_element = "1 1 " + new_element;
                                       new_inputs_labels.push_back(label);
                                       labels_map[id_counter] = label;
-                                      new_inputs += label+" "+new_element + "\n";
+                                      inputs_entries[label]=new_element;
+                                      //new_inputs += label+" "+new_element + "\n";
                                       id_counter++;
                                       dictionary[temp_str] = label;
                                       /*****/sub_vector_expression+=" "+label ;
@@ -751,11 +754,12 @@ std::pair<std::string, int> process(
                     }
                     new_inputs_labels.push_back(label);
                     labels_map[id_counter] = label;
-                    new_inputs += label+" "+new_input + "\n";
+                    inputs_entries[label]=new_input;
+                    //new_inputs += label+" "+new_input + "\n";
                     id_counter++;
                     dictionary[string_vector] = label;
                     if(nb_sub_elements>0){
-                      sub_vector_expression+=" "+label;
+                      sub_vector_expression+=" "+label; 
                       for(int i=0;i<nb_sub_elements;i++){
                         sub_vector_expression+=" )";
                       }
@@ -773,13 +777,13 @@ std::pair<std::string, int> process(
             std::string op = (operation == "VecAdd") ? "+" : (operation == "VecMinus") ? "-" : (operation == "VecMul") ? "*" : "<<";
             /*****/new_expression+=" "+op ;
             index++;
-            auto [operand_1, new_index] = process(tokens, index, dictionary, inputs, inputs_types, slot_count, sub_vector_size,new_expression);
+            auto [operand_1, new_index] = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression);
             index = new_index;
             /**************************/
             if (tokens[index] != ")") {
                 std::string operand_2;
                 if (tokens[index] == "(") {
-                    std::tie(operand_2, index) = process(tokens, index, dictionary, inputs, inputs_types, slot_count, sub_vector_size,new_expression);
+                    std::tie(operand_2, index) = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression);
                 } else {
                     operand_2 = tokens[index];
                     new_expression+=" "+operand_2;
@@ -816,7 +820,197 @@ std::vector<std::string> split_string(const std::string& str, char delimiter) {
     return substrings;
 }
 /************************************************************************/
-void update_io_file(const string& updated_inputs,const vector<string> updated_outputs, int new_slot_count){
+std::vector<int> split_string_ints(const std::string& str, char delimiter) {
+    std::vector<int> composingValues;
+    std::stringstream ss(str);
+    std::string token;
+    while (std::getline(ss, token, delimiter)) {
+      try{
+          composingValues.push_back(stoi(token));
+      }catch(exception e){
+        throw invalid_argument("value :"+token+" cant be converted to int");
+      }
+    }
+    return composingValues;
+}
+/************************************************************************/
+std::string vectorToString(const std::vector<int>& vec) {
+    std::ostringstream oss;
+    
+    for (size_t i = 0; i < vec.size(); ++i) {
+        if (i != 0) {
+            oss << " ";  // Add a space before every element except the first
+        }
+        oss << vec[i];  // Add the element
+    }
+    
+    return oss.str();
+}
+/**********************************************************************/
+string vector_constant_folding(queue<string> &tokens,unordered_map<string,string>& input_entries)
+{
+  while (!tokens.empty())
+  {
+    if (tokens.front() == "(")
+    {
+      //std::cout<<"here\n";
+      tokens.pop();
+      string operationString = tokens.front();
+      tokens.pop();
+      string potential_step = "";
+      string operand1="" ,operand2="";
+      if (tokens.front() == "(")
+      {
+        operand1 = vector_constant_folding(tokens,input_entries);
+      }
+      else
+      {
+        operand1 = tokens.front();
+        tokens.pop();
+      }
+      if (tokens.front() == "(")
+      {
+        operand2 = vector_constant_folding(tokens,input_entries);
+        potential_step += " ";
+
+      }
+      else if (tokens.front() != ")")
+      {
+        operand2 = tokens.front();
+        potential_step = tokens.front();
+        tokens.pop();
+      }
+
+      // Check for the closing parenthesis
+      if (tokens.front() == ")")
+      {
+        tokens.pop();
+      }
+      if (potential_step.size() > 0)
+      {
+        //std::cout<<operationString<<" "<<operand1<<" "<<operand2<<" \n";
+        string type_op1 = operand1.substr(0,1);
+        string type_op2 = operand2.substr(0,1);
+        //std::cout<<type_op1<<" "<<type_op2<<" \n";
+        if(type_op1=="p"&&type_op2=="p"){
+            if (input_entries.find(operand1) == input_entries.end()){
+              throw invalid_argument("given plaintext_label :"+operand1+" doesnt exist in input_entries");
+            }
+            if (input_entries.find(operand2) == input_entries.end()){
+              throw invalid_argument("given plaintext_label :"+operand2+" doesnt exist in input_entries");
+            }
+            string header = input_entries.at(operand1).substr(0,4);
+            vector<int> vec1 = split_string_ints(input_entries.at(operand1).substr(4),' ');
+            vector<int> vec2 = split_string_ints(input_entries.at(operand2).substr(4),' ');
+             if (vec1.size() != vec2.size()) {
+               throw invalid_argument("vectors are of different lengths");
+            }
+            bool all_vec1_values_eq0 = true ;
+            bool all_vec2_values_eq0 = true ;
+            for(int i =0;i<vec1.size();i++){
+               if(vec1[i]!=0){
+                  all_vec1_values_eq0 = false ;
+               }
+               if(vec2[i]!=0){
+                  all_vec2_values_eq0 = false ;
+               }
+            }
+            if(all_vec1_values_eq0&&all_vec2_values_eq0){
+                return operand1 ;
+            }else if(all_vec1_values_eq0){
+                return operand2 ;
+            }else if(all_vec2_values_eq0){
+               return operand1 ;
+            }else{
+              // Resize 'values' to match the size of 'vec1' (and 'vec2')
+              vector<int> values ;
+              values.resize(vec1.size());
+              if (operationString=="+"){
+                for(int i =0;i<vec1.size();i++){
+                  values[i]=vec1[i]+vec2[i];
+                }
+              }else if(operationString=="-"){
+                for(int i =0;i<vec1.size();i++){
+                  values[i]=vec1[i]-vec2[i];
+                }
+              }else if(operationString=="*"){
+                for(int i =0;i<vec1.size();i++){
+                  values[i]=vec1[i]*vec2[i];
+                }
+              }
+              string new_input = vectorToString(values);
+              new_input=header+new_input;
+              string label = "p" + std::to_string(id_counter);
+              id_counter++;
+              input_entries.insert({label,new_input});
+              return label ;
+            }
+        }else if(type_op1=="p"){
+            if (input_entries.find(operand1) == input_entries.end()){
+              throw invalid_argument("given plaintext_label :"+operand1+" doesnt exist in input_entries");
+            }
+            string header = input_entries.at(operand1).substr(0,4);
+            vector<int> vec1 = split_string_ints(input_entries.at(operand1).substr(4),' ');
+            bool all_vec1_values_eq0 = true ;
+            for(int i =0;i<vec1.size();i++){
+               if(vec1[i]!=0){
+                  all_vec1_values_eq0 = false ;
+               }
+            }
+            if(all_vec1_values_eq0){
+                if(operationString=="+"){
+                    return operand2 ;
+                }else if (operationString=="*"){
+                    return operand1 ;
+                }else if (operationString=="-"){
+                    return "( "+operationString+" "+operand2+" )";
+                }else if (operationString=="<<"){
+                  return "";
+                }
+            }else{ 
+              return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+            }
+        }else if(type_op2=="p"){
+            if (input_entries.find(operand2) == input_entries.end()){
+              throw invalid_argument("given plaintext_label :"+operand2+" doesnt exist in input_entries");
+            }
+            string header = input_entries.at(operand2).substr(0,4);
+            vector<int> vec2 = split_string_ints(input_entries.at(operand2).substr(4),' ');
+            bool all_vec2_values_eq0 = true ;
+            for(int i =0;i<vec2.size();i++){
+               if(vec2[i]!=0){
+                  all_vec2_values_eq0 = false ;
+               }
+            }
+            if(all_vec2_values_eq0){
+                if(operationString=="+"){
+                    return operand1 ;
+                }else if (operationString=="*"){
+                    return operand2 ;
+                }else if (operationString=="-"){
+                    return operand1 ;
+                }
+            }else{ 
+              return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+            }
+        }else{
+          return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+        }
+      }
+      else 
+      {
+        return " ( "+operationString+" "+operand1+" )" ;
+      }
+    }
+    else
+    {
+      return tokens.front();
+    }
+  }
+  throw logic_error("Invalid expressionnn");
+}
+/************************************************************************/
+void update_io_file(const unordered_map<string,string>& input_entries,const vector<string> updated_outputs, int new_slot_count){
    std::string inputs_file_name = "fhe_io_example.txt";
    std::ifstream input_file(inputs_file_name);
    std::string line ;
@@ -833,7 +1027,6 @@ void update_io_file(const string& updated_inputs,const vector<string> updated_ou
         std::cerr << "Unable to open file: " << inputs_file_name << std::endl;
     }
     /***************************************************************************/
-    vector<string> separated_updated_inputs = split_string(updated_inputs, '\n');
     std::unordered_map<string,string> plaintexts;
     std::unordered_map<string,string> ciphertexts;
     std::vector<string> old_header = split_string(lines[0], ' '); 
@@ -866,34 +1059,30 @@ void update_io_file(const string& updated_inputs,const vector<string> updated_ou
     string updated_inputs_file_name = "fhe_io_example_adapted.txt" ;
     std::ofstream updated_input_file(updated_inputs_file_name);
     /**********************************************************/
-    string new_header = std::to_string(new_slot_count)+" "+std::to_string(separated_updated_inputs.size())+" "+std::to_string(updated_outputs.size())+"\n";
+    string new_header = std::to_string(new_slot_count)+" "+std::to_string(input_entries.size())+" "+std::to_string(updated_outputs.size())+"\n";
     updated_input_file << new_header;
     string updated_input ="" ;
-    for(int i = 0 ;i<separated_updated_inputs.size();i++){
-        updated_input ="" ;
-        vector<std::string> tokens = split_string(separated_updated_inputs[i], ' ');
-        if(tokens.size()>3){
-            updated_input=tokens[0]+" "+tokens[1]+" "+tokens[2]+" ";
-            int type = stoi(tokens[1]);
-            for(int i =3; i<tokens.size() ; i++){
-                string key = tokens[i];
-                if(!is_literal(key)){
-                    string value =""; 
-                    if (ciphertexts.find(key) != ciphertexts.end()) {
-                        updated_input+=ciphertexts[key];  // Access the value corresponding to the key
-                    } else {
-                        throw invalid_argument("key : "+key+" Not found in ciphertxts map \n");
-                    }
-                }else{
-                    updated_input+=key+" ";
-                }
+    for(const auto&pair : input_entries){
+        string vectorString = pair.second.substr(4);
+        string addionalInfo = pair.second.substr(0,4);
+        updated_input=pair.first+" "+addionalInfo;
+        vector<std::string> Valuestokens = split_string(vectorString, ' ');
+        for(int i =0; i<Valuestokens.size() ; i++){
+            string key = Valuestokens[i];
+            if(!is_literal(key)){
+              string value =""; 
+              if (ciphertexts.find(key) != ciphertexts.end()) {
+                  updated_input+=ciphertexts[key];  // Access the value corresponding to the key
+              } else {
+                  throw invalid_argument("key : "+key+" Not found in ciphertxts map \n");
+              }
+            }else{
+              updated_input+=key+" ";
             }
-            updated_input+="\n";
-            //std::cout<<updated_input ;
-            updated_input_file << updated_input;
-        }else{
-            throw invalid_argument("malfomated updated inputs\n");
         }
+        updated_input+="\n";
+        //std::cout<<updated_input ;
+        updated_input_file << updated_input;
     }
     for(int j=0;j<updated_outputs.size();j++){
         updated_input=updated_outputs[j]+" 1";
@@ -909,7 +1098,6 @@ void update_io_file(const string& updated_inputs,const vector<string> updated_ou
 /************************************************************************/
 void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
 {
-    new_inputs = "";
     new_inputs_labels = {};
     std::string inputs_file = "../inputs.txt";
     std::ifstream input_file(inputs_file);
@@ -943,21 +1131,59 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     //std::cout<<"slot_count : "<<slot_count<<" \n";
     //std::cout<<"sub_vector_size : "<<sub_vector_size<<" \n";
     std::vector<std::string> outputs;
-    string simplified_expression = "";
+    vector<string> simplified_expressions= {};
+    string simplified_expression="";
     //std::cout<<"Start Processing of vectorized code :\n" ;
+    unordered_map<string,string> inputs_entries ={};
     for (const auto& expr : expressions) {
         if (&expr == &expressions.back()) break;
         auto tokens = process_vectorized_code(expr);
         std::unordered_map<std::string, std::string> dictionary = {};
-        process(tokens,0,dictionary, inputs, inputs_types, slot_count, sub_vector_size,simplified_expression);
-        simplified_expression+="\n";
+        process(tokens,0,dictionary,inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,simplified_expression);
+        simplified_expressions.push_back(simplified_expression.substr(1));
+        simplified_expression="";
         outputs.push_back(labels_map[id_counter - 1]);
     }
-    simplified_expression = simplified_expression.substr(1); 
+    /*string info_tmp ="( + ( * ( + ( * ( * ( + ( * c0 c1 ) ( + ( * c0 c2 ) ( + ( * c0 c3 ) ( + ( * c0 c4 ) ( + ( * c0 c5 ) ( + ( * c0 c6 ) ( * c0 c7 ) ) ) ) ) ) ) c9 ) c11 ) ( + ( * ( + ( * c13 c14 ) ( + ( * c15 c16 ) ( + ( * c17 c18 ) ( + ( * c19 c20 ) ( + ( * c21 c22 ) ( + ( * c23 c24 ) ( + ( * c25 c26 ) ( + ( * c27 c28 ) ( + ( * c29 c30 ) ( + ( * c31 c32 ) ( + ( * c33 c34 ) c35 ) ) ) ) ) ) ) ) ) ) ) p36 ) ( + ( + ( * c38 c39 ) ( + ( * c0 c40 ) ( + ( * c0 c41 ) ( + ( * c0 c42 ) ( + ( * c0 c43 ) ( + ( * c0 c44 ) ( + ( * c0 c45 ) ( + ( * c0 c46 ) ( + ( * c0 c47 ) ( + ( * c0 c48 ) ( + ( * c0 c49 ) ( * c0 c50 ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c0 c52 ) ( + ( * c53 c54 ) ( + ( * c55 c56 ) ( + ( * c0 c57 ) ( + ( * c58 c59 ) ( + ( * c60 c61 ) ( + ( * c62 c63 ) ( + ( * c0 c64 ) ( + ( * c65 c66 ) ( + ( * c67 c68 ) ( + ( * c69 c70 ) ( + ( * c0 c71 ) ( + ( * c72 c73 ) ( + ( * c74 c75 ) ( + ( * c76 c77 ) ( * c0 c78 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( * c35 p36 ) ) ( * ( + ( * ( * ( + ( * c1 c14 ) ( + ( * c2 c16 ) ( + ( * c4 c22 ) ( + ( * c5 c24 ) ( + ( * c6 c28 ) ( + ( * c90 c30 ) ( + ( * c7 c32 ) c91 ) ) ) ) ) ) ) p92 ) p36 ) ( + ( * ( + ( * c0 c13 ) ( + ( * c0 c15 ) ( + ( * c0 c17 ) ( + ( * c0 c19 ) ( + ( * c0 c21 ) ( + ( * c0 c23 ) ( + ( * c0 c25 ) ( + ( * c0 c27 ) ( + ( * c0 c29 ) ( + ( * c0 c31 ) ( * c0 c33 ) ) ) ) ) ) ) ) ) ) ) c96 ) ( + ( + ( * c0 c38 ) ( + ( * c40 c54 ) ( + ( * c41 c56 ) ( + ( * c0 c58 ) ( + ( * c0 c60 ) ( + ( * c0 c62 ) ( + ( * c0 c65 ) ( + ( * c0 c67 ) ( + ( * c0 c69 ) ( + ( * c0 c72 ) ( + ( * c0 c74 ) ( * c0 c76 ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c52 c39 ) ( + ( * c0 c53 ) ( + ( * c0 c55 ) ( + ( * c57 c99 ) ( + ( * c42 c59 ) ( + ( * c43 c61 ) ( + ( * c44 c63 ) ( + ( * c64 c100 ) ( + ( * c45 c66 ) ( + ( * c46 c68 ) ( + ( * c47 c70 ) ( + ( * c71 c101 ) ( + ( * c48 c73 ) ( + ( * c49 c75 ) ( + ( * c50 c77 ) ( * c78 c102 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c91 p92 ) p36 ) ) )";
+    vector<string> updated_cons_fd_expressions ={} ;
+    updated_cons_fd_expressions = simplified_expressions ;*/
+    //updated_cons_fd_expressions.push_back(info_tmp);
     //std::cout<<"Updated IR : "<<simplified_expression<<" \n";
     /*****************************************************************/
     /*****************************************************************/
-    update_io_file(new_inputs,outputs,sub_vector_size);
+    // applying constant forlding for vectors 
+    vector<string> updated_cons_fd_expressions = {};
+    for(const auto& expr : simplified_expressions){
+        auto tokens1 = split(expr);
+        string res = vector_constant_folding(tokens1,inputs_entries);
+        updated_cons_fd_expressions.push_back(res);
+    }
+    vector<string> labels = {};
+    for (const auto& pair : inputs_entries) {
+      labels.push_back(pair.first);  // Access the key via pair.first
+    }
+    unordered_map<string,int> inputs_occurences ={};
+    for(auto label : labels){
+      inputs_occurences.insert({label,0});
+    }
+    for(const auto &expr : updated_cons_fd_expressions){
+        vector<string> tokens = split_string(expr,' ');
+        for(int i =0;i<tokens.size();i++){
+          for(auto label : labels){
+              if(label==tokens[i]){
+                inputs_occurences[label]+=1;
+              }
+          }
+        }        
+    }
+    for(auto label : labels){
+      if(inputs_occurences[label]==0){
+        inputs_entries.erase(label);
+      }
+    }  
+    /*****************************************************************/
+    /*****************************************************************/
+    update_io_file(inputs_entries,outputs,sub_vector_size);
     std::cout<<"==>IO file updated succefully \n";
     /*****************************************************************/
     /*******Convert simplified_vectorized IR  *************************/
@@ -968,19 +1194,14 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     pr.make_terms_str_expr(util::ExprPrinter::Mode::prefix);
     map<string, ir::Term *> myMap;
     ////**********Storing input infos *********************
-    vector<string> new_input_infos = split_string(new_inputs,'\n');
     //std::cout<<"Creating the new inputs \n";
-    for(auto new_input_info : new_input_infos){
+    for(const auto& new_input_info : inputs_entries){
       //std::cout<<new_input_info<<" \n";
-      vector<std::string> tokens = split_string(new_input_info, ' ');
-      string label = tokens[0]; 
-      int type = stoi(tokens[1]);
-      if(type==1){
-          //std::cout<<"here c\n";
+      string label = new_input_info.first ;
+      if(label.substr(0,1)=="c"){
           Ciphertext cipher(label);
           func->init_input(cipher,move(label));
       }else{
-          //std::cout<<"here1 \n";
           Plaintext plain(label);
           func->init_input(plain,move(label));
       }
@@ -994,7 +1215,6 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     //std::cout<<"Store input_elements in myMap \n";
     for (auto input_info : func->data_flow().inputs_info())
     {
-      //std::cout<<"insert term in myMap with label :"<<input_info.second.label_<<"\n";
       ir::Term *temp = const_cast<ir::Term *>(input_info.first);
       myMap[input_info.second.label_] = temp;
     }
@@ -1008,33 +1228,22 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     ////////////////////////
     std::reverse(output_terms.begin(), output_terms.end());
     std::string new_term_str ;
-    stringstream ss(simplified_expression);
     int index=0;
     //std::cout<<"Number of function inputs : "<<func->data_flow().inputs_info().size()<<"\n";
     //std::cout<<"Start expression traitment ====> \n";
-    while (getline(ss,new_term_str)) {
-          std::cout<<new_term_str<<" \n";
-          if (!new_term_str.empty()) {  // Ensure that we do not push empty tokens
-              //std::cout<<"here \n";
-              auto tokens = split(new_term_str);
-              //std::cout<<"here1 \n";
-              auto new_term = build_expression(func, myMap, tokens);
-              //std::cout<<"here2 \n";
-              auto old_term = const_cast<ir::Term *>(output_terms[index]);
-              func->replace_term_with(old_term, new_term);
-              //std::cout<<"here3 \n";
-              index+=1;
-          }
+    for(const auto &new_term_str : updated_cons_fd_expressions){
+      std::cout<<new_term_str<<" \n";
+      if (!new_term_str.empty()) {  // Ensure that we do not push empty tokens
+        //std::cout<<"here \n";
+        auto tokens = split(new_term_str);
+        //std::cout<<"here1 \n";
+        auto new_term = build_expression(func, myMap, tokens);
+        //std::cout<<"here2 \n";
+        auto old_term = const_cast<ir::Term *>(output_terms[index]);
+        func->replace_term_with(old_term, new_term);
+        //std::cout<<"here3 \n";
+        index+=1;
+      }
     }
-    //std::cout<<"Number of function inputs : "<<func->data_flow().inputs_info().size()<<"\n";
-    /*******************************************************************/
-    /*******************************************************************/
-    /*const char *command = "python3 ../script.py ";
-    int result = system(command);
-    if (result != 0)
-    {
-      // The executable did not run successfully
-      std::cout << "Failed to call the script " << std::endl;
-    }*/
 }
 } // namespace fheco
