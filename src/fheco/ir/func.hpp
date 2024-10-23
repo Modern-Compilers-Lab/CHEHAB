@@ -41,6 +41,8 @@ public:
 
   template <typename T>
   void set_output(const T &out, std::string label);
+  
+  void update_negative_rotation_steps(int polynomial_modulus_degree);
 
   inline Term *insert_op_term(OpCode op_code, std::vector<Term *> operands)
   {

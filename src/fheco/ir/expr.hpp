@@ -82,9 +82,11 @@ public:
 
   inline const orderedOutputTermsKeys &output_keys() const { return output_keys_ ;}
 
-  const std::vector<const Term *> &get_top_sorted_terms();
+  const std::vector<const Term *> &get_top_sorted_terms(); 
 
   const std::vector<std::size_t> &get_top_sorted_terms_ids();
+
+  void update_negative_rotation_steps(int polynomial_modulus_degree) ;
 
   bool valid_top_sort() const { return valid_top_sort_; }
 

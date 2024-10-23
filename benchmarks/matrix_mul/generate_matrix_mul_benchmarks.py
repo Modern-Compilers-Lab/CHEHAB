@@ -22,7 +22,7 @@ def multiply_matrixes(A : Matrix,B : Matrix):
 #############################################################################################################
 #############################################################################################################
 is_vectorization_activated = True
-function_slot_count= 4
+function_slot_count= 16
 is_cipher = 1 
 is_signed = 0
 matrix_A = Matrix(nb_rows=function_slot_count,nb_cols=function_slot_count)

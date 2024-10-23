@@ -1,1 +1,10 @@
-benchmark,compile_time( ms ),execution_time (ms),add,sub,multiply_plain,rotate_rows,square,multiply,Depth,Multplicative Depth
+benchmark,add,sub,multiply_plain,rotate_rows,square,multiply,Depth,Multplicative Depth,compile_time( ms ),execution_time (ms)
+hamming_dist,15,8,8,0,0,16,10,2,109.44092,109.886
+poly_reg,3,0,0,0,0,3,5,2,2660.642,41.10296
+lin_reg,2,0,1,0,0,1,3,1,2461.046,0.2530536
+l2_distance,7,8,0,0,0,8,9,1,85.24958,51.28406
+dot_product,7,0,0,0,0,8,8,1,79.13813999999999,51.651360000000004
+box_blur,291,0,0,0,0,0,65,0,21738.76,40.228699999999996
+gx_kernel,547,0,1,0,0,484,72,1,1845026.0,9329.234
+gy_kernel,484,0,1,0,0,421,72,1,1301966.0,8118.254
+sobel,484,0,1,0,0,422,71,2,1450040.0,16945.32

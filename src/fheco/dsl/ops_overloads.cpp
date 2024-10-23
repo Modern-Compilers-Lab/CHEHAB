@@ -224,21 +224,20 @@ Plaintext operator-(const Plaintext &arg)
   return dest;
 }
 
-// rotation
+// rotation  
 Ciphertext rotate(const Ciphertext &arg, int steps)
 {
   if (arg.idx().size())
     throw invalid_argument("subscript read must be performed on const variables");
 
   auto signed_slot_count = static_cast<int64_t>(Compiler::active_func()->slot_count());
-  int abs_rotation = abs(steps);
-  int real_slot_count = 2048 ;
+  //int real_slot_count = 2048 ;
   if (steps >= signed_slot_count || steps < 0)
   {
     steps %= signed_slot_count;
-    std::cout<<"rotations in ops_overloads :"<<steps<<" \n";
+    /*std::cout<<"rotations in ops_overloads :"<<steps<<" \n";
     if (steps < 0) 
-      steps += real_slot_count;
+      steps += real_slot_count;*/
   }
   
   Ciphertext dest{};

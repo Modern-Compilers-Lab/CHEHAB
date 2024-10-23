@@ -316,7 +316,9 @@ const map<int, map<size_t, ParameterSelector::NoiseEstimatesValue>> ParameterSel
 
 EncParams ParameterSelector::select_params(bool &use_mod_switch)
 {
-  return select_params_bfv(use_mod_switch);
+  EncParams params = select_params_bfv(use_mod_switch);
+  program_->update_negative_rotation_steps(params.poly_mod_degree());
+  return params;
 }
 /*********************************************************************************/
 /*********************************************************************************/
@@ -439,7 +441,7 @@ int ParameterSelector::simulate_noise_bfv(
     {{ir::OpCode::relin, ir::Term::Type::cipher, ir::Term::Type::undefined}, 0}
   };
 
-  int circuit_noise = fresh_noise;
+  int circuit_noise = fresh_noise; 
 
   const auto &nodes = program_->get_top_sorted_terms();
   for (const auto &node : nodes)

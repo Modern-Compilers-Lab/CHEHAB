@@ -8,7 +8,7 @@
 #include "fheco/util/common.hpp"
 #include "fheco/util/expr_printer.hpp"
 #include "compiler.hpp"
-#include <cstring>
+#include <cstring> 
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -622,6 +622,402 @@ bool is_literal(const std::string& token) {
     return std::none_of(token.begin(), token.end(), [](unsigned char c) { return std::isalpha(c); });
 }
 /**********************************************************************/
+string constant_folding(queue<string> &tokens)
+{
+  //std::cout<<"welcome in constant folding\n";
+  while (!tokens.empty())
+  {
+    //std::cout<<"hereee :"<<tokens.front()<<"\n";
+    if (tokens.front() == "(")
+    {
+      //std::cout<<"here\n";
+      tokens.pop();
+      string operationString = tokens.front();
+      tokens.pop();
+      string potential_step = "";
+      string operand1="" ,operand2="";
+      if (tokens.front() == "(")
+      {
+        operand1 = constant_folding(tokens);
+      }
+      else
+      {
+        //std::cout<<"get op1 \n";
+        operand1 = tokens.front();
+        tokens.pop();
+      }
+      if (tokens.front() == "(")
+      {
+        operand2 = constant_folding(tokens);
+        potential_step += " ";
+
+      }
+      else if (tokens.front() != ")")
+      {
+        //std::cout<<"get op2 \n";
+        operand2 = tokens.front();
+        potential_step = tokens.front();
+        tokens.pop();
+      }
+
+      // Check for the closing parenthesis
+      if (tokens.front() == ")")
+      {
+        tokens.pop();
+      }
+      if (potential_step.size() > 0)
+      {
+        //std::cout<<operationString<<" "<<operand1<<" "<<operand2<<" \n";
+        bool is_op1_litteral = is_literal(operand1);
+        bool is_op2_litteral = is_literal(operand2);
+        //std::cout<<type_op1<<" "<<type_op2<<" \n";
+        if(is_op1_litteral&&is_op2_litteral){
+          int op1 = 0;
+          int op2 = 0;
+          try{
+            op1 = stoi(operand1);
+            op2 = stoi(operand2); 
+            int res = 0 ;
+            if(operationString=="+"){
+              res = op1+op2 ;
+            }else if(operationString=="-"){
+              res = op1-op2 ;
+            }else if(operationString=="*"){
+              res = op1*op2 ;
+            }
+            string res_op = std::to_string(res);
+            return res_op ;
+          }catch(exception e){
+            throw invalid_argument("value :"+operand1+" or "+operand2+" cant be converted to int");
+          }
+        }else if(is_op1_litteral){
+            int op1 = stoi(operand1);
+            int res = 0;
+            if(op1==0){
+              if(operationString=="+"){
+                return operand2;
+              }else if(operationString=="-"){
+                return "( "+operationString+" "+operand2+" )";
+              }else if(operationString=="*"){
+                return std::to_string(res);
+              }
+            }else if (op1==1){
+              if(operationString=="*"){
+                return operand2;
+              }else{
+                return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+              }
+            }else{
+               return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+            }
+        }else if (is_op2_litteral){
+            //std::cout<<"welcome \n";
+            int op2 = stoi(operand2);
+            int res = 0;
+            if(op2==0){
+              if(operationString=="+"){
+                return operand1;
+              }else if(operationString=="-"){
+                return "( "+operationString+" "+operand1+" )";
+              }else if(operationString=="*"){
+                return std::to_string(res);
+              }
+            }else if (op2==1){
+              if(operationString=="*"){
+                return operand1;
+              }else{
+                return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+              }
+            }else{
+               return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+            }
+        }else{
+            return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+        }
+      }else{
+        return " ( "+operationString+" "+operand1+" )" ;
+      }
+    }
+    else
+    {
+      return tokens.front();
+    }
+  }
+  throw logic_error("Invalid expression");
+}
+/**********************************************************************/
+bool verify_all_vec_elems_eq0(const vector<string>& elems){
+  bool all_vec_elems_eq0 = true ;
+  for(auto elem : elems){
+    if(elem!="0"){
+      all_vec_elems_eq0=false;
+    }
+  }
+  return all_vec_elems_eq0 ;
+}
+/***********************************************************************/
+string process_composed_vectors(const vector<string>& vector_elements,
+    std::unordered_map<std::string, std::string>& dictionary,
+    std::unordered_map<std::string, std::string>& inputs_entries,
+    const std::vector<std::string>& inputs,
+    const std::vector<std::string>& inputs_types,
+    int slot_count,
+    int sub_vector_size)
+{
+  if(!verify_all_vec_elems_eq0(vector_elements)){
+    vector<string> simple_elements = {} ;
+    vector<string> composed_elements = {} ;
+    for(auto elem : vector_elements){
+      if(elem.substr(0,1)=="("){
+        composed_elements.push_back(elem);
+        simple_elements.push_back("0");
+      }else{
+        composed_elements.push_back("0");
+        simple_elements.push_back(elem);
+      }
+    }
+    //0 --- in_00 --- in_01 --- 0 --- in_00 --- 0 --- 0 --- in_02 --- in_10 --- 0 --- ( + in_21 ( + in_13 ( + in_12 in_11 ) ) ) --- in_12 --- 0 --- in_20 --- in_21 --- 0 --- 
+    std::cout<<"simple elements :\n";
+    for(auto val : simple_elements)
+      std::cout<<val<<" ";
+    std::cout<<"\n";
+    std::cout<<"composed elements :\n";
+    for(auto val : composed_elements)
+      std::cout<<val<<" ";
+    std::cout<<"\n";
+    bool all_simple_elements_eq_0 = verify_all_vec_elems_eq0(simple_elements);
+    bool all_composed_elements_eq_0 = verify_all_vec_elems_eq0(composed_elements);
+    vector<string> addition_elements = {} ;
+    vector<string> substraction_elements = {} ;
+    vector<string> multiplication_elements = {} ;
+    if(!all_simple_elements_eq_0&&!all_composed_elements_eq_0){
+      return "( + "+process_composed_vectors(simple_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(composed_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
+    }else if(!all_composed_elements_eq_0){
+      // declare simple_elements as a new ciphertext and store it 
+      // indicate that they are associated with composed elements by an addition 
+      // cout<<"divide composed_elements vector on three vectors each one containing\n";
+      // cout<<"associated operations with + , - *\n";
+      for(const auto elem : composed_elements){
+        //std::cout<<elem<<" --- ";
+        if(elem.substr(1,2)==" +"){
+          addition_elements.push_back(elem);
+          substraction_elements.push_back("0");
+          multiplication_elements.push_back("0");
+        }else if(elem.substr(1,2)==" -"){
+          addition_elements.push_back("0");
+          substraction_elements.push_back(elem);
+          multiplication_elements.push_back("0");
+        }else if(elem.substr(1,2)==" *"){
+          addition_elements.push_back("0");
+          substraction_elements.push_back("0");
+          multiplication_elements.push_back(elem);
+        }else if(elem=="0"){
+          addition_elements.push_back("0");
+          substraction_elements.push_back("0");
+          multiplication_elements.push_back("0");
+        }
+      }
+      //std::cout<<"additon_elems :"<<verify_all_vec_elems_eq0(addition_elements)<<"substraction_elems :"<<verify_all_vec_elems_eq0(substraction_elements)<<"mutliplication :"<<verify_all_vec_elems_eq0(multiplication_elements)<<"\n";
+      if(!verify_all_vec_elems_eq0(addition_elements)&&!verify_all_vec_elems_eq0(substraction_elements)&&!verify_all_vec_elems_eq0(multiplication_elements)){
+        return "( + "+process_composed_vectors(addition_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" ( + "+process_composed_vectors(substraction_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(multiplication_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" ) )";
+      }else if(!verify_all_vec_elems_eq0(addition_elements)&&!verify_all_vec_elems_eq0(substraction_elements)){
+         return "( + "+process_composed_vectors(addition_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(substraction_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
+      }else if(!verify_all_vec_elems_eq0(substraction_elements)&&!verify_all_vec_elems_eq0(multiplication_elements)){
+        return "( + "+process_composed_vectors(substraction_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(multiplication_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
+      }else if(!verify_all_vec_elems_eq0(addition_elements)&&!verify_all_vec_elems_eq0(multiplication_elements)){
+        return "( + "+process_composed_vectors(addition_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(multiplication_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
+      }else if(!verify_all_vec_elems_eq0(addition_elements)){
+        vector<string> vec_ops1 ={} ;
+        vector<string> vec_ops2 ={} ;
+        for(auto elem : addition_elements){
+          vector<string> elems = {};
+          if(elem=="0"){
+            vec_ops1.push_back(elem);
+            vec_ops2.push_back(elem);
+          }else{
+            elem=elem.substr(3);
+            elem=elem.substr(0,elem.size()-2);
+            istringstream iss(elem);
+            string vector_string_element="";
+            string element="";
+            while (iss >> element) {
+                if (element=="("){
+                    vector_string_element+=" (" ;
+                    //string sub_expression="";
+                    int sub_nested_level=0 ;
+                    while (iss >> element&&sub_nested_level>=0){
+                        if(element!=")"&&element!="("){
+                            vector_string_element+=" "+element; 
+                        }else{
+                            sub_nested_level += (element == "(") ? 1 : (element == ")") ? -1 : 0;
+                            vector_string_element+=" "+element ;
+                        }
+                    }
+                    iss.seekg(-element.length(), std::ios_base::cur);
+                    elems.push_back(vector_string_element.substr(1,vector_string_element.size()));
+                }else{
+                    elems.push_back(element);
+                }     
+            }
+            vec_ops1.push_back(elems[0]);
+            vec_ops2.push_back(elems[1]);
+          }
+        }
+        std::cout<<"Separate in the case of addition \n";
+        for(auto val : vec_ops1)
+          std::cout<<val<<" --- ";
+        std::cout<<"\n";
+         for(auto val : vec_ops2)
+          std::cout<<val<<" --- ";
+        std::cout<<"\n\n";
+        return "( + "+process_composed_vectors(vec_ops1,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(vec_ops2,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
+      }else if(!verify_all_vec_elems_eq0(substraction_elements)){
+        vector<string> vec_ops1 ={} ;
+        vector<string> vec_ops2 ={} ;
+        for(auto elem : substraction_elements){
+          vector<string> elems = {};
+          if(elem=="0"){
+            vec_ops1.push_back(elem);
+            vec_ops2.push_back(elem);
+          }else{
+            elem=elem.substr(3);
+            elem=elem.substr(0,elem.size()-2);
+            istringstream iss(elem);
+            string vector_string_element="";
+            string element="";
+            while (iss >> element) {
+                if (element=="("){
+                    vector_string_element+=" (" ;
+                    //string sub_expression="";
+                    int sub_nested_level=0 ;
+                    while (iss >> element&&sub_nested_level>=0){
+                        if(element!=")"&&element!="("){
+                            vector_string_element+=" "+element; 
+                        }else{
+                            sub_nested_level += (element == "(") ? 1 : (element == ")") ? -1 : 0;
+                            vector_string_element+=" "+element ;
+                        }
+                    }
+                    iss.seekg(-element.length(), std::ios_base::cur);
+                    elems.push_back(vector_string_element.substr(1,vector_string_element.size()));
+                }else{
+                    elems.push_back(element);
+                }     
+            }
+            vec_ops1.push_back(elems[0]);
+            vec_ops2.push_back(elems[1]);
+          }
+        }
+        return "( - "+process_composed_vectors(vec_ops1,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(vec_ops2,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
+      }else if(!verify_all_vec_elems_eq0(multiplication_elements)){
+        vector<string> vec_ops1 ={} ;
+        vector<string> vec_ops2 ={} ;
+        for(auto elem : multiplication_elements){
+          vector<string> elems = {};
+          if(elem=="0"){
+            vec_ops1.push_back(elem);
+            vec_ops2.push_back(elem);
+          }else{
+            elem=elem.substr(3);
+            elem=elem.substr(0,elem.size()-2);
+            istringstream iss(elem);
+            string vector_string_element="";
+            string element="";
+            while (iss >> element) {
+                if (element=="("){
+                    vector_string_element+=" (" ;
+                    //string sub_expression="";
+                    int sub_nested_level=0 ;
+                    while (iss >> element&&sub_nested_level>=0){
+                        if(element!=")"&&element!="("){
+                            vector_string_element+=" "+element; 
+                        }else{
+                            sub_nested_level += (element == "(") ? 1 : (element == ")") ? -1 : 0;
+                            vector_string_element+=" "+element ;
+                        }
+                    }
+                    iss.seekg(-element.length(), std::ios_base::cur);
+                    elems.push_back(vector_string_element.substr(1,vector_string_element.size()));
+                }else{
+                    elems.push_back(element);
+                }     
+            }
+            vec_ops1.push_back(elems[0]);
+            vec_ops2.push_back(elems[1]);
+          }
+        }
+        return "( * "+process_composed_vectors(vec_ops1,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(vec_ops2,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
+      }
+    }else if(!all_simple_elements_eq_0){
+      string new_element = ""; 
+      bool is_literal_val = true ;
+      for(auto val :simple_elements){
+        if(!is_literal(val)){
+          if (inputs_types[std::distance(inputs.begin(), std::find(inputs.begin(), inputs.end(), val))] == "1") {
+            is_literal_val = false;
+          }
+        }
+        new_element+=val+" ";
+      }
+      string string_vector = "Vec "+new_element.substr(0, new_element.size() - 1);// strip trailing space
+      if (dictionary.find(string_vector) == dictionary.end()) {
+        int number_of_sub_vectors = slot_count / sub_vector_size;
+        string res = "";
+        for(int i =0 ; i<number_of_sub_vectors ; i++){
+            res+=new_element;
+        }
+        new_element = res ;
+        new_element = new_element.substr(0, new_element.size() - 1); 
+        string label;
+        if(is_literal_val){
+          label = "p" + std::to_string(id_counter);
+          new_element = "1 1 " + new_element;
+          std::cout<<label<<" : "<<new_element<<" \n";
+        }else{
+          label = "c" + std::to_string(id_counter);
+          new_element = "1 1 " + new_element;
+          std::cout<<label<<" : "<<new_element<<" \n";
+        }
+        new_inputs_labels.push_back(label);
+        labels_map[id_counter] = label;
+        inputs_entries[label]=new_element;
+        id_counter++ ;
+        dictionary[string_vector] = label;
+        return label ;
+      }else{
+        return dictionary[string_vector];
+      }
+    }
+  }
+  else{
+    string new_element = ""; 
+    for(auto val : vector_elements){
+      new_element+=val+" ";
+    }
+    string string_vector = "Vec "+new_element.substr(0, new_element.size() - 1);// strip trailing space
+    if (dictionary.find(string_vector) == dictionary.end()) {
+      int number_of_sub_vectors = slot_count / sub_vector_size;
+      string res = "";
+      for(int i =0 ; i<number_of_sub_vectors ; i++){
+          res+=new_element;
+      }
+      new_element = res ;
+      new_element = new_element.substr(0, new_element.size() - 1); 
+      string label;
+      label = "p" + std::to_string(id_counter);
+      new_element = "0 1 " + new_element;
+      new_inputs_labels.push_back(label);
+      labels_map[id_counter] = label;
+      inputs_entries[label]=new_element;
+      id_counter++ ;
+      dictionary[string_vector] = label;
+      return label ;
+    }else{
+      return dictionary[string_vector];
+    }
+  }
+}
+/**********************************************************************/
 std::pair<std::string, int> process(
     const std::vector<std::string>& tokens,
     int index,
@@ -637,28 +1033,25 @@ std::pair<std::string, int> process(
         if (tokens[index] == "(") {
             index++;
             if (tokens[index] == "Vec"){
-                std::string string_vector = "Vec ";
+                std::string vector_string = "Vec ";
                 int nested_level = 0;
                 index++;
                 while (nested_level >= 0) {
-                    string_vector += tokens[index] + " ";
+                    vector_string += tokens[index] + " ";
                     nested_level += (tokens[index] == "(") ? 1 : (tokens[index] == ")") ? -1 : 0;
                     index++;
                 }
-                /*
-                String_vector :Vec in_74 in_60 ( + in_43 ( + in_23 in_33 ) ) )
-                */
-                string_vector = string_vector.substr(0, string_vector.size() - 2);  // Strip trailing space and closing parenthesis
+                vector_string = vector_string.substr(0, vector_string.size() - 2);  // Strip trailing space and closing parenthesis
+                /**
                 if (dictionary.find(string_vector) == dictionary.end()) {
                     vector<string> elements;
-                    istringstream iss(string_vector.substr(4));  // Remove "Vec " from vector string
+                    istringstream iss(string_vector.substr(4));  // Remove "Vec " from vector string                    
                     string element;
                     string new_input = "";
                     bool all_literals = true;
                     int vector_index=0;
                     // Start treating a vector content
-                    /*******************************************************************/
-                    /*******************************************************************/
+                    
                     // ( + ( * A[58][] B[][0] ) ( << ( * A[58][] B[][0] ) 1 ) )
                     //std::cout<<"\n===>Start Vector treatment :\n";
                     bool is_vector_contain_sub_ops = false ;
@@ -666,18 +1059,19 @@ std::pair<std::string, int> process(
                     int nb_sub_elements = 0 ;
                     while (iss >> element) {
                         if (element=="("){
+                          all_literals = false;
                           nb_sub_elements+=1;
                           sub_vector_expression+=" ( +";
-                          /****/sub_vector_expression+=" (" ;
+                          /////sub_vector_expression+=" (" ;
                           //string sub_expression="";
                           int sub_nested_level=0 ;
                           bool end = false ;
                           while (iss >> element&&sub_nested_level>=0){
                               if (element=="+"|| element=="*" || element=="-"){
-                                 /*****/sub_vector_expression+=" "+element ;
+                                 /////sub_vector_expression+=" "+element ;
                               }else{
                                 if(element!=")"&&element!="("){
-                                  string new_element =" ";
+                                  string new_element ="";
                                   //std::cout<<"Fomating the new element :\n";
                                   for(int i =0; i<sub_vector_size;i++){
                                     if(i==vector_index){
@@ -686,41 +1080,42 @@ std::pair<std::string, int> process(
                                       new_element+="0 ";
                                     }
                                   }
-                                  /*******Add the label of the new elements**/
-                                  string temp_str = "Vec"+new_element;
+                                  ////Add the label of the new elements
+                                  string temp_str = "Vec "+new_element.substr(0, new_element.size() - 1);// strip trailing space
                                   if (dictionary.find(temp_str) == dictionary.end()) {
                                       int number_of_sub_vectors = slot_count / sub_vector_size;
                                       string res = "";
                                       for(int i =0 ; i<number_of_sub_vectors ; i++){
-                                          res+=" " + new_element ;
+                                          res+=new_element;
                                       }
-                                      res = new_element ;
-                                      new_element = new_element.substr(1);  // Remove leading space
+                                      new_element = res ;
+                                      new_element = new_element.substr(0, new_element.size() - 1); 
                                       string label;
                                       label = "c" + std::to_string(id_counter);
                                       new_element = "1 1 " + new_element;
                                       new_inputs_labels.push_back(label);
+                                      //std::cout<<label<<" : "<<temp_str<<" \n";
                                       labels_map[id_counter] = label;
                                       inputs_entries[label]=new_element;
                                       //new_inputs += label+" "+new_element + "\n";
                                       id_counter++;
                                       dictionary[temp_str] = label;
-                                      /*****/sub_vector_expression+=" "+label ;
+                                      //////sub_vector_expression+=" "+label ;
                                   }
-                                  /****this input element Exist in the dictionarr */
+                                  ////this input element Exist in the dictionarr 
                                   else{
                                       sub_vector_expression+=" "+dictionary[temp_str] ;
                                   }
                                 }else{    
                                   sub_nested_level += (element == "(") ? 1 : (element == ")") ? -1 : 0;
-                                  /*****/sub_vector_expression+=" "+element ;
+                                  ////////sub_vector_expression+=" "+element ;
                                 }
                               }
                           }
                           iss.seekg(-element.length(), std::ios_base::cur);
                           new_input+="0 ";
                         }
-                        /*********************************************************/
+                        /*********************************************************
                         else{
                           if (!is_literal(element)) {
                               new_input += element + " ";
@@ -735,15 +1130,13 @@ std::pair<std::string, int> process(
                         //std::cout<<"current_vector_shape :"<<new_input<<" , Current_pos :"<<vector_index<<"\n";
                     }
                     //std::cout<<"End vector treatment \n";
-                    /**************************************************************************/
-                    /**************************************************************************/
                     int number_of_sub_vectors = slot_count / sub_vector_size;
                     string res = "";
                     for(int i =0 ; i<number_of_sub_vectors ; i++){
-                        res+=" " + new_input ;
+                        res+=new_input ;
                     }
                     new_input = res ;
-                    new_input = new_input.substr(1);  // Remove leading space
+                    new_input = new_input.substr(0,new_input.size()-1); 
                     string label, label_type;
                     if (all_literals) {
                         label = "p" + std::to_string(id_counter);
@@ -753,6 +1146,7 @@ std::pair<std::string, int> process(
                         new_input = "1 1 " + new_input;
                     }
                     new_inputs_labels.push_back(label);
+                    //std::cout<<label<<" : "<<string_vector<<" \n";
                     labels_map[id_counter] = label;
                     inputs_entries[label]=new_input;
                     //new_inputs += label+" "+new_input + "\n";
@@ -763,14 +1157,64 @@ std::pair<std::string, int> process(
                       for(int i=0;i<nb_sub_elements;i++){
                         sub_vector_expression+=" )";
                       }
-                      /*******/new_expression+=sub_vector_expression;
+                       ////////new_expression+=sub_vector_expression;
                     }else{
-                       /******/new_expression+=" "+label ;
+                       ///////new_expression+=" "+label ;
                     }
                 }else{
                     new_expression+=" "+dictionary[string_vector] ;
+                }*/
+                // Divide string_vector on a vector of strings containing it elements 
+                istringstream iss(vector_string.substr(4));
+                vector<string> vector_elements = {};
+                string element="";
+                while (iss >> element) {
+                  string vector_string_element="";
+                  if (element=="("){
+                    vector_string_element+=" (" ;
+                    //string sub_expression="";
+                    int sub_nested_level=0 ;
+                    while (iss >> element&&sub_nested_level>=0){
+                        if(element!=")"&&element!="("){
+                          vector_string_element+=" "+element; 
+                        }else{
+                            sub_nested_level += (element == "(") ? 1 : (element == ")") ? -1 : 0;
+                            vector_string_element+=" "+element ;
+                        }
+                    }
+                    iss.seekg(-element.length(), std::ios_base::cur);
+                    vector_elements.push_back(vector_string_element.substr(1,vector_string_element.size()));
+                  }else{
+                    vector_elements.push_back(element);
+                  }     
                 }
-                return {dictionary[string_vector], index};
+                //apply constant-folding on vector elements 
+                vector<string> updated_vector_elements = {};
+                cout<<"Applying constant Folding ==> \n";
+                bool if_all_vector_elems_eq0 = true ;
+                for(auto elem : vector_elements){
+                  auto tokens = split(elem);
+                  string updated_elem = constant_folding(tokens);
+                  updated_vector_elements.push_back(updated_elem);
+                }
+                std::cout<<"Start vector processing ==> \n";
+                for(auto val : updated_vector_elements){
+                    std::cout<<val<<" --- ";
+                }
+                std::cout<<"\n";
+                string result_expr = process_composed_vectors(updated_vector_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size);
+                /******/new_expression+=" "+result_expr;
+                if(result_expr.substr(0,1)=="("){
+                  std::string label = "c" + std::to_string(id_counter);
+                  std::cout<<"Simplified composed vector :"<<result_expr<<"\n";
+                  std::cout<<"\n************************************\n";
+                  labels_map[id_counter] = label;
+                  id_counter++;
+                  return {label, index};
+                }else{
+                  std::cout<<"\n************************************\n";
+                  return {dictionary[vector_string], index};
+                }
             }
             /******/new_expression+=" (";
             std::string operation = tokens[index];
@@ -779,6 +1223,7 @@ std::pair<std::string, int> process(
             index++;
             auto [operand_1, new_index] = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression);
             index = new_index;
+            //std::cout<<"current index pos after operand1 creation: "<<tokens[index-1]<<" : "<<tokens[index]<<"\n";
             /**************************/
             if (tokens[index] != ")") {
                 std::string operand_2;
@@ -822,6 +1267,7 @@ std::vector<std::string> split_string(const std::string& str, char delimiter) {
 /************************************************************************/
 std::vector<int> split_string_ints(const std::string& str, char delimiter) {
     std::vector<int> composingValues;
+    std::cout<<str<<" \n";
     std::stringstream ss(str);
     std::string token;
     while (std::getline(ss, token, delimiter)) {
@@ -952,9 +1398,13 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
             string header = input_entries.at(operand1).substr(0,4);
             vector<int> vec1 = split_string_ints(input_entries.at(operand1).substr(4),' ');
             bool all_vec1_values_eq0 = true ;
+            bool all_vec1_values_eq1 = true ;
             for(int i =0;i<vec1.size();i++){
                if(vec1[i]!=0){
                   all_vec1_values_eq0 = false ;
+               }
+               if(vec1[i]!=1){
+                  all_vec1_values_eq1 = false ;
                }
             }
             if(all_vec1_values_eq0){
@@ -967,8 +1417,14 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
                 }else if (operationString=="<<"){
                   return "";
                 }
-            }else{ 
-              return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+            }else{
+              if(all_vec1_values_eq1){
+                if (operationString=="*"){
+                    return operand2 ;
+                }else{
+                    return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+                }
+              }
             }
         }else if(type_op2=="p"){
             if (input_entries.find(operand2) == input_entries.end()){
@@ -977,9 +1433,13 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
             string header = input_entries.at(operand2).substr(0,4);
             vector<int> vec2 = split_string_ints(input_entries.at(operand2).substr(4),' ');
             bool all_vec2_values_eq0 = true ;
+            bool all_vec2_values_eq1 = true ;
             for(int i =0;i<vec2.size();i++){
                if(vec2[i]!=0){
                   all_vec2_values_eq0 = false ;
+               }
+               if(vec2[i]!=1){
+                  all_vec2_values_eq1 = false ;
                }
             }
             if(all_vec2_values_eq0){
@@ -991,7 +1451,13 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
                     return operand1 ;
                 }
             }else{ 
-              return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+              if(all_vec2_values_eq1){
+                if (operationString=="*"){
+                    return operand1 ;
+                }else{
+                    return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+                }
+              }
             }
         }else{
           return "( "+operationString+" "+operand1+" "+operand2+" )" ;
@@ -1140,18 +1606,19 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
         auto tokens = process_vectorized_code(expr);
         std::unordered_map<std::string, std::string> dictionary = {};
         process(tokens,0,dictionary,inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,simplified_expression);
+        std::cout<<"Simplified expression==> :"<<simplified_expression<<" \n";
         simplified_expressions.push_back(simplified_expression.substr(1));
         simplified_expression="";
         outputs.push_back(labels_map[id_counter - 1]);
     }
-    /*string info_tmp ="( + ( * ( + ( * ( * ( + ( * c0 c1 ) ( + ( * c0 c2 ) ( + ( * c0 c3 ) ( + ( * c0 c4 ) ( + ( * c0 c5 ) ( + ( * c0 c6 ) ( * c0 c7 ) ) ) ) ) ) ) c9 ) c11 ) ( + ( * ( + ( * c13 c14 ) ( + ( * c15 c16 ) ( + ( * c17 c18 ) ( + ( * c19 c20 ) ( + ( * c21 c22 ) ( + ( * c23 c24 ) ( + ( * c25 c26 ) ( + ( * c27 c28 ) ( + ( * c29 c30 ) ( + ( * c31 c32 ) ( + ( * c33 c34 ) c35 ) ) ) ) ) ) ) ) ) ) ) p36 ) ( + ( + ( * c38 c39 ) ( + ( * c0 c40 ) ( + ( * c0 c41 ) ( + ( * c0 c42 ) ( + ( * c0 c43 ) ( + ( * c0 c44 ) ( + ( * c0 c45 ) ( + ( * c0 c46 ) ( + ( * c0 c47 ) ( + ( * c0 c48 ) ( + ( * c0 c49 ) ( * c0 c50 ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c0 c52 ) ( + ( * c53 c54 ) ( + ( * c55 c56 ) ( + ( * c0 c57 ) ( + ( * c58 c59 ) ( + ( * c60 c61 ) ( + ( * c62 c63 ) ( + ( * c0 c64 ) ( + ( * c65 c66 ) ( + ( * c67 c68 ) ( + ( * c69 c70 ) ( + ( * c0 c71 ) ( + ( * c72 c73 ) ( + ( * c74 c75 ) ( + ( * c76 c77 ) ( * c0 c78 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( * c35 p36 ) ) ( * ( + ( * ( * ( + ( * c1 c14 ) ( + ( * c2 c16 ) ( + ( * c4 c22 ) ( + ( * c5 c24 ) ( + ( * c6 c28 ) ( + ( * c90 c30 ) ( + ( * c7 c32 ) c91 ) ) ) ) ) ) ) p92 ) p36 ) ( + ( * ( + ( * c0 c13 ) ( + ( * c0 c15 ) ( + ( * c0 c17 ) ( + ( * c0 c19 ) ( + ( * c0 c21 ) ( + ( * c0 c23 ) ( + ( * c0 c25 ) ( + ( * c0 c27 ) ( + ( * c0 c29 ) ( + ( * c0 c31 ) ( * c0 c33 ) ) ) ) ) ) ) ) ) ) ) c96 ) ( + ( + ( * c0 c38 ) ( + ( * c40 c54 ) ( + ( * c41 c56 ) ( + ( * c0 c58 ) ( + ( * c0 c60 ) ( + ( * c0 c62 ) ( + ( * c0 c65 ) ( + ( * c0 c67 ) ( + ( * c0 c69 ) ( + ( * c0 c72 ) ( + ( * c0 c74 ) ( * c0 c76 ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c52 c39 ) ( + ( * c0 c53 ) ( + ( * c0 c55 ) ( + ( * c57 c99 ) ( + ( * c42 c59 ) ( + ( * c43 c61 ) ( + ( * c44 c63 ) ( + ( * c64 c100 ) ( + ( * c45 c66 ) ( + ( * c46 c68 ) ( + ( * c47 c70 ) ( + ( * c71 c101 ) ( + ( * c48 c73 ) ( + ( * c49 c75 ) ( + ( * c50 c77 ) ( * c78 c102 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c91 p92 ) p36 ) ) )";
+    //string info_tmp ="( + ( * ( + ( * ( * ( + ( * c0 c1 ) ( + ( * c0 c2 ) ( + ( * c0 c3 ) ( + ( * c0 c4 ) ( + ( * c0 c5 ) ( + ( * c0 c6 ) ( * c0 c7 ) ) ) ) ) ) ) c9 ) c11 ) ( + ( * ( + ( * c13 c14 ) ( + ( * c15 c16 ) ( + ( * c17 c18 ) ( + ( * c19 c20 ) ( + ( * c21 c22 ) ( + ( * c23 c24 ) ( + ( * c25 c26 ) ( + ( * c27 c28 ) ( + ( * c29 c30 ) ( + ( * c31 c32 ) ( + ( * c33 c34 ) c35 ) ) ) ) ) ) ) ) ) ) ) p36 ) ( + ( + ( * c38 c39 ) ( + ( * c0 c40 ) ( + ( * c0 c41 ) ( + ( * c0 c42 ) ( + ( * c0 c43 ) ( + ( * c0 c44 ) ( + ( * c0 c45 ) ( + ( * c0 c46 ) ( + ( * c0 c47 ) ( + ( * c0 c48 ) ( + ( * c0 c49 ) ( * c0 c50 ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c0 c52 ) ( + ( * c53 c54 ) ( + ( * c55 c56 ) ( + ( * c0 c57 ) ( + ( * c58 c59 ) ( + ( * c60 c61 ) ( + ( * c62 c63 ) ( + ( * c0 c64 ) ( + ( * c65 c66 ) ( + ( * c67 c68 ) ( + ( * c69 c70 ) ( + ( * c0 c71 ) ( + ( * c72 c73 ) ( + ( * c74 c75 ) ( + ( * c76 c77 ) ( * c0 c78 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( * c35 p36 ) ) ( * ( + ( * ( * ( + ( * c1 c14 ) ( + ( * c2 c16 ) ( + ( * c4 c22 ) ( + ( * c5 c24 ) ( + ( * c6 c28 ) ( + ( * c90 c30 ) ( + ( * c7 c32 ) c91 ) ) ) ) ) ) ) p92 ) p36 ) ( + ( * ( + ( * c0 c13 ) ( + ( * c0 c15 ) ( + ( * c0 c17 ) ( + ( * c0 c19 ) ( + ( * c0 c21 ) ( + ( * c0 c23 ) ( + ( * c0 c25 ) ( + ( * c0 c27 ) ( + ( * c0 c29 ) ( + ( * c0 c31 ) ( * c0 c33 ) ) ) ) ) ) ) ) ) ) ) c96 ) ( + ( + ( * c0 c38 ) ( + ( * c40 c54 ) ( + ( * c41 c56 ) ( + ( * c0 c58 ) ( + ( * c0 c60 ) ( + ( * c0 c62 ) ( + ( * c0 c65 ) ( + ( * c0 c67 ) ( + ( * c0 c69 ) ( + ( * c0 c72 ) ( + ( * c0 c74 ) ( * c0 c76 ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c52 c39 ) ( + ( * c0 c53 ) ( + ( * c0 c55 ) ( + ( * c57 c99 ) ( + ( * c42 c59 ) ( + ( * c43 c61 ) ( + ( * c44 c63 ) ( + ( * c64 c100 ) ( + ( * c45 c66 ) ( + ( * c46 c68 ) ( + ( * c47 c70 ) ( + ( * c71 c101 ) ( + ( * c48 c73 ) ( + ( * c49 c75 ) ( + ( * c50 c77 ) ( * c78 c102 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c91 p92 ) p36 ) ) )";
     vector<string> updated_cons_fd_expressions ={} ;
-    updated_cons_fd_expressions = simplified_expressions ;*/
+    updated_cons_fd_expressions = simplified_expressions ;
     //updated_cons_fd_expressions.push_back(info_tmp);
     //std::cout<<"Updated IR : "<<simplified_expression<<" \n";
     /*****************************************************************/
-    /*****************************************************************/
-    // applying constant forlding for vectors 
+    /*****************************************************************
+    std::cout<<"applying constant forlding for vectors \n"; 
     vector<string> updated_cons_fd_expressions = {};
     for(const auto& expr : simplified_expressions){
         auto tokens1 = split(expr);

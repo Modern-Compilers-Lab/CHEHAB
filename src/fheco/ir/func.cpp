@@ -111,6 +111,10 @@ void Func::set_output(const T &output, string label)
     throw invalid_argument("object not defined");
 }
 
+void Func::update_negative_rotation_steps(int polynomial_modulus_degree){
+    data_flow_.update_negative_rotation_steps(polynomial_modulus_degree);
+}
+
 Term *Func::insert_op_term(OpCode op_code, vector<Term *> operands, bool &inserted)
 {
   if (Compiler::const_folding_enabled())

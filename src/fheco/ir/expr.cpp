@@ -73,7 +73,22 @@ bool Expr::EqualOpTermKey::operator()(const OpTermKey &lhs, const OpTermKey &rhs
   }
   return true;
 }
-
+/******************************************************************************/
+/*****************************************************************************/
+void Expr::update_negative_rotation_steps(int polynomial_modulus_degree) {
+    for (auto *term : terms_) {
+        // Check if the term's OpCode is of type rotate
+        if (term->op_code().type() == fheco::ir::OpCode::Type::rotate) {
+            // Update the term's OpCode with the new rotation step
+            int rotation_step = term->op_code_.steps();
+            if(rotation_step<0){
+              rotation_step = rotation_step + polynomial_modulus_degree>>1;
+              term->op_code_ = fheco::ir::OpCode::rotate(rotation_step);
+            }
+        }
+    }
+}
+/***********************************************************************/
 Term *Expr::insert_op(OpCode op_code, vector<Term *> operands, bool &inserted)
 {
   if (Compiler::cse_enabled())
@@ -183,7 +198,7 @@ void Expr::replace(Term *term1, Term *term2)
   if (*term1 == *term2)
     return;
 
-  struct Call
+  struct Call 
   {
     Term *term1_;
     Term *term2_;

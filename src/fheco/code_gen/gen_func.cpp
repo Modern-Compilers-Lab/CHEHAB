@@ -45,11 +45,13 @@ namespace fheco::code_gen
     source_os << '\n';
     /****************************************************************/
     //std::cout<<"\n ==>Welcome in encryption params selection : \n";
-    param_select::ParameterSelector selector(func, param_select::EncParams::SecurityLevel::tc128);
+    param_select::ParameterSelector selector(func, security_level);
     bool use_mod_switch = false ;
     param_select::EncParams params = selector.select_params(use_mod_switch); 
     params.print_params(std::cout); 
+    //std::cout<<"Encryption params have been printed succefully\n";
     gen_main_code(params,security_level);
+    //std::cout<<"Gen main code has been done \n";
   }
 
 /**************************************************************************************/
