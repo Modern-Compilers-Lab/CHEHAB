@@ -8,7 +8,7 @@ import statistics
 benchmarks_folder = "benchmarks"
 build_folder = os.path.join("build", "benchmarks")
 # to be run after with slot_count = 8 for both matrix_mul and rober_cross
-slot_count = 16
+slot_count = 32
 output_csv = "results_{}.csv".format(str(slot_count))
 # vectorization_csv = "vectorization.csv"
 operations = ["add", "sub", "multiply_plain", "rotate_rows", "square", "multiply"]
@@ -43,7 +43,8 @@ except subprocess.CalledProcessError as e:
 
 # Iterate through each item in the benchmarks folder
 # "hamming_dist","poly_reg","lin_reg","l2_distance","dot_product","box_blur"
-benchmark_folders = ["gx_kernel","gy_kernel","sobel","roberts_cross","matrix_mul"] 
+# "box_blur","gx_kernel","gy_kernel","sobel","roberts_cross","matrix_mul"
+benchmark_folders = ["hamming_dist","poly_reg","lin_reg","l2_distance","dot_product","box_blur","gx_kernel","gy_kernel","sobel","roberts_cross","matrix_mul"] 
 for subfolder_name in benchmark_folders:
     benchmark_path = os.path.join(benchmarks_folder, subfolder_name)
     build_path = os.path.join(build_folder, subfolder_name)
@@ -57,11 +58,13 @@ for subfolder_name in benchmark_folders:
         #############################################################
         #############################################################
         operation_stats = {
-        "add": [], "sub": [], "multiply_plain": [], "rotate_rows": [],
-        "square": [], "multiply": [], "Depth": [], "Multiplicative Depth": [],
-        "compile_time (ms)": [], "execution_time (ms)": []
+        "add": [0], "sub": [0], "multiply_plain": [0], "rotate_rows": [0],
+        "square": [0], "multiply": [0], "Depth": [0], "Multiplicative Depth": [0],
+        "compile_time (ms)": [0], "execution_time (ms)": [0]
         }
-        iterations = 5
+        ##############
+        iterations = 2
+        ######################################
         for iteration in range(iterations):
             print(f"Running iteration {iteration + 1} for benchmark '{subfolder_name}'")
 
@@ -85,10 +88,12 @@ for subfolder_name in benchmark_folders:
                         break
 
                 # Collect depth and multiplicative depth
+                print(result.stdout)
                 depth_match = re.search(r'max:\s*\((\d+),\s*(\d+)\)', result.stdout)
+                print(depth_match)
                 depth = int(depth_match.group(1)) if depth_match else None
                 multiplicative_depth = int(depth_match.group(2)) if depth_match else None
-
+                print(f"Depth=>{depth}, multiplcative_depth=>{multiplicative_depth}\n")
                 operation_stats["Depth"].append(depth)
                 operation_stats["Multiplicative Depth"].append(multiplicative_depth)
 
@@ -138,7 +143,7 @@ for subfolder_name in benchmark_folders:
         row=[subfolder_name]
         for key, values in operation_stats.items():
             print(key)
-            row.append(statistics.mean(values)) if values else None
+            row.append(int(statistics.mean(values))) if values else None
         #####################################################################
         #######################################################################
         with open(output_csv, mode='a', newline='') as file:

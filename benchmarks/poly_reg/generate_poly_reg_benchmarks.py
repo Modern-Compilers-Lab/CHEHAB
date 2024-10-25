@@ -1,6 +1,6 @@
 import numpy as np
 is_vectorization_activated = True
-function_slot_count= 4
+function_slot_count= 32
 c0 = np.random.randint(0,10,(function_slot_count))
 c1 = np.random.randint(0,10,(function_slot_count))
 c2 = np.random.randint(0,10,(function_slot_count))

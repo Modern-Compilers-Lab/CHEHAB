@@ -1,13 +1,14 @@
 import numpy as np
 from math import sqrt 
 is_vectorization_activated = True
-slot_count = 256
+slot_counts = [16,64,256,1024]
+slot_count = slot_counts[3]
 n_rows_image = int(sqrt(slot_count))
 n_cols_image = n_rows_image
 N = n_rows_image*n_cols_image
 is_cipher = 1 
 is_signed = 0
-input_image = np.random.randint(0,10,(N)) 
+input_image = np.random.randint(2,10,(N)) 
 output_image = np.zeros((n_rows_image*n_cols_image))
 ######################################
 kernel = [[-1,0,1],[-2,0,2],[-1,0,1]]

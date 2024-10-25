@@ -10,7 +10,6 @@
 #include <tuple>
 #include <unordered_set>
 #include <utility>
-#include<iostream>
 
 using namespace std;
 
@@ -27,17 +26,14 @@ void Quantifier::run_all_analysis(const param_select::EncParams &params)
 
 void Quantifier::run_all_analysis()
 {
-  //std::cout<<"welcome in run_all_analysis , start wo=ith depth info \n";
   compute_depth_info();
-  //std::cout<<"==> count_terms_classes\n";
   count_terms_classes();
 }
-/*****************************************************************/
-/*****************************************************************/
+
 void Quantifier::compute_depth_info()
 {
   ctxt_leaves_depth_info_.clear();
-  //std::cout<<"==> start1\n";
+
   struct Call
   {
     const ir::Term *term_;
@@ -46,26 +42,21 @@ void Quantifier::compute_depth_info()
   stack<Call> call_stack;
 
   struct CompareDepthInfo
-  { 
+  {
     bool operator()(const DepthInfo &lhs, const DepthInfo &rhs) const
     {
       return lhs.depth_ + lhs.xdepth_ > rhs.depth_ + rhs.xdepth_;
     }
   };
-  //std::cout<<"==> start2\n";
+
   using DepthInfoSet = set<DepthInfo, CompareDepthInfo>;
   unordered_map<const ir::Term *, DepthInfoSet> emitted_calls;
-  //std::cout<<"==> start3\n";
+
   for (auto [output_term, output_info] : func_->data_flow().outputs_info())
   {
-    if (output_term->type() == ir::Term::Type::cipher){
-      //std::cout<<"output term-type cipher\n";
+    if (output_term->type() == ir::Term::Type::cipher)
       call_stack.push({output_term, DepthInfo{0, 0}});
-    }else{
-       //std::cout<<"output term-type plain\n";
-    }
   }
-  //std::cout<<"==> start4 : call_stack state :"<<call_stack.empty()<<"\n";
   while (!call_stack.empty())
   {
     auto top_call = call_stack.top();
@@ -78,11 +69,9 @@ void Quantifier::compute_depth_info()
         ctxt_leaves_depth_info_.emplace(top_term, DepthInfo{top_depth_info.depth_, top_depth_info.xdepth_});
       if (!inserted)
       {
-        //std::cout<<"==> term not inserted\n";
         it->second.depth_ = max(it->second.depth_, top_depth_info.depth_);
         it->second.xdepth_ = max(it->second.xdepth_, top_depth_info.xdepth_);
       }
-      //std::cout<<"==> term inserted\n";
       continue;
     }
     auto operands_depth = top_depth_info.depth_;
@@ -119,10 +108,9 @@ void Quantifier::compute_depth_info()
       }
     }
   }
-  //std::cout<<"==> start5\n";
   if (ctxt_leaves_depth_info_.empty())
     return;
-  //std::cout<<"==> start6\n";
+
   auto first_leaf_depth = ctxt_leaves_depth_info_.begin()->second.depth_;
   auto first_leaf_xdepth = ctxt_leaves_depth_info_.begin()->second.xdepth_;
   depth_summary_.min_depth_ = first_leaf_depth;
@@ -131,7 +119,6 @@ void Quantifier::compute_depth_info()
   depth_summary_.avg_xdepth_ = 0;
   depth_summary_.max_depth_ = first_leaf_xdepth;
   depth_summary_.max_xdepth_ = first_leaf_xdepth;
-  //std::cout<<"==> start7\n";
   for (const auto &e : ctxt_leaves_depth_info_)
   {
     if (e.second.depth_ < depth_summary_.min_depth_)
@@ -147,15 +134,12 @@ void Quantifier::compute_depth_info()
     if (e.second.xdepth_ > depth_summary_.max_xdepth_)
       depth_summary_.max_xdepth_ = e.second.xdepth_;
   }
-  //std::cout<<"==> start8\n";
   depth_summary_.avg_depth_ /= ctxt_leaves_depth_info_.size();
   depth_summary_.avg_xdepth_ /= ctxt_leaves_depth_info_.size();
-  //std::cout<<"set depth_metrics_ to true \n";
+
   depth_metrics_ = true;
 }
 
-/*****************************************************************/
-/*****************************************************************/
 void Quantifier::count_terms_classes()
 {
   terms_count_ = 0;
@@ -503,8 +487,8 @@ void Quantifier::print_info(ostream &os, bool depth_details, bool outputs_detail
   os << "depth_metrics\n";
   print_depth_info(os, depth_details);
   print_line_sep(os);
-  //os << "terms_classes_metrics\n";
-  //print_terms_classes_info(os, outputs_details);
+  os << "terms_classes_metrics\n";
+  print_terms_classes_info(os, outputs_details);
 }
 
 void Quantifier::print_depth_info(ostream &os, bool details) const

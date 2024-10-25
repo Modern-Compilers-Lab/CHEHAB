@@ -322,7 +322,6 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
  */
 void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window)
 {
-
   if (window < 0)
   {
     std::cerr << "Window size must be greater than 0." << std::endl;
@@ -338,51 +337,62 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
     // Utility function to print expressions in prefix notation
     util::ExprPrinter expr_printer(func);
     expr_printer.make_terms_str_expr(util::ExprPrinter::Mode::prefix);
-
     // Initialize files to store inputs and vectorized code
     std::ofstream inputs_file("../inputs.txt");
     std::ofstream vectorized_code_file("../vectorized_code.txt");
-
     // Check if any of the files failed to open
     if (!inputs_file || !vectorized_code_file)
     {
       std::cerr << "Error opening one of the output files." << std::endl;
       return;
     }
-
     // Strings to store input names and types
     std::string input_names;
     std::string input_types;
-
     // Process input terms and store their names and types
     std::vector<const ir::Term *> input_terms;
+    vector<string> prepared_names ={} ;
     for (const auto &input_info : func->data_flow().inputs_info())
     {
       input_terms.push_back(input_info.first);
+      string name=input_info.second.label_;
+      prepared_names.push_back(name);
     }
+    std::reverse(prepared_names.begin(),prepared_names.end());
+    int comp = 0;
     for (auto it = input_terms.rbegin(); it != input_terms.rend(); ++it)
     {
       auto input_term = *it;
-      input_names += expr_printer.terms_str_exprs().at(input_term->id()) + " ";
+      input_names+=prepared_names[comp]+" ";
       input_types += (input_term->type() == ir::Term::Type::cipher) ? "1 " : "0 ";
+      comp+=1;
     }
     inputs_file << input_names << std::endl;
     inputs_file << input_types << std::endl;
     inputs_file.close();
-
     // Process output terms and compute the total number of outputs
-    std::vector<const ir::Term *> output_terms;
     int vector_full_width = 0;
-    for (const auto &output_info : func->data_flow().outputs_info())
-    {
-      output_terms.push_back(output_info.first);
-      vector_full_width++;
+    
+    auto process_output_terms = [&](const ir::OutputTermsInfo &outputs_info , const ir::orderedOutputTermsKeys & output_keys) {
+      std::vector<const ir::Term *> output_terms;
+      for(const auto & output_key : output_keys){
+        vector_full_width++;
+        auto output_info = outputs_info.at(output_key); 
+        unordered_set<std::string> infos = output_info.labels_ ;
+        output_terms.push_back(output_key);
+      }
+      return output_terms;
+    }; 
+    // Process output terms
+    std::vector<const ir::Term *> output_terms = process_output_terms(func->data_flow().outputs_info(),func->data_flow().output_keys());
+    if(vector_full_width<window){
+      std::cout<<"\nresult vector width smaller than window size ==> windows will be considered=0(deactivated)\n";
+      gen_vectorized_code(func);
+      return;
     }
-
     int index = 0;
     std::string expression = "(Vec ";
     int vector_width = 0;
-
     // Get the vector width from the environment variable
     const char *env_var = std::getenv("VECTOR_WIDTH");
     if (env_var)
@@ -400,19 +410,17 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
     {
       vector_width = window;
     }
-
     // Clear the content of vectorized_code_file
     vectorized_code_file << "";
     vectorized_code_file.close();
     // Generate vectorized code
-    for (auto it = output_terms.rbegin(); it != output_terms.rend(); ++it)
+    for (auto it = output_terms.begin(); it != output_terms.end(); ++it)
     {
       auto output_term = *it;
       expression += expr_printer.terms_str_exprs().at(output_term->id()) + " ";
       index = (index + 1) % window;
-
       // When a subvector is complete or all outputs are consumed
-      if (!index || it == output_terms.rend() - 1)
+      if (!index || it == output_terms.end() - 1)
       {
         int current_vector_width = (index == 0) ? window : index;
         // Pad the subvector with zeros if necessary
@@ -421,7 +429,6 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
           expression += " 0 ";
         }
         expression += " )";
-
         // Write the expression to expression_file and call the vectorizer
         std::ofstream expression_file("../expression.txt");
         if (!expression_file)
@@ -431,7 +438,6 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
         }
         expression_file << expression;
         expression_file.close();
-
         call_vectorizer(vector_width);
         expression = "(Vec ";
       }
@@ -446,7 +452,7 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
     }
     vectorized_code_file_2 << vector_full_width << " " << window;
     vectorized_code_file_2.close();
-
+    
     // Call the script to construct the source code
     format_vectorized_code(func);
   }
@@ -471,7 +477,6 @@ void Compiler::call_vectorizer(int vector_width)
 /**************************************************************************************/
 using namespace std ;
 std::unordered_map<int, std::string> labels_map;
-std::vector<string> new_inputs_labels ;
 int id_counter = 0;
 /**************************************************************************/
 ir::OpCode Compiler::operationFromString(string operation)
@@ -776,15 +781,6 @@ string process_composed_vectors(const vector<string>& vector_elements,
         simple_elements.push_back(elem);
       }
     }
-    //0 --- in_00 --- in_01 --- 0 --- in_00 --- 0 --- 0 --- in_02 --- in_10 --- 0 --- ( + in_21 ( + in_13 ( + in_12 in_11 ) ) ) --- in_12 --- 0 --- in_20 --- in_21 --- 0 --- 
-    std::cout<<"simple elements :\n";
-    for(auto val : simple_elements)
-      std::cout<<val<<" ";
-    std::cout<<"\n";
-    std::cout<<"composed elements :\n";
-    for(auto val : composed_elements)
-      std::cout<<val<<" ";
-    std::cout<<"\n";
     bool all_simple_elements_eq_0 = verify_all_vec_elems_eq0(simple_elements);
     bool all_composed_elements_eq_0 = verify_all_vec_elems_eq0(composed_elements);
     vector<string> addition_elements = {} ;
@@ -798,7 +794,6 @@ string process_composed_vectors(const vector<string>& vector_elements,
       // cout<<"divide composed_elements vector on three vectors each one containing\n";
       // cout<<"associated operations with + , - *\n";
       for(const auto elem : composed_elements){
-        //std::cout<<elem<<" --- ";
         if(elem.substr(1,2)==" +"){
           addition_elements.push_back(elem);
           substraction_elements.push_back("0");
@@ -817,7 +812,6 @@ string process_composed_vectors(const vector<string>& vector_elements,
           multiplication_elements.push_back("0");
         }
       }
-      //std::cout<<"additon_elems :"<<verify_all_vec_elems_eq0(addition_elements)<<"substraction_elems :"<<verify_all_vec_elems_eq0(substraction_elements)<<"mutliplication :"<<verify_all_vec_elems_eq0(multiplication_elements)<<"\n";
       if(!verify_all_vec_elems_eq0(addition_elements)&&!verify_all_vec_elems_eq0(substraction_elements)&&!verify_all_vec_elems_eq0(multiplication_elements)){
         return "( + "+process_composed_vectors(addition_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" ( + "+process_composed_vectors(substraction_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(multiplication_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" ) )";
       }else if(!verify_all_vec_elems_eq0(addition_elements)&&!verify_all_vec_elems_eq0(substraction_elements)){
@@ -843,7 +837,6 @@ string process_composed_vectors(const vector<string>& vector_elements,
             while (iss >> element) {
                 if (element=="("){
                     vector_string_element+=" (" ;
-                    //string sub_expression="";
                     int sub_nested_level=0 ;
                     while (iss >> element&&sub_nested_level>=0){
                         if(element!=")"&&element!="("){
@@ -863,13 +856,6 @@ string process_composed_vectors(const vector<string>& vector_elements,
             vec_ops2.push_back(elems[1]);
           }
         }
-        std::cout<<"Separate in the case of addition \n";
-        for(auto val : vec_ops1)
-          std::cout<<val<<" --- ";
-        std::cout<<"\n";
-         for(auto val : vec_ops2)
-          std::cout<<val<<" --- ";
-        std::cout<<"\n\n";
         return "( + "+process_composed_vectors(vec_ops1,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(vec_ops2,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
       }else if(!verify_all_vec_elems_eq0(substraction_elements)){
         vector<string> vec_ops1 ={} ;
@@ -961,24 +947,21 @@ string process_composed_vectors(const vector<string>& vector_elements,
       }
       string string_vector = "Vec "+new_element.substr(0, new_element.size() - 1);// strip trailing space
       if (dictionary.find(string_vector) == dictionary.end()) {
-        int number_of_sub_vectors = slot_count / sub_vector_size;
         string res = "";
-        for(int i =0 ; i<number_of_sub_vectors ; i++){
-            res+=new_element;
+        for(int i = 0 ; i<slot_count ; i++){
+          res+=simple_elements[i%sub_vector_size]+" ";
         }
-        new_element = res ;
-        new_element = new_element.substr(0, new_element.size() - 1); 
+        new_element = res.substr(0, res.size() - 1); 
         string label;
         if(is_literal_val){
           label = "p" + std::to_string(id_counter);
-          new_element = "1 1 " + new_element;
-          std::cout<<label<<" : "<<new_element<<" \n";
+          new_element = "0 1 " + new_element;
+          //std::cout<<label<<" : "<<new_element<<" \n";
         }else{
           label = "c" + std::to_string(id_counter);
           new_element = "1 1 " + new_element;
-          std::cout<<label<<" : "<<new_element<<" \n";
+          //std::cout<<label<<" : "<<new_element<<" \n";
         }
-        new_inputs_labels.push_back(label);
         labels_map[id_counter] = label;
         inputs_entries[label]=new_element;
         id_counter++ ;
@@ -996,17 +979,14 @@ string process_composed_vectors(const vector<string>& vector_elements,
     }
     string string_vector = "Vec "+new_element.substr(0, new_element.size() - 1);// strip trailing space
     if (dictionary.find(string_vector) == dictionary.end()) {
-      int number_of_sub_vectors = slot_count / sub_vector_size;
       string res = "";
-      for(int i =0 ; i<number_of_sub_vectors ; i++){
-          res+=new_element;
+      for(int i = 0 ; i<slot_count ; i++){
+        res+=vector_elements[i%sub_vector_size]+" ";
       }
-      new_element = res ;
-      new_element = new_element.substr(0, new_element.size() - 1); 
+      new_element = res.substr(0, res.size() - 1); 
       string label;
       label = "p" + std::to_string(id_counter);
       new_element = "0 1 " + new_element;
-      new_inputs_labels.push_back(label);
       labels_map[id_counter] = label;
       inputs_entries[label]=new_element;
       id_counter++ ;
@@ -1041,130 +1021,7 @@ std::pair<std::string, int> process(
                     nested_level += (tokens[index] == "(") ? 1 : (tokens[index] == ")") ? -1 : 0;
                     index++;
                 }
-                vector_string = vector_string.substr(0, vector_string.size() - 2);  // Strip trailing space and closing parenthesis
-                /**
-                if (dictionary.find(string_vector) == dictionary.end()) {
-                    vector<string> elements;
-                    istringstream iss(string_vector.substr(4));  // Remove "Vec " from vector string                    
-                    string element;
-                    string new_input = "";
-                    bool all_literals = true;
-                    int vector_index=0;
-                    // Start treating a vector content
-                    
-                    // ( + ( * A[58][] B[][0] ) ( << ( * A[58][] B[][0] ) 1 ) )
-                    //std::cout<<"\n===>Start Vector treatment :\n";
-                    bool is_vector_contain_sub_ops = false ;
-                    string sub_vector_expression = "";
-                    int nb_sub_elements = 0 ;
-                    while (iss >> element) {
-                        if (element=="("){
-                          all_literals = false;
-                          nb_sub_elements+=1;
-                          sub_vector_expression+=" ( +";
-                          /////sub_vector_expression+=" (" ;
-                          //string sub_expression="";
-                          int sub_nested_level=0 ;
-                          bool end = false ;
-                          while (iss >> element&&sub_nested_level>=0){
-                              if (element=="+"|| element=="*" || element=="-"){
-                                 /////sub_vector_expression+=" "+element ;
-                              }else{
-                                if(element!=")"&&element!="("){
-                                  string new_element ="";
-                                  //std::cout<<"Fomating the new element :\n";
-                                  for(int i =0; i<sub_vector_size;i++){
-                                    if(i==vector_index){
-                                      new_element+=element+" "; 
-                                    }else{
-                                      new_element+="0 ";
-                                    }
-                                  }
-                                  ////Add the label of the new elements
-                                  string temp_str = "Vec "+new_element.substr(0, new_element.size() - 1);// strip trailing space
-                                  if (dictionary.find(temp_str) == dictionary.end()) {
-                                      int number_of_sub_vectors = slot_count / sub_vector_size;
-                                      string res = "";
-                                      for(int i =0 ; i<number_of_sub_vectors ; i++){
-                                          res+=new_element;
-                                      }
-                                      new_element = res ;
-                                      new_element = new_element.substr(0, new_element.size() - 1); 
-                                      string label;
-                                      label = "c" + std::to_string(id_counter);
-                                      new_element = "1 1 " + new_element;
-                                      new_inputs_labels.push_back(label);
-                                      //std::cout<<label<<" : "<<temp_str<<" \n";
-                                      labels_map[id_counter] = label;
-                                      inputs_entries[label]=new_element;
-                                      //new_inputs += label+" "+new_element + "\n";
-                                      id_counter++;
-                                      dictionary[temp_str] = label;
-                                      //////sub_vector_expression+=" "+label ;
-                                  }
-                                  ////this input element Exist in the dictionarr 
-                                  else{
-                                      sub_vector_expression+=" "+dictionary[temp_str] ;
-                                  }
-                                }else{    
-                                  sub_nested_level += (element == "(") ? 1 : (element == ")") ? -1 : 0;
-                                  ////////sub_vector_expression+=" "+element ;
-                                }
-                              }
-                          }
-                          iss.seekg(-element.length(), std::ios_base::cur);
-                          new_input+="0 ";
-                        }
-                        /*********************************************************
-                        else{
-                          if (!is_literal(element)) {
-                              new_input += element + " ";
-                              if (inputs_types[std::distance(inputs.begin(), std::find(inputs.begin(), inputs.end(), element))] == "1") {
-                                  all_literals = false;
-                              }
-                          } else {
-                            new_input += element+" ";
-                          }
-                        }
-                        vector_index+=1;
-                        //std::cout<<"current_vector_shape :"<<new_input<<" , Current_pos :"<<vector_index<<"\n";
-                    }
-                    //std::cout<<"End vector treatment \n";
-                    int number_of_sub_vectors = slot_count / sub_vector_size;
-                    string res = "";
-                    for(int i =0 ; i<number_of_sub_vectors ; i++){
-                        res+=new_input ;
-                    }
-                    new_input = res ;
-                    new_input = new_input.substr(0,new_input.size()-1); 
-                    string label, label_type;
-                    if (all_literals) {
-                        label = "p" + std::to_string(id_counter);
-                        new_input = "0 1 " + new_input;
-                    } else {
-                        label = "c" + std::to_string(id_counter);
-                        new_input = "1 1 " + new_input;
-                    }
-                    new_inputs_labels.push_back(label);
-                    //std::cout<<label<<" : "<<string_vector<<" \n";
-                    labels_map[id_counter] = label;
-                    inputs_entries[label]=new_input;
-                    //new_inputs += label+" "+new_input + "\n";
-                    id_counter++;
-                    dictionary[string_vector] = label;
-                    if(nb_sub_elements>0){
-                      sub_vector_expression+=" "+label; 
-                      for(int i=0;i<nb_sub_elements;i++){
-                        sub_vector_expression+=" )";
-                      }
-                       ////////new_expression+=sub_vector_expression;
-                    }else{
-                       ///////new_expression+=" "+label ;
-                    }
-                }else{
-                    new_expression+=" "+dictionary[string_vector] ;
-                }*/
-                // Divide string_vector on a vector of strings containing it elements 
+                vector_string = vector_string.substr(0, vector_string.size() - 2);
                 istringstream iss(vector_string.substr(4));
                 vector<string> vector_elements = {};
                 string element="";
@@ -1172,7 +1029,6 @@ std::pair<std::string, int> process(
                   string vector_string_element="";
                   if (element=="("){
                     vector_string_element+=" (" ;
-                    //string sub_expression="";
                     int sub_nested_level=0 ;
                     while (iss >> element&&sub_nested_level>=0){
                         if(element!=")"&&element!="("){
@@ -1188,31 +1044,21 @@ std::pair<std::string, int> process(
                     vector_elements.push_back(element);
                   }     
                 }
-                //apply constant-folding on vector elements 
                 vector<string> updated_vector_elements = {};
-                cout<<"Applying constant Folding ==> \n";
                 bool if_all_vector_elems_eq0 = true ;
                 for(auto elem : vector_elements){
                   auto tokens = split(elem);
                   string updated_elem = constant_folding(tokens);
                   updated_vector_elements.push_back(updated_elem);
                 }
-                std::cout<<"Start vector processing ==> \n";
-                for(auto val : updated_vector_elements){
-                    std::cout<<val<<" --- ";
-                }
-                std::cout<<"\n";
                 string result_expr = process_composed_vectors(updated_vector_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size);
                 /******/new_expression+=" "+result_expr;
                 if(result_expr.substr(0,1)=="("){
                   std::string label = "c" + std::to_string(id_counter);
-                  std::cout<<"Simplified composed vector :"<<result_expr<<"\n";
-                  std::cout<<"\n************************************\n";
                   labels_map[id_counter] = label;
                   id_counter++;
                   return {label, index};
                 }else{
-                  std::cout<<"\n************************************\n";
                   return {dictionary[vector_string], index};
                 }
             }
@@ -1223,8 +1069,6 @@ std::pair<std::string, int> process(
             index++;
             auto [operand_1, new_index] = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression);
             index = new_index;
-            //std::cout<<"current index pos after operand1 creation: "<<tokens[index-1]<<" : "<<tokens[index]<<"\n";
-            /**************************/
             if (tokens[index] != ")") {
                 std::string operand_2;
                 if (tokens[index] == "(") {
@@ -1237,12 +1081,11 @@ std::pair<std::string, int> process(
                 /******/new_expression+=" )";
                 std::string op = (operation == "VecAdd") ? "+" : (operation == "VecMinus") ? "-" : (operation == "VecMul") ? "*" : "<<";
                 std::string label = "c" + std::to_string(id_counter);
-                //std::cout<<"generated label :"<<label<<" \n";
                 labels_map[id_counter] = label;
                 id_counter++;
                 index++;
                 return {label, index};
-            } else {
+            }else{
                 /******/new_expression+=" )";
                 index++;
                 std::string label = "c" + std::to_string(id_counter);
@@ -1255,7 +1098,7 @@ std::pair<std::string, int> process(
     return {"", index};
 }
 /**********************************************************************/
-std::vector<std::string> split_string(const std::string& str, char delimiter) {
+std::vector<std::string> split_string(const std::string& str, char delimiter){
     std::vector<std::string> substrings;
     std::stringstream ss(str);
     std::string token;
@@ -1265,9 +1108,8 @@ std::vector<std::string> split_string(const std::string& str, char delimiter) {
     return substrings;
 }
 /************************************************************************/
-std::vector<int> split_string_ints(const std::string& str, char delimiter) {
+std::vector<int> split_string_ints(const std::string& str, char delimiter){
     std::vector<int> composingValues;
-    std::cout<<str<<" \n";
     std::stringstream ss(str);
     std::string token;
     while (std::getline(ss, token, delimiter)) {
@@ -1280,7 +1122,7 @@ std::vector<int> split_string_ints(const std::string& str, char delimiter) {
     return composingValues;
 }
 /************************************************************************/
-std::string vectorToString(const std::vector<int>& vec) {
+std::string vectorToString(const std::vector<int>& vec){
     std::ostringstream oss;
     
     for (size_t i = 0; i < vec.size(); ++i) {
@@ -1293,8 +1135,7 @@ std::string vectorToString(const std::vector<int>& vec) {
     return oss.str();
 }
 /**********************************************************************/
-string vector_constant_folding(queue<string> &tokens,unordered_map<string,string>& input_entries)
-{
+string vector_constant_folding(queue<string> &tokens,unordered_map<string,string>& input_entries){
   while (!tokens.empty())
   {
     if (tokens.front() == "(")
@@ -1334,7 +1175,7 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
       }
       if (potential_step.size() > 0)
       {
-        //std::cout<<operationString<<" "<<operand1<<" "<<operand2<<" \n";
+        //std::cout<<operationString<<"--"<<operand1<<"--"<<operand2<<" ==> ";
         string type_op1 = operand1.substr(0,1);
         string type_op2 = operand2.substr(0,1);
         //std::cout<<type_op1<<" "<<type_op2<<" \n";
@@ -1389,9 +1230,11 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
               string label = "p" + std::to_string(id_counter);
               id_counter++;
               input_entries.insert({label,new_input});
+              //std::cout<<label<<" \n";
               return label ;
             }
         }else if(type_op1=="p"){
+            //std::cout<<"First operand is plaintext \n";
             if (input_entries.find(operand1) == input_entries.end()){
               throw invalid_argument("given plaintext_label :"+operand1+" doesnt exist in input_entries");
             }
@@ -1413,7 +1256,8 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
                 }else if (operationString=="*"){
                     return operand1 ;
                 }else if (operationString=="-"){
-                    return "( "+operationString+" "+operand2+" )";
+                    string res = "( "+operationString+" "+operand2+" )";
+                    return res;
                 }else if (operationString=="<<"){
                   return "";
                 }
@@ -1422,11 +1266,16 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
                 if (operationString=="*"){
                     return operand2 ;
                 }else{
-                    return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+                    string res = "( "+operationString+" "+operand1+" "+operand2+" )" ;
+                    return res ;
                 }
+              }else{
+                  string res = "( "+operationString+" "+operand1+" "+operand2+" )" ;
+                  return res ;
               }
             }
         }else if(type_op2=="p"){
+            //std::cout<<"second operand is plaintext \n";
             if (input_entries.find(operand2) == input_entries.end()){
               throw invalid_argument("given plaintext_label :"+operand2+" doesnt exist in input_entries");
             }
@@ -1455,12 +1304,17 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
                 if (operationString=="*"){
                     return operand1 ;
                 }else{
-                    return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+                    string res = "( "+operationString+" "+operand1+" "+operand2+" )" ;
+                    return res ;
                 }
+              }else{
+                  string res = "( "+operationString+" "+operand1+" "+operand2+" )" ;
+                  return res ;
               }
             }
         }else{
-          return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+          string res = "( "+operationString+" "+operand1+" "+operand2+" )" ;
+          return res ;
         }
       }
       else 
@@ -1476,7 +1330,7 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
   throw logic_error("Invalid expressionnn");
 }
 /************************************************************************/
-void update_io_file(const unordered_map<string,string>& input_entries,const vector<string> updated_outputs, int new_slot_count){
+void update_io_file(const unordered_map<string,string>& input_entries,const vector<string> updated_outputs,int slot_count, int sub_vector_size){
    std::string inputs_file_name = "fhe_io_example.txt";
    std::ifstream input_file(inputs_file_name);
    std::string line ;
@@ -1525,7 +1379,7 @@ void update_io_file(const unordered_map<string,string>& input_entries,const vect
     string updated_inputs_file_name = "fhe_io_example_adapted.txt" ;
     std::ofstream updated_input_file(updated_inputs_file_name);
     /**********************************************************/
-    string new_header = std::to_string(new_slot_count)+" "+std::to_string(input_entries.size())+" "+std::to_string(updated_outputs.size())+"\n";
+    string new_header = std::to_string(slot_count)+" "+std::to_string(input_entries.size())+" "+std::to_string(updated_outputs.size())+"\n";
     updated_input_file << new_header;
     string updated_input ="" ;
     for(const auto&pair : input_entries){
@@ -1533,18 +1387,40 @@ void update_io_file(const unordered_map<string,string>& input_entries,const vect
         string addionalInfo = pair.second.substr(0,4);
         updated_input=pair.first+" "+addionalInfo;
         vector<std::string> Valuestokens = split_string(vectorString, ' ');
-        for(int i =0; i<Valuestokens.size() ; i++){
-            string key = Valuestokens[i];
-            if(!is_literal(key)){
-              string value =""; 
-              if (ciphertexts.find(key) != ciphertexts.end()) {
-                  updated_input+=ciphertexts[key];  // Access the value corresponding to the key
-              } else {
-                  throw invalid_argument("key : "+key+" Not found in ciphertxts map \n");
+        if(pair.first.substr(0,1)=="c"){
+          for(int i =0; i<Valuestokens.size() ; i++){
+              string key = Valuestokens[i];
+              if(!is_literal(key)){
+                string value =""; 
+                if (ciphertexts.find(key) != ciphertexts.end()) {
+                    updated_input+=ciphertexts[key];  // Access the value corresponding to the key
+                } else {
+                    if (plaintexts.find(key) != plaintexts.end()){
+                      updated_input+=plaintexts[key];
+                    }else{
+                      throw invalid_argument("key : "+key+" Not found in ciphertexts and plaintexts map \n");
+                    }
+                }
+              }else{
+                updated_input+=key+" ";
               }
-            }else{
-              updated_input+=key+" ";
-            }
+          }
+        }else if(pair.first.substr(0,1)=="p"){
+          for(int i =0; i<Valuestokens.size() ; i++){
+              string key = Valuestokens[i];
+              if(!is_literal(key)){
+                string value =""; 
+                if (plaintexts.find(key) != plaintexts.end()){
+                  updated_input+=plaintexts[key];
+                }else{
+                  throw invalid_argument("key : "+key+" Not found in plaintexts map \n");
+                }
+              }else{
+                updated_input+=key+" ";
+              }
+          }
+        }else{
+          throw invalid_argument("key :"+pair.first+" is incorrect\n");
         }
         updated_input+="\n";
         //std::cout<<updated_input ;
@@ -1552,7 +1428,7 @@ void update_io_file(const unordered_map<string,string>& input_entries,const vect
     }
     for(int j=0;j<updated_outputs.size();j++){
         updated_input=updated_outputs[j]+" 1";
-        for(int i =0;i<new_slot_count;i++){
+        for(int i =0;i<slot_count;i++){
             updated_input+=" 0";
         }
         updated_input+="\n";
@@ -1564,7 +1440,6 @@ void update_io_file(const unordered_map<string,string>& input_entries,const vect
 /************************************************************************/
 void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
 {
-    new_inputs_labels = {};
     std::string inputs_file = "../inputs.txt";
     std::ifstream input_file(inputs_file);
     std::string inputs_line, input_types_line;
@@ -1580,7 +1455,6 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     while (iss_types >> token) inputs_types.push_back(token);
     /********************************************************************/
     std::string vectorized_file = "../vectorized_code.txt";
-    //std::string vectorized_file = "../expression.txt";
     /*********************************************************************/
     std::ifstream vec_file(vectorized_file);
     std::vector<std::string> expressions;
@@ -1605,26 +1479,30 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
         if (&expr == &expressions.back()) break;
         auto tokens = process_vectorized_code(expr);
         std::unordered_map<std::string, std::string> dictionary = {};
+        //std::cout<<"process expression : "<<expr<<"\n";
         process(tokens,0,dictionary,inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,simplified_expression);
-        std::cout<<"Simplified expression==> :"<<simplified_expression<<" \n";
+        //std::cout<<"Simplified expression  : "<<simplified_expression<<" \n";
         simplified_expressions.push_back(simplified_expression.substr(1));
         simplified_expression="";
         outputs.push_back(labels_map[id_counter - 1]);
+        //std::cout<<"********************************************************\n";
     }
     //string info_tmp ="( + ( * ( + ( * ( * ( + ( * c0 c1 ) ( + ( * c0 c2 ) ( + ( * c0 c3 ) ( + ( * c0 c4 ) ( + ( * c0 c5 ) ( + ( * c0 c6 ) ( * c0 c7 ) ) ) ) ) ) ) c9 ) c11 ) ( + ( * ( + ( * c13 c14 ) ( + ( * c15 c16 ) ( + ( * c17 c18 ) ( + ( * c19 c20 ) ( + ( * c21 c22 ) ( + ( * c23 c24 ) ( + ( * c25 c26 ) ( + ( * c27 c28 ) ( + ( * c29 c30 ) ( + ( * c31 c32 ) ( + ( * c33 c34 ) c35 ) ) ) ) ) ) ) ) ) ) ) p36 ) ( + ( + ( * c38 c39 ) ( + ( * c0 c40 ) ( + ( * c0 c41 ) ( + ( * c0 c42 ) ( + ( * c0 c43 ) ( + ( * c0 c44 ) ( + ( * c0 c45 ) ( + ( * c0 c46 ) ( + ( * c0 c47 ) ( + ( * c0 c48 ) ( + ( * c0 c49 ) ( * c0 c50 ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c0 c52 ) ( + ( * c53 c54 ) ( + ( * c55 c56 ) ( + ( * c0 c57 ) ( + ( * c58 c59 ) ( + ( * c60 c61 ) ( + ( * c62 c63 ) ( + ( * c0 c64 ) ( + ( * c65 c66 ) ( + ( * c67 c68 ) ( + ( * c69 c70 ) ( + ( * c0 c71 ) ( + ( * c72 c73 ) ( + ( * c74 c75 ) ( + ( * c76 c77 ) ( * c0 c78 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( * c35 p36 ) ) ( * ( + ( * ( * ( + ( * c1 c14 ) ( + ( * c2 c16 ) ( + ( * c4 c22 ) ( + ( * c5 c24 ) ( + ( * c6 c28 ) ( + ( * c90 c30 ) ( + ( * c7 c32 ) c91 ) ) ) ) ) ) ) p92 ) p36 ) ( + ( * ( + ( * c0 c13 ) ( + ( * c0 c15 ) ( + ( * c0 c17 ) ( + ( * c0 c19 ) ( + ( * c0 c21 ) ( + ( * c0 c23 ) ( + ( * c0 c25 ) ( + ( * c0 c27 ) ( + ( * c0 c29 ) ( + ( * c0 c31 ) ( * c0 c33 ) ) ) ) ) ) ) ) ) ) ) c96 ) ( + ( + ( * c0 c38 ) ( + ( * c40 c54 ) ( + ( * c41 c56 ) ( + ( * c0 c58 ) ( + ( * c0 c60 ) ( + ( * c0 c62 ) ( + ( * c0 c65 ) ( + ( * c0 c67 ) ( + ( * c0 c69 ) ( + ( * c0 c72 ) ( + ( * c0 c74 ) ( * c0 c76 ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c52 c39 ) ( + ( * c0 c53 ) ( + ( * c0 c55 ) ( + ( * c57 c99 ) ( + ( * c42 c59 ) ( + ( * c43 c61 ) ( + ( * c44 c63 ) ( + ( * c64 c100 ) ( + ( * c45 c66 ) ( + ( * c46 c68 ) ( + ( * c47 c70 ) ( + ( * c71 c101 ) ( + ( * c48 c73 ) ( + ( * c49 c75 ) ( + ( * c50 c77 ) ( * c78 c102 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c91 p92 ) p36 ) ) )";
-    vector<string> updated_cons_fd_expressions ={} ;
-    updated_cons_fd_expressions = simplified_expressions ;
+    //vector<string> updated_cons_fd_expressions ={} ;
+    //updated_cons_fd_expressions = simplified_expressions ;
     //updated_cons_fd_expressions.push_back(info_tmp);
     //std::cout<<"Updated IR : "<<simplified_expression<<" \n";
     /*****************************************************************/
-    /*****************************************************************
+    /*****************************************************************/
     std::cout<<"applying constant forlding for vectors \n"; 
     vector<string> updated_cons_fd_expressions = {};
     for(const auto& expr : simplified_expressions){
         auto tokens1 = split(expr);
+        //std::cout<<"Input expression :"<<expr<<" \n";
         string res = vector_constant_folding(tokens1,inputs_entries);
         updated_cons_fd_expressions.push_back(res);
     }
+    std::cout<<"==> constant forlding Done\n"; 
     vector<string> labels = {};
     for (const auto& pair : inputs_entries) {
       labels.push_back(pair.first);  // Access the key via pair.first
@@ -1647,10 +1525,50 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
       if(inputs_occurences[label]==0){
         inputs_entries.erase(label);
       }
-    }  
+    }
+    /**********************************************************/
+    /**********************************************************/
+    /*
+    Checking if window option is activated ,
+    Then we concat exiting outputs in one output 
+    */
+    if(sub_vector_size<slot_count){
+      int nb_outputs = outputs.size();
+      string New_IR_expression="";
+      for(int i = 0;i<nb_outputs;i++){
+        vector<int> mask = vector<int>(slot_count,0);
+        for(int j =0; j<sub_vector_size; j++){
+          if(i*sub_vector_size+j<slot_count){
+            mask[i*sub_vector_size+j]=1;
+          }
+        }
+        // create a new plaintext entrie to store mask
+        string label;
+        label = "p" + std::to_string(id_counter);
+        string new_element = "0 1 " + vectorToString(mask);
+        id_counter++;
+        inputs_entries[label]=new_element;
+        if(i!=(nb_outputs-1)){
+           New_IR_expression+="( + ( * "+label+" "+updated_cons_fd_expressions[i]+" ) ";
+        }else{
+          New_IR_expression+= "( * "+label+" "+updated_cons_fd_expressions[i]+" ) ";
+          for(int k=0;k<nb_outputs-1;k++){
+            New_IR_expression+=") ";
+          }
+          New_IR_expression=New_IR_expression.substr(0,New_IR_expression.size()-1);
+          //std::cout<<"New IR"<<New_IR_expression<<"||End\n";
+          updated_cons_fd_expressions.clear();
+          updated_cons_fd_expressions.push_back(New_IR_expression);
+          outputs.clear();
+          std::string label = "c" + std::to_string(id_counter);
+          id_counter++;
+          outputs.push_back(label);
+        }
+      }
+    }
     /*****************************************************************/
     /*****************************************************************/
-    update_io_file(inputs_entries,outputs,sub_vector_size);
+    update_io_file(inputs_entries,outputs,slot_count,sub_vector_size);
     std::cout<<"==>IO file updated succefully \n";
     /*****************************************************************/
     /*******Convert simplified_vectorized IR  *************************/
@@ -1699,7 +1617,6 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     //std::cout<<"Number of function inputs : "<<func->data_flow().inputs_info().size()<<"\n";
     //std::cout<<"Start expression traitment ====> \n";
     for(const auto &new_term_str : updated_cons_fd_expressions){
-      std::cout<<new_term_str<<" \n";
       if (!new_term_str.empty()) {  // Ensure that we do not push empty tokens
         //std::cout<<"here \n";
         auto tokens = split(new_term_str);

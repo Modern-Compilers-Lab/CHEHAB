@@ -1,5 +1,5 @@
 import numpy as np
-function_slot_count= 16
+function_slot_count= 32
 is_vectorization_activated = True
 c1 = np.random.randint(0,10,(function_slot_count))
 c2 = np.random.randint(0,10,(function_slot_count)) 

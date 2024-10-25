@@ -1,6 +1,6 @@
 import numpy as np
 is_vectorization_activated = True 
-function_slot_count= 16
+function_slot_count= 32
 is_cipher = 1  
 is_signed = 1
 if is_vectorization_activated :

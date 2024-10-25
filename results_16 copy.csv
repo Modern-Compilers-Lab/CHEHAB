@@ -1,0 +1,7 @@
+benchmark,add,sub,multiply_plain,rotate_rows,square,multiply,Depth,Multplicative Depth,compile_time( ms ),execution_time (ms)
+box_blur,402,0,0,0,0,0,9,0,6703,20
+gx_kernel,311,0,227,0,0,227,7,1,117450,415
+gy_kernel,711,0,432,0,0,432,8,0,112468,367
+sobel,447,0,277,0,0,320,8,2,264959,1057
+roberts_cross,94,0,79,0,0,166,6,4,168474,5101
+matrix_mul,320,0,0,0,0,170,10,0,168047,2273
