@@ -7,7 +7,7 @@ using namespace fheco;
 #include <iostream>
 #include <string>
 #include <vector>
-#include <cmath>
+#include <cmath> 
 
 /****************/
  void fhe_vectorized(int slot_count)

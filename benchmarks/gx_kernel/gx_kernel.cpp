@@ -29,7 +29,7 @@ void fhe(int width){
   {
     for (int j = 0; j < width; j++) 
     {
-      img[i][j] = Ciphertext("in_" + std::to_string(i) + std::to_string(j));
+      img[i][j] = Ciphertext("in_" + std::to_string(i) +"_"+ std::to_string(j));
     } 
   }
   int rows = width;
@@ -56,7 +56,7 @@ void fhe(int width){
   {
     for (int j = 0; j < cols; j++)
     {
-      output[i][j].set_output("out_" + std::to_string(i) + std::to_string(j));
+      output[i][j].set_output("out_" + std::to_string(i) +"_"+ std::to_string(j));
     }
   }
 }

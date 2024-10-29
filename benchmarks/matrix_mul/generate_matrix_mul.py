@@ -21,8 +21,15 @@ def multiply_matrixes(A : Matrix,B : Matrix):
     return C
 #############################################################################################################
 #############################################################################################################
+import argparse
+# Create the parser
+parser = argparse.ArgumentParser(description="Get io_file generation parameters")
 is_vectorization_activated = True
-function_slot_count= 32
+parser.add_argument("--slot_count", required=True,type=int, help="Slot_count", default=0)
+# Parse arguments
+args = parser.parse_args()
+function_slot_count = args.slot_count 
+####################
 is_cipher = 1 
 is_signed = 0
 matrix_A = Matrix(nb_rows=function_slot_count,nb_cols=function_slot_count)

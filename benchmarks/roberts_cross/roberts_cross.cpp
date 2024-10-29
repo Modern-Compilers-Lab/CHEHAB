@@ -5,7 +5,7 @@ using namespace fheco;
 #include <chrono>
 #include <fstream>
 #include <iostream>
-#include <string>
+#include <string> 
 #include <vector>
 /*****************************/
 void fhe_vectorized(int width){
@@ -36,7 +36,7 @@ void fhe(int width){
   {
     for (int j = 0; j < width; j++) 
     {
-      image[i][j] = Ciphertext("in_" + std::to_string(i) + std::to_string(j));
+      image[i][j] = Ciphertext("in_" + std::to_string(i) +"_"+ std::to_string(j));
     } 
   }
   int rows = width;
@@ -59,7 +59,7 @@ void fhe(int width){
   {
     for (int j = 0; j < cols; j++)
     {
-      output[i][j].set_output("out_" + std::to_string(i) + std::to_string(j));
+      output[i][j].set_output("out_" + std::to_string(i)+"_"+std::to_string(j));
     }
   }
   cout<<"End\n";

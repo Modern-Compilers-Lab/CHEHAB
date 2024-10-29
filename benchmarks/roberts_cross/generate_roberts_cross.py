@@ -1,13 +1,19 @@
 import numpy as np
-from math import sqrt
+################
+import argparse
+# Create the parser
+parser = argparse.ArgumentParser(description="Get io_file generation parameters")
 is_vectorization_activated = True
-slot_counts = [16,64,256,1024]
-slot_count = slot_counts[3]
-n_rows_image = int(sqrt(slot_count)) 
+parser.add_argument("--slot_count", required=True,type=int, help="Slot_count", default=0)
+# Parse arguments
+args = parser.parse_args()
+#################################################
+function_slot_count = args.slot_count
+n_rows_image = function_slot_count
 n_cols_image = n_rows_image
 N = n_rows_image*n_cols_image
 is_cipher = 1 
-is_signed = 0
+is_signed = 0 
 ##################################################
 # Initialize the output array
 width = n_cols_image

@@ -8,7 +8,7 @@ using namespace fheco;
 #include <string>
 #include <vector>
 /***************************/
-void fhe_vectorized(int slot_count){
+void fhe_vectorized(int slot_count){ 
   Ciphertext c0("c0"); 
   Ciphertext c1("c1");
   Ciphertext c2("c2");

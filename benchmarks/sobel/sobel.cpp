@@ -7,7 +7,7 @@ using namespace fheco;
 #include <iostream>
 #include <string>
 #include <vector>
-/*****************************/
+/*****************************/ 
 void fhe_vectorized(int width){
   vector<vector<integer>> gx_kernel = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
   vector<vector<integer>> gy_kernel = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
@@ -45,7 +45,7 @@ void fhe(int width){
   {
     for (int j = 0; j < width; j++)
     {
-      img[i][j] = Ciphertext("in_" + std::to_string(i) + std::to_string(j));
+      img[i][j] = Ciphertext("in_" + std::to_string(i)+"_"+ std::to_string(j));
     } 
   }
   int rows = width;
@@ -91,7 +91,7 @@ void fhe(int width){
     for (int j = 0; j < cols; j++)
     {
       output[i][j]= gx_output[i][j] * gx_output[i][j] + gy_output[i][j] * gy_output[i][j];
-      output[i][j].set_output("out_" + std::to_string(i) + std::to_string(j));
+      output[i][j].set_output("out_" + std::to_string(i)+"_"+ std::to_string(j));
     }
   }
 }

@@ -6,7 +6,7 @@ using namespace fheco;
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <vector>
+#include <vector> 
 /********************/
 void fhe_vectorized(int slot_count){
   Ciphertext c1("c1");

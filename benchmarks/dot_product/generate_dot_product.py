@@ -1,11 +1,18 @@
 import numpy as np
-function_slot_count= 32
+import argparse
+# Create the parser
+parser = argparse.ArgumentParser(description="Get io_file generation parameters")
 is_vectorization_activated = True
+parser.add_argument("--slot_count", required=True,type=int, help="Slot_count", default=0)
+# Parse arguments
+args = parser.parse_args()
+function_slot_count = args.slot_count
+######################################################
 c1 = np.random.randint(0,10,(function_slot_count))
 c2 = np.random.randint(0,10,(function_slot_count))
 result = np.zeros((function_slot_count)) 
 res = 0 
-for i in range(function_slot_count):
+for i in range(function_slot_count): 
     res+= c1[i]*c2[i]
 for i in range(function_slot_count):
     result[i]=res

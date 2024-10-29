@@ -11,7 +11,7 @@ using namespace fheco;
 void fhe_vectorized(int width){
   vector<vector<integer>> kernel = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
   Ciphertext img("img");
-  Ciphertext top_row = img >> width;
+  Ciphertext top_row = img >> width; 
   Ciphertext bottom_row = img << width;
   Ciphertext top_sum = kernel[0][0] * (top_row >> 1) + kernel[0][1] * top_row + kernel[0][2] * (top_row << 1);
   Ciphertext curr_sum = kernel[1][0] * (img >> 1) + kernel[1][1] * img + kernel[1][2] * (img << 1);
@@ -30,7 +30,7 @@ void fhe(int width){
   {
     for (int j = 0; j < width; j++)
     {
-      img[i][j] = Ciphertext("in_" + std::to_string(i) + std::to_string(j));
+      img[i][j] = Ciphertext("in_" + std::to_string(i) +"_"+ std::to_string(j));
     } 
   }
   int rows = width;
@@ -57,7 +57,7 @@ void fhe(int width){
   {
     for (int j = 0; j < cols; j++)
     {
-      output[i][j].set_output("out_" + std::to_string(i) + std::to_string(j));
+      output[i][j].set_output("out_" + std::to_string(i)+"_"+std::to_string(j));
     }
   }
 }

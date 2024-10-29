@@ -1,12 +1,16 @@
 import numpy as np
 from math import sqrt
-
+import argparse
+# Create the parser
+parser = argparse.ArgumentParser(description="Get io_file generation parameters")
 is_vectorization_activated = True
-slot_counts = [16,64,256,1024]
-slot_count = slot_counts[3]
+parser.add_argument("--slot_count", required=True,type=int,help="Slot_count")
+# Parse arguments
+args = parser.parse_args()
+slot_count = args.slot_count 
 #################### 
-n_rows_image = int(sqrt(slot_count))
-n_cols_image = n_rows_image
+n_rows_image = slot_count
+n_cols_image = n_rows_image 
 N = n_rows_image*n_cols_image
 input_image = np.random.randint(0,10,(N))
 output_image = np.zeros((n_rows_image*n_cols_image))
@@ -51,9 +55,9 @@ else :
         output_lines = []
         for i in range(n_rows_image):
             for j in range(n_cols_image):
-                input_line= "in_{}{}".format(i,j)+" "+str(is_cipher)+" "+str(is_signed)+" "+str(int(input_image[i*n_cols_image+j]))+"\n"
+                input_line= "in_{}_{}".format(i,j)+" "+str(is_cipher)+" "+str(is_signed)+" "+str(int(input_image[i*n_cols_image+j]))+"\n"
                 input_lines.append(input_line)
-                output_line= "out_{}{}".format(i,j)+" "+str(is_cipher)+" "+str(int(output_image[i*n_cols_image+j]))+"\n"
+                output_line= "out_{}_{}".format(i,j)+" "+str(is_cipher)+" "+str(int(output_image[i*n_cols_image+j]))+"\n"
                 output_lines.append(output_line)
         f.writelines(input_lines)
         f.writelines(output_lines)

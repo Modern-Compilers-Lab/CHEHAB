@@ -1,13 +1,19 @@
 import numpy as np
+import argparse
+# Create the parser
+parser = argparse.ArgumentParser(description="Get io_file generation parameters")
 is_vectorization_activated = True
-function_slot_count= 32
+parser.add_argument("--slot_count", required=True,type=int, help="Slot_count", default=0)
+# Parse arguments
+args = parser.parse_args()
+function_slot_count = args.slot_count 
+##################################################
 c0 = np.random.randint(0,10,(function_slot_count))
 c1 = np.random.randint(0,10,(function_slot_count))
 c2 = np.random.randint(0,10,(function_slot_count))
 c3 = np.random.randint(0,10,(function_slot_count))
 c4 = np.random.randint(0,10,(function_slot_count))
-
-result = np.zeros((function_slot_count))
+result = np.zeros((function_slot_count)) 
 for i in range(function_slot_count):
     result[i]=c1[i] + (c0[i] * c0[i] * c4[i] + c0[i] * c3[i] + c2[i])
 is_cipher = 1 

@@ -1,10 +1,17 @@
 import numpy as np
-is_vectorization_activated = True 
-function_slot_count= 32
+import argparse
+# Create the parser
+parser = argparse.ArgumentParser(description="Get io_file generation parameters")
+is_vectorization_activated = True
+parser.add_argument("--slot_count", required=True,type=int, help="Slot_count", default=0)
+# Parse arguments
+args = parser.parse_args()
+function_slot_count = args.slot_count 
+##################################################
 is_cipher = 1  
 is_signed = 1
 if is_vectorization_activated :
-    m = 5
+    m = 5 
     b = 2
     v1 = np.random.randint(0,10,(function_slot_count))
     v2 = np.random.randint(0,10,(function_slot_count))

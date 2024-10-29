@@ -473,8 +473,7 @@ void Compiler::call_vectorizer(int vector_width)
     std::cout << "Failed to call the vectorizer engine!" << std::endl;
   }
 }
-/***************************************************************************************/
-/**************************************************************************************/
+/***************************************************************************/
 using namespace std ;
 std::unordered_map<int, std::string> labels_map;
 int id_counter = 0;
@@ -492,7 +491,7 @@ ir::OpCode Compiler::operationFromString(string operation)
   else
     throw logic_error("Invalid expression");
 }
-/*****************************************************************/
+/*************************************************************************/
 ir::Term *Compiler::build_expression(const std::shared_ptr<ir::Func> &func, map<string, ir::Term *> map, queue<string> &tokens)
 {
   while (!tokens.empty())
@@ -584,7 +583,7 @@ ir::Term *Compiler::build_expression(const std::shared_ptr<ir::Func> &func, map<
   }
   throw logic_error("Invalid expression");
 }
-/*****************************************************************/
+/************************************************************************/
 queue<string>split(const string &s)
 {
   queue<std::string> tokens;
@@ -761,6 +760,52 @@ bool verify_all_vec_elems_eq0(const vector<string>& elems){
   return all_vec_elems_eq0 ;
 }
 /***********************************************************************/
+void decompose_vector_op(const vector<string>& vector_elements, vector<string>& vec_ops1 , vector<string>& vec_ops2){
+   vector<string> elems = {};
+   for (auto elem : vector_elements) {
+        vector<string> elems;
+        // Check for a "0" element
+        if (elem == "0") {
+            vec_ops1.emplace_back(elem);
+            vec_ops2.emplace_back(elem);
+            continue;
+        }
+        // Remove the first "( + " and last " )"
+        elem = elem.substr(3, elem.size() - 5);
+        // Stream processing
+        istringstream iss(elem);
+        string token, nested_expr;
+        int nested_level = 0;
+        while (iss >> token) {
+            if (token == "(") {
+                // Start a new nested expression
+                nested_expr.clear();
+                nested_expr += token;
+                nested_level = 1;
+                // Collect tokens until the nested level returns to zero
+                while (nested_level > 0 && iss >> token) {
+                    nested_expr += " " + token;
+                    if (token == "(") ++nested_level;
+                    else if (token == ")") --nested_level;
+                }
+                elems.emplace_back(nested_expr);
+            } else {
+                // Simple operand
+                elems.emplace_back(token);
+            }
+        }
+        if (elems.size() >= 2) {
+            vec_ops1.emplace_back(elems[0]);
+            vec_ops2.emplace_back(elems[1]);
+        }
+    }
+    // Debug output to check results
+    /*cout << "vec_ops1: ";
+    for (const auto& op : vec_ops1) cout << op << " --- ";
+    cout << "\nvec_ops2: ";
+    for (const auto& op : vec_ops2) cout << op << " --- ";*/
+}
+/***********************************************************************/
 string process_composed_vectors(const vector<string>& vector_elements,
     std::unordered_map<std::string, std::string>& dictionary,
     std::unordered_map<std::string, std::string>& inputs_entries,
@@ -773,7 +818,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
     vector<string> simple_elements = {} ;
     vector<string> composed_elements = {} ;
     for(auto elem : vector_elements){
-      if(elem.substr(0,1)=="("){
+      if(elem.at(0)=='('){
         composed_elements.push_back(elem);
         simple_elements.push_back("0");
       }else{
@@ -794,24 +839,28 @@ string process_composed_vectors(const vector<string>& vector_elements,
       // cout<<"divide composed_elements vector on three vectors each one containing\n";
       // cout<<"associated operations with + , - *\n";
       for(const auto elem : composed_elements){
-        if(elem.substr(1,2)==" +"){
-          addition_elements.push_back(elem);
-          substraction_elements.push_back("0");
-          multiplication_elements.push_back("0");
-        }else if(elem.substr(1,2)==" -"){
-          addition_elements.push_back("0");
-          substraction_elements.push_back(elem);
-          multiplication_elements.push_back("0");
-        }else if(elem.substr(1,2)==" *"){
-          addition_elements.push_back("0");
-          substraction_elements.push_back("0");
-          multiplication_elements.push_back(elem);
-        }else if(elem=="0"){
+        if(elem=="0"){
           addition_elements.push_back("0");
           substraction_elements.push_back("0");
           multiplication_elements.push_back("0");
+        }else{
+          if(elem.at(2)=='+'){
+            addition_elements.push_back(elem);
+            substraction_elements.push_back("0");
+            multiplication_elements.push_back("0");
+          }else if(elem.at(2)=='-'){
+            addition_elements.push_back("0");
+            substraction_elements.push_back(elem);
+            multiplication_elements.push_back("0");
+          }else if(elem.at(2)=='*'){
+            addition_elements.push_back("0");
+            substraction_elements.push_back("0");
+            multiplication_elements.push_back(elem);
+          }
         }
       }
+      vector<string> vec_ops1 ={} ;
+      vector<string> vec_ops2 ={} ;
       if(!verify_all_vec_elems_eq0(addition_elements)&&!verify_all_vec_elems_eq0(substraction_elements)&&!verify_all_vec_elems_eq0(multiplication_elements)){
         return "( + "+process_composed_vectors(addition_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" ( + "+process_composed_vectors(substraction_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(multiplication_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" ) )";
       }else if(!verify_all_vec_elems_eq0(addition_elements)&&!verify_all_vec_elems_eq0(substraction_elements)){
@@ -821,117 +870,13 @@ string process_composed_vectors(const vector<string>& vector_elements,
       }else if(!verify_all_vec_elems_eq0(addition_elements)&&!verify_all_vec_elems_eq0(multiplication_elements)){
         return "( + "+process_composed_vectors(addition_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(multiplication_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
       }else if(!verify_all_vec_elems_eq0(addition_elements)){
-        vector<string> vec_ops1 ={} ;
-        vector<string> vec_ops2 ={} ;
-        for(auto elem : addition_elements){
-          vector<string> elems = {};
-          if(elem=="0"){
-            vec_ops1.push_back(elem);
-            vec_ops2.push_back(elem);
-          }else{
-            elem=elem.substr(3);
-            elem=elem.substr(0,elem.size()-2);
-            istringstream iss(elem);
-            string vector_string_element="";
-            string element="";
-            while (iss >> element) {
-                if (element=="("){
-                    vector_string_element+=" (" ;
-                    int sub_nested_level=0 ;
-                    while (iss >> element&&sub_nested_level>=0){
-                        if(element!=")"&&element!="("){
-                            vector_string_element+=" "+element; 
-                        }else{
-                            sub_nested_level += (element == "(") ? 1 : (element == ")") ? -1 : 0;
-                            vector_string_element+=" "+element ;
-                        }
-                    }
-                    iss.seekg(-element.length(), std::ios_base::cur);
-                    elems.push_back(vector_string_element.substr(1,vector_string_element.size()));
-                }else{
-                    elems.push_back(element);
-                }     
-            }
-            vec_ops1.push_back(elems[0]);
-            vec_ops2.push_back(elems[1]);
-          }
-        }
+        decompose_vector_op(addition_elements, vec_ops1 ,vec_ops2);
         return "( + "+process_composed_vectors(vec_ops1,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(vec_ops2,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
       }else if(!verify_all_vec_elems_eq0(substraction_elements)){
-        vector<string> vec_ops1 ={} ;
-        vector<string> vec_ops2 ={} ;
-        for(auto elem : substraction_elements){
-          vector<string> elems = {};
-          if(elem=="0"){
-            vec_ops1.push_back(elem);
-            vec_ops2.push_back(elem);
-          }else{
-            elem=elem.substr(3);
-            elem=elem.substr(0,elem.size()-2);
-            istringstream iss(elem);
-            string vector_string_element="";
-            string element="";
-            while (iss >> element) {
-                if (element=="("){
-                    vector_string_element+=" (" ;
-                    //string sub_expression="";
-                    int sub_nested_level=0 ;
-                    while (iss >> element&&sub_nested_level>=0){
-                        if(element!=")"&&element!="("){
-                            vector_string_element+=" "+element; 
-                        }else{
-                            sub_nested_level += (element == "(") ? 1 : (element == ")") ? -1 : 0;
-                            vector_string_element+=" "+element ;
-                        }
-                    }
-                    iss.seekg(-element.length(), std::ios_base::cur);
-                    elems.push_back(vector_string_element.substr(1,vector_string_element.size()));
-                }else{
-                    elems.push_back(element);
-                }     
-            }
-            vec_ops1.push_back(elems[0]);
-            vec_ops2.push_back(elems[1]);
-          }
-        }
+        decompose_vector_op(substraction_elements, vec_ops1 ,vec_ops2);
         return "( - "+process_composed_vectors(vec_ops1,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(vec_ops2,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
       }else if(!verify_all_vec_elems_eq0(multiplication_elements)){
-        vector<string> vec_ops1 ={} ;
-        vector<string> vec_ops2 ={} ;
-        for(auto elem : multiplication_elements){
-          vector<string> elems = {};
-          if(elem=="0"){
-            vec_ops1.push_back(elem);
-            vec_ops2.push_back(elem);
-          }else{
-            elem=elem.substr(3);
-            elem=elem.substr(0,elem.size()-2);
-            istringstream iss(elem);
-            string vector_string_element="";
-            string element="";
-            while (iss >> element) {
-                if (element=="("){
-                    vector_string_element+=" (" ;
-                    //string sub_expression="";
-                    int sub_nested_level=0 ;
-                    while (iss >> element&&sub_nested_level>=0){
-                        if(element!=")"&&element!="("){
-                            vector_string_element+=" "+element; 
-                        }else{
-                            sub_nested_level += (element == "(") ? 1 : (element == ")") ? -1 : 0;
-                            vector_string_element+=" "+element ;
-                        }
-                    }
-                    iss.seekg(-element.length(), std::ios_base::cur);
-                    elems.push_back(vector_string_element.substr(1,vector_string_element.size()));
-                }else{
-                    elems.push_back(element);
-                }     
-            }
-            vec_ops1.push_back(elems[0]);
-            vec_ops2.push_back(elems[1]);
-          }
-        }
+        decompose_vector_op(multiplication_elements, vec_ops1 ,vec_ops2);
         return "( * "+process_composed_vectors(vec_ops1,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(vec_ops2,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
       }
     }else if(!all_simple_elements_eq_0){
@@ -1494,7 +1439,7 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     //std::cout<<"Updated IR : "<<simplified_expression<<" \n";
     /*****************************************************************/
     /*****************************************************************/
-    std::cout<<"applying constant forlding for vectors \n"; 
+    std::cout<<"applying constant forlding On vectors \n"; 
     vector<string> updated_cons_fd_expressions = {};
     for(const auto& expr : simplified_expressions){
         auto tokens1 = split(expr);
