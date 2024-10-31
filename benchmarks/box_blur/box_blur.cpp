@@ -114,7 +114,7 @@ int main(int argc, char **argv)
     Compiler::enable_const_folding();
   else
     Compiler::disable_const_folding(); 
-
+  Compiler::disable_auto_enc_params_selection();
   chrono::high_resolution_clock::time_point t;
   chrono::duration<double, milli> elapsed;
   string func_name = "fhe";
@@ -175,3 +175,24 @@ int main(int argc, char **argv)
   }
   return 0;
 }
+/*
+ rw!("assoc-balan-add-mul-1"; 
+        "(VecAdd (VecAdd (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2)) (VecMul ?b1 ?b2)) (VecMul ?a1 ?a2))" => 
+        "(VecAdd (VecAdd (VecMul ?a1 ?a2) (VecMul ?b1 ?b2)) (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2)))"
+        if is_vec_mul("?a1","?a2","?b1","?b2","?c1","?c2","?d1","?d2")
+        ),
+        rw!("assoc-balan-add-mul-2"; 
+        "(VecAdd (VecAdd (VecMul ?b1 ?b2) (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2))) (VecMul ?a1 ?a2))" => 
+        "(VecAdd (VecAdd (VecMul ?a1 ?a2) (VecMul ?b1 ?b2)) (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2)))"
+        if is_vec_mul("?a1","?a2","?b1","?b2","?c1","?c2","?d1","?d2")
+        ),
+        rw!("assoc-balan-add-mul-3"; 
+        "(VecAdd (VecAdd (VecMul ?a1 ?a2) (VecAdd (VecMul ?b1 ?b2) (VecMul ?c1 ?c2))) (VecMul ?d1 ?d2))" => 
+        "(VecAdd (VecAdd (VecMul ?a1 ?a2) (VecMul ?b1 ?b2)) (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2)))"
+        if is_vec_mul("?a1","?a2","?b1","?b2","?c1","?c2","?d1","?d2")
+        ),
+        rw!("distribute-mul-over-add"; 
+        "(VecMul ?a (VecAdd ?b ?c))" => "(VecAdd (VecMul ?a ?b) (VecMul ?a ?c))"
+        if is_vec("?a","?b","?c","?c")
+        ),
+*/

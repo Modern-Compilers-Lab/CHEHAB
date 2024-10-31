@@ -25,6 +25,8 @@ namespace fheco::param_select
 
     EncParams(std::size_t poly_mod_degree, integer plain_mod, std::vector<int> coeff_mod_bit_sizes);
 
+    EncParams(std::size_t poly_mod_degree, int plain_mod_bit_size);
+
     ~EncParams() = default;
 
     EncParams(const EncParams &other) = default;

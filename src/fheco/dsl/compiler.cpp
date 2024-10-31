@@ -42,6 +42,9 @@ bool Compiler::const_folding_enabled_ = false;
 
 bool Compiler::scalar_vector_shape_ = true;
 
+bool Compiler::automatic_enc_params_enabled_ = false; // Or set to true if desired
+
+
 extern "C"
 { 
   void modify_string(char *str, size_t len);
@@ -98,7 +101,7 @@ void Compiler::gen_he_code(
 #ifdef FHECO_LOGGING
   clog << "\ncode_generation\n";
 #endif
-  code_gen::gen_func(func, rotation_steps_keys, header_os, header_name, source_os,security_level);
+  code_gen::gen_func(func, rotation_steps_keys, header_os, header_name, source_os,security_level,auto_enc_params_selection_enabled());
 }
 
 const shared_ptr<ir::Func> &Compiler::add_func(shared_ptr<ir::Func> func)

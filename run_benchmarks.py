@@ -44,6 +44,7 @@ except subprocess.CalledProcessError as e:
 # "hamming_dist","poly_reg","lin_reg","l2_distance","dot_product","box_blur"
 # "box_blur","gx_kernel","gy_kernel","sobel","roberts_cross","matrix_mul"
 benchmark_folders = ["hamming_dist","poly_reg","lin_reg","l2_distance","dot_product","box_blur","gx_kernel","gy_kernel","sobel","roberts_cross","matrix_mul"] 
+benchmark_folders = ["gy_kernel","sobel","roberts_cross","matrix_mul"]
 ###############################
 ### specify the number of iteration  
 iterations = 5

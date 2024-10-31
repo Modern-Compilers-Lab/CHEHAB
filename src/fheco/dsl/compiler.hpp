@@ -102,6 +102,12 @@ public:
 
   static inline void disable_scalar_vector_shape() { scalar_vector_shape_ = false; }
 
+  static inline void enable_auto_enc_params_selection() {automatic_enc_params_enabled_ = true ;}
+
+  static inline void disable_auto_enc_params_selection() {automatic_enc_params_enabled_ = false ;}
+
+  static inline bool auto_enc_params_selection_enabled() {return automatic_enc_params_enabled_ ;}
+
 private:
   using FuncsTable = std::unordered_map<std::string, std::shared_ptr<ir::Func>>;
 
@@ -118,6 +124,8 @@ private:
   static bool const_folding_enabled_;
 
   static bool scalar_vector_shape_;
+
+  static bool automatic_enc_params_enabled_ ;
 };
 
 std::ostream &operator<<(std::ostream &os, Compiler::Ruleset ruleset);

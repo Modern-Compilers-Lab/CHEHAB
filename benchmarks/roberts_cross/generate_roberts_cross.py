@@ -61,9 +61,9 @@ if is_vectorization_activated :
         output_lines = []
         for i in range(n_rows_image):
             for j in range(n_cols_image):
-                input_line= "in_{}{}".format(i,j)+" "+str(is_cipher)+" "+str(is_signed)+" "+str(int(input_image[i][j]))+"\n"
+                input_line= "in_{}_{}".format(i,j)+" "+str(is_cipher)+" "+str(is_signed)+" "+str(int(input_image[i][j]))+"\n"
                 input_lines.append(input_line)
-                output_line= "out_{}{}".format(i,j)+" "+str(is_cipher)+" "+str(int(output_image[i][j]))+"\n"
+                output_line= "out_{}_{}".format(i,j)+" "+str(is_cipher)+" "+str(int(output_image[i][j]))+"\n"
                 output_lines.append(output_line)
         f.writelines(input_lines)
         f.writelines(output_lines)

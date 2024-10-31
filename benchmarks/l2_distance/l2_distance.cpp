@@ -128,9 +128,7 @@ int main(int argc, char **argv)
       auto ruleset = Compiler::Ruleset::ops_cost;
       auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
       Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
-      
       /************/elapsed = chrono::high_resolution_clock::now() - t;
-
       cout << elapsed.count() << " ms\n";
       if (call_quantifier)
       {

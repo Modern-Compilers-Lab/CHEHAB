@@ -1,6 +1,5 @@
 import random
 class Matrix : 
-   
     def __init__(self, nb_rows,nb_cols):
         self.nb_rows = nb_rows
         self.nb_cols = nb_cols 

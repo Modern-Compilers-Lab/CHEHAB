@@ -28,7 +28,7 @@ using TermsCtxtObjectsInfo = std::unordered_map<std::size_t, CtxtObjectInfo>;
 
 void gen_func(
   const std::shared_ptr<ir::Func> &func, const std::unordered_set<int> &rotataion_steps, std::ostream &header_os,
-  std::string_view header_name, std::ostream &source_os,param_select::EncParams::SecurityLevel security_level);
+  std::string_view header_name, std::ostream &source_os,param_select::EncParams::SecurityLevel security_level,bool automatic_enc_params_enabled);
 
 void gen_func_decl(const std::string &func_name, std::ostream &os);
 
@@ -54,7 +54,7 @@ void gen_output_terms(
 void gen_rotation_steps_getter_def(
   const std::string &func_name, const std::unordered_set<int> &steps, std::ostream &os);
 void gen_main_code(
-  fheco::param_select::EncParams params,param_select::EncParams::SecurityLevel security_level);
+  fheco::param_select::EncParams params,param_select::EncParams::SecurityLevel security_level,bool automatic_enc_params_enabled);
 template <typename Iter>
 void gen_sequence(Iter begin, Iter end, std::size_t line_threshold, std::ostream &os)
 {

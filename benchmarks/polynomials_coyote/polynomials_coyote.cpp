@@ -20,6 +20,12 @@ int getRandomNumber(int range) {
     std::uniform_int_distribution<int> dist(0, range);
     return dist(rng);
 }
+int64_t getRandomInt64(int64_t range) {
+    static std::random_device rd;         // Seed generator
+    static std::mt19937_64 rng(rd());     // 64-bit Mersenne Twister generator
+    std::uniform_int_distribution<int64_t> dist(0, range - 1);  // Exclusive upper bound
+    return dist(rng);
+}
 /**************************************************************** */
 // C++ equivalent of the treeGenerator function
 Ciphertext treeGenerator(int originalDepth, int maxDepth, int& seed, const std::string& regime) {
@@ -57,7 +63,7 @@ Ciphertext treeGenerator(int originalDepth, int maxDepth, int& seed, const std::
             }
         }
     } else {
-        integer endNode = getRandomNumber(1024);
+        //integer endNode = (1024);
         seed += 1;
         return Ciphertext("x");  // Return Ciphertext instance instead of Tree(Var)
     }

@@ -44,8 +44,8 @@ if not is_vectorization_activated :
         f.write(f"result {is_cipher} "+" ".join(f"{int(num)}" for num in output_image)+"\n")
 else : 
     function_slot_count= 1
-    nb_inputs = slot_count
-    nb_outputs = slot_count
+    nb_inputs = N
+    nb_outputs = N
     #nb_outputs = n_rows_out*n_cols_out
     #nb_outputs = 1 # 3*3*4 
     with open("fhe_io_example.txt", "w") as f:

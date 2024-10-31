@@ -41,6 +41,12 @@ EncParams::EncParams(size_t poly_mod_degree, integer plain_mod, vector<int> coef
     coeff_mod_bit_count_ += prime_size;
 }
 /**************************************************************************************************/
+EncParams::EncParams(size_t poly_mod_degree, int plain_mod_bit_size)
+  : poly_mod_degree_{poly_mod_degree}, plain_mod_bit_size_{plain_mod_bit_size}
+{
+
+}
+/**************************************************************************************************/
 
 int EncParams::increase_coeff_mod_bit_sizes(int max_total_amount)
 {

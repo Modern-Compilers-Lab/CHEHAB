@@ -96,7 +96,7 @@ for subfolder_name in polynomial_folders:
                         multiplicative_depth = depth_match.group(2) if depth_match else None
                         operation_stats["Depth"].append(int(depth))
                         operation_stats["Multiplicative Depth"].append(int(multiplicative_depth))
-                        print(f"\nDepth: {depth} --MultipliDepth {multiplicative_depth}")
+                        print(f"Depth: {depth} --MultipliDepth {multiplicative_depth}")
                     except subprocess.CalledProcessError as e:
                         print(f"Command for {subfolder_name} failed with error:\n{e.stderr}")
                     #########################################################################

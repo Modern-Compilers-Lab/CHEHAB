@@ -9,7 +9,7 @@ parser.add_argument("--slot_count", required=True,type=int, help="Slot_count", d
 args = parser.parse_args()
 #################################################
 function_slot_count = args.slot_count
-n_rows_image = int(sqrt(slot_count))
+n_rows_image = function_slot_count
 n_cols_image = n_rows_image
 N = n_rows_image*n_cols_image
 is_cipher = 1  
@@ -58,9 +58,9 @@ if is_vectorization_activated :
         output_lines = []
         for i in range(n_rows_image):
             for j in range(n_cols_image):
-                input_line= "in_{}{}".format(i,j)+" "+str(is_cipher)+" "+str(is_signed)+" "+str(int(input_image[i*n_cols_image+j]))+"\n"
+                input_line= "in_{}_{}".format(i,j)+" "+str(is_cipher)+" "+str(is_signed)+" "+str(int(input_image[i*n_cols_image+j]))+"\n"
                 input_lines.append(input_line)
-                output_line= "out_{}{}".format(i,j)+" "+str(is_cipher)+" "+str(int(output_image[i*n_cols_image+j]))+"\n"
+                output_line= "out_{}_{}".format(i,j)+" "+str(is_cipher)+" "+str(int(output_image[i*n_cols_image+j]))+"\n"
                 output_lines.append(output_line)
         f.writelines(input_lines)
         f.writelines(output_lines)
