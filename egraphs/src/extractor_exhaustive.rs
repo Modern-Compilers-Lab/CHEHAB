@@ -2,17 +2,17 @@ use egg::*;
 use std::collections::{HashMap, HashSet};
 
 use crate::config::*;
-pub struct Extractor<'a, L: Language, N: Analysis<L>> {
+pub struct ExhaustiveExtractor<'a, L: Language, N: Analysis<L>> {
     egraph: &'a egg::EGraph<L, N>,
 }
 
-impl<'a, L, N> Extractor<'a, L, N>
+impl<'a, L, N> ExhaustiveExtractor<'a, L, N>
 where
     L: Language + ToString  + std::fmt::Display,
     N: Analysis<L>,
 {
     pub fn new(egraph: &'a EGraph<L, N>) -> Self {
-        let extractor = Extractor { egraph };
+        let extractor = ExhaustiveExtractor { egraph };
         extractor
     }
     // The find_best function tests all possible combinations of e-nodes within an e-graph,
@@ -173,6 +173,7 @@ where
                         // Adjust the IDs of the children to reflect the reversed order
                         let new_node =
                             node.map_children(|id| (total_nodes - usize::from(id) - 1).into());
+                        eprintln!("Add a new node id {} to the best expression ==> \n",total_nodes);
                         best_expr.add(new_node); // Add the adjusted node to the best expression
                     }
                 }

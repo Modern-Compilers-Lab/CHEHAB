@@ -4,17 +4,17 @@ use rand::Rng;
 use std::collections::HashSet;
 use crate::veclang::VecLang;
 
-pub struct Extractor<'a, L: Language, N: Analysis<L>> {
+pub struct SimulatedAnnealingExtractor<'a, L: Language, N: Analysis<L>> {
     egraph: &'a egg::EGraph<L, N>,
 }
 
-impl<'a, L, N> Extractor<'a, L, N>
+impl<'a, L, N> SimulatedAnnealingExtractor<'a, L, N>
 where
     L: Language + ToString + std::fmt::Display,
     N: Analysis<L>,
 {
     pub fn new(egraph: &'a EGraph<L, N>) -> Self {
-        Extractor { egraph }
+        SimulatedAnnealingExtractor { egraph }
     }
 
     fn causes_cycle(&self, enode: &L, visited: &HashSet<Id>) -> bool {

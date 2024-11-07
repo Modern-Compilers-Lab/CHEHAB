@@ -48,10 +48,12 @@ impl Analysis<VecLang> for ConstantFold {
             VecLang::Mul([a, b]) => x(a)? * x(b)?,
             VecLang::Neg([a]) => -*x(a)?,
             VecLang::Rot([a, _b]) => *x(a)?,
+            // VecAdd and similar operations return None to skip i32 representation
+            VecLang::VecAdd(_) | VecLang::VecMul(_) | VecLang::Vec(_) | VecLang::VecMinus(_) | VecLang::VecNeg(_) => return None,
             _ => return None,
         })
     }
-
+  
     fn merge(&mut self, to: &mut Self::Data, from: Self::Data) -> DidMerge {
         egg::merge_max(to, from)
     }
@@ -76,4 +78,3 @@ impl Analysis<VecLang> for ConstantFold {
         }
     }
 }
-

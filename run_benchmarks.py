@@ -43,8 +43,9 @@ except subprocess.CalledProcessError as e:
 # Iterate through each item in the benchmarks folder
 # "hamming_dist","poly_reg","lin_reg","l2_distance","dot_product","box_blur"
 # "box_blur","gx_kernel","gy_kernel","sobel","roberts_cross","matrix_mul"
-benchmark_folders = ["hamming_dist","poly_reg","lin_reg","l2_distance","dot_product","box_blur","gx_kernel","gy_kernel","sobel","roberts_cross","matrix_mul"] 
-benchmark_folders = ["gy_kernel","sobel","roberts_cross","matrix_mul"]
+# benchmark_folders = ["hamming_dist","poly_reg","lin_reg","l2_distance","dot_product","box_blur","gx_kernel","gy_kernel","sobel","roberts_cross","matrix_mul"] 
+benchmark_folders = ["matrix_mul","sobel","roberts_cross","gy_kernel","gx_kernel"]
+#benchmark_folders = ["dot_product"]
 ###############################
 ### specify the number of iteration  
 iterations = 5
@@ -58,15 +59,15 @@ for subfolder_name in benchmark_folders:
     if os.path.isdir(build_path):
         ###############################################
         ##### loop over specified slot_counts #########
-        slot_counts= [4,8,16,32]
-        window_size = 8
+        slot_counts= [4,8,16]
+        window_size = 0
         for slot_count in slot_counts :
             print("****************************************************************")
             print(f"*****run {subfolder_name} , for slot_count : {slot_count}******")
             operation_stats = {
-            "add": [0], "sub": [0], "multiply_plain": [0], "rotate_rows": [0],
-            "square": [0], "multiply": [0], "Depth": [0], "Multiplicative Depth": [0],
-            "compile_time (ms)": [0], "execution_time (ms)": [0]
+            "add": [], "sub": [], "multiply_plain": [], "rotate_rows": [],
+            "square": [], "multiply": [], "Depth": [], "Multiplicative Depth": [],
+            "compile_time (ms)": [], "execution_time (ms)": []
             }
             ###generate io_file for benchmark with slot_count 
             pro = subprocess.Popen(['python3', 'generate_{}.py'.format(subfolder_name),'--slot_count',str(slot_count)],cwd=build_path)
@@ -99,7 +100,7 @@ for subfolder_name in benchmark_folders:
                     #print(depth_match)
                     depth = int(depth_match.group(1)) if depth_match else None
                     multiplicative_depth = int(depth_match.group(2)) if depth_match else None
-                    #print(f"Depth=>{depth}, multiplcative_depth=>{multiplicative_depth}")
+                    print(f"Depth=>{depth}, multiplcative_depth=>{multiplicative_depth}")
                     operation_stats["Depth"].append(depth)
                     operation_stats["Multiplicative Depth"].append(multiplicative_depth)
 
@@ -153,12 +154,13 @@ for subfolder_name in benchmark_folders:
                     file_content = file.read()
                     for op in operations:
                         nb_occurrences = len(re.findall(rf'\b{op}', file_content))
-                        operation_stats[op].append(nb_occurrences)
+                        operation_stats[op].append(int(nb_occurrences))
             ####################################################################
             bench_name = subfolder_name+"_"+str(slot_count)
             row=[bench_name]
             for key, values in operation_stats.items():
-                row.append(int(statistics.mean(values))) if values else None
+                print(f"{key} {values} {statistics.median(values)}")
+                row.append(statistics.mean(values)) if values else None
             #####################################################################
             #######################################################################
             with open(output_csv, mode='a', newline='') as file:

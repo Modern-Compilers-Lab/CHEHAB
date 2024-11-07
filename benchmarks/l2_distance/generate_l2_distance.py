@@ -2,7 +2,7 @@ import numpy as np
 import argparse
 # Create the parser
 parser = argparse.ArgumentParser(description="Get io_file generation parameters")
-is_vectorization_activated = False
+is_vectorization_activated = True
 parser.add_argument("--slot_count", required=True,type=int, help="Slot_count", default=0)
 # Parse arguments
 args = parser.parse_args()

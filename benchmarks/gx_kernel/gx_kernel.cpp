@@ -21,7 +21,7 @@ void fhe_vectorized(int width){
 }
 /**********************************************************************************/
 void fhe(int width){
-  vector<vector<integer>> kernel = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+  vector<vector<integer>> kernel = {{1, 0, 1}, {2, 0, 2}, {1, 0, 1}};
   std::vector<std::vector<Ciphertext>> img = std::vector<std::vector<Ciphertext>>(width, std::vector<Ciphertext>(width));
   std::vector<std::vector<Ciphertext>> output(width, std::vector<Ciphertext>(width));
   std::cout<<"welcome in fhe \n";

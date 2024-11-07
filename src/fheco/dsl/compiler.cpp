@@ -11,7 +11,7 @@
 #include <cstring> 
 #include <ctime>
 #include <filesystem>
-#include <fstream>
+#include <fstream> 
 #include <iostream>
 #include <map>
 #include <ostream>
@@ -181,6 +181,173 @@ ostream &operator<<(ostream &os, Compiler::Ruleset ruleset)
  *
  * @param func Shared pointer to the function to be vectorized.
  */
+/************************************************************************/
+queue<string>split(const string &s)
+{
+  queue<std::string> tokens;
+  stringstream ss(s);
+  std::string token;
+  while (getline(ss, token, ' '))
+  {
+    tokens.push(token);
+  }
+  return tokens;
+}
+/**************************************************************************/
+void replace_all(string& str, const string& from, const string& to) {
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Move past the replacement
+    }
+}
+/************************************************************************/
+std::vector<std::string> process_vectorized_code(const string& content) {
+    std::string cleaned_content = content;
+    replace_all(cleaned_content, "(", "( ");
+    replace_all(cleaned_content, ")", " )");
+    replace_all(cleaned_content, "\n", " ");
+    /********************************/
+    istringstream iss(cleaned_content);
+    vector<string> tokens;
+    string token;
+
+    while (iss >> token) {
+        if (!token.empty()) {
+            tokens.push_back(token);
+        }
+    }
+    return tokens;
+}
+/***********************************************************************/
+bool is_literal(const std::string& token) {
+    return std::none_of(token.begin(), token.end(), [](unsigned char c) { return std::isalpha(c); });
+}
+/**********************************************************************/
+string constant_folding(queue<string> &tokens)
+{
+  //std::cout<<"welcome in constant folding\n";
+  while (!tokens.empty())
+  {
+    //std::cout<<"hereee :"<<tokens.front()<<"\n";
+    if (tokens.front() == "(")
+    {
+      //std::cout<<"here\n";
+      tokens.pop();
+      string operationString = tokens.front();
+      tokens.pop();
+      string potential_step = "";
+      string operand1="" ,operand2="";
+      if (tokens.front() == "(")
+      {
+        operand1 = constant_folding(tokens);
+      }
+      else
+      {
+        //std::cout<<"get op1 \n";
+        operand1 = tokens.front();
+        tokens.pop();
+      }
+      if (tokens.front() == "(")
+      {
+        operand2 = constant_folding(tokens);
+        potential_step += " ";
+
+      }
+      else if (tokens.front() != ")")
+      {
+        //std::cout<<"get op2 \n";
+        operand2 = tokens.front();
+        potential_step = tokens.front();
+        tokens.pop();
+      }
+
+      // Check for the closing parenthesis
+      if (tokens.front() == ")")
+      {
+        tokens.pop();
+      }
+      if (potential_step.size() > 0)
+      {
+        //std::cout<<operationString<<" "<<operand1<<" "<<operand2<<" \n";
+        bool is_op1_litteral = is_literal(operand1);
+        bool is_op2_litteral = is_literal(operand2);
+        //std::cout<<type_op1<<" "<<type_op2<<" \n";
+        if(is_op1_litteral&&is_op2_litteral){
+          int op1 = 0;
+          int op2 = 0;
+          try{
+            op1 = stoi(operand1);
+            op2 = stoi(operand2); 
+            int res = 0 ;
+            if(operationString=="+"){
+              res = op1+op2 ;
+            }else if(operationString=="-"){
+              res = op1-op2 ;
+            }else if(operationString=="*"){
+              res = op1*op2 ;
+            }
+            string res_op = std::to_string(res);
+            return res_op ;
+          }catch(exception e){
+            throw invalid_argument("value :"+operand1+" or "+operand2+" cant be converted to int");
+          }
+        }else if(is_op1_litteral){
+            int op1 = stoi(operand1);
+            int res = 0;
+            if(op1==0){
+              if(operationString=="+"){
+                return operand2;
+              }else if(operationString=="-"){
+                return "( "+operationString+" "+operand2+" )";
+              }else if(operationString=="*"){
+                return std::to_string(res);
+              }
+            }else if (op1==1){
+              if(operationString=="*"){
+                return operand2;
+              }else{
+                return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+              }
+            }else{
+               return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+            }
+        }else if (is_op2_litteral){
+            //std::cout<<"welcome \n";
+            int op2 = stoi(operand2);
+            int res = 0;
+            if(op2==0){
+              if(operationString=="+"){
+                return operand1;
+              }else if(operationString=="-"){
+                return "( "+operationString+" "+operand1+" )";
+              }else if(operationString=="*"){
+                return std::to_string(res);
+              }
+            }else if (op2==1){
+              if(operationString=="*"){
+                return operand1;
+              }else{
+                return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+              }
+            }else{
+               return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+            }
+        }else{
+            return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+        }
+      }else{
+        return " ( "+operationString+" "+operand1+" )" ;
+      }
+    }
+    else
+    {
+      return tokens.front();
+    }
+  }
+  throw logic_error("Invalid expression");
+}
+/**********************************************************************/
 void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
 {
   std::cout<<"welcome in vectorized code generator \n";
@@ -193,7 +360,7 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   std::ofstream vectorized_code_file("../vectorized_code.txt");
 
   // Check if any of the files failed to open
-  if (!inputs_file || !expression_file || !vectorized_code_file)
+  if (!inputs_file || !vectorized_code_file || !expression_file)
   {
     std::cerr << "Error opening one of the output files." << std::endl;
     return;
@@ -253,11 +420,12 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   for (auto it = output_terms.begin(); it != output_terms.end(); ++it)
   {
     auto output_term = *it;
-    expression += expr_printer.terms_str_exprs().at(output_term->id()) + " ";
-    //std::cout<<expression<<" \n";
+    string temp_elem = expr_printer.terms_str_exprs().at(output_term->id()) ;
+    auto tokens = split(temp_elem);
+    temp_elem=constant_folding(tokens);
+    expression += temp_elem + " ";
     ++vector_width;
   }
-
   // Read and parse the VECTOR_WIDTH environment variable
   const char *env_var = std::getenv("VECTOR_WIDTH");
   if (env_var)
@@ -582,172 +750,6 @@ ir::Term *Compiler::build_expression(const std::shared_ptr<ir::Func> &func, map<
     {
 
       return map.at(tokens.front());
-    }
-  }
-  throw logic_error("Invalid expression");
-}
-/************************************************************************/
-queue<string>split(const string &s)
-{
-  queue<std::string> tokens;
-  stringstream ss(s);
-  std::string token;
-  while (getline(ss, token, ' '))
-  {
-    tokens.push(token);
-  }
-  return tokens;
-}
-/**************************************************************************/
-void replace_all(string& str, const string& from, const string& to) {
-    size_t start_pos = 0;
-    while ((start_pos = str.find(from, start_pos)) != string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // Move past the replacement
-    }
-}
-/************************************************************************/
-std::vector<std::string> process_vectorized_code(const string& content) {
-    std::string cleaned_content = content;
-    replace_all(cleaned_content, "(", "( ");
-    replace_all(cleaned_content, ")", " )");
-    replace_all(cleaned_content, "\n", " ");
-    /********************************/
-    istringstream iss(cleaned_content);
-    vector<string> tokens;
-    string token;
-
-    while (iss >> token) {
-        if (!token.empty()) {
-            tokens.push_back(token);
-        }
-    }
-    return tokens;
-}
-/***********************************************************************/
-bool is_literal(const std::string& token) {
-    return std::none_of(token.begin(), token.end(), [](unsigned char c) { return std::isalpha(c); });
-}
-/**********************************************************************/
-string constant_folding(queue<string> &tokens)
-{
-  //std::cout<<"welcome in constant folding\n";
-  while (!tokens.empty())
-  {
-    //std::cout<<"hereee :"<<tokens.front()<<"\n";
-    if (tokens.front() == "(")
-    {
-      //std::cout<<"here\n";
-      tokens.pop();
-      string operationString = tokens.front();
-      tokens.pop();
-      string potential_step = "";
-      string operand1="" ,operand2="";
-      if (tokens.front() == "(")
-      {
-        operand1 = constant_folding(tokens);
-      }
-      else
-      {
-        //std::cout<<"get op1 \n";
-        operand1 = tokens.front();
-        tokens.pop();
-      }
-      if (tokens.front() == "(")
-      {
-        operand2 = constant_folding(tokens);
-        potential_step += " ";
-
-      }
-      else if (tokens.front() != ")")
-      {
-        //std::cout<<"get op2 \n";
-        operand2 = tokens.front();
-        potential_step = tokens.front();
-        tokens.pop();
-      }
-
-      // Check for the closing parenthesis
-      if (tokens.front() == ")")
-      {
-        tokens.pop();
-      }
-      if (potential_step.size() > 0)
-      {
-        //std::cout<<operationString<<" "<<operand1<<" "<<operand2<<" \n";
-        bool is_op1_litteral = is_literal(operand1);
-        bool is_op2_litteral = is_literal(operand2);
-        //std::cout<<type_op1<<" "<<type_op2<<" \n";
-        if(is_op1_litteral&&is_op2_litteral){
-          int op1 = 0;
-          int op2 = 0;
-          try{
-            op1 = stoi(operand1);
-            op2 = stoi(operand2); 
-            int res = 0 ;
-            if(operationString=="+"){
-              res = op1+op2 ;
-            }else if(operationString=="-"){
-              res = op1-op2 ;
-            }else if(operationString=="*"){
-              res = op1*op2 ;
-            }
-            string res_op = std::to_string(res);
-            return res_op ;
-          }catch(exception e){
-            throw invalid_argument("value :"+operand1+" or "+operand2+" cant be converted to int");
-          }
-        }else if(is_op1_litteral){
-            int op1 = stoi(operand1);
-            int res = 0;
-            if(op1==0){
-              if(operationString=="+"){
-                return operand2;
-              }else if(operationString=="-"){
-                return "( "+operationString+" "+operand2+" )";
-              }else if(operationString=="*"){
-                return std::to_string(res);
-              }
-            }else if (op1==1){
-              if(operationString=="*"){
-                return operand2;
-              }else{
-                return "( "+operationString+" "+operand1+" "+operand2+" )" ;
-              }
-            }else{
-               return "( "+operationString+" "+operand1+" "+operand2+" )" ;
-            }
-        }else if (is_op2_litteral){
-            //std::cout<<"welcome \n";
-            int op2 = stoi(operand2);
-            int res = 0;
-            if(op2==0){
-              if(operationString=="+"){
-                return operand1;
-              }else if(operationString=="-"){
-                return "( "+operationString+" "+operand1+" )";
-              }else if(operationString=="*"){
-                return std::to_string(res);
-              }
-            }else if (op2==1){
-              if(operationString=="*"){
-                return operand1;
-              }else{
-                return "( "+operationString+" "+operand1+" "+operand2+" )" ;
-              }
-            }else{
-               return "( "+operationString+" "+operand1+" "+operand2+" )" ;
-            }
-        }else{
-            return "( "+operationString+" "+operand1+" "+operand2+" )" ;
-        }
-      }else{
-        return " ( "+operationString+" "+operand1+" )" ;
-      }
-    }
-    else
-    {
-      return tokens.front();
     }
   }
   throw logic_error("Invalid expression");

@@ -6,13 +6,13 @@ use std::{
 use std::time::Instant;
 use std::vec::Vec;
 use crate::cost;
-pub struct Extractor<'a, CF: cost::CostFunction<L>, L: Language, N: Analysis<L>> {
+pub struct GreedyExtractor<'a, CF: cost::CostFunction<L>, L: Language, N: Analysis<L>> {
     cost_function: CF,
     costs: HashMap<Id, (usize, L)>,
     egraph: &'a egg::EGraph<L, N>,
 }
 
-impl<'a, CF, L, N> Extractor<'a, CF, L, N>
+impl<'a, CF, L, N> GreedyExtractor<'a, CF, L, N>
 where
     CF: cost::CostFunction<L>,
     L: Language + ToString  + std::fmt::Display,
@@ -27,7 +27,7 @@ where
         ) -> Self
     {
             let costs = HashMap::default();
-            let mut extractor = Extractor {
+            let mut extractor = GreedyExtractor {
                 costs,
                 egraph,
                 cost_function,
@@ -114,7 +114,7 @@ where
     
         sorted_orders  // Return the sorted vector with eclass Ids and their assigned order
     }
-
+    
     /// Calculates the total cost of a node within an e-graph.
     ///
     /// This function calculates the cost of a given node by considering the costs of its child e-classes.
@@ -238,6 +238,7 @@ where
     /// Returns:
     /// - None
     fn find_costs(&mut self, ordered : Vec<(Id, usize)>) {
+        //eprintln!("welcome in cost finder !! ");
         let mut did_something = true;
         let mut sub_classes: HashMap<Id, HashSet<Id>> = HashMap::new();
         let mut i = 0;
@@ -259,6 +260,7 @@ where
             i += 1;
 
             for class in &eclasses {
+                //eprintln!("==> make a_pass on an eclass");
                 let pass = self.make_pass(&mut sub_classes, class);
                 match (self.costs.get(&class.id), pass) {
                     // If the cost is calculated for the first time
@@ -316,7 +318,25 @@ where
     /// Returns:
     /// - `Some((usize, L))`: A tuple containing the minimum cost and the corresponding best e-node.
     /// - `None`: If no valid cost could be calculated for any e-node within the e-class.
-
+    /*******************************************************************************************/
+    fn ast_depth(&self, node: &L) -> usize {
+        // Base case: if the node is a leaf, depth is 1
+        if node.children().is_empty() {
+            return 0;
+        }
+        // Check if all children have been processed
+        let max_child_depth = node.children().iter().map(|&child_id| {
+                if let Some((_, node)) = self.costs.get(&child_id) {
+                    self.ast_depth(node)
+                } else {
+                    0
+                }
+            })
+            .max()
+            .unwrap_or(0);
+            max_child_depth + 1 
+    }
+    /*******************************************************************************************/
     fn make_pass(
         &mut self,
         sub_classes: &mut HashMap<Id, HashSet<Id>>,
@@ -325,7 +345,7 @@ where
     ) -> Option<(usize, L)> {
         // Record the start time for the entire function
         let start_time = Instant::now();
-
+         
         let mut node_sub_classes: HashSet<Id> = HashSet::new();
         let mut nodes: Vec<L> = vec![];
 
@@ -340,18 +360,39 @@ where
        
 
         if nodes.is_empty() {
-            println!("No valid nodes found, total time: {:?}", start_time.elapsed());
+            eprintln!("No valid nodes found, total time: {:?}", start_time.elapsed());
             return None;
         }
 
         // Time the cost calculation process
         let cost_calculation_start = Instant::now();
-        let (cost, node) = nodes
+        //eprintln!("calculate eclass cost => find best enode !! nb_nodes : {}",nodes.len());
+        let (cost, node , ast_dep) = nodes
             .iter()
-            .map(|n| (self.node_total_cost(n, sub_classes), n))
-            .min_by(|a, b| Self::cmp(&a.0, &b.0))
+            .map(|n| {
+                let cost = self.node_total_cost(n, sub_classes);
+                let ast_dep = self.ast_depth(&n);
+                (cost, n, ast_dep)
+            })
+            .min_by(|a,b|{
+                //eprintln!("compare enodes costs !!");
+                let cost_order=Self::cmp(&a.0, &b.0);
+                /*match(a.0,b.0){
+                    (Some(v1),Some(v2))=>{eprintln!("a-Cost : {} , b-Cost : {}  ",v1,v2);},
+                    _ => eprintln!(""),
+                }*/
+                if cost_order == Ordering::Equal  {
+                    //eprintln!("a-Depth : {} , b-Depth : {}  ",a.2,b.2);
+                    //Self::cmp(&b.0, &a.0)
+                    a.2.cmp(&b.2)
+                } else {
+                    cost_order
+                }
+            
+            })
             .unwrap();
-        
+        //let ast_dep1 = self.ast_depth(&node);
+        //eprintln!(" selected_node depth : {} ",ast_dep1);
         
         let cost_calculation_duration = cost_calculation_start.elapsed();
         // eprintln!("Cost calculation took: {:?}", cost_calculation_duration);
