@@ -6,7 +6,7 @@ target_link_libraries(roberts_cross PRIVATE fheco)
 # Define the source file and destination file 
 
 
-
+ 
 set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/roberts_cross/he/utils.cpp)
 set(DESTINATION_FILE_2 ${CMAKE_SOURCE_DIR}/build/benchmarks/roberts_cross/he/utils.cpp)
 
@@ -19,6 +19,14 @@ set(DESTINATION_FILE_4 ${CMAKE_SOURCE_DIR}/build/benchmarks/roberts_cross/he/CMa
 set(SOURCE_FILE_5 ${CMAKE_SOURCE_DIR}/benchmarks/roberts_cross/fhe_io_example.txt)
 set(DESTINATION_FILE_5 ${CMAKE_SOURCE_DIR}/build/benchmarks/roberts_cross/fhe_io_example.txt)
 
+set(SOURCE_FILE_6 ${CMAKE_SOURCE_DIR}/benchmarks/roberts_cross/generate_roberts_cross.py)
+set(DESTINATION_FILE_6 ${CMAKE_SOURCE_DIR}/build/benchmarks/roberts_cross/generate_roberts_cross.py)
+
+add_custom_target(copy_my_file_6roberts_cross ALL 
+    COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_6} ${DESTINATION_FILE_6}
+    DEPENDS ${SOURCE_FILE}
+    COMMENT "Copying ${SOURCE_FILE_6} to ${DESTINATION_FILE_6}"
+)
 
 add_custom_target(copy_my_file_2roberts_cross ALL
     COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_2} ${DESTINATION_FILE_2}

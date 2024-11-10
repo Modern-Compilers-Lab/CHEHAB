@@ -41,10 +41,10 @@ void fhe(int width){
   }
   int rows = width;
   int cols = width;
-  for (int i = 0; i < rows; i++) {
+  for (int i = 0; i < rows; i++) { 
       for (int j = 0; j < cols; j++) {
           // Apply Kernel 1
-          std::cout<<"Step \n";
+          //std::cout<<"Step \n";
           Ciphertext Gx = image[i][j] * gx_kernel[0][0] + image[i][j + 1] * gx_kernel[0][1] +
                     image[i + 1][j] * gx_kernel[1][0] + image[i + 1][j + 1] * gx_kernel[1][1];
           // Apply Kernel 2
@@ -62,7 +62,7 @@ void fhe(int width){
       output[i][j].set_output("out_" + std::to_string(i)+"_"+std::to_string(j));
     }
   }
-  cout<<"End\n";
+  //cout<<"End\n";
 }
 /*******************************************************************************************/
 /*******************************************************************************************/

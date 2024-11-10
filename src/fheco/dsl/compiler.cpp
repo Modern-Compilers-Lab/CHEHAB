@@ -1,5 +1,5 @@
 #include "fheco/code_gen/gen_func.hpp"
-#include "fheco/dsl/compiler.hpp"
+#include "fheco/dsl/compiler.hpp" 
 #include "fheco/dsl/ciphertext.hpp"
 #include "fheco/dsl/plaintext.hpp"
 #include "fheco/ir/term.hpp"
@@ -121,7 +121,7 @@ const shared_ptr<ir::Func> &Compiler::get_func(const string &name)
 
   return it->second;
 }
-
+ 
 void Compiler::set_active_func(const string &name)
 {
   active_func_it_ = funcs_table_.find(name);
@@ -309,6 +309,12 @@ string constant_folding(queue<string> &tokens)
               }else{
                 return "( "+operationString+" "+operand1+" "+operand2+" )" ;
               }
+            }else if (op1==-1){
+             if(operationString=="*"){
+                return "( - "+operand2+" )";
+              }else{
+                return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+              }
             }else{
                return "( "+operationString+" "+operand1+" "+operand2+" )" ;
             }
@@ -330,14 +336,21 @@ string constant_folding(queue<string> &tokens)
               }else{
                 return "( "+operationString+" "+operand1+" "+operand2+" )" ;
               }
-            }else{
+            }else if (op2==-1){
+             if(operationString=="*"){
+                return "( - "+operand1+" )";
+              }else{
+                return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+              }
+            }
+            else{
                return "( "+operationString+" "+operand1+" "+operand2+" )" ;
             }
         }else{
             return "( "+operationString+" "+operand1+" "+operand2+" )" ;
         }
       }else{
-        return " ( "+operationString+" "+operand1+" )" ;
+        return "( "+operationString+" "+operand1+" )" ;
       }
     }
     else
@@ -665,6 +678,7 @@ ir::OpCode Compiler::operationFromString(string operation)
 /*************************************************************************/
 ir::Term *Compiler::build_expression(const std::shared_ptr<ir::Func> &func, map<string, ir::Term *> map, queue<string> &tokens)
 {
+  //std::cout<<"==========> welcome in build expression \n";
   while (!tokens.empty())
   {
 
@@ -682,6 +696,7 @@ ir::Term *Compiler::build_expression(const std::shared_ptr<ir::Func> &func, map<
       }else{
           operation = operationFromString(operationString);
       }
+      //std::cout<<"operation :"<<operation<<"||\n";
       tokens.pop();
 
       string potential_step = "";
@@ -689,38 +704,45 @@ ir::Term *Compiler::build_expression(const std::shared_ptr<ir::Func> &func, map<
       ir::Term *operand1, *operand2 = nullptr;
       if (tokens.front() == "(")
       {
+        //std::cout<<"build opearnd 1 \n";
         operand1 = build_expression(func, map, tokens);
       }
       else
       {
+        //std::cout<<"get opearnd 1 from token"<<tokens.front()<<"||\n";
         operand1 = map.at(tokens.front());
         tokens.pop();
       }
+      std::queue<string> temp = tokens;
+      // Iterate through the copy and print each element
       if (tokens.front() == "(")
       {
+        //std::cout<<"build operand2 \n";
         potential_step += " ";
         operand2 = build_expression(func, map, tokens);
       }
       else if (tokens.front() != ")")
       {
+        //std::cout<<"get opearnd 2 from token"<<tokens.front()<<"||\n";
         if (!op_is_rotation && !op_is_SumVec)
         {
           operand2 = map.at(tokens.front());
         }
         potential_step = tokens.front();
-
+        //std::cout<<"potential_step op2 :"<<potential_step<<" \n";
         tokens.pop();
       }
 
       // Check for the closing parenthesis
       if (tokens.front() == ")")
       {
+        //std::cout<<"pop clsoing prenthesis \n";
         tokens.pop();
       }
-
+      //std::cout<<"potential_step size :"<<potential_step.size()<<" \n";
       if (potential_step.size() > 0)
       {
-
+        //std::cout<<"insert binary operation :"<<operationString<<"||\n";
         if (op_is_rotation)
         {
           operation = ir::OpCode::rotate(stoi(potential_step));
@@ -740,6 +762,7 @@ ir::Term *Compiler::build_expression(const std::shared_ptr<ir::Func> &func, map<
       }
       else
       {
+        //std::cout<<"operation is negation \n";
         vector<ir::Term *> operands = {operand1};
         if (operation == ir::OpCode::sub)
           operation = ir::OpCode::negate;
@@ -748,7 +771,7 @@ ir::Term *Compiler::build_expression(const std::shared_ptr<ir::Func> &func, map<
     }
     else
     {
-
+      //std::cout<<"return token :"<<tokens.front()<<"||\n";
       return map.at(tokens.front());
     }
   }
@@ -802,6 +825,8 @@ void decompose_vector_op(const vector<string>& vector_elements, vector<string>& 
         if (elems.size() >= 2) {
             vec_ops1.emplace_back(elems[0]);
             vec_ops2.emplace_back(elems[1]);
+        }else if(elems.size() == 1){
+            vec_ops1.emplace_back(elems[0]);
         }
     }
     // Debug output to check results
@@ -809,6 +834,34 @@ void decompose_vector_op(const vector<string>& vector_elements, vector<string>& 
     for (const auto& op : vec_ops1) cout << op << " --- ";
     cout << "\nvec_ops2: ";
     for (const auto& op : vec_ops2) cout << op << " --- ";*/
+}
+/***********************************************************************/
+bool isSingleOperandExpression(const std::string& expression) {
+    // Extract the content inside the outer parentheses
+    std::string content = expression.substr(4, expression.size()); // Removes "( - " and ")"
+    int depth = 0; // Tracks the current depth of parentheses
+    int comp = 0 ;
+    istringstream iss(content);
+    string token;
+    vector<string> tokens = {};
+    while (iss >> token) {
+      tokens.push_back(token);
+    }
+    for (auto c : tokens) {
+        if (c == "(") {
+            depth++; // Entering a nested expression
+        } else if (c == ")") {
+            depth--; // Exiting a nested expression
+        }
+        if(depth == 0){
+          break;
+        }
+        comp++ ;
+    }
+    bool is_unary = false ;
+    if(tokens[comp+1]==")")
+      is_unary = true ;
+    return is_unary ;
 }
 /***********************************************************************/
 string process_composed_vectors(const vector<string>& vector_elements,
@@ -823,6 +876,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
     vector<string> simple_elements = {} ;
     vector<string> composed_elements = {} ;
     for(auto elem : vector_elements){
+      //std::cout<<"===========> : First element ==>"<<elem.at(0)<<"\n";
       if(elem.at(0)=='('){
         composed_elements.push_back(elem);
         simple_elements.push_back("0");
@@ -831,39 +885,80 @@ string process_composed_vectors(const vector<string>& vector_elements,
         simple_elements.push_back(elem);
       }
     }
+    /*std::cout<<"composed elements \n";
+    for(auto val : composed_elements){
+      std::cout<<val<<" --- ";
+    }
+    std::cout<<"\n*******************************************\n";
+    std::cout<<"Simple elements \n";
+    for(auto val : simple_elements){
+      std::cout<<val<<" --- ";
+    }
+    std::cout<<"\n";*/
     bool all_simple_elements_eq_0 = verify_all_vec_elems_eq0(simple_elements);
     bool all_composed_elements_eq_0 = verify_all_vec_elems_eq0(composed_elements);
+    //std::cout<<"Next \n";
     vector<string> addition_elements = {} ;
     vector<string> substraction_elements = {} ;
     vector<string> multiplication_elements = {} ;
+    vector<string> negation_elements = {} ;
     if(!all_simple_elements_eq_0&&!all_composed_elements_eq_0){
       return "( + "+process_composed_vectors(simple_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(composed_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
     }else if(!all_composed_elements_eq_0){
       // declare simple_elements as a new ciphertext and store it 
       // indicate that they are associated with composed elements by an addition 
       // cout<<"divide composed_elements vector on three vectors each one containing\n";
-      // cout<<"associated operations with + , - *\n";
+      //cout<<" ===> Treat composed vectors\n";
       for(const auto elem : composed_elements){
         if(elem=="0"){
           addition_elements.push_back("0");
           substraction_elements.push_back("0");
           multiplication_elements.push_back("0");
+          negation_elements.push_back("0");
         }else{
           if(elem.at(2)=='+'){
             addition_elements.push_back(elem);
             substraction_elements.push_back("0");
             multiplication_elements.push_back("0");
+            negation_elements.push_back("0");
           }else if(elem.at(2)=='-'){
-            addition_elements.push_back("0");
-            substraction_elements.push_back(elem);
-            multiplication_elements.push_back("0");
+            std::cout<<elem<<"||"<<isSingleOperandExpression(elem)<<"\n";
+            if(isSingleOperandExpression(elem)){
+              addition_elements.push_back("0");
+              substraction_elements.push_back("0");
+              multiplication_elements.push_back("0");
+              negation_elements.push_back(elem);
+            }else{
+              addition_elements.push_back("0");
+              substraction_elements.push_back(elem);
+              multiplication_elements.push_back("0");
+              negation_elements.push_back("0");
+            }
           }else if(elem.at(2)=='*'){
             addition_elements.push_back("0");
             substraction_elements.push_back("0");
             multiplication_elements.push_back(elem);
+            negation_elements.push_back("0");
           }
         }
       }
+      /*std::cout<<"Negation elements : \n";
+      for(auto val : negation_elements)
+          std::cout<<val<<" ";
+      std::cout<<"\n";
+      std::cout<<"Addition elements : \n";
+      for(auto val : addition_elements)
+          std::cout<<val<<" ";
+      std::cout<<"\n";
+      std::cout<<"substraction_elements : \n";
+      for(auto val : substraction_elements)
+          std::cout<<val<<" ";
+      std::cout<<"\n";
+      std::cout<<"multiplication_elements : \n";
+      for(auto val : multiplication_elements)
+          std::cout<<val<<" ";
+      std::cout<<"\n";
+      std::cout<<"Processing composed vectors done !\n";*/
       vector<string> vec_ops1 ={} ;
       vector<string> vec_ops2 ={} ;
       if(!verify_all_vec_elems_eq0(addition_elements)&&!verify_all_vec_elems_eq0(substraction_elements)&&!verify_all_vec_elems_eq0(multiplication_elements)){
@@ -883,10 +978,19 @@ string process_composed_vectors(const vector<string>& vector_elements,
       }else if(!verify_all_vec_elems_eq0(multiplication_elements)){
         decompose_vector_op(multiplication_elements, vec_ops1 ,vec_ops2);
         return "( * "+process_composed_vectors(vec_ops1,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" "+process_composed_vectors(vec_ops2,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
+      }else if(!verify_all_vec_elems_eq0(negation_elements)){
+        //std::cout<<"==> Treat Negation case \n";
+        decompose_vector_op(negation_elements, vec_ops1 ,vec_ops2);
+        /*for(auto val : vec_ops1)
+          std::cout<<val<<" ";
+        std::cout<<"\n";*/
+        return "( - "+process_composed_vectors(vec_ops1,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
       }
     }else if(!all_simple_elements_eq_0){
+      //std::cout<<"==> Traet simple elements \n";
       string new_element = ""; 
       bool is_literal_val = true ;
+      //std::cout<<"=> Firts \n";
       for(auto val :simple_elements){
         if(!is_literal(val)){
           if (inputs_types[std::distance(inputs.begin(), std::find(inputs.begin(), inputs.end(), val))] == "1") {
@@ -896,6 +1000,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
         new_element+=val+" ";
       }
       string string_vector = "Vec "+new_element.substr(0, new_element.size() - 1);// strip trailing space
+      //std::cout<<"=> Seconds "<<string_vector<<"\n";
       if (dictionary.find(string_vector) == dictionary.end()) {
         string res = "";
         for(int i = 0 ; i<slot_count ; i++){
@@ -912,6 +1017,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
           new_element = "1 1 " + new_element;
           //std::cout<<label<<" : "<<new_element<<" \n";
         }
+        //std::cout<<"=> new_element "<<new_element<<"\n";
         labels_map[id_counter] = label;
         inputs_entries[label]=new_element;
         id_counter++ ;
@@ -920,6 +1026,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
       }else{
         return dictionary[string_vector];
       }
+      //std::cout<<"=> treating simple element done \n";
     }
   }
   else{
@@ -996,12 +1103,16 @@ std::pair<std::string, int> process(
                 }
                 vector<string> updated_vector_elements = {};
                 bool if_all_vector_elems_eq0 = true ;
+                //std::cout<<"Process composed vector : \n";
                 for(auto elem : vector_elements){
                   auto tokens = split(elem);
                   string updated_elem = constant_folding(tokens);
+                  //std::cout<<"updated element :"<<updated_elem<<"\n";
                   updated_vector_elements.push_back(updated_elem);
                 }
                 string result_expr = process_composed_vectors(updated_vector_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size);
+                //std::cout<<"Geat \n";
+                //std::cout<<"Proposing composed_vector done, res_expression :"<<result_expr<<" \n";
                 /******/new_expression+=" "+result_expr;
                 if(result_expr.substr(0,1)=="("){
                   std::string label = "c" + std::to_string(id_counter);
@@ -1014,7 +1125,7 @@ std::pair<std::string, int> process(
             }
             /******/new_expression+=" (";
             std::string operation = tokens[index];
-            std::string op = (operation == "VecAdd") ? "+" : (operation == "VecMinus") ? "-" : (operation == "VecMul") ? "*" : "<<";
+            std::string op = (operation == "VecAdd") ? "+" : (operation == "VecMinus") ? "-" : (operation == "VecNeg") ? "-": (operation == "VecMul") ? "*" : "<<";
             /*****/new_expression+=" "+op ;
             index++;
             auto [operand_1, new_index] = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression);
@@ -1029,7 +1140,6 @@ std::pair<std::string, int> process(
                     index++;
                 }
                 /******/new_expression+=" )";
-                std::string op = (operation == "VecAdd") ? "+" : (operation == "VecMinus") ? "-" : (operation == "VecMul") ? "*" : "<<";
                 std::string label = "c" + std::to_string(id_counter);
                 labels_map[id_counter] = label;
                 id_counter++;
@@ -1444,15 +1554,15 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     //std::cout<<"Updated IR : "<<simplified_expression<<" \n";
     /*****************************************************************/
     /*****************************************************************/
-    std::cout<<"applying constant forlding On vectors \n"; 
-    vector<string> updated_cons_fd_expressions = {};
-    for(const auto& expr : simplified_expressions){
+    //std::cout<<"applying constant forlding On vectors \n"; 
+    vector<string> updated_cons_fd_expressions = simplified_expressions;
+    /*for(const auto& expr : simplified_expressions){
         auto tokens1 = split(expr);
         //std::cout<<"Input expression :"<<expr<<" \n";
         string res = vector_constant_folding(tokens1,inputs_entries);
         updated_cons_fd_expressions.push_back(res);
-    }
-    std::cout<<"==> constant forlding Done\n"; 
+    }*/
+    //std::cout<<"==> constant forlding Done\n"; 
     vector<string> labels = {};
     for (const auto& pair : inputs_entries) {
       labels.push_back(pair.first);  // Access the key via pair.first
@@ -1567,6 +1677,7 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     //std::cout<<"Number of function inputs : "<<func->data_flow().inputs_info().size()<<"\n";
     //std::cout<<"Start expression traitment ====> \n";
     for(const auto &new_term_str : updated_cons_fd_expressions){
+      //std::cout<<new_term_str<<" \n";
       if (!new_term_str.empty()) {  // Ensure that we do not push empty tokens
         //std::cout<<"here \n";
         auto tokens = split(new_term_str);

@@ -7,10 +7,10 @@ define_language! {
         // Id is a key to identify EClasses within an EGraph, represents
         // children nodes
         "+" = Add([Id; 2]),
-        "*" = Mul([Id; 2]),
+        "*" = Mul([Id; 2]), 
         "-" = Minus([Id; 2]),
         "<<" = Rot([Id; 2]),
-        "-" = Neg([Id; 1]),
+        "-" = Neg([Id; 1]), 
         // Vectors have width elements
         "Vec" = Vec(Box<[Id]>),
 

@@ -41,7 +41,7 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
     {"simplify-add-mul_negate-3", z + x * (-y), z - x * y},
     {"simplify-add-mul_negate-4", z + (-y) * x, z - y * x},
 
-    {"part-fold-assoc-add-1", c0 + (c1 + x), (c0 + c1) + x},
+    {"part-fold-assoc-add-1", c0 + (c1 + x), (c0 + c1) + x}, 
     {"part-fold-assoc-add-2", c0 + (x + c1), (c0 + c1) + x},
     {"part-fold-assoc-add-3", (c0 + x) + c1, x + (c0 + c1)},
     {"part-fold-assoc-add-4", (x + c0) + c1, x + (c0 + c1)},

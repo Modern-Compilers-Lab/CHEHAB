@@ -50,7 +50,7 @@ Ciphertext treeGenerator(int originalDepth, int maxDepth, int& seed, const std::
         if (randomNum > 1) {
             localString = std::to_string(getRandomNumber(1024));
             seed += 1;
-            std::cout << originalDepth + 1 - maxDepth << std::endl;
+            //std::cout << originalDepth + 1 - maxDepth << std::endl;
             return Ciphertext("x");  // Return Ciphertext instance instead of Tree(Var)
         } else {
             Ciphertext lhs = treeGenerator(originalDepth, maxDepth - 1, seed, regime);

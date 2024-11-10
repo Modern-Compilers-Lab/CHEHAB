@@ -343,7 +343,7 @@ where
                 //eprintln!("===> Search Rewrite for rule '{}'", rw.name);
                 let mut ms = self.scheduler.search_rewrite(i, &self.egraph, rw);
                 //let total_matches: usize = ms.iter().map(|m| m.substs.len()).sum();
-                //eprintln!("Rewrite rule '{}' matched {} times.", rw.name, ms.len());
+                eprintln!("Rewrite rule '{}' matched {} times.", rw.name, ms.len());
                 debug!("Rewrite rule '{}' matched {} times.", rw.name, ms.len());
                 if rw.name.as_str().starts_with("exp"){
                     // Expansive rule: sample matches
@@ -351,18 +351,24 @@ where
                     matches.push(sampled_matches);
                 } else {
                     // Non-expansive rule: apply all matches
-                    /*let max_subs_size : usize = 100 ;
+                    let max_subs_size : usize = 10000 ;
                     let mut rng = thread_rng(); 
-                    ms.iter_mut().map(|match_item| {
-                        match_item.substs.shuffle(&mut rng);
-                        match_item.substs.truncate(max_subs_size);
-
+                    /*ms.iter_mut().map(|match_item| {
+                        if(match_item.substs.len()>max_subs_size){
+                            eprintln!("subs  for rw : {} ==> '{}' ",match_item.substs.len(),rw.name);
+                        }
+                        if(!rw.name.as_str().starts_with("assoc")){
+                            match_item.substs.shuffle(&mut rng);
+                            match_item.substs.truncate(max_subs_size);
+                        }else{
+                            eprintln!("===> Assoc subs  is  for rw : {} ==> '{}' ",match_item.substs.len(),rw.name);
+                        }
                         SearchMatches {
                             eclass: match_item.eclass.clone(),
                             substs: match_item.substs.clone(),
                             ast: match_item.ast.clone(),
                         }
-                    }).collect::<Vec<SearchMatches<L>>>();*/
+                    }).collect::<Vec<SearchMatches<L>>>();*/ 
                     matches.push(ms);
                     //debug!("Applied all {} matches for rule {}", total_matches, rw.name);
                 }

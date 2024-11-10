@@ -10,7 +10,7 @@ build_folder = os.path.join("build", "benchmarks")
 # to be run after with slot_count = 8 for both matrix_mul and rober_cross
 output_csv = "results.csv"
 # vectorization_csv = "vectorization.csv"
-operations = ["add", "sub", "multiply_plain", "rotate_rows", "square", "multiply"]
+operations = ["add", "sub", "multiply_plain", "rotate_rows", "negate", "multiply"]
 infos = ["benchmark"]
 additional_infos =[ "Depth", "Multplicative Depth","compile_time( ms )", "execution_time (ms)"]
 infos.extend(operations)
@@ -43,12 +43,12 @@ except subprocess.CalledProcessError as e:
 # Iterate through each item in the benchmarks folder
 # "hamming_dist","poly_reg","lin_reg","l2_distance","dot_product","box_blur"
 # "box_blur","gx_kernel","gy_kernel","sobel","roberts_cross","matrix_mul"
-# benchmark_folders = ["hamming_dist","poly_reg","lin_reg","l2_distance","dot_product","box_blur","gx_kernel","gy_kernel","sobel","roberts_cross","matrix_mul"] 
-benchmark_folders = ["matrix_mul","sobel","roberts_cross","gy_kernel","gx_kernel"]
+benchmark_folders = ["hamming_dist","poly_reg","lin_reg","l2_distance","dot_product","box_blur","gx_kernel","gy_kernel","roberts_cross","matrix_mul","sobel"] 
+#benchmark_folders = ["gx_kernel","gy_kernel","roberts_cross","sobel"]
 #benchmark_folders = ["dot_product"]
 ###############################
 ### specify the number of iteration  
-iterations = 5
+iterations = 3
 for subfolder_name in benchmark_folders:
     benchmark_path = os.path.join(benchmarks_folder, subfolder_name)
     build_path = os.path.join(build_folder, subfolder_name) 
@@ -66,7 +66,7 @@ for subfolder_name in benchmark_folders:
             print(f"*****run {subfolder_name} , for slot_count : {slot_count}******")
             operation_stats = {
             "add": [], "sub": [], "multiply_plain": [], "rotate_rows": [],
-            "square": [], "multiply": [], "Depth": [], "Multiplicative Depth": [],
+            "negate": [], "multiply": [], "Depth": [], "Multiplicative Depth": [],
             "compile_time (ms)": [], "execution_time (ms)": []
             }
             ###generate io_file for benchmark with slot_count 

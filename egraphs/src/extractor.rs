@@ -8,7 +8,7 @@ use std::vec::Vec;
 use crate::cost;
 pub struct GreedyExtractor<'a, CF: cost::CostFunction<L>, L: Language, N: Analysis<L>> {
     cost_function: CF,
-    costs: HashMap<Id, (usize, L)>,
+    costs: HashMap<Id, (usize, L)>, 
     egraph: &'a egg::EGraph<L, N>,
 }
 
@@ -319,7 +319,7 @@ where
     /// - `Some((usize, L))`: A tuple containing the minimum cost and the corresponding best e-node.
     /// - `None`: If no valid cost could be calculated for any e-node within the e-class.
     /*******************************************************************************************/
-    fn ast_depth(&self, node: &L) -> usize {
+    fn ast_depth(&self, node: &L) -> usize { 
         // Base case: if the node is a leaf, depth is 1
         if node.children().is_empty() {
             return 0;
@@ -358,7 +358,7 @@ where
             }
         }
        
-
+ 
         if nodes.is_empty() {
             eprintln!("No valid nodes found, total time: {:?}", start_time.elapsed());
             return None;
@@ -367,6 +367,21 @@ where
         // Time the cost calculation process
         let cost_calculation_start = Instant::now();
         //eprintln!("calculate eclass cost => find best enode !! nb_nodes : {}",nodes.len());
+        /*
+        let (cost, node) = nodes
+            .iter()
+            .map(|n| {
+                let cost = self.node_total_cost(n, sub_classes);
+                (cost, n)
+            })
+            .min_by(|a,b|{
+                //eprintln!("compare enodes costs !!");
+                let cost_order=Self::cmp(&a.0, &b.0);
+                cost_order
+            })
+            .unwrap();
+        ***************************************************/
+        /****************************************************/
         let (cost, node , ast_dep) = nodes
             .iter()
             .map(|n| {
@@ -377,22 +392,14 @@ where
             .min_by(|a,b|{
                 //eprintln!("compare enodes costs !!");
                 let cost_order=Self::cmp(&a.0, &b.0);
-                /*match(a.0,b.0){
-                    (Some(v1),Some(v2))=>{eprintln!("a-Cost : {} , b-Cost : {}  ",v1,v2);},
-                    _ => eprintln!(""),
-                }*/
                 if cost_order == Ordering::Equal  {
-                    //eprintln!("a-Depth : {} , b-Depth : {}  ",a.2,b.2);
-                    //Self::cmp(&b.0, &a.0)
                     a.2.cmp(&b.2)
                 } else {
-                    cost_order
+                  cost_order
                 }
-            
             })
             .unwrap();
-        //let ast_dep1 = self.ast_depth(&node);
-        //eprintln!(" selected_node depth : {} ",ast_dep1);
+        /*****************************************/
         
         let cost_calculation_duration = cost_calculation_start.elapsed();
         // eprintln!("Cost calculation took: {:?}", cost_calculation_duration);

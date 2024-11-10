@@ -13,7 +13,7 @@ void fhe_vectorized(int slot_count){
   Ciphertext c1("c1");
   Ciphertext c2("c2");
   Ciphertext c3("c3");
-  Ciphertext c_result = c1 - (c2 * c0) - c3;
+  Ciphertext c_result = -1*c3;
   c_result.set_output("c_result");
 }
 /************************************/
@@ -33,7 +33,7 @@ void fhe(int slot_count)
     v2[i] = Ciphertext("v2_" + std::to_string(i));
     output[i] = v2[i] + (m * v1[i] + b);
   }
-
+ 
   for (int i = 0; i < size; i++)
   {
     output[i].set_output("output_" + std::to_string(i));

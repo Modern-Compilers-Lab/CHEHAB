@@ -17,6 +17,15 @@ set(DESTINATION_FILE_4 ${CMAKE_SOURCE_DIR}/build/benchmarks/dot_product/he/CMake
 set(SOURCE_FILE_5 ${CMAKE_SOURCE_DIR}/benchmarks/dot_product/fhe_io_example.txt)
 set(DESTINATION_FILE_5 ${CMAKE_SOURCE_DIR}/build/benchmarks/dot_product/fhe_io_example.txt)
 
+set(SOURCE_FILE_6 ${CMAKE_SOURCE_DIR}/benchmarks/dot_product/generate_dot_product.py)
+set(DESTINATION_FILE_6 ${CMAKE_SOURCE_DIR}/build/benchmarks/dot_product/generate_dot_product.py)
+
+add_custom_target(copy_my_file_6dot_product ALL 
+    COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_6} ${DESTINATION_FILE_6}
+    DEPENDS ${SOURCE_FILE}
+    COMMENT "Copying ${SOURCE_FILE_6} to ${DESTINATION_FILE_6}"
+)
+
 add_custom_target(copy_my_file_2dot_product ALL
     COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_2} ${DESTINATION_FILE_2}
     DEPENDS ${SOURCE_FILE}

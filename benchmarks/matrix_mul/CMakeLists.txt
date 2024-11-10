@@ -17,6 +17,14 @@ set(DESTINATION_FILE_4 ${CMAKE_SOURCE_DIR}/build/benchmarks/matrix_mul/he/CMakeL
 set(SOURCE_FILE_5 ${CMAKE_SOURCE_DIR}/benchmarks/matrix_mul/fhe_io_example.txt)
 set(DESTINATION_FILE_5 ${CMAKE_SOURCE_DIR}/build/benchmarks/matrix_mul/fhe_io_example.txt)
 
+set(SOURCE_FILE_6 ${CMAKE_SOURCE_DIR}/benchmarks/matrix_mul/generate_matrix_mul.py)
+set(DESTINATION_FILE_6 ${CMAKE_SOURCE_DIR}/build/benchmarks/matrix_mul/generate_matrix_mul.py)
+
+add_custom_target(copy_my_file_6matrix_mul ALL 
+    COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_6} ${DESTINATION_FILE_6}
+    DEPENDS ${SOURCE_FILE}
+    COMMENT "Copying ${SOURCE_FILE_6} to ${DESTINATION_FILE_6}"
+)
 
 add_custom_target(copy_my_file_2matrix_mul ALL
     COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE_2} ${DESTINATION_FILE_2}
