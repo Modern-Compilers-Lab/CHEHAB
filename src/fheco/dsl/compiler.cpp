@@ -61,7 +61,7 @@ void Compiler::compile(
   /***********Apply Sumvec reduction ************/
   trs::TRS SumVec_reduct_trs{trs::Ruleset::SumVec_reduct_opt_ruleset(func)};
   SumVec_reduct_trs.run(trs::RewriteHeuristic::top_down);
-  /***********************Rename io_file*********/
+  /***********************Rename io_file*********
   std::string input_file_name = "fhe_io_example.txt";
   std::ifstream input_file(input_file_name);
   string updated_inputs_file_name = "fhe_io_example_adapted.txt" ;
