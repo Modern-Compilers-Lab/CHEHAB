@@ -41,7 +41,8 @@ pub fn run(
         9 => {rules = vector_assoc_add_min_rules(vector_width);},
         10 => {rules = vector_assoc_min_mul_rules(vector_width);},
         11 => {rules = neg_rules(vector_width); }, 
-        _ => println!("Ruleset correspoding to this order doesnt exist"),
+        12 => {rules = assoc_neg_rules(vector_width);},
+        _ => eprintln!("Ruleset correspoding to this order doesnt exist"),
     }
     let mut iteration_count = 0;
     // Start timing the e-graph building process
@@ -1446,18 +1447,67 @@ pub fn neg_rules(vector_width : usize) ->  Vec<Rewrite<VecLang, ConstantFold>>{
     rules.push(rw!(format!("neg-vectorize"); { lhs_neg.clone() } => { rhs_neg.clone() }));
     rules
 }
+pub fn assoc_neg_rules(vector_width : usize) -> Vec<Rewrite<VecLang,ConstantFold>>{
+    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![
+        rewrite!("simplify-sub-negate"; 
+        "(VecMinus ?x (VecNeg ?y))" => 
+        "(VecAdd ?x ?y)"
+        if is_vec("?x","?x","?y","?y")
+        ),
+        rewrite!("simplify-sub-negate-1"; 
+        "(VecAdd ?x (VecNeg ?y))" => 
+        "(VecMinus ?x ?y)"
+        if is_vec("?x","?x","?y","?y")
+        ),
+        rewrite!("simplify-sub-negate-1-2"; 
+        "(VecAdd (VecNeg ?y) ?x)" => 
+        "(VecMinus ?x ?y)"
+        if is_vec("?x","?x","?y","?y")
+        ),
+        rewrite!("simplify-add-mul-negate-1"; 
+        "(VecAdd (VecMul ?x (VecNeg ?y)) ?z)" => 
+        "(VecMinus ?z (VecMul ?x ?y))"
+        if is_vec("?x","?x","?y","?z")
+        ), 
+        rewrite!("simplify-add-mul-negate-2"; 
+        "(VecAdd (VecMul (VecNeg ?y) ?x) ?z)" => 
+        "(VecMinus ?z (VecMul ?x ?y))"
+        if is_vec("?x","?x","?y","?z")
+        ),
+        rewrite!("simplify-add-mul-negate-3"; 
+        "(VecAdd ?z (VecMul ?x (VecNeg ?y)))" => 
+        "(VecMinus ?z (VecMul ?x ?y))"
+        if is_vec("?x","?x","?y","?z")
+        ),
+        rewrite!("simplify-add-mul-negate-4"; 
+        "(VecAdd ?z (VecMul (VecNeg ?y) ?x))" => 
+        "(VecMinus ?z (VecMul ?y ?x))"
+        if is_vec("?x","?x","?y","?z")
+        ),
+        rewrite!("simplify-sub-mul-negate-1"; 
+        "(VecMinus ?z (VecMul ?x (VecNeg ?y)))" => 
+        "(VecAdd ?z (VecMul ?x ?y))"
+        if is_vec("?x","?x","?y","?z")
+        ),
+        rewrite!("simplify-sub-mul-negate-2"; 
+        "(VecMinus ?z (VecMul (VecNeg ?y) ?x))" => 
+        "(VecAdd ?z (VecMul ?x ?y))"
+        if is_vec("?x","?x","?y","?z")
+        ),
+        rewrite!("simplify-add-negate-2-1"; 
+        "(VecAdd ?x (VecMinus (VecNeg ?y) ?z))" => 
+        "(VecMinus ?x (VecAdd ?x ?y))"
+        if is_vec("?x","?x","?y","?z")
+        ),
+        rewrite!("simplify-add-negate-2-2"; 
+        "(VecAdd (VecMinus ?z (VecNeg ?y)) ?x)" => 
+        "(VecMinus ?x (VecAdd ?x ?y))"
+        if is_vec("?x","?x","?y","?z")
+        ),
+    ];
+    rules
+}
 /*
-{"fold-negate", -(-x), x}, {"fold-negate-add", -(x - y), y - x}, {"fold-negate-sub", -(-x - y), x + y}};
-    {"simplify-sub-negate", x - (-y), x + y},
-    {"simplify-add-negate-1-1", x + (-y), x - y},
-    {"simplify-add-negate-1-2", (-y) + x, x - y},
-
-    {"simplify-add-mul_negate-1", x * (-y) + z, z - x * y},
-    {"simplify-add-mul_negate-2", (-y) * x + z, z - y * x},
-    {"simplify-add-mul_negate-3", z + x * (-y), z - x * y},
-    {"simplify-add-mul_negate-4", z + (-y) * x, z - y * x},
-    {"simplify-sub-mul_negate-1", z - x * (-y), z + x * y},
-    {"simplify-sub-mul_negate-2", z - (-y) * x, z + y * x},
     {"simplify-add-negate-2-1", x + (-y - z), x - (y + z)},
     {"simplify-add-negate-2-2", (-y - z) + x, x - (y + z)},
 */

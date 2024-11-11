@@ -290,23 +290,22 @@ fn main() {
         iteration = iteration + 1 ;
         eprintln!("Best cost at iteration {}: {} ", iteration + 1, current_cost);
 
-    }
+    } 
     //eprintln!("\n\n******************* Continue working with Simulated annealing *************************\n\n");
     let mut best_depth = ast_depth(&current_expr);
     let mut best_cost = current_cost ;
     let mut best_expr = current_expr.clone(); 
     rulesets_appplying_order  = vec![5,6,7,8];
     let mut best_depth = ast_depth(&best_expr);
-    for iteration in 0..12 {
+    for iteration in 0..28 {
         let (cost, best , stop_reason) = rules::run(&current_expr, timeout, vector_width, node_limit,rulesets_appplying_order[iteration%rulesets_appplying_order.len()],0);
-        current_expr = best ;
-        current_cost = cost;
-        let depth = ast_depth(&current_expr);
+        let depth = ast_depth(&best);
         if depth < best_depth {
             best_depth=depth ; 
+            current_expr = best ;
             best_expr = current_expr.clone() ;
         }
-        eprintln!("Best cost at iteration {}: {} , Depth {} \n\n", iteration + 1, current_cost,depth);
+        eprintln!("Best cost at iteration {}: {} , Depth {} \n\n", iteration + 1, cost,depth);
     }
     
     /*rulesets_appplying_order  = vec![5,7,8];

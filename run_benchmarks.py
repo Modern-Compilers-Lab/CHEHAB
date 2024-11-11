@@ -48,7 +48,7 @@ benchmark_folders = ["hamming_dist","poly_reg","lin_reg","l2_distance","dot_prod
 #benchmark_folders = ["dot_product"]
 ###############################
 ### specify the number of iteration  
-iterations = 3
+iterations = 1
 for subfolder_name in benchmark_folders:
     benchmark_path = os.path.join(benchmarks_folder, subfolder_name)
     build_path = os.path.join(build_folder, subfolder_name) 
@@ -59,7 +59,7 @@ for subfolder_name in benchmark_folders:
     if os.path.isdir(build_path):
         ###############################################
         ##### loop over specified slot_counts #########
-        slot_counts= [4,8,16]
+        slot_counts= [32]
         window_size = 0
         for slot_count in slot_counts :
             print("****************************************************************")

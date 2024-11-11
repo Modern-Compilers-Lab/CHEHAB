@@ -922,7 +922,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
             multiplication_elements.push_back("0");
             negation_elements.push_back("0");
           }else if(elem.at(2)=='-'){
-            std::cout<<elem<<"||"<<isSingleOperandExpression(elem)<<"\n";
+            //std::cout<<elem<<"||"<<isSingleOperandExpression(elem)<<"\n";
             if(isSingleOperandExpression(elem)){
               addition_elements.push_back("0");
               substraction_elements.push_back("0");
