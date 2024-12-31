@@ -29,7 +29,7 @@ where
             let costs = HashMap::default();
             let mut extractor = GreedyExtractor {
                 costs,
-                egraph,
+                egraph, 
                 cost_function,
             };
 
@@ -160,20 +160,20 @@ where
                 for &id_j in children.iter().skip(i + 1) {
     
                     // If both children are the same, subtract the cost of one child
-                    if id_i == id_j {
+                    /*if id_i == id_j {
                         return Some(cost - costs[&eg.find(id_i)].0);
-                    }
+                    }*/
     
                     let sub_classes_i = map.get(&id_i).unwrap();
                     let sub_classes_j = map.get(&id_j).unwrap();
     
                     // If one child belongs to the hierarchy of the other, subtract the contained class cost
-                    if sub_classes_i.contains(&id_j) {
+                    /*if sub_classes_i.contains(&id_j) {
                         return Some(cost - costs[&eg.find(id_j)].0);
                     }
                     if sub_classes_j.contains(&id_i) {
                         return Some(cost - costs[&eg.find(id_i)].0);
-                    }
+                    }*/
     
                     // Calculate the intersection of both hierarchies and subtract the cost of shared operations
                     let shared = sub_classes_i
@@ -186,7 +186,7 @@ where
             }
     
             // Adjust the cost based on shared sub-classes
-            for id in shared_sub_classes {
+            /*for id in shared_sub_classes {
                 let node = costs[&eg.find(id)].1.clone();
                 let op = node.to_string();
     
@@ -206,7 +206,7 @@ where
                 };
     
                 cost -= op_costs;
-            }
+            }*/
     
             return Some(cost);
         }
@@ -367,7 +367,7 @@ where
         // Time the cost calculation process
         let cost_calculation_start = Instant::now();
         //eprintln!("calculate eclass cost => find best enode !! nb_nodes : {}",nodes.len());
-        /*
+        /*******************************
         let (cost, node) = nodes
             .iter()
             .map(|n| {
@@ -400,7 +400,6 @@ where
             })
             .unwrap();
         /*****************************************/
-        
         let cost_calculation_duration = cost_calculation_start.elapsed();
         // eprintln!("Cost calculation took: {:?}", cost_calculation_duration);
 

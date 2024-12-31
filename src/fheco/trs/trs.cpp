@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
-
+#include <iostream>
 using namespace std;
 
 namespace fheco::trs
@@ -33,9 +33,9 @@ bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created
   switch (heuristic)
   {
   case RewriteHeuristic::bottom_up:
-    for (auto id : func_->get_top_sorted_terms_ids())
+    for (auto id : func_->get_top_sorted_terms_ids()){
       did_rewrite = rewrite_term(id, RewriteHeuristic::bottom_up, iter, rewrite_created_sub_terms, global_analysis);
-
+    }
     break;
 
   case RewriteHeuristic::top_down:

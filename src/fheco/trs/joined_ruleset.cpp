@@ -104,10 +104,10 @@ Ruleset Ruleset::joined_ruleset(shared_ptr<ir::Func> func)
     {"assoc-balan-add-sub-11", x + (y - (z - t)), (x + y) - (z - t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
     {"assoc-balan-add-sub-12", x + ((z - t) - y), (x + z) - (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
 
-    {"fact-add-square-1", x * ct_y + square(ct_y), (x + ct_y) * ct_y},
+    /*{"fact-add-square-1", x * ct_y + square(ct_y), (x + ct_y) * ct_y},
     {"fact-add-square-2", ct_y * x + square(ct_y), ct_y * (x + ct_y)},
     {"fact-add-square-3", square(ct_y) + x * ct_y, ct_y * (ct_y + x)},
-    {"fact-add-square-4", square(ct_y) + ct_y * x, ct_y * (ct_y + x)},
+    {"fact-add-square-4", square(ct_y) + ct_y * x, ct_y * (ct_y + x)},*/
 
     {"fact-add-1-1-1", x * ct_y + z * ct_y, (x + z) * ct_y},
 
@@ -175,10 +175,10 @@ Ruleset Ruleset::joined_ruleset(shared_ptr<ir::Func> func)
     {"assoc-balan-sub-add-11", x - (y + (z + t)), (x - y) - (z + t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
     {"assoc-balan-sub-add-12", x - ((z + t) + y), (x - z) - (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
 
-    {"fact-sub-square-1", x * ct_y - square(ct_y), (x - ct_y) * ct_y},
+    /*{"fact-sub-square-1", x * ct_y - square(ct_y), (x - ct_y) * ct_y},
     {"fact-sub-square-2", ct_y * x - square(ct_y), ct_y * (x - ct_y)},
     {"fact-sub-square-3", square(ct_y) - x * ct_y, ct_y * (ct_y - x)},
-    {"fact-sub-square-4", square(ct_y) - ct_y * x, ct_y * (ct_y - x)},
+    {"fact-sub-square-4", square(ct_y) - ct_y * x, ct_y * (ct_y - x)},*/
 
     {"fact-sub-1-1-1-1", x * ct_y - z * ct_y, (x - z) * ct_y},
     {"fact-sub-1-1-1-4", x * (-ct_y) - z * ct_y, -(x + z) * ct_y},
@@ -348,7 +348,7 @@ Ruleset Ruleset::joined_ruleset(shared_ptr<ir::Func> func)
     {"mul_m1-1", x * m_one, -x},
     {"mul_m1-2", m_one * x, -x},
 
-    {"mul-to-square", x * x, square(x)},
+    //{"mul-to-square", x * x, square(x)},
 
     {"merge-rotate-mul", (x << n) * (y << n), (x * y) << n},
 
@@ -363,14 +363,14 @@ Ruleset Ruleset::joined_ruleset(shared_ptr<ir::Func> func)
 
     {"part-fold-assoc-mul", (x * c0) * c1, x * (c0 * c1)},
 
-    {"assoc-balan-mul-square-1", ((x * y) * x) * z, square(x) * (y * z), Rule::has_less_ctxt_leaves(z, x, y, *cache)},
+    /*{"assoc-balan-mul-square-1", ((x * y) * x) * z, square(x) * (y * z), Rule::has_less_ctxt_leaves(z, x, y, *cache)},
     {"assoc-balan-mul-square-2", (x * (x * y)) * z, square(x) * (y * z), Rule::has_less_ctxt_leaves(z, x, y, *cache)},
     {"assoc-balan-mul-square-3", ((x * y) * y) * z, (x * z) * square(y), Rule::has_less_ctxt_leaves(z, x, y, *cache)},
     {"assoc-balan-mul-square-4", (y * (x * y)) * z, square(y) * (x * z), Rule::has_less_ctxt_leaves(z, x, y, *cache)},
     {"assoc-balan-mul-square-5", ((x * y) * z) * x, square(x) * (y * z)},
     {"assoc-balan-mul-square-6", x * ((x * y) * z), square(x) * (y * z)},
     {"assoc-balan-mul-square-7", ((x * y) * z) * y, (x * z) * square(y)},
-    {"assoc-balan-mul-square-8", y * ((x * y) * z), square(y) * (x * z)},
+    {"assoc-balan-mul-square-8", y * ((x * y) * z), square(y) * (x * z)},*/
 
     {"assoc-balan-mul-1", ((x * y) * z) * t, (x * y) * (z * t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
     {"assoc-balan-mul-2", (z * (x * y)) * t, (z * x) * (y * t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},

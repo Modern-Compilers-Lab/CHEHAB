@@ -401,7 +401,7 @@ where
                     } else {
                         applied.insert(rw.name.to_owned(), actually_matched);
                     }
-                    //eprintln!("Applied {} {} times", rw.name, actually_matched);
+                    eprintln!("===> {} was applied : {} times", rw.name, actually_matched);
                 }
                 let end = start.elapsed();
                 //eprintln!("time for applying the rewrte rule {:?} is {:?}", rw.name, end);

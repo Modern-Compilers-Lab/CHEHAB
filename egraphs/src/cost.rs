@@ -7,7 +7,7 @@ use crate::veclang::{Egraph, VecLang};
 pub struct VecCostFn<'a> { 
     pub egraph: &'a Egraph,
 }
-
+ 
 // &'a EGraph
 pub trait CostFunction<L: Language> {
     type Cost;
@@ -60,10 +60,14 @@ impl CostFunction<VecLang> for VecCostFn<'_> {
 
             VecLang::Rot(..) => VEC_OP * 50,
             VecLang::VecAdd(..) => VEC_OP,
-            VecLang::VecMinus(..) => VEC_OP,
+            VecLang::VecMinus(..) => VEC_OP, 
             VecLang::VecMul(..) => VEC_OP * 100,
-
             VecLang::VecNeg(..) => VEC_OP,
+
+            VecLang::VecAddRot(..) => VEC_OP * 1051, // 2101
+            VecLang::VecMinusRot(..) => VEC_OP * 1051, // 2101
+            VecLang::VecMulRot(..) => VEC_OP * 2150,
+
         };
         enode.fold(op_cost, |sum, id| sum + costs(id))
     }

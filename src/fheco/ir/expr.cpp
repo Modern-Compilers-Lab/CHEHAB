@@ -192,7 +192,7 @@ Term *Expr::find_op(const OpCode *op_code, const vector<Term *> *operands) const
 
   return nullptr;
 }
-
+/********************************************************************/
 void Expr::replace(Term *term1, Term *term2)
 {
   if (*term1 == *term2)
@@ -222,8 +222,16 @@ void Expr::replace(Term *term1, Term *term2)
       }
       else
       {
+        // in this case we will replace an existing output term
         outputs_info_.emplace(top_term2, move(term1_output_it->second));
         outputs_info_.erase(term1_output_it);
+        // we need to replace to replace top_term1 by top_term2 in output keys  
+        for(int i=0 ; i<output_keys_.size() ; i++){
+          if(output_keys_[i]==top_term1){
+            output_keys_[i]=top_term2;
+            break ;
+          }
+        }
       }
     }
 

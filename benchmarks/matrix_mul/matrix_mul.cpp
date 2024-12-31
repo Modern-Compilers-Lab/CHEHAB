@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 
   bool cse = true;
   if (argc > 4)
-    cse = stoi(argv[4]);
+    cse = stoi(argv[4]); 
   
   int slot_count = 1 ;
   if (argc > 5)
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
       if (!source_os)
         throw logic_error("failed to create source file");
       cout << " window is " << window << endl;
-      Compiler::gen_vectorized_code(func);
+      Compiler::gen_vectorized_code(func,0);
       Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
       /************/elapsed = chrono::high_resolution_clock::now() - t;
       cout << elapsed.count() << " ms\n";

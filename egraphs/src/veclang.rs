@@ -13,16 +13,15 @@ define_language! {
         "-" = Neg([Id; 1]), 
         // Vectors have width elements
         "Vec" = Vec(Box<[Id]>),
-
         // Vector operations that take 2 vectors of inputs
         "VecAdd" = VecAdd([Id; 2]),
         "VecMinus" = VecMinus([Id; 2]),
         "VecMul" = VecMul([Id; 2]),
-
-
         // Vector operations that take 1 vector of inputs
         "VecNeg" = VecNeg([Id; 1]),
-
+        "VecAddRot" = VecAddRot([Id; 2]),
+        "VecMinusRot" = VecMinusRot([Id; 2]),
+        "VecMulRot" = VecMulRot([Id; 2]),
         Symbol(egg::Symbol),
     }
 }
@@ -49,7 +48,7 @@ impl Analysis<VecLang> for ConstantFold {
             VecLang::Neg([a]) => -*x(a)?,
             VecLang::Rot([a, _b]) => *x(a)?,
             // VecAdd and similar operations return None to skip i32 representation
-            VecLang::VecAdd(_) | VecLang::VecMul(_) | VecLang::Vec(_) | VecLang::VecMinus(_) | VecLang::VecNeg(_) => return None,
+            VecLang::VecAdd(_) | VecLang::VecMul(_) | VecLang::Vec(_) | VecLang::VecMinus(_) | VecLang::VecNeg(_) | VecLang::VecAddRot(_) | VecLang::VecMinusRot(_) => return None,
             _ => return None,
         })
     }

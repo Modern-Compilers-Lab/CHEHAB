@@ -363,21 +363,21 @@ string constant_folding(queue<string> &tokens)
 /**********************************************************************/
 void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
 {
-  std::cout<<"welcome in vectorized code generator \n";
   // Utility function to print expressions in prefix notation
   util::ExprPrinter expr_printer(func);
   expr_printer.make_terms_str_expr(util::ExprPrinter::Mode::prefix);
   // Initialize files to store inputs, expression, and vectorized code
   std::ofstream inputs_file("../inputs.txt");
-  std::ofstream expression_file("../expression.txt");
+  //std::ofstream expression_file("../expression.txt");
   std::ofstream vectorized_code_file("../vectorized_code.txt");
 
   // Check if any of the files failed to open
-  if (!inputs_file || !vectorized_code_file || !expression_file)
+  if (!inputs_file  || !vectorized_code_file)
   {
     std::cerr << "Error opening one of the output files." << std::endl;
     return;
   }
+  std::cout<<"Done1 \n";
 
   // Strings to store input names and types
   std::string input_names;
@@ -425,7 +425,6 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
     }
     return output_terms;
   };
-
   // Process output terms
   std::vector<const ir::Term *> output_terms = process_output_terms(func->data_flow().outputs_info(),func->data_flow().output_keys());
   std::string expression = "(Vec ";
@@ -460,13 +459,13 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   expression += ")";
 
   // Write the expression to the expression_file
-  expression_file << expression << std::endl;
+  //expression_file << expression << std::endl;
 
   // Overwrite the vectorized_code_file
   vectorized_code_file << "";
   // Close the input and expression files
   inputs_file.close();
-  expression_file.close();
+  //expression_file.close();
   vectorized_code_file.close();
   /*********************************************************/
   // Call the vectorizer function with the computed vector width
@@ -474,12 +473,12 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   call_vectorizer(vector_width);
   /***********************************************************/
   // Re-open the vectorized_code_file in append mode and write the vector width
-  std::ofstream vectorized_code_file_2("../vectorized_code.txt", std::ios::app);
+  //std::ofstream vectorized_code_file_2("../vectorized_code.txt", std::ios::app);
   /*************************************************
   vectorized_code_file_2 << expression << "\n";
   /*********************************************** */
-  vectorized_code_file_2 << vector_width << " " << vector_width;
-  vectorized_code_file_2.close();
+  //vectorized_code_file_2 << 32 << " " << 32 ;
+  //vectorized_code_file_2.close();
   // Call the script to build the source code that operates on vectors
   format_vectorized_code(func);
 }
@@ -511,7 +510,15 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
     std::cerr << "Window size must be greater than 0." << std::endl;
     return;
   }
-  else if (window == 0)
+  std::cout<<"welcome in vectorized code generator \n";
+  /*********************************************************/
+  std::cout<<"apply existing trs on output elements to balance them \n";
+  auto rewrite_heuristicc = trs::RewriteHeuristic::bottom_up;
+  trs::TRS joined_trs{trs::Ruleset::joined_ruleset(func)};
+  joined_trs.run(rewrite_heuristicc); 
+  std::cout<<"Done \n";
+  /**********************************************************/
+  if (window == 0)
   {
     gen_vectorized_code(func);
     return;
@@ -1125,7 +1132,7 @@ std::pair<std::string, int> process(
             }
             /******/new_expression+=" (";
             std::string operation = tokens[index];
-            std::string op = (operation == "VecAdd") ? "+" : (operation == "VecMinus") ? "-" : (operation == "VecNeg") ? "-": (operation == "VecMul") ? "*" : "<<";
+            std::string op = (operation == "VecAdd") ? "+" : (operation == "VecMinus") ? "-" : (operation == "VecNeg") ? "-": (operation == "VecMul") ? "*": (operation == "VecAddRot") ? "VecAddRot" : (operation == "VecMinusRot") ? "VecMinusRot" : (operation == "VecMulRot") ? "VecMulRot" : "<<";
             /*****/new_expression+=" "+op ;
             index++;
             auto [operand_1, new_index] = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression);
@@ -1497,9 +1504,75 @@ void update_io_file(const unordered_map<string,string>& input_entries,const vect
     updated_input_file.close();
 }
 /************************************************************************/
+string convert_new_ops(queue<string> &tokens)
+{
+  //std::cout<<"welcome in constant folding\n";
+  while (!tokens.empty())
+  {
+    //std::cout<<"hereee :"<<tokens.front()<<"\n";
+    if (tokens.front() == "(")
+    {
+      //std::cout<<"here\n";
+      tokens.pop();
+      string operationString = tokens.front();
+      tokens.pop();
+      string potential_step = "";
+      string operand1="" ,operand2="";
+      if (tokens.front() == "(")
+      {
+        operand1 = convert_new_ops(tokens);
+      }
+      else
+      {
+        operand1 = tokens.front();
+        tokens.pop();
+      }
+      if (tokens.front() == "(")
+      {
+        operand2 = convert_new_ops(tokens);
+        potential_step += " ";
+
+      }
+      else if (tokens.front() != ")")
+      {
+        //std::cout<<"get op2 \n";
+        operand2 = tokens.front();
+        potential_step = tokens.front();
+        tokens.pop();
+      }
+
+      // Check for the closing parenthesis
+      if (tokens.front() == ")")
+      {
+        tokens.pop();
+      }
+      if (potential_step.size() > 0)
+      {
+        if (operationString=="VecAddRot"){
+            return "( + "+operand1+" ( << "+operand1+" "+operand2+" ) )" ;
+        }else if (operationString=="VecMinusRot"){
+            return "( - "+operand1+" ( << "+operand1+" "+operand2+" ) )" ;
+        }else if (operationString=="VecMulRot"){
+            return "( * "+operand1+" ( << "+operand1+" "+operand2+" ) )" ;
+        }else{
+          return "( "+operationString+" "+operand1+" "+operand2+" )" ;
+        }
+      }else{
+        return "( "+operationString+" "+operand1+" )" ;
+      }
+    }
+    else
+    {
+      return tokens.front();
+    }
+  }
+  throw logic_error("Invalid expression");
+}
+/************************************************************************/
 /************************************************************************/
 void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
 {
+    std::cout<<"Welcome in vectorized code generator !!!! \n";
     std::string inputs_file = "../inputs.txt";
     std::ifstream input_file(inputs_file);
     std::string inputs_line, input_types_line;
@@ -1542,7 +1615,10 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
         //std::cout<<"process expression : "<<expr<<"\n";
         process(tokens,0,dictionary,inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,simplified_expression);
         //std::cout<<"Simplified expression  : "<<simplified_expression<<" \n";
-        simplified_expressions.push_back(simplified_expression.substr(1));
+        // Convert new operands VecAddRot, VecMulRot, VecMinusRot
+        auto tokens1 = split(simplified_expression.substr(1));
+        string updated_expr = convert_new_ops(tokens1);
+        simplified_expressions.push_back(updated_expr);
         simplified_expression="";
         outputs.push_back(labels_map[id_counter - 1]);
         //std::cout<<"********************************************************\n";

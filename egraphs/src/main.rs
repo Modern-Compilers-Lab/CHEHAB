@@ -5,21 +5,6 @@ use std::time::Instant;
 use crate::veclang::VecLang;
 use egg::{RecExpr, Id, Language};
 use rand::Rng;
-/*************************************************************************/
-fn ast_depth(expr: &RecExpr<VecLang>) -> usize {
-    fn depth_helper(id: Id, expr: &RecExpr<VecLang>) -> usize {
-        let node = &expr[id];
-        if node.children().is_empty() {
-            0 // Leaf node, depth is 1
-        } else { 
-            // Depth is 1 + max depth of all child nodes
-            1 + node.children().iter().map(|&child| depth_helper(child, expr)).max().unwrap_or(0)
-        }
-    }
-    // Start with the root node (usually the last node in `RecExpr`)
-    depth_helper(Id::from(expr.as_ref().len() - 1), expr)
-}
-/*****************************************************************************/
 fn main() {
     let matches = App::new("Rewriter")
         .arg(
@@ -27,7 +12,7 @@ fn main() {
                 .help("Sets the input file")
                 .required(true)
                 .index(1),
-        )
+        ) 
         .arg(
             Arg::with_name("vector_width")
                 .help("Sets the vector_width")
@@ -246,41 +231,33 @@ fn main() {
     }
     *****************************************************************************************************************/
     /*
-        0 => {rules = rules0(vector_width);},
+       0 => {rules = rules0(vector_width);},
         1 => {rules = vector_rules(vector_width);},
-        2 => {rules = addition_rules(vector_width);},
-        3 => {rules = min_rules(vector_width);},
-        4 => {rules = multiplication_rules(vector_width);},
-        5 => {rules = vector_assoc_add_rules(vector_width);},
-        6 => {rules = vector_assoc_min_rules(vector_width);},
-        7 => {rules = vector_assoc_mul_rules(vector_width);},
-        8 => {rules = vector_assoc_add_mul_rules(vector_width);},
-        9 => {rules = vector_assoc_add_min_rules(vector_width);},
-        10 => {rules = vector_assoc_min_mul_rules(vector_width);},
+        2 => {rules = addition_rules(vector_width,expression_depth);},
+        3 => {rules = minus_rules(vector_width,expression_depth);},
+        4 => {rules = multiplication_rules(vector_width,expression_depth);},
+        5 => {rules = neg_rules(vector_width); }, 
+        6 => {rules = rot_addition_rules(vector_width,expression_depth);},
+        7 => {rules = rot_minus_rules(vector_width,expression_depth);},
+        8 => {rules = rot_multiplication_rules(vector_width,expression_depth);},
+        9 => {rules = vector_assoc_add_rules(vector_width);},
+        10 => {rules = vector_assoc_min_rules(vector_width);},
+        11 => {rules = vector_assoc_mul_rules(vector_width);},
+        12 => {rules = vector_assoc_add_mul_rules(vector_width);},
+        13 => {rules = vector_assoc_add_min_rules(vector_width);},
+        14 => {rules = vector_assoc_min_mul_rules(vector_width);},
+        15 => {rules = assoc_neg_rules(vector_width);},
     */
-    rulesets_appplying_order  = vec![2,3,4,11];
+    rulesets_appplying_order  = vec![2,4];
     let mut previous_cost = usize::MAX;
     node_limit = 100_000 ;
     let mut comp = 0;
-    /*while (comp != rulesets_appplying_order.len()){
-        let (cost, best, stop_reason) = rules::run(&current_expr, timeout, vector_width,node_limit,rulesets_appplying_order[iteration%rulesets_appplying_order.len()],0);
-        if (cost == previous_cost){
-            comp+=1;
-        }else{
-            if(previous_cost>cost){
-                previous_cost=cost ; 
-                current_expr = best ;
-            }
-            comp=0;
-        }
-        iteration = iteration + 1 ;
-        eprintln!("cost of expr at iteration {} : {} , best_cost : {} ", iteration + 1, cost,previous_cost);
-
-    }*/ // 78314
+    let mut current_vector_width = vector_width ; 
     while (comp != rulesets_appplying_order.len()){
-        let (cost, best, stop_reason) = rules::run(&current_expr, timeout, vector_width,node_limit,rulesets_appplying_order[iteration%rulesets_appplying_order.len()],0);
+        let (cost, best, stop_reason) = rules::run(&current_expr, timeout, current_vector_width,node_limit,rulesets_appplying_order[iteration%rulesets_appplying_order.len()],0);
         current_expr = best ;
         current_cost = cost ;
+        current_vector_width = rules::get_vector_width(&current_expr);
         if (current_cost == previous_cost){
             comp+=1;
         }else{
@@ -289,75 +266,28 @@ fn main() {
         }
         iteration = iteration + 1 ;
         eprintln!("Best cost at iteration {}: {} ", iteration + 1, current_cost);
-
-    } 
-    //eprintln!("\n\n******************* Continue working with Simulated annealing *************************\n\n");
-    let mut best_depth = ast_depth(&current_expr);
+        eprintln!("Obtained expression ==> : {}", current_expr.to_string());
+    }
+    /*****************************************************************************/
     let mut best_cost = current_cost ;
     let mut best_expr = current_expr.clone(); 
-    rulesets_appplying_order  = vec![5,6,7,8];
-    let mut best_depth = ast_depth(&best_expr);
+    rulesets_appplying_order  = vec![9,10,11,12,13,14,15];
+    let mut best_depth = rules::ast_depth(&best_expr);
     for iteration in 0..28 {
         let (cost, best , stop_reason) = rules::run(&current_expr, timeout, vector_width, node_limit,rulesets_appplying_order[iteration%rulesets_appplying_order.len()],0);
-        let depth = ast_depth(&best);
+        let depth = rules::ast_depth(&best);
         if depth < best_depth {
             best_depth=depth ; 
-            current_expr = best ;
+            current_expr = best ; 
             best_expr = current_expr.clone() ;
         }
         eprintln!("Best cost at iteration {}: {} , Depth {} \n\n", iteration + 1, cost,depth);
     }
-    
-    /*rulesets_appplying_order  = vec![5,7,8];
-    for iteration in 0..40 {
-        let (cost, best , stop_reason) = rules::run(&current_expr, timeout, vector_width, final_node_limit,rulesets_appplying_order[iteration%rulesets_appplying_order.len()],0);
-        current_cost = cost;
-        let depth = ast_depth(&best);
-        if depth < best_depth {
-            current_expr = best ;
-            best_depth=depth ; 
-            //best_expr = current_expr.clone() ;
-        }
-        eprintln!("Best cost at iteration {}: {} , Depth {} \n\n", iteration + 1, current_cost,depth);
-    }
-    best_expr = current_expr.clone() ;*/
-    /**********************************************************************************************************/
-    /**********************************************************************************************************
-    let mut rulesets_appplying_order  = vec![0,1];
-    let mut best_cost = 0;
-    let mut best_expr = prog;
-    let node_limit = 100_000 ;
-    for iteration in 0..10 {
-        //println!("Iteration: {}", iteration + 1);
-        // Run the rule optimization
-        let (cost, best , stop_reason) = rules::run(&best_expr, timeout, vector_width,node_limit,rulesets_appplying_order[iteration%rulesets_appplying_order.len()],0);
-        // Update `prog` with the best expression from the current iteration
-        best_expr = best ;
-        // Store the best cost and expression
-        best_cost = cost;
-        eprintln!("Best cost at iteration {}: {} \n\n", iteration + 1, best_cost);
-        //println!("Best expression at iteration {}: {}", iteration + 1, best_expr);
-    }
-    // vec![3]
-    // iteration in 0..6
-    rulesets_appplying_order  = vec![2,3];
-    for iteration in 0..8 {
-        let (cost, best, stop_reason) = rules::run(&best_expr, timeout, vector_width,node_limit,rulesets_appplying_order[iteration%rulesets_appplying_order.len()],0);
-        best_expr = best ;
-        best_cost = cost;
-        eprintln!("Best cost at iteration {}: {} \n\n", iteration + 1, best_cost);
-    }
-    eprintln!("\n\n******************* Continue working with exhaustive extraction *************************\n\n");
-    rulesets_appplying_order  = vec![1];
-    for iteration in 0..1 {
-        let (cost, best, stop_reason) = rules::run(&best_expr, timeout, vector_width,node_limit, rulesets_appplying_order[iteration%rulesets_appplying_order.len()],2);
-        best_expr = best ;
-        best_cost = cost;
-        eprintln!("Best cost at iteration {}: {} \n\n", iteration + 1, best_cost);
-    }*/
     let duration = start_time.elapsed();
     // Print the results
     println!("{}", best_expr.to_string()); /* Pretty print with width 80 */
+    println!("{} {}",current_vector_width,current_vector_width);
+    eprintln!("\n===> Final expression depth : {}", rules::ast_depth(&best_expr));
     eprintln!("\nCost: {}", best_cost);
     //eprintln!("Time taken: {:?} to finish", duration);*/
 }
