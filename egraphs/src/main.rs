@@ -248,14 +248,14 @@ fn main() {
         14 => {rules = vector_assoc_min_mul_rules(vector_width);},
         15 => {rules = assoc_neg_rules(vector_width);},
     */
-    rulesets_appplying_order  = vec![2,4];
+    rulesets_appplying_order  = vec![2,3,4,5];
     let mut previous_cost = usize::MAX;
     node_limit = 100_000 ;
     let mut comp = 0;
     let mut current_vector_width = vector_width ; 
     while (comp != rulesets_appplying_order.len()){
         let (cost, best, stop_reason) = rules::run(&current_expr, timeout, current_vector_width,node_limit,rulesets_appplying_order[iteration%rulesets_appplying_order.len()],0);
-        current_expr = best ;
+        current_expr = best ; 
         current_cost = cost ;
         current_vector_width = rules::get_vector_width(&current_expr);
         if (current_cost == previous_cost){
@@ -266,7 +266,7 @@ fn main() {
         }
         iteration = iteration + 1 ;
         eprintln!("Best cost at iteration {}: {} ", iteration + 1, current_cost);
-        eprintln!("Obtained expression ==> : {}", current_expr.to_string());
+        //eprintln!("Obtained expression ==> : {}", current_expr.to_string());
     }
     /*****************************************************************************/
     let mut best_cost = current_cost ;

@@ -20,7 +20,7 @@ width = n_cols_image
 output = np.zeros((width, width), dtype=int)
 image = np.zeros((width+1, width+1), dtype=int)
 input_image = np.zeros((width, width), dtype=int)
-print("Welcome to image filtering!")
+#print("Welcome to image filtering!")
 # Populate the image with random integers
 for i in range(width):
     for j in range(width):
@@ -45,9 +45,6 @@ for i in range(rows):
 ##############################################################################################
 ##############################################################################################
 # Output the results
-for i in range(rows):
-    for j in range(cols):
-        print(f"output[{i}][{j}] = {output[i][j]}")
 output_image = output
 #########################################################################
 if is_vectorization_activated :

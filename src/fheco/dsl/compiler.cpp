@@ -368,11 +368,11 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   expr_printer.make_terms_str_expr(util::ExprPrinter::Mode::prefix);
   // Initialize files to store inputs, expression, and vectorized code
   std::ofstream inputs_file("../inputs.txt");
-  //std::ofstream expression_file("../expression.txt");
+  std::ofstream expression_file("../expression.txt");
   std::ofstream vectorized_code_file("../vectorized_code.txt");
 
   // Check if any of the files failed to open
-  if (!inputs_file  || !vectorized_code_file)
+  if (!inputs_file  || !vectorized_code_file || !expression_file)
   {
     std::cerr << "Error opening one of the output files." << std::endl;
     return;
@@ -459,13 +459,13 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   expression += ")";
 
   // Write the expression to the expression_file
-  //expression_file << expression << std::endl;
+  expression_file << expression << std::endl;
 
   // Overwrite the vectorized_code_file
   vectorized_code_file << "";
   // Close the input and expression files
   inputs_file.close();
-  //expression_file.close();
+  expression_file.close();
   vectorized_code_file.close();
   /*********************************************************/
   // Call the vectorizer function with the computed vector width
@@ -477,7 +477,7 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   /*************************************************
   vectorized_code_file_2 << expression << "\n";
   /*********************************************** */
-  //vectorized_code_file_2 << 32 << " " << 32 ;
+  //vectorized_code_file_2 << vector_width << " " << vector_width ;
   //vectorized_code_file_2.close();
   // Call the script to build the source code that operates on vectors
   format_vectorized_code(func);
@@ -665,7 +665,6 @@ void Compiler::call_vectorizer(int vector_width)
   }
 }
 /***************************************************************************/
-using namespace std ;
 std::unordered_map<int, std::string> labels_map;
 int id_counter = 0;
 /**************************************************************************/
@@ -1011,7 +1010,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
       if (dictionary.find(string_vector) == dictionary.end()) {
         string res = "";
         for(int i = 0 ; i<slot_count ; i++){
-          res+=simple_elements[i%sub_vector_size]+" ";
+          res+=simple_elements[i%simple_elements.size()]+" ";
         }
         new_element = res.substr(0, res.size() - 1); 
         string label;
@@ -1045,7 +1044,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
     if (dictionary.find(string_vector) == dictionary.end()) {
       string res = "";
       for(int i = 0 ; i<slot_count ; i++){
-        res+=vector_elements[i%sub_vector_size]+" ";
+        res+=vector_elements[i%vector_elements.size()]+" ";
       }
       new_element = res.substr(0, res.size() - 1); 
       string label;
@@ -1612,9 +1611,7 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
         if (&expr == &expressions.back()) break;
         auto tokens = process_vectorized_code(expr);
         std::unordered_map<std::string, std::string> dictionary = {};
-        //std::cout<<"process expression : "<<expr<<"\n";
         process(tokens,0,dictionary,inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,simplified_expression);
-        //std::cout<<"Simplified expression  : "<<simplified_expression<<" \n";
         // Convert new operands VecAddRot, VecMulRot, VecMinusRot
         auto tokens1 = split(simplified_expression.substr(1));
         string updated_expr = convert_new_ops(tokens1);

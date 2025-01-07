@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <random>
+#include <unordered_map>
 using namespace std;
 using namespace fheco;
 
@@ -20,21 +21,15 @@ int getRandomNumber(int range) {
     std::uniform_int_distribution<int> dist(0, range);
     return dist(rng);
 }
-int64_t getRandomInt64(int64_t range) {
-    static std::random_device rd;         // Seed generator
-    static std::mt19937_64 rng(rd());     // 64-bit Mersenne Twister generator
-    std::uniform_int_distribution<int64_t> dist(0, range - 1);  // Exclusive upper bound
-    return dist(rng);
-}
 /**************************************************************** */
 // C++ equivalent of the treeGenerator function
-Ciphertext treeGenerator(int originalDepth, int maxDepth, int& seed, const std::string& regime) {
-    std::string localString = "";
-    
+Ciphertext treeGenerator(int originalDepth, int maxDepth, int& seed, const std::string& regime,std::unordered_map<std::string , int>& labels_values) {
+    std::string VarName = "";
+    int value = 0 ;
     if (originalDepth == maxDepth || maxDepth == originalDepth - 1) {
         int randomNum = (regime == "100-100") ? getRandomNumber(1) : getRandomNumber(1);
-        Ciphertext lhs = treeGenerator(originalDepth, maxDepth - 1, seed, regime);
-        Ciphertext rhs = treeGenerator(originalDepth, maxDepth - 1, seed, regime);
+        Ciphertext lhs = treeGenerator(originalDepth, maxDepth - 1, seed, regime,labels_values);
+        Ciphertext rhs = treeGenerator(originalDepth, maxDepth - 1, seed, regime,labels_values);
 
         if (randomNum == 1) {
             return lhs + rhs;
@@ -48,13 +43,14 @@ Ciphertext treeGenerator(int originalDepth, int maxDepth, int& seed, const std::
         seed += 1;
 
         if (randomNum > 1) {
-            localString = std::to_string(getRandomNumber(1024));
+            value = getRandomNumber(1024) ; 
+            VarName = "x" + std::to_string(seed);
+            labels_values[VarName]=value ;
             seed += 1;
-            //std::cout << originalDepth + 1 - maxDepth << std::endl;
-            return Ciphertext("x");  // Return Ciphertext instance instead of Tree(Var)
+            return Ciphertext(VarName);  // Return Ciphertext instance instead of Tree(Var)
         } else {
-            Ciphertext lhs = treeGenerator(originalDepth, maxDepth - 1, seed, regime);
-            Ciphertext rhs = treeGenerator(originalDepth, maxDepth - 1, seed, regime);
+            Ciphertext lhs = treeGenerator(originalDepth, maxDepth - 1, seed, regime,labels_values);
+            Ciphertext rhs = treeGenerator(originalDepth, maxDepth - 1, seed, regime,labels_values);
 
             if (randomNum == 1) {
                 return lhs + rhs;
@@ -63,9 +59,11 @@ Ciphertext treeGenerator(int originalDepth, int maxDepth, int& seed, const std::
             }
         }
     } else {
-        //integer endNode = (1024);
+        value = getRandomNumber(1024) ; 
+        VarName = "x" + std::to_string(seed);
+        labels_values[VarName]=value ;
         seed += 1;
-        return Ciphertext("x");  // Return Ciphertext instance instead of Tree(Var)
+        return Ciphertext(VarName);  // Return Ciphertext instance instead of Tree(Var)
     }
 }
 /*****************************************************/
@@ -74,9 +72,25 @@ void fhe(int depth,int iteration, string regime) {
     //vector<string> regimes = {"50-50", "100-50", "100-100"};
     //int iteration = 1;
     //int depth = depths[0];
+    std::unordered_map<std::string, int> labels_values;
     int seed = 9100 + (iteration - 1) * 100 + (depth*100) + iteration;
-    Ciphertext result = treeGenerator(depth, depth, seed, regime);
+    Ciphertext result = treeGenerator(depth, depth, seed, regime,labels_values);
     result.set_output("result");
+    // update io file
+    string inputs_file_name = "fhe_io_example.txt" ;
+    std::ofstream input_file(inputs_file_name);
+    /**********************************************************/ 
+    string header = "1 "+std::to_string(labels_values.size())+" 1 \n";
+    input_file << header;
+    string entrie ="" ;
+    for(const auto&pair : labels_values){
+        entrie=pair.first+" 1 0 "+std::to_string(pair.second)+" \n";
+        input_file << entrie;
+    }
+    // output entrie
+    entrie = "result 1 1 \n";
+    input_file << entrie;
+    input_file.close();
 }
 /***************************************************/
 void print_bool_arg(bool arg, const string &name, ostream &os)
@@ -89,10 +103,9 @@ int main(int argc, char **argv) {
     auto window = 0;
     bool cse = true;
     bool const_folding = true;
-    /***************************/
     /**************************/
     bool call_quantifier = true;
-    bool vectorized = true;
+    bool vectorized = false;
     /**************************/
     // Argument validation
     if (argc < 4) {

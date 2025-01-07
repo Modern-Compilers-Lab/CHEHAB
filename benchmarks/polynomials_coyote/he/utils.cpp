@@ -168,7 +168,7 @@ void print_encrypted_outputs_info(
   int L = context.first_context_data()->parms().coeff_modulus().size();
   os << "output ciphertexts info (L=" << L - 1 << ")\n";
   os << "id: level, remaining_noise_budget, actual_noise_upper_bound (maybe mod_switch was used to sacrifice some "
-        "noise budget)\n";
+        "noise budget)\n"; 
   int init_noise_budget = context.first_context_data()->total_coeff_modulus_bit_count() -
                           context.first_context_data()->parms().plain_modulus().bit_count();
   for (const auto &output : encrypted_outputs)

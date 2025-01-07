@@ -339,14 +339,14 @@ Ruleset Ruleset::joined_ruleset(shared_ptr<ir::Func> func)
     {"undo-nest-rotate-mul-2", ((y << (n)) * x) << m, (y << (n + m) % func->slot_count()) * (x << m)}};
 
   vector<Rule> mul_rules{
-    {"mul_0-1", zero * x, zero},
-    {"mul_0-2", x * zero, zero},
+    //{"mul_0-1", zero * x, zero},
+    //{"mul_0-2", x * zero, zero},
 
-    {"mul_1-1", one * x, x},
-    {"mul_1-2", x * one, x},
+    //{"mul_1-1", one * x, x},
+    //{"mul_1-2", x * one, x},
 
-    {"mul_m1-1", x * m_one, -x},
-    {"mul_m1-2", m_one * x, -x},
+    //{"mul_m1-1", x * m_one, -x},
+    //{"mul_m1-2", m_one * x, -x},
 
     //{"mul-to-square", x * x, square(x)},
 

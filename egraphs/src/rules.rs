@@ -9,7 +9,7 @@ use crate::{
     runner::StopReason,
     cost::VecCostFn,
 };
-use std::collections::HashMap; 
+use std::collections::HashMap;  
 use std::collections::HashSet; 
 use egg::rewrite as rw;
 use egg::*;
@@ -37,7 +37,7 @@ pub fn run(
         2 => {rules = addition_rules(vector_width,expression_depth);},
         3 => {rules = minus_rules(vector_width,expression_depth);},
         4 => {rules = multiplication_rules(vector_width,expression_depth);},
-        5 => {rules = neg_rules(vector_width); }, 
+        5 => {rules = neg_rules(vector_width,expression_depth); }, 
 
         //7 => {rules = rot_minus_rules(vector_width,expression_depth);},
         //8 => {rules = rot_multiplication_rules(vector_width,expression_depth);},
@@ -1113,6 +1113,7 @@ pub fn addition_rules(vector_width: usize, expression_depth: usize) -> Vec<Rewri
         ));
         initial_vector_size=initial_vector_size*2;
     }
+    /*************************************************/
     rules
 }
 /*************************************************************/
@@ -1188,6 +1189,7 @@ pub fn minus_rules(vector_width: usize, expression_depth: usize) -> Vec<Rewrite<
         ));
         initial_vector_size=initial_vector_size*2;
     }
+    /***********************************************/
     rules
 } 
 /*************************************************************/
@@ -1263,25 +1265,34 @@ pub fn multiplication_rules(vector_width: usize, expression_depth: usize) -> Vec
         ));
         initial_vector_size=initial_vector_size*2;
     }
+    /********************************************/
     rules
 }
 /*************************************************************/
-pub fn neg_rules(vector_width : usize) ->  Vec<Rewrite<VecLang, ConstantFold>>{
+pub fn neg_rules(vector_width : usize, expression_depth: usize) ->  Vec<Rewrite<VecLang, ConstantFold>>{
+    let base: usize = 2;
+    let mut max_vector_size : usize = base.pow(expression_depth as u32 - 1) * vector_width; 
+    max_vector_size = min(max_vector_size,4096);
+
     let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![
         rw!("neg-0-0+0"; "0" => "(- 0)"),
     ];
-    let mut searcher_neg = Vec::new();
-    let mut applier_1 = Vec::new();
-    for i in 0..vector_width {
-        searcher_neg.push(format!("( - ?b{}) ", i));
-        applier_1.push(format!("?b{} ", i));
-    }
-    let lhs_neg: Pattern<VecLang> = format!("(Vec {})", searcher_neg.concat()).parse().unwrap();
-    let rhs_neg: Pattern<VecLang> = format!("(VecNeg (Vec {}) )", applier_1.concat(),)
+    let mut initial_vector_size : usize = 1 ;
+    while initial_vector_size <= max_vector_size{
+        let mut searcher_neg = Vec::new();
+        let mut applier_1 = Vec::new();
+        for i in 0..initial_vector_size {
+            searcher_neg.push(format!("( - ?b{}) ", i));
+            applier_1.push(format!("?b{} ", i));
+        }
+        let lhs_neg: Pattern<VecLang> = format!("(Vec {})", searcher_neg.concat()).parse().unwrap();
+        let rhs_neg: Pattern<VecLang> = format!("(VecNeg (Vec {}) )", applier_1.concat(),)
         .parse()
         .unwrap();
-    // Push the rewrite rules into the rules vector
-    rules.push(rw!(format!("neg-vectorize"); { lhs_neg.clone() } => { rhs_neg.clone() }));
+        // Push the rewrite rules into the rules vector
+        rules.push(rw!(format!("neg-vectorize-{}",initial_vector_size); { lhs_neg.clone() } => { rhs_neg.clone() }));
+        initial_vector_size=initial_vector_size*2 ;
+    }
     rules
 }
 /*************************************Composed rotation rules************************************/
