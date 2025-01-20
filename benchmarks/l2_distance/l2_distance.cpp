@@ -5,11 +5,12 @@ using namespace fheco;
 #include <chrono>
 #include <fstream>
 #include <iostream>
-#include <string> 
+#include <string>
 #include <vector> 
+#include "fheco/dsl/benchmark_types.cpp"
 /********************/
 void fhe_vectorized(int slot_count){
-  Ciphertext c1("c1");
+  Ciphertext c1("c1"); 
   Ciphertext c2("c2");
   Ciphertext slot_wise_diff = (c1 - c2) * (c1 - c2);
   Ciphertext sum = SumVec(slot_wise_diff,slot_count);
@@ -38,6 +39,8 @@ void fhe(int slot_count)
   }
   output.set_output("result");
 }
+
+
 /********************************************/
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
@@ -91,6 +94,7 @@ int main(int argc, char **argv)
   /**************/t = chrono::high_resolution_clock::now();
   if (vectorized)
   { 
+      int benchmark_type = STRUCTURED_WITH_ONE_OUTPUT;
       const auto &func = Compiler::create_func(func_name, 1, 20, true, true);
       fhe(slot_count);
       string gen_name = "_gen_he_" + func_name;
@@ -102,8 +106,11 @@ int main(int argc, char **argv)
       if (!source_os)
         throw logic_error("failed to create source file");
       cout << " window is " << window << endl;
-      Compiler::gen_vectorized_code(func, window);
-      Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);      
+      Compiler::gen_vectorized_code(func, window, benchmark_type);
+      auto ruleset = Compiler::Ruleset::ops_cost;
+      auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+      Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);  
+      Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);    
       /************/elapsed = chrono::high_resolution_clock::now() - t;   
       cout << elapsed.count() << " ms\n";
       if (call_quantifier)

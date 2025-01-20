@@ -21,7 +21,7 @@ set_target_properties(fheco PROPERTIES CXX_EXTENSIONS OFF)
 install(TARGETS fheco ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 
 add_subdirectory(benchmarks/box_blur)
-add_subdirectory(benchmarks/cryptonets)
+# add_subdirectory(benchmarks/cryptonets)
 add_subdirectory(benchmarks/sort)
 add_subdirectory(benchmarks/max)
 add_subdirectory(benchmarks/dot_product)

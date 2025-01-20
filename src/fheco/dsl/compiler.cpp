@@ -7,6 +7,7 @@
 #include "fheco/passes/passes.hpp"
 #include "fheco/util/common.hpp"
 #include "fheco/util/expr_printer.hpp"
+#include "fheco/dsl/benchmark_types.cpp"
 #include "compiler.hpp"
 #include <cstring> 
 #include <ctime>
@@ -21,6 +22,7 @@
 #include <utility>
 #include <sstream>
 #include <unordered_map>
+#include <stack>
 #include <algorithm>
 
 using namespace std;
@@ -62,18 +64,6 @@ void Compiler::compile(
   trs::TRS SumVec_reduct_trs{trs::Ruleset::SumVec_reduct_opt_ruleset(func)};
   SumVec_reduct_trs.run(trs::RewriteHeuristic::top_down);
   /***********************Rename io_file*********
-  std::string input_file_name = "fhe_io_example.txt";
-  std::ifstream input_file(input_file_name);
-  string updated_inputs_file_name = "fhe_io_example_adapted.txt" ;
-  std::ofstream updated_input_file(updated_inputs_file_name);
-  std::string line;
-  if (input_file.is_open()&&updated_input_file.is_open()) {
-      while (std::getline(input_file, line)) {
-          updated_input_file<<line<<"\n";
-      }
-      updated_input_file.close();
-      input_file.close();
-  }
   /*********************************************/
   gen_he_code(func, header_os, header_name, source_os, 29, true);
 }
@@ -269,10 +259,8 @@ string constant_folding(queue<string> &tokens)
       }
       if (potential_step.size() > 0)
       {
-        //std::cout<<operationString<<" "<<operand1<<" "<<operand2<<" \n";
         bool is_op1_litteral = is_literal(operand1);
         bool is_op2_litteral = is_literal(operand2);
-        //std::cout<<type_op1<<" "<<type_op2<<" \n";
         if(is_op1_litteral&&is_op2_litteral){
           int op1 = 0;
           int op2 = 0;
@@ -361,7 +349,7 @@ string constant_folding(queue<string> &tokens)
   throw logic_error("Invalid expression");
 }
 /**********************************************************************/
-void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
+void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int benchmark_type)
 {
   // Utility function to print expressions in prefix notation
   util::ExprPrinter expr_printer(func);
@@ -377,7 +365,6 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
     std::cerr << "Error opening one of the output files." << std::endl;
     return;
   }
-  std::cout<<"Done1 \n";
 
   // Strings to store input names and types
   std::string input_names;
@@ -397,7 +384,6 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
       prepared_names.push_back(name);
     }
     std::reverse(prepared_names.begin(),prepared_names.end());
-    //std::cout<<"format expression \n";
     int comp =0 ;
     for (auto it = input_terms.rbegin(); it != input_terms.rend(); ++it)
     {
@@ -428,7 +414,6 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   // Process output terms
   std::vector<const ir::Term *> output_terms = process_output_terms(func->data_flow().outputs_info(),func->data_flow().output_keys());
   std::string expression = "(Vec ";
-  //  for (auto it = output_terms.begin(); it != output_terms.end(); ++it)
   for (auto it = output_terms.begin(); it != output_terms.end(); ++it)
   {
     auto output_term = *it;
@@ -470,17 +455,10 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
   /*********************************************************/
   // Call the vectorizer function with the computed vector width
   std::cout<<"Call the code vectorizer \n";
-  call_vectorizer(vector_width);
+  call_vectorizer(vector_width, benchmark_type);
   /***********************************************************/
-  // Re-open the vectorized_code_file in append mode and write the vector width
-  //std::ofstream vectorized_code_file_2("../vectorized_code.txt", std::ios::app);
-  /*************************************************
-  vectorized_code_file_2 << expression << "\n";
-  /*********************************************** */
-  //vectorized_code_file_2 << vector_width << " " << vector_width ;
-  //vectorized_code_file_2.close();
   // Call the script to build the source code that operates on vectors
-  format_vectorized_code(func);
+  format_vectorized_code(func, benchmark_type);
 }
 /**
  * Generates vectorized code for a given function, divided into subvectors.
@@ -503,24 +481,23 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func)
  * @param func Shared pointer to the function to be vectorized.
  * @param window The number of subvectors to divide the outputs into for vectorization.
  */
-void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window)
+void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window, int benchmark_type)
 {
   if (window < 0)
   {
     std::cerr << "Window size must be greater than 0." << std::endl;
     return;
   }
-  std::cout<<"welcome in vectorized code generator \n";
   /*********************************************************/
-  std::cout<<"apply existing trs on output elements to balance them \n";
+  // std::cout<<"apply existing trs on output elements to balance them \n";
   auto rewrite_heuristicc = trs::RewriteHeuristic::bottom_up;
   trs::TRS joined_trs{trs::Ruleset::joined_ruleset(func)};
   joined_trs.run(rewrite_heuristicc); 
-  std::cout<<"Done \n";
+  // std::cout<<"Done \n";
   /**********************************************************/
   if (window == 0)
   {
-    gen_vectorized_code(func);
+    gen_vectorized_code(func, benchmark_type);
     return;
   }
   else
@@ -578,7 +555,7 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
     std::vector<const ir::Term *> output_terms = process_output_terms(func->data_flow().outputs_info(),func->data_flow().output_keys());
     if(vector_full_width<window){
       std::cout<<"\nresult vector width smaller than window size ==> windows will be considered=0(deactivated)\n";
-      gen_vectorized_code(func);
+      gen_vectorized_code(func, benchmark_type);
       return;
     }
     int index = 0;
@@ -629,7 +606,7 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
         }
         expression_file << expression;
         expression_file.close();
-        call_vectorizer(vector_width);
+        call_vectorizer(vector_width, benchmark_type);
         expression = "(Vec ";
       }
     }
@@ -645,14 +622,14 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int wi
     vectorized_code_file_2.close();
     
     // Call the script to construct the source code
-    format_vectorized_code(func);
+    format_vectorized_code(func, benchmark_type);
   }
 }
 /***************************************************************************************/
-void Compiler::call_vectorizer(int vector_width)
+void Compiler::call_vectorizer(int vector_width, int benchmark_type)
 {
-  string command = "cargo run --release --manifest-path ../../../egraphs/Cargo.toml -- ../expression.txt " +
-                   to_string(vector_width) + " >> ../vectorized_code.txt";
+   string command = "cargo run --release --manifest-path ../../../egraphs/Cargo.toml -- ../expression.txt " +
+                  to_string(vector_width) +" "+ to_string(benchmark_type) + " >> ../vectorized_code.txt";
 
   // Use the system function to run the executable
   int result = system(command.c_str());
@@ -661,7 +638,7 @@ void Compiler::call_vectorizer(int vector_width)
   if (result != 0)
   {
     // The executable did not run successfully
-    std::cout << "Failed to call the vectorizer engine!" << std::endl;
+     //std::cout << "Failed to call the vectorizer engine!" << std::endl;
   }
 }
 /***************************************************************************/
@@ -836,10 +813,6 @@ void decompose_vector_op(const vector<string>& vector_elements, vector<string>& 
         }
     }
     // Debug output to check results
-    /*cout << "vec_ops1: ";
-    for (const auto& op : vec_ops1) cout << op << " --- ";
-    cout << "\nvec_ops2: ";
-    for (const auto& op : vec_ops2) cout << op << " --- ";*/
 }
 /***********************************************************************/
 bool isSingleOperandExpression(const std::string& expression) {
@@ -891,16 +864,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
         simple_elements.push_back(elem);
       }
     }
-    /*std::cout<<"composed elements \n";
-    for(auto val : composed_elements){
-      std::cout<<val<<" --- ";
-    }
-    std::cout<<"\n*******************************************\n";
-    std::cout<<"Simple elements \n";
-    for(auto val : simple_elements){
-      std::cout<<val<<" --- ";
-    }
-    std::cout<<"\n";*/
+    
     bool all_simple_elements_eq_0 = verify_all_vec_elems_eq0(simple_elements);
     bool all_composed_elements_eq_0 = verify_all_vec_elems_eq0(composed_elements);
     //std::cout<<"Next \n";
@@ -948,23 +912,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
           }
         }
       }
-      /*std::cout<<"Negation elements : \n";
-      for(auto val : negation_elements)
-          std::cout<<val<<" ";
-      std::cout<<"\n";
-      std::cout<<"Addition elements : \n";
-      for(auto val : addition_elements)
-          std::cout<<val<<" ";
-      std::cout<<"\n";
-      std::cout<<"substraction_elements : \n";
-      for(auto val : substraction_elements)
-          std::cout<<val<<" ";
-      std::cout<<"\n";
-      std::cout<<"multiplication_elements : \n";
-      for(auto val : multiplication_elements)
-          std::cout<<val<<" ";
-      std::cout<<"\n";
-      std::cout<<"Processing composed vectors done !\n";*/
+    
       vector<string> vec_ops1 ={} ;
       vector<string> vec_ops2 ={} ;
       if(!verify_all_vec_elems_eq0(addition_elements)&&!verify_all_vec_elems_eq0(substraction_elements)&&!verify_all_vec_elems_eq0(multiplication_elements)){
@@ -987,9 +935,7 @@ string process_composed_vectors(const vector<string>& vector_elements,
       }else if(!verify_all_vec_elems_eq0(negation_elements)){
         //std::cout<<"==> Treat Negation case \n";
         decompose_vector_op(negation_elements, vec_ops1 ,vec_ops2);
-        /*for(auto val : vec_ops1)
-          std::cout<<val<<" ";
-        std::cout<<"\n";*/
+       
         return "( - "+process_composed_vectors(vec_ops1,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size)+" )";
       }
     }else if(!all_simple_elements_eq_0){
@@ -1006,7 +952,6 @@ string process_composed_vectors(const vector<string>& vector_elements,
         new_element+=val+" ";
       }
       string string_vector = "Vec "+new_element.substr(0, new_element.size() - 1);// strip trailing space
-      //std::cout<<"=> Seconds "<<string_vector<<"\n";
       if (dictionary.find(string_vector) == dictionary.end()) {
         string res = "";
         for(int i = 0 ; i<slot_count ; i++){
@@ -1023,7 +968,6 @@ string process_composed_vectors(const vector<string>& vector_elements,
           new_element = "1 1 " + new_element;
           //std::cout<<label<<" : "<<new_element<<" \n";
         }
-        //std::cout<<"=> new_element "<<new_element<<"\n";
         labels_map[id_counter] = label;
         inputs_entries[label]=new_element;
         id_counter++ ;
@@ -1032,7 +976,6 @@ string process_composed_vectors(const vector<string>& vector_elements,
       }else{
         return dictionary[string_vector];
       }
-      //std::cout<<"=> treating simple element done \n";
     }
   }
   else{
@@ -1060,6 +1003,34 @@ string process_composed_vectors(const vector<string>& vector_elements,
     }
   }
 }
+
+/**********************************************************************/
+string generate_rotated_expression(string& expression_to_rotate, int number_of_rotations, string operation) {
+
+  string expression_builder = "";
+  expression_to_rotate.erase(0, 1);   // remove the first char bcz it s a space
+  
+  string op = operation == "+" ? "+" : 
+            operation == "-" ? "-" : 
+            operation == "*" ? "*" : " ";
+ 
+  if (number_of_rotations == 1) {
+    expression_builder += " ( " + op + " " + expression_to_rotate + " ( << " + expression_to_rotate + " 1))";
+  } else {
+    expression_builder += " ( " + op + " " + expression_to_rotate;
+    for (int idx = 1 ; idx <= number_of_rotations - 1; idx++) {
+      expression_builder += " ( "+ op +" ( << " + expression_to_rotate + " " + std::to_string(idx) + " )";
+    }
+    expression_builder += " ( << " + expression_to_rotate + " " + std::to_string(number_of_rotations) + " )";
+    
+    for (int idx = 1 ; idx <= number_of_rotations; idx++) {
+      expression_builder += " )";
+    }
+  }
+
+ return expression_builder;
+
+}
 /**********************************************************************/
 std::pair<std::string, int> process(
     const std::vector<std::string>& tokens,
@@ -1070,7 +1041,9 @@ std::pair<std::string, int> process(
     const std::vector<std::string>& inputs_types,
     int slot_count,
     int sub_vector_size,
-    string& new_expression
+    string& new_expression,
+    bool& rotation_flag,
+    string& expression_to_rotate
 ) {
     while (index < tokens.size()) {
         if (tokens[index] == "(") {
@@ -1109,17 +1082,14 @@ std::pair<std::string, int> process(
                 }
                 vector<string> updated_vector_elements = {};
                 bool if_all_vector_elems_eq0 = true ;
-                //std::cout<<"Process composed vector : \n";
                 for(auto elem : vector_elements){
                   auto tokens = split(elem);
                   string updated_elem = constant_folding(tokens);
-                  //std::cout<<"updated element :"<<updated_elem<<"\n";
                   updated_vector_elements.push_back(updated_elem);
                 }
                 string result_expr = process_composed_vectors(updated_vector_elements,dictionary,inputs_entries,inputs,inputs_types,slot_count,sub_vector_size);
-                //std::cout<<"Geat \n";
-                //std::cout<<"Proposing composed_vector done, res_expression :"<<result_expr<<" \n";
-                /******/new_expression+=" "+result_expr;
+                if (!rotation_flag) new_expression+=" "+result_expr;
+                if (rotation_flag) expression_to_rotate += " " + result_expr;
                 if(result_expr.substr(0,1)=="("){
                   std::string label = "c" + std::to_string(id_counter);
                   labels_map[id_counter] = label;
@@ -1128,18 +1098,75 @@ std::pair<std::string, int> process(
                 }else{
                   return {dictionary[vector_string], index};
                 }
-            }
+            } else if (tokens[index] == "VecAddRotF" | tokens[index] == "VecAddRotP" |
+                    tokens[index] == "VecMinusRotF" | tokens[index] == "VecMinusRotP" |
+                    tokens[index] == "VecMulRotF" | tokens[index] == "VecMulRotP"){
+                       rotation_flag = true;
+                      std::string expression_to_rotate = "";
+                      expression_to_rotate += " (";
+                      std::string operation = tokens[index];
+                      std::string op = 
+                      operation == "VecAddRotF"  | operation == "VecAddRotP" ? "+" : 
+                      operation == "VecMinusRotF" | operation == "VecMinusRotP" ? "-" : 
+                      operation == "VecMulRotF" | operation == "VecMulRotP" ? "*" : "+";
+                      expression_to_rotate += " " + op;
+
+                      index++;
+                      auto [operand_1, new_index] = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression, rotation_flag, expression_to_rotate);
+                      index = new_index;
+
+                      if (tokens[index] != ")") {
+                        std::string operand_2;
+                        if (tokens[index] == "(") {
+                            std::tie(operand_2, index) = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression, rotation_flag, expression_to_rotate);
+                        } else {
+                            operand_2 = tokens[index];
+                            new_expression += " " + operand_2;
+                            expression_to_rotate += " " + operand_2;
+
+                            index++;
+                        }
+                        expression_to_rotate += " )";
+                       
+                        string ret = generate_rotated_expression(expression_to_rotate, /*number of rotations*/ std::stoi(tokens[index]), /*the current operatoin*/ std::string(1, expression_to_rotate[3]));
+                        new_expression += ret;
+                        
+                        std::string op = (operation == "VecAdd") ? "+" : (operation == "VecMinus") ? "-" : (operation == "VecMul") ? "*" : "<<";
+                        std::string label = "c" + std::to_string(id_counter);
+                        labels_map[id_counter] = label;
+                        id_counter++;
+                        index++;  // skip ")"
+                        index++;  // skip the space
+                        rotation_flag = false;
+                        return {label, index};
+                        } else {
+                          /******/new_expression+=" )";
+                            index++;
+                            std::string label = "c" + std::to_string(id_counter);
+                            labels_map[id_counter] = label;
+                            inputs_entries[label]=label;
+                            id_counter++;
+                            return {label, index};
+                        }
+                    }
             /******/new_expression+=" (";
             std::string operation = tokens[index];
-            std::string op = (operation == "VecAdd") ? "+" : (operation == "VecMinus") ? "-" : (operation == "VecNeg") ? "-": (operation == "VecMul") ? "*": (operation == "VecAddRot") ? "VecAddRot" : (operation == "VecMinusRot") ? "VecMinusRot" : (operation == "VecMulRot") ? "VecMulRot" : "<<";
+            std::string op = 
+              operation == "VecAdd" | operation == "+" ? "+" :
+              operation == "VecMinus"  | operation == "-" ? "-" : 
+              operation == "VecMul"  | operation == "*" ? "*":
+              operation == "VecAddRotS" ? "VecAddRot" :
+              operation == "VecMinusRotS" ? "VecMinusRot" : 
+              operation == "VecMulRotS" ? "VecMulRot" 
+              : "<<";           
             /*****/new_expression+=" "+op ;
             index++;
-            auto [operand_1, new_index] = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression);
+            auto [operand_1, new_index] = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression, rotation_flag, expression_to_rotate);
             index = new_index;
             if (tokens[index] != ")") {
                 std::string operand_2;
                 if (tokens[index] == "(") {
-                    std::tie(operand_2, index) = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression);
+                    std::tie(operand_2, index) = process(tokens, index, dictionary, inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,new_expression, rotation_flag, expression_to_rotate);
                 } else {
                     operand_2 = tokens[index];
                     new_expression+=" "+operand_2;
@@ -1296,7 +1323,6 @@ string vector_constant_folding(queue<string> &tokens,unordered_map<string,string
               string label = "p" + std::to_string(id_counter);
               id_counter++;
               input_entries.insert({label,new_input});
-              //std::cout<<label<<" \n";
               return label ;
             }
         }else if(type_op1=="p"){
@@ -1401,11 +1427,8 @@ void update_io_file(const unordered_map<string,string>& input_entries,const vect
    std::ifstream input_file(inputs_file_name);
    std::string line ;
    std::vector<string> lines ;
-   //std::cout<<" read fhe_io example file \n";
    if (input_file.is_open()) {
-        //std::cout<<"read file content \n";
         while (std::getline(input_file, line)) {
-            //std::cout<<line<<" \n";
             lines.push_back(line);
         }
         input_file.close();
@@ -1489,7 +1512,6 @@ void update_io_file(const unordered_map<string,string>& input_entries,const vect
           throw invalid_argument("key :"+pair.first+" is incorrect\n");
         }
         updated_input+="\n";
-        //std::cout<<updated_input ;
         updated_input_file << updated_input;
     }
     for(int j=0;j<updated_outputs.size();j++){
@@ -1505,13 +1527,10 @@ void update_io_file(const unordered_map<string,string>& input_entries,const vect
 /************************************************************************/
 string convert_new_ops(queue<string> &tokens)
 {
-  //std::cout<<"welcome in constant folding\n";
   while (!tokens.empty())
   {
-    //std::cout<<"hereee :"<<tokens.front()<<"\n";
     if (tokens.front() == "(")
     {
-      //std::cout<<"here\n";
       tokens.pop();
       string operationString = tokens.front();
       tokens.pop();
@@ -1534,7 +1553,6 @@ string convert_new_ops(queue<string> &tokens)
       }
       else if (tokens.front() != ")")
       {
-        //std::cout<<"get op2 \n";
         operand2 = tokens.front();
         potential_step = tokens.front();
         tokens.pop();
@@ -1567,11 +1585,80 @@ string convert_new_ops(queue<string> &tokens)
   }
   throw logic_error("Invalid expression");
 }
+/***************************************************************************** */
+std::vector<std::string> tokenizeExpression(const std::string& expression) {
+    std::vector<std::string> tokens;
+    std::string currentToken;
+
+    for (size_t i = 0; i < expression.size(); ++i) {
+        char ch = expression[i];
+
+        if (std::isalnum(ch) || ch == '_' || ch == '.') { 
+            // Part of a token (alphanumeric or underscore/dot for identifiers like c_234 or 1.23)
+            currentToken += ch;
+        } else if (std::isspace(ch)) {
+            // Space: End of current token (if any)
+            if (!currentToken.empty()) {
+                tokens.push_back(currentToken);
+                currentToken.clear();
+            }
+        } else {
+            // Special characters like '(', ')', '*', etc.
+            if (!currentToken.empty()) {
+                tokens.push_back(currentToken);
+                currentToken.clear();
+            }
+            tokens.emplace_back(1, ch); // Add the special character as a single token
+        }
+    }
+
+    // Add the last token if any
+    if (!currentToken.empty()) {
+        tokens.push_back(currentToken);
+    }
+
+    return tokens;
+}
+/*********************************************************************** */
+void processExpression(const std::string& expression, std::vector<int>& vectorSizes, int& maxSize) {
+    std::stack<int> parenthesesStack;
+    int currentSize = 0;
+    maxSize = 0;
+    
+    // Tokenize the expression
+    std::vector<std::string> tokens = tokenizeExpression(expression);
+    std::string token;
+    int i = 0;
+    
+    // Loop through each token in the expression
+    for (int i = 0 ; i < tokens.size() ; i++) {
+        token = tokens[i];
+        // Check if token is "Vec"
+        if (token == "Vec") {
+            currentSize = 0;
+            i++;
+            token = tokens[i];
+            while (token != ")") {
+                currentSize++;  // Count non-space elements
+                i++;
+                token = tokens[i];
+            }
+            
+            // Add the size to vectorSizes and update the max size
+            vectorSizes.push_back(currentSize);
+            maxSize = std::max(maxSize, currentSize);
+        }
+    }
+}
 /************************************************************************/
 /************************************************************************/
-void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
+void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func, int benchmark_type)
 {
-    std::cout<<"Welcome in vectorized code generator !!!! \n";
+    std::vector<int> vectorSizes;
+    int maxSize;
+    int slot_count;
+    int sub_vector_size;
+
     std::string inputs_file = "../inputs.txt";
     std::ifstream input_file(inputs_file);
     std::string inputs_line, input_types_line;
@@ -1593,49 +1680,59 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     std::string expression;
     if (vec_file.is_open()) {
         while (std::getline(vec_file, expression)) {
-            //std::cout<<expression<<" \n";
             expressions.push_back(expression);
         }
         vec_file.close();
     }
-    int slot_count = std::stoi(expressions.back().substr(0, expressions.back().find(' ')));
-    int sub_vector_size = std::stoi(expressions.back().substr(expressions.back().find(' ') + 1));
-    //std::cout<<"slot_count : "<<slot_count<<" \n";
-    //std::cout<<"sub_vector_size : "<<sub_vector_size<<" \n";
+    /*********************************************************************/
+     if (benchmark_type != UNSTRUCTURED_WITH_ONE_OUTPUT) {
+      /* if there are various outputs (vector as output), we need to get the sizes of the slot
+      and the sub_vector before starting the expressions processing, else, (there is only one output)
+      we extract expressions from egraph and we find the sizes using the function processExpression,
+      and we generate rotations to use only one output
+      */
+      slot_count = std::stoi(expressions.back().substr(0, expressions.back().find(' ')));
+      sub_vector_size = std::stoi(expressions.back().substr(expressions.back().find(' ') + 1));
+      // std::cout<<"slot_count : " <<slot_count<<" \n";
+      // std::cout<<"sub_vector_size : " <<sub_vector_size<<" \n";
+    }
+    /*********************************************************************/
     std::vector<std::string> outputs;
     vector<string> simplified_expressions= {};
     string simplified_expression="";
-    //std::cout<<"Start Processing of vectorized code :\n" ;
+    bool rotation_flag = false;   // this flag is reuquired just for the unstructured code, else, it will be used with false always, we use it as argument with other types to avoid write several codes with diff parameters
+    string expression_to_rotate;  // same remark
     unordered_map<string,string> inputs_entries ={};
+
     for (const auto& expr : expressions) {
         if (&expr == &expressions.back()) break;
+         /*************************************/
+        if (benchmark_type == UNSTRUCTURED_WITH_ONE_OUTPUT) { // the size of the outpt is 1 , like l2_distance
+           /* in reality, in this part there is no widnow optimiezation , we get the vector size returned by the egraph
+            after the vectorization process , sub_vector_size is not necessary , but we will add it to avoid re-implement
+            new function for expression processing
+            */
+          processExpression(expr, vectorSizes, maxSize);
+          slot_count = maxSize;
+          sub_vector_size = maxSize;
+        }
+
         auto tokens = process_vectorized_code(expr);
         std::unordered_map<std::string, std::string> dictionary = {};
-        process(tokens,0,dictionary,inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,simplified_expression);
+        process(tokens,0,dictionary,inputs_entries,inputs,inputs_types, slot_count, sub_vector_size,simplified_expression, rotation_flag, expression_to_rotate);
         // Convert new operands VecAddRot, VecMulRot, VecMinusRot
-        auto tokens1 = split(simplified_expression.substr(1));
-        string updated_expr = convert_new_ops(tokens1);
-        simplified_expressions.push_back(updated_expr);
+        if (benchmark_type == STRUCTURED_WITH_ONE_OUTPUT || benchmark_type == STRUCTURED_WITH_MULTIPLE_OUTPUTS) {
+          auto tokens1 = split(simplified_expression.substr(1));
+          string updated_expr = convert_new_ops(tokens1);
+          simplified_expressions.push_back(updated_expr);
+        }  else if (benchmark_type == UNSTRUCTURED_WITH_ONE_OUTPUT || benchmark_type == STRUCTURED_WITH_MULTIPLE_OUTPUTS) {
+            simplified_expressions.push_back(simplified_expression.substr(1));
+        }
         simplified_expression="";
         outputs.push_back(labels_map[id_counter - 1]);
-        //std::cout<<"********************************************************\n";
     }
-    //string info_tmp ="( + ( * ( + ( * ( * ( + ( * c0 c1 ) ( + ( * c0 c2 ) ( + ( * c0 c3 ) ( + ( * c0 c4 ) ( + ( * c0 c5 ) ( + ( * c0 c6 ) ( * c0 c7 ) ) ) ) ) ) ) c9 ) c11 ) ( + ( * ( + ( * c13 c14 ) ( + ( * c15 c16 ) ( + ( * c17 c18 ) ( + ( * c19 c20 ) ( + ( * c21 c22 ) ( + ( * c23 c24 ) ( + ( * c25 c26 ) ( + ( * c27 c28 ) ( + ( * c29 c30 ) ( + ( * c31 c32 ) ( + ( * c33 c34 ) c35 ) ) ) ) ) ) ) ) ) ) ) p36 ) ( + ( + ( * c38 c39 ) ( + ( * c0 c40 ) ( + ( * c0 c41 ) ( + ( * c0 c42 ) ( + ( * c0 c43 ) ( + ( * c0 c44 ) ( + ( * c0 c45 ) ( + ( * c0 c46 ) ( + ( * c0 c47 ) ( + ( * c0 c48 ) ( + ( * c0 c49 ) ( * c0 c50 ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c0 c52 ) ( + ( * c53 c54 ) ( + ( * c55 c56 ) ( + ( * c0 c57 ) ( + ( * c58 c59 ) ( + ( * c60 c61 ) ( + ( * c62 c63 ) ( + ( * c0 c64 ) ( + ( * c65 c66 ) ( + ( * c67 c68 ) ( + ( * c69 c70 ) ( + ( * c0 c71 ) ( + ( * c72 c73 ) ( + ( * c74 c75 ) ( + ( * c76 c77 ) ( * c0 c78 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( * c35 p36 ) ) ( * ( + ( * ( * ( + ( * c1 c14 ) ( + ( * c2 c16 ) ( + ( * c4 c22 ) ( + ( * c5 c24 ) ( + ( * c6 c28 ) ( + ( * c90 c30 ) ( + ( * c7 c32 ) c91 ) ) ) ) ) ) ) p92 ) p36 ) ( + ( * ( + ( * c0 c13 ) ( + ( * c0 c15 ) ( + ( * c0 c17 ) ( + ( * c0 c19 ) ( + ( * c0 c21 ) ( + ( * c0 c23 ) ( + ( * c0 c25 ) ( + ( * c0 c27 ) ( + ( * c0 c29 ) ( + ( * c0 c31 ) ( * c0 c33 ) ) ) ) ) ) ) ) ) ) ) c96 ) ( + ( + ( * c0 c38 ) ( + ( * c40 c54 ) ( + ( * c41 c56 ) ( + ( * c0 c58 ) ( + ( * c0 c60 ) ( + ( * c0 c62 ) ( + ( * c0 c65 ) ( + ( * c0 c67 ) ( + ( * c0 c69 ) ( + ( * c0 c72 ) ( + ( * c0 c74 ) ( * c0 c76 ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c52 c39 ) ( + ( * c0 c53 ) ( + ( * c0 c55 ) ( + ( * c57 c99 ) ( + ( * c42 c59 ) ( + ( * c43 c61 ) ( + ( * c44 c63 ) ( + ( * c64 c100 ) ( + ( * c45 c66 ) ( + ( * c46 c68 ) ( + ( * c47 c70 ) ( + ( * c71 c101 ) ( + ( * c48 c73 ) ( + ( * c49 c75 ) ( + ( * c50 c77 ) ( * c78 c102 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( + ( * c91 p92 ) p36 ) ) )";
-    //vector<string> updated_cons_fd_expressions ={} ;
-    //updated_cons_fd_expressions = simplified_expressions ;
-    //updated_cons_fd_expressions.push_back(info_tmp);
-    //std::cout<<"Updated IR : "<<simplified_expression<<" \n";
-    /*****************************************************************/
-    /*****************************************************************/
-    //std::cout<<"applying constant forlding On vectors \n"; 
-    vector<string> updated_cons_fd_expressions = simplified_expressions;
-    /*for(const auto& expr : simplified_expressions){
-        auto tokens1 = split(expr);
-        //std::cout<<"Input expression :"<<expr<<" \n";
-        string res = vector_constant_folding(tokens1,inputs_entries);
-        updated_cons_fd_expressions.push_back(res);
-    }*/
-    //std::cout<<"==> constant forlding Done\n"; 
+    
+    vector<string> updated_cons_fd_expressions = simplified_expressions; 
     vector<string> labels = {};
     for (const auto& pair : inputs_entries) {
       labels.push_back(pair.first);  // Access the key via pair.first
@@ -1702,19 +1799,15 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     /*****************************************************************/
     /*****************************************************************/
     update_io_file(inputs_entries,outputs,slot_count,sub_vector_size);
-    std::cout<<"==>IO file updated succefully \n";
     /*****************************************************************/
     /*******Convert simplified_vectorized IR  *************************/
     func->reset_data_flow();
-    //std::cout<<"Number of function inputs : "<<func->data_flow().inputs_info().size()<<"\n";
     func->set_slot_count(sub_vector_size);
     util::ExprPrinter pr(func);
     pr.make_terms_str_expr(util::ExprPrinter::Mode::prefix);
     map<string, ir::Term *> myMap;
     ////**********Storing input infos *********************
-    //std::cout<<"Creating the new inputs \n";
     for(const auto& new_input_info : inputs_entries){
-      //std::cout<<new_input_info<<" \n";
       string label = new_input_info.first ;
       if(label.substr(0,1)=="c"){
           Ciphertext cipher(label);
@@ -1724,13 +1817,10 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
           func->init_input(plain,move(label));
       }
     }
-    //std::cout<<"Number of function inputs : "<<func->data_flow().inputs_info().size()<<"\n";
     for(auto new_output_label : outputs){
-      //std::cout<<"Add new output :"<<new_output_label<<" \n";
       Ciphertext cipher(new_output_label);
       func->set_output(cipher,move(new_output_label));
     }
-    //std::cout<<"Store input_elements in myMap \n";
     for (auto input_info : func->data_flow().inputs_info())
     {
       ir::Term *temp = const_cast<ir::Term *>(input_info.first);
@@ -1738,7 +1828,6 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     }
     vector<const ir::Term *> output_terms;
     
-    //std::cout<<"Store output_elements in myMap \n";
     for (auto output_info : func->data_flow().outputs_info())
     {
       output_terms.push_back(output_info.first);
@@ -1747,19 +1836,12 @@ void Compiler::format_vectorized_code(const std::shared_ptr<ir::Func> &func)
     std::reverse(output_terms.begin(), output_terms.end());
     std::string new_term_str ;
     int index=0;
-    //std::cout<<"Number of function inputs : "<<func->data_flow().inputs_info().size()<<"\n";
-    //std::cout<<"Start expression traitment ====> \n";
     for(const auto &new_term_str : updated_cons_fd_expressions){
-      //std::cout<<new_term_str<<" \n";
       if (!new_term_str.empty()) {  // Ensure that we do not push empty tokens
-        //std::cout<<"here \n";
         auto tokens = split(new_term_str);
-        //std::cout<<"here1 \n";
         auto new_term = build_expression(func, myMap, tokens);
-        //std::cout<<"here2 \n";
         auto old_term = const_cast<ir::Term *>(output_terms[index]);
         func->replace_term_with(old_term, new_term);
-        //std::cout<<"here3 \n";
         index+=1;
       }
     }

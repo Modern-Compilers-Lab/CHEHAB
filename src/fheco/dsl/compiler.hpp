@@ -55,10 +55,10 @@ public:
   const std::shared_ptr<ir::Func> &func, std::map<string, ir::Term *> map, queue<string> &tokens);
   static ir::OpCode operationFromString(string operation);
   
-  static void gen_vectorized_code(const std::shared_ptr<ir::Func> &func);
-  static void format_vectorized_code(const std::shared_ptr<ir::Func> &func);
+  static void gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int benchmark_type);
+  static void format_vectorized_code(const std::shared_ptr<ir::Func> &func, int benchmark_type);
 
-  static void gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window);
+  static void gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window, int benchmark_type);
   static void gen_he_code(
     const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name,
     std::ostream &source_os, std::size_t rotation_keys_threshold = std::numeric_limits<std::size_t>::max(),
@@ -71,7 +71,7 @@ public:
   }
 
   static void set_active_func(const std::string &name);
-  static void call_vectorizer(int vector_width);
+  static void call_vectorizer(int vector_width, int benchmark_type);
   static void call_script();
 
   static const std::shared_ptr<ir::Func> &get_func(const std::string &name);

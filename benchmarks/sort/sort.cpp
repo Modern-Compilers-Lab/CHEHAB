@@ -8,6 +8,7 @@ using namespace fheco;
 #include <string>
 #include <vector>
 #include <cmath>
+#include "fheco/dsl/benchmark_types.cpp"
  
 /**************************/
 void fhe_vectorized(int width){
@@ -86,6 +87,7 @@ int main(int argc, char **argv)
   /**************/t = chrono::high_resolution_clock::now();
   if (vectorized)
   {
+      int benchmark_type = STRUCTURED_WITH_MULTIPLE_OUTPUTS;
       const auto &func = Compiler::create_func(func_name, 1, 20, false, true);
       fhe(slot_count);
       string gen_name = "_gen_he_" + func_name;

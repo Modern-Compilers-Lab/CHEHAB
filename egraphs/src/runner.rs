@@ -3,32 +3,22 @@ use std::fmt::{self, Debug, Formatter};
 use log::*;
 
 use egg::*;
+// use crate::rewrite::Rewrite;
 use indexmap::IndexMap;
-use std::time::Duration; 
+use std::time::Duration;
 use std::time::Instant;
 use std::collections::hash_map::RandomState;
 use std::collections::HashMap;
-use rand::prelude::SliceRandom;
-use rand::thread_rng;
+use std::collections::HashSet;
 
 pub struct Runner<L: Language, N: Analysis<L>, IterData = ()> {
-    /// The [`EGraph`] used.
     pub egraph: EGraph<L, N>,
-    /// Data accumulated over each [`Iteration`].
     pub iterations: Vec<Iteration<IterData>>,
     /// The roots of expressions added by the
     /// [`with_expr`](Runner::with_expr()) method, in insertion order.
     pub roots: Vec<Id>,
-    /// Why the `Runner` stopped. This will be `None` if it hasn't
-    /// stopped yet.
     pub stop_reason: Option<StopReason>,
-
-    /// The hooks added by the
-    /// [`with_hook`](Runner::with_hook()) method, in insertion order.
-    #[allow(clippy::type_complexity)]
-    pub hooks: Vec<Box<dyn FnMut(&mut Self) -> Result<(), String>>>,
-
-    // limits
+    
     iter_limit: usize,
     node_limit: usize,
     time_limit: Duration,
@@ -43,7 +33,7 @@ where
     N: Analysis<L> + Default,
 {
     fn default() -> Self {
-        //eprintln!("Hello runner");
+        debug!("Hello runner");
         Runner::new(N::default())
     }
 }
@@ -55,13 +45,11 @@ where
     IterData: Debug,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        // Use an exhaustive pattern match to ensure the Debug implementation and the struct stay in sync.
         let Runner {
             egraph,
             iterations,
             roots,
             stop_reason,
-            hooks,
             iter_limit,
             node_limit,
             time_limit,
@@ -74,7 +62,6 @@ where
             .field("iterations", iterations)
             .field("roots", roots)
             .field("stop_reason", stop_reason)
-            .field("hooks", &vec![format_args!("<dyn FnMut ..>"); hooks.len()])
             .field("iter_limit", iter_limit)
             .field("node_limit", node_limit)
             .field("time_limit", time_limit)
@@ -84,20 +71,12 @@ where
     }
 }
 
-/// Error returned by [`Runner`] when it stops.
-///
 #[derive(Debug, Clone)]
 pub enum StopReason {
-    /// The egraph saturated, i.e., there was an iteration where we
-    /// didn't learn anything new from applying the rules.
     Saturated,
-    /// The iteration limit was hit. The data is the iteration limit.
     IterationLimit(usize),
-    /// The enode limit was hit. The data is the enode limit.
     NodeLimit(usize),
-    /// The time limit was hit. The data is the time limit in seconds.
     TimeLimit(f64),
-    /// Some other reason to stop.
     Other(String),
 }
 
@@ -127,7 +106,6 @@ impl std::fmt::Display for Report {
     #[rustfmt::skip]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         writeln!(f, "Runner report")?;
-        writeln!(f, "=============")?;
         writeln!(f, "  Stop reason: {:?}", self.stop_reason)?;
         writeln!(f, "  Iterations: {}", self.iterations)?;
         writeln!(f, "  Egraph size: {} nodes, {} classes, {} memo", self.egraph_nodes, self.egraph_classes, self.memo_size)?;
@@ -143,31 +121,18 @@ impl std::fmt::Display for Report {
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct Iteration<IterData> {
-    /// The number of enodes in the egraph at the start of this
-    /// iteration.
+    /// some statistics about this iteration
     pub egraph_nodes: usize,
-    /// The number of eclasses in the egraph at the start of this
-    /// iteration.
     pub egraph_classes: usize,
     /// A map from rule name to number of times it was _newly_ applied
-    /// in this iteration.
     pub applied: IndexMap<Symbol, usize>,
-    /// Seconds spent running hooks.
-    pub hook_time: f64,
-    /// Seconds spent searching in this iteration.
     pub search_time: f64,
-    /// Seconds spent applying rules in this iteration.
     pub apply_time: f64,
-    /// Seconds spent [`rebuild`](EGraph::rebuild())ing
-    /// the egraph in this iteration.
     pub rebuild_time: f64,
-    /// Total time spent in this iteration, including data generation time.
     pub total_time: f64,
     /// The user provided annotation for this iteration
     pub data: IterData,
-    /// The number of rebuild iterations done after this iteration completed.
     pub n_rebuilds: usize,
-    /// If the runner stopped on this iterations, this is the reason
     pub stop_reason: Option<StopReason>,
 }
 
@@ -181,7 +146,7 @@ where
 {
     /// Create a new `Runner` with the given analysis and default parameters.
     pub fn new(analysis: N) -> Self {
-        //eprintln!("Hello runner");
+        debug!("Hello runner");
         Self {
             iter_limit: 30,
             node_limit: 10_000,
@@ -191,49 +156,28 @@ where
             roots: vec![],
             iterations: vec![],
             stop_reason: None,
-            hooks: vec![],
 
             start_time: None,
             scheduler: Box::new(BackoffScheduler::new(
-                /* match_limit */ 100_000,
-                /* ban_length */ 2,
+                /* match_limit */ 1_000, /* better : 5000*/
+                /* ban_length */ 2, /* better: 2 */
             )),
         }
     }
 
-    /// Sets the iteration limit. Default: 30
+    /// Sets the iteration limit
     pub fn with_iter_limit(self, iter_limit: usize) -> Self {
         Self { iter_limit, ..self }
     }
 
-    /// Sets the egraph size limit (in enodes). Default: 10,000
+    /// Sets the egraph size limit (in enodes)
     pub fn with_node_limit(self, node_limit: usize) -> Self {
         Self { node_limit, ..self }
     }
 
-    /// Sets the runner time limit. Default: 5 seconds
+    /// Sets the runner time limit
     pub fn with_time_limit(self, time_limit: Duration) -> Self {
         Self { time_limit, ..self }
-    }
-
-    /// Add a hook to instrument or modify the behavior of a [`Runner`].
-    /// Each hook will run at the beginning of each iteration, i.e. before
-    /// all the rewrites.
-    ///
-    pub fn with_hook<F>(mut self, hook: F) -> Self
-    where
-        F: FnMut(&mut Self) -> Result<(), String> + 'static,
-    {
-        self.hooks.push(Box::new(hook));
-        self
-    }
-
-    /// Change out the [`RewriteScheduler`] used by this [`Runner`].
-    /// The default one is [`BackoffScheduler`].
-    ///
-    pub fn with_scheduler(self, scheduler: impl RewriteScheduler<L, N> + 'static) -> Self {
-        let scheduler = Box::new(scheduler);
-        Self { scheduler, ..self }
     }
 
     /// Add an expression to the egraph to be run.
@@ -256,18 +200,37 @@ where
     /// After this, the field
     /// [`stop_reason`](Runner::stop_reason) is guaranteed to be
     /// set.
-    pub fn run<'a, R>(mut self, rules: R) -> Self
+    pub fn run<'a, R>(
+        mut self, 
+        rules: R, 
+        initial_rules: R, 
+        rules_info: HashMap<String, Vec<String>>,
+        optimized_rw: bool,
+    ) -> Self
     where
         R: IntoIterator<Item = &'a Rewrite<L, N>>,
         L: 'a,
         N: 'a,
     {
+        let initial_rules: Vec<&Rewrite<L, N>> = initial_rules.into_iter().collect(); // Collect initial_rules into Vec
         let rules: Vec<&Rewrite<L, N>> = rules.into_iter().collect();
+        let mut operation_tracker: HashSet<String> = HashSet::new();
         check_rules(&rules);
         self.egraph.rebuild();
         loop {
-            let iter = self.run_one(&rules);
-            self.iterations.push(iter);
+            if optimized_rw {
+                let iter = self.run_one_with_rule_filtering(
+                    &rules, 
+                    &initial_rules, 
+                    rules_info.clone(), 
+                    &mut operation_tracker,
+                );
+                self.iterations.push(iter);
+            } else {
+                let iter = self.run_one_non_optimized_without_rule_filtering(&rules);
+                self.iterations.push(iter);
+            }
+            
             let stop_reason = self.iterations.last().unwrap().stop_reason.clone();
             // we need to check_limits after the iteration is complete to check for iter_limit
             if let Some(stop_reason) = stop_reason.or_else(|| self.check_limits().err()) {
@@ -303,7 +266,282 @@ where
         }
     }
 
-    fn run_one(&mut self, rules: &[&Rewrite<L, N>]) -> Iteration<IterData> {
+    fn run_one_with_rule_filtering(
+        &mut self,
+        rules: &[&Rewrite<L, N>],
+        initial_rules: &[&Rewrite<L, N>],
+        rules_info: HashMap<String, Vec<String>>,
+        operation_tracker: &mut HashSet<String>,
+    ) -> Iteration<IterData> {
+        assert!(self.stop_reason.is_none());
+
+        eprintln!("hello from run_one optimized");
+
+        info!("\nIteration {}", self.iterations.len());
+        
+        self.try_start();
+        let mut result = self.check_limits();
+
+        let egraph_nodes = self.egraph.total_size();
+        let egraph_classes = self.egraph.number_of_classes();
+
+
+        let i = self.iterations.len();
+        trace!("EGraph {:?}", self.egraph.dump());
+        // let mut operation_tracker = Vec::new();
+
+        let start_time = Instant::now();
+        let mut matches = Vec::new();
+        let mut applied = IndexMap::default();
+        let sample_size = 10;
+        let mut start_search_time = Instant::now();
+        let mut filtered_rules: Vec<&Rewrite<L, N>> = Vec::new();
+        let  iterator_rules_for_applying_matches: &[&Rewrite<L, N>];
+
+
+        if i == 0 {
+            debug!("first iteration");
+            result = result.and_then(|_| {
+                initial_rules.iter().try_for_each(|rw| {
+                    debug!("Rewrite rule for first is : {:?}", rw.name.as_str());
+    
+                    start_search_time = Instant::now();
+    
+                    let ms = self.scheduler.search_rewrite(i, &self.egraph, rw);
+                    let total_matches: usize = ms.iter().map(|m| m.substs.len()).sum();
+    
+                    debug!("Rewrite rule '{}' matched {} times.", rw.name.as_str(), ms.len());
+    
+    
+                    if rw.name.as_str().starts_with("exp"){
+                        // Expansive rule: sample matches
+                        let sampled_matches: Vec<_> = ms.into_iter().take(sample_size).collect();
+                        matches.push(sampled_matches);
+                        debug!("Sampled {} matches for expansive rule {}", sample_size, rw.name);
+                    } else {
+                        // Non-expansive rule: apply all matches
+                        matches.push(ms);
+                        debug!("Applied all {} matches for rule {}", total_matches, rw.name);
+                        if total_matches > 0 {
+                            match rules_info.get(rw.name.as_str()) {
+                                Some(value) => {
+                                    let rhs = &value[1];  // First element is lhs
+                                    debug!("Rewrite rule is {:?} with rhs {:?}", rw.name, rhs);
+                                    
+                                    if rhs.contains("Mul") || rhs.contains("*") {    //VecLang:VecMul or VecLang:*
+                                        debug!("rw {:?} contains VecMul in rhs", rw.name);
+                                        operation_tracker.insert("Mul".to_string());
+                                    }
+                                    if rhs.contains("Add") || rhs.contains("+") {    //VecLang:VecAdd or VecLang:+
+                                        debug!("rw {:?} contains VecAdd in rhs", rw.name);
+                                        operation_tracker.insert("Add".to_string());
+                                    }
+                                    if rhs.contains("Minus") ||rhs.contains("-"){    //VecLang:VecMinus or VecLang:-
+                                        debug!("rw {:?} contains VecMinus in rhs", rw.name);
+                                        operation_tracker.insert("Min".to_string());
+                                    }
+                                    if rhs.contains("Neg") { //VecLang:VecNeg
+                                        debug!("rw {:?} contains Neg in its rhs", rw.name);
+                                        operation_tracker.insert("Neg".to_string());
+                                    }
+
+                
+                                },
+                                None => ()
+                            }
+                            
+                        } 
+                    }
+        
+                    self.check_limits()
+                })
+                
+            });
+    
+        }
+
+        if i > 0 { // this is not the first iteration
+
+            result = result.and_then(|_| {
+
+                debug!("operation trackercontains {:?} in the iteration {:}", operation_tracker, i);
+
+                for operation in operation_tracker.iter() {
+                    // Only iterate over `rules_info` entries that have the current operations in their left hand side
+                    let matching_rules: Vec<_> = rules_info
+                    .iter()
+                    .filter(|(_, rule_parts)| rule_parts[0].contains(operation)) // Filter based on `lhs` containing `operation`
+                    .collect();
+
+                    for (rule_name, _) in matching_rules {
+                        debug!("Checking rule_name: {:?}", rule_name);
+
+                        // Use `.find` to get the matching rule in `rules` by `rule_name`
+                        if let Some(rw) = rules.iter().find(|r| r.name == rule_name.as_str().into()) {
+                            filtered_rules.push(rw); // Add rule reference to `filtered_rules`
+                            debug!(
+                                "Rule {:?} added to filtered rules because lhs contains operation {:?}",
+                                rw.name, operation
+                            );
+                        }
+                    }
+                }
+
+
+                //Search using the filterrd rules
+                filtered_rules.iter().try_for_each(|rw| {
+                    debug!("filterd rule is : {:?}", rw.name.as_str());
+    
+                    start_search_time = Instant::now();
+    
+                    let ms = self.scheduler.search_rewrite(i, &self.egraph, rw);
+                    let total_matches: usize = ms.iter().map(|m| m.substs.len()).sum();
+    
+                    debug!("Rewrite rule '{}' matched {} times.", rw.name, ms.len());
+    
+    
+                    if rw.name.as_str().starts_with("exp"){
+                        // Expansive rule: sample matches
+                        let sampled_matches: Vec<_> = ms.into_iter().take(sample_size).collect();
+                        matches.push(sampled_matches);
+                        debug!("Sampled {} matches for expansive rule {}", sample_size, rw.name);
+                    } else {
+                        // Non-expansive rule: apply all matches
+                        matches.push(ms);
+                        debug!("Applied all {} matches for rule {}", total_matches, rw.name);
+                        if total_matches > 0 {
+                            match rules_info.get(rw.name.as_str()) {
+                                Some(value) => {
+                                    let rhs = &value[1];  // First element is lhs
+                                    debug!("Rewrite rule is {:?} with rhs {:?}", rw.name, rhs);
+                                    
+                                    if rhs.contains("Mul") || rhs.contains("*") {    //VecLang:VecMul or VecLang:*
+                                        debug!("rw {:?} contains VecMul in rhs", rw.name);
+                                        operation_tracker.insert("Mul".to_string());
+                                    }
+                                    if rhs.contains("Add") || rhs.contains("+") {    //VecLang:VecAdd or VecLang:+
+                                        debug!("rw {:?} contains VecAdd in rhs", rw.name);
+                                        operation_tracker.insert("Add".to_string());
+                                    }
+                                    if rhs.contains("Minus") ||rhs.contains("-"){    //VecLang:VecMinus or VecLang:-
+                                        debug!("rw {:?} contains VecMinus in rhs", rw.name);
+                                        operation_tracker.insert("Min".to_string());
+                                    }
+                                    if rhs.contains("Neg") { //VecLang:VecNeg
+                                        debug!("rw {:?} contains Neg in its rhs", rw.name);
+                                        operation_tracker.insert("Neg".to_string());
+                                    }
+                                    
+                                }
+                                None => ()
+                            }
+                        }
+
+                    }
+        
+                    self.check_limits()
+                })
+            });
+        }
+
+        // for rw in initial_rules.iter() {
+        //     eprintln!("initial rule is : {:?}", rw.name.as_str());
+        // }
+        let filtered_clone;
+        let cloned_rules = if i == 0 {
+            initial_rules  // Make sure this is of type `Vec<&Rewrite<L, N>>`
+        } else {
+            filtered_clone = filtered_rules.clone();
+            &filtered_clone
+        };
+        
+        
+        iterator_rules_for_applying_matches = &cloned_rules;
+
+        // for rw in iterator_rules_for_applying_matches.iter() {
+            
+        //     eprintln!("iterator_rules_for_applying_matches : {:?}", rw.name.as_str());
+        // }
+        // eprintln!("end iterator_rules_for_applying_matches");
+
+        let search_time = start_search_time.elapsed().as_secs_f64();
+        // debug!("time for searching the rewrte rule {:?} is {:?}", rw.name, search_time);
+        
+        // in the remaining iterations, we use the left hande side operations in the applied rules in the latest iteration
+
+        let apply_time = Instant::now();
+
+        result = result.and_then(|_| {
+            iterator_rules_for_applying_matches.iter().zip(matches).try_for_each(|(rw, ms)| {
+                let start = Instant::now();
+
+                let total_matches: usize = ms.iter().map(|m| m.substs.len()).sum();
+
+                debug!("Applying {} {} times", rw.name, total_matches);
+                if total_matches == 0 {
+                    debug!("No matches for rule '{}'. Skipping application.", rw.name);
+                    return Ok(());
+                }
+
+                let actually_matched = self.scheduler.apply_rewrite(i, &mut self.egraph, rw, ms);
+                if actually_matched > 0 {
+                    if let Some(count) = applied.get_mut(&rw.name) {
+                        *count += actually_matched;
+                    } else {
+                        applied.insert(rw.name.to_owned(), actually_matched);
+                    }
+                    eprintln!("Applied {} {} times", rw.name, actually_matched);
+                }
+
+                let _end = start.elapsed();
+                // eprintln!("time for applying the rewrte rule {:?} is {:?}", rw.name, end);
+
+                self.check_limits()
+            })
+        });
+
+        let apply_time = apply_time.elapsed().as_secs_f64();
+        // eprintln!("Total Apply time: {}", apply_time);
+
+        let rebuild_time = Instant::now();
+        let n_rebuilds = self.egraph.rebuild();
+        
+
+        let rebuild_time = rebuild_time.elapsed().as_secs_f64();
+        // eprintln!("Rebuild time: {}", rebuild_time);
+        info!(
+            "Size: n={}, e={}",
+            self.egraph.total_size(),
+            self.egraph.number_of_classes()
+        );
+
+        let can_be_saturated = applied.is_empty()
+            && self.scheduler.can_stop(i)
+            // now make sure that conditional rules (which might add
+            // nodes without applying) didn't do anything
+            && (egraph_nodes == self.egraph.total_size())
+            && (egraph_classes == self.egraph.number_of_classes());
+
+        if can_be_saturated {
+            result = result.and(Err(StopReason::Saturated))
+        }
+
+        Iteration {
+            applied,
+            egraph_nodes,
+            egraph_classes,
+            search_time,
+            apply_time,
+            rebuild_time,
+            n_rebuilds,
+            data: IterData::make(self),
+            total_time: start_time.elapsed().as_secs_f64(),
+            stop_reason: result.err(),
+        }
+    }
+
+
+    fn run_one_non_optimized_without_rule_filtering(&mut self, rules: &[&Rewrite<L, N>]) -> Iteration<IterData> {
         assert!(self.stop_reason.is_none());
 
         info!("\nIteration {}", self.iterations.len());
@@ -314,86 +552,67 @@ where
         let egraph_nodes = self.egraph.total_size();
         let egraph_classes = self.egraph.number_of_classes();
 
-        let hook_time = Instant::now();
-        let mut hooks = std::mem::take(&mut self.hooks);
-        result = result.and_then(|_| {
-            hooks
-                .iter_mut()
-                .try_for_each(|hook| hook(self).map_err(StopReason::Other))
-        });
-        self.hooks = hooks;
-        let hook_time = hook_time.elapsed().as_secs_f64();
-
-        let egraph_nodes_after_hooks = self.egraph.total_size();
-        let egraph_classes_after_hooks = self.egraph.number_of_classes();
 
         let i = self.iterations.len();
         trace!("EGraph {:?}", self.egraph.dump());
+        // let mut operation_tracker = Vec::new();
 
         let start_time = Instant::now();
 
         let mut matches = Vec::new();
         let mut applied = IndexMap::default();
         let sample_size = 10;
+        
+        // in the remaining iterations, we use the left hande side operations in the applied rules in the latest iteration
+            result = result.and_then(|_| {
+                rules.iter().try_for_each(|rw| {
+    
+                    let start = Instant::now();
+    
+                    let ms = self.scheduler.search_rewrite(i, &self.egraph, rw);
+                    let total_matches: usize = ms.iter().map(|m| m.substs.len()).sum();
+    
+                    debug!("Rewrite rule '{}' matched {} times.", rw.name.as_str(), ms.len());
+    
+    
+                    if rw.name.as_str().starts_with("exp"){
+                        // Expansive rule: sample matches
+                        let sampled_matches: Vec<_> = ms.into_iter().take(sample_size).collect();
+                        matches.push(sampled_matches);
+                        debug!("Sampled {} matches for expansive rule {}", sample_size, rw.name);
+                    } else {
+                        // Non-expansive rule: apply all matches
+                        matches.push(ms);
+                        debug!("Applied all {} matches for rule {}", total_matches, rw.name);
+                    }
+    
+                    let _end = start.elapsed();
+    
+                    // eprintln!("time for searching the rewrte rule {:?} is {:?}", rw.name, end);
+    
+                    self.check_limits()
+                })
+            });
+    
+            let search_time = start_time.elapsed().as_secs_f64();
 
-        result = result.and_then(|_| {
-            rules.iter().try_for_each(|rw| {
-                let start = Instant::now();
-                // Vec<SearchMatches<'a, L>>
-                //eprintln!("===> Search Rewrite for rule '{}'", rw.name);
-                let mut ms = self.scheduler.search_rewrite(i, &self.egraph, rw);
-                //let total_matches: usize = ms.iter().map(|m| m.substs.len()).sum();
-                eprintln!("Rewrite rule '{}' matched {} times.", rw.name, ms.len());
-                debug!("Rewrite rule '{}' matched {} times.", rw.name, ms.len());
-                if rw.name.as_str().starts_with("exp"){
-                    // Expansive rule: sample matches
-                    let sampled_matches: Vec<_> = ms.into_iter().take(sample_size).collect();
-                    matches.push(sampled_matches);
-                } else {
-                    // Non-expansive rule: apply all matches
-                    let max_subs_size : usize = 10000 ;
-                    let mut rng = thread_rng(); 
-                    /*ms.iter_mut().map(|match_item| {
-                        if(match_item.substs.len()>max_subs_size){
-                            eprintln!("subs  for rw : {} ==> '{}' ",match_item.substs.len(),rw.name);
-                        }
-                        if(!rw.name.as_str().starts_with("assoc")){
-                            match_item.substs.shuffle(&mut rng);
-                            match_item.substs.truncate(max_subs_size);
-                        }else{
-                            eprintln!("===> Assoc subs  is  for rw : {} ==> '{}' ",match_item.substs.len(),rw.name);
-                        }
-                        SearchMatches {
-                            eclass: match_item.eclass.clone(),
-                            substs: match_item.substs.clone(),
-                            ast: match_item.ast.clone(),
-                        }
-                    }).collect::<Vec<SearchMatches<L>>>();*/ 
-                    matches.push(ms);
-                    //debug!("Applied all {} matches for rule {}", total_matches, rw.name);
-                }
-                let end = start.elapsed();
-                // eprintln!("time for searching the rewrte rule {:?} is {:?}", rw.name, end);
-                self.check_limits()
-            })
-        });
-
-        let search_time = start_time.elapsed().as_secs_f64();
-        //eprintln!("Total Search time: {}", search_time);
+        
 
         let apply_time = Instant::now();
-        /********************************************/
-        //eprintln!("/*************Applying Found matches *****************/");
+
         result = result.and_then(|_| {
             rules.iter().zip(matches).try_for_each(|(rw, ms)| {
+
                 let start = Instant::now();
+
                 let total_matches: usize = ms.iter().map(|m| m.substs.len()).sum();
+
                 debug!("Applying {} {} times", rw.name, total_matches);
-                //eprintln!("Applying Rewrite rule : '{}' total_matches : {}", rw.name,total_matches);
                 if total_matches == 0 {
                     debug!("No matches for rule '{}'. Skipping application.", rw.name);
                     return Ok(());
                 }
+
                 let actually_matched = self.scheduler.apply_rewrite(i, &mut self.egraph, rw, ms);
                 if actually_matched > 0 {
                     if let Some(count) = applied.get_mut(&rw.name) {
@@ -401,19 +620,23 @@ where
                     } else {
                         applied.insert(rw.name.to_owned(), actually_matched);
                     }
-                    eprintln!("===> {} was applied : {} times", rw.name, actually_matched);
+                    debug!("Applied {} {} times", rw.name, actually_matched);
                 }
-                let end = start.elapsed();
-                //eprintln!("time for applying the rewrte rule {:?} is {:?}", rw.name, end);
+
+                let _end = start.elapsed();
+                // eprintln!("time for applying the rewrte rule {:?} is {:?}", rw.name, end);
+
                 self.check_limits()
             })
         });
-        //eprintln!("/***********************************************************************/");
-        /************************************************/
+
         let apply_time = apply_time.elapsed().as_secs_f64();
         // eprintln!("Total Apply time: {}", apply_time);
+
         let rebuild_time = Instant::now();
         let n_rebuilds = self.egraph.rebuild();
+        
+
         let rebuild_time = rebuild_time.elapsed().as_secs_f64();
         // eprintln!("Rebuild time: {}", rebuild_time);
         info!(
@@ -421,12 +644,9 @@ where
             self.egraph.total_size(),
             self.egraph.number_of_classes()
         );
-        /************************************************/
+
         let can_be_saturated = applied.is_empty()
             && self.scheduler.can_stop(i)
-            // now make sure the hooks didn't do anything
-            && (egraph_nodes == egraph_nodes_after_hooks)
-            && (egraph_classes == egraph_classes_after_hooks)
             // now make sure that conditional rules (which might add
             // nodes without applying) didn't do anything
             && (egraph_nodes == self.egraph.total_size())
@@ -435,12 +655,11 @@ where
         if can_be_saturated {
             result = result.and(Err(StopReason::Saturated))
         }
-        /************************************************/
+
         Iteration {
             applied,
             egraph_nodes,
             egraph_classes,
-            hook_time,
             search_time,
             apply_time,
             rebuild_time,
@@ -486,7 +705,7 @@ fn check_rules<L, N>(rules: &[&Rewrite<L, N>]) {
         log::warn!("Duplicated rule names may affect rule reporting and scheduling.");
         for (name, &count) in name_counts.iter() {
             assert!(count > 1);
-            //eprintln!("Rule '{}' appears {} times", name, count);
+            eprintln!("Rule '{}' appears {} times", name, count);
             log::warn!("Rule '{}' appears {} times", name, count);
         }
     }
@@ -499,6 +718,7 @@ the [`EGraph`] and dominating how much time is spent while running the
 [`Runner`].
 
 */
+
 #[allow(unused_variables)]
 pub trait RewriteScheduler<L, N>
 where
@@ -509,7 +729,7 @@ where
     /// Default implementation just returns `true`.
     ///
     fn can_stop(&mut self, iteration: usize) -> bool {
-        //eprintln!("hello can stop from simple");
+        debug!("can stop called");
         true
     }
 
@@ -535,22 +755,11 @@ where
         rewrite: &Rewrite<L, N>,
         matches: Vec<SearchMatches<L>>,
     ) -> usize {
-        rewrite.apply(egraph, &matches).len()
+        let results = rewrite.apply(egraph, &matches);
+        // eprintln!("result applying : {:?}", results);
+        results.len()
     }
 }   
-
-/// A [`RewriteScheduler`] that implements exponentional rule backoff.
-///
-/// For each rewrite, there exists a configurable initial match limit.
-/// If a rewrite search yield more than this limit, then we ban this
-/// rule for number of iterations, double its limit, and double the time
-/// it will be banned next time.
-///
-/// This seems effective at preventing explosive rules like
-/// associativity from taking an unfair amount of resources.
-///
-/// [`BackoffScheduler`] is configurable in the builder-pattern style.
-///
 
 #[derive(Debug)]
 pub struct BackoffScheduler {
@@ -601,7 +810,7 @@ where
     N: Analysis<L>,
 {
     fn can_stop(&mut self, iteration: usize) -> bool {
-        //eprintln!("hello can stop from backoff");
+        debug!("verifying can stop");
         let n_stats = self.stats.len();
 
         let mut banned: Vec<_> = self
@@ -667,6 +876,7 @@ where
             .match_limit
             .checked_shl(stats.times_banned as u32)
             .unwrap();
+    
         // For expensive rules, adjust the limit
         let limit = if exp_rule {
             threshold.saturating_add(1).min(max_expensive_matches) // Limit matches for expensive rules
@@ -675,12 +885,11 @@ where
         };
     
         // Search for matches with the adjusted limit
-        //eprintln!("start search : limit {} ========>",limit);
-        let matches = rewrite.search_with_limit(egraph, 100000);
-        //eprintln!("End of search for rewrite");
+        let matches = rewrite.search_with_limit(egraph, limit);
         let total_len: usize = matches.iter().map(|m| m.substs.len()).sum();
+        // eprintln!("name of rw is : {:?}", rewrite.name.as_str());
         matches.iter().for_each(|rw| {
-            debug!("new matches : {:?}", rw.substs);
+            debug!("new matche : {:?} for eclass: {:}", rw.substs, rw.eclass);
         });
         
         if total_len > threshold {

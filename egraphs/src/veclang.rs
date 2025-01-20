@@ -7,21 +7,36 @@ define_language! {
         // Id is a key to identify EClasses within an EGraph, represents
         // children nodes
         "+" = Add([Id; 2]),
-        "*" = Mul([Id; 2]), 
+        "*" = Mul([Id; 2]),
         "-" = Minus([Id; 2]),
         "<<" = Rot([Id; 2]),
-        "-" = Neg([Id; 1]), 
+        "-" = Neg([Id; 1]),
         // Vectors have width elements
         "Vec" = Vec(Box<[Id]>),
+
         // Vector operations that take 2 vectors of inputs
         "VecAdd" = VecAdd([Id; 2]),
         "VecMinus" = VecMinus([Id; 2]),
         "VecMul" = VecMul([Id; 2]),
+
+        // Op for unstructured code
+        // Vector operations for full vectors => no 0 in any lane
+        "VecAddRotF" = VecAddRotF([Id; 3]),
+        "VecMinusRotF" = VecMinusRotF([Id; 3]),
+        "VecMulRotF" = VecMulRotF([Id; 3]),
+        // Vector operations for partial vectors
+        "VecAddRotP" = VecAddRotP([Id; 3]),
+        "VecMinusRotP" = VecMinusRotP([Id; 3]),
+        "VecMulRotP" = VecMulRotP([Id; 3]),
+        
+        // Op for structured code
+        "VecAddRotS" = VecAddRotS([Id; 2]),
+        "VecMinusRotS" = VecMinusRotS([Id; 2]),
+        "VecMulRotS" = VecMulRotS([Id; 2]),
+
         // Vector operations that take 1 vector of inputs
         "VecNeg" = VecNeg([Id; 1]),
-        "VecAddRot" = VecAddRot([Id; 2]),
-        "VecMinusRot" = VecMinusRot([Id; 2]),
-        "VecMulRot" = VecMulRot([Id; 2]),
+
         Symbol(egg::Symbol),
     }
 }
@@ -48,7 +63,10 @@ impl Analysis<VecLang> for ConstantFold {
             VecLang::Neg([a]) => -*x(a)?,
             VecLang::Rot([a, _b]) => *x(a)?,
             // VecAdd and similar operations return None to skip i32 representation
-            VecLang::VecAdd(_) | VecLang::VecMul(_) | VecLang::Vec(_) | VecLang::VecMinus(_) | VecLang::VecNeg(_) | VecLang::VecAddRot(_) | VecLang::VecMinusRot(_) => return None,
+            VecLang::VecAdd(_) | VecLang::VecMul(_) | VecLang::Vec(_) | VecLang::VecMinus(_) | VecLang::VecNeg(_) | 
+            VecLang::VecAddRotF(_) | VecLang::VecMinusRotF(_) | VecLang::VecMulRotF(_) |
+            VecLang::VecAddRotP(_) | VecLang::VecMinusRotP(_) | VecLang::VecMulRotP(_) |
+            VecLang::VecAddRotS(_) | VecLang::VecMinusRotS(_) | VecLang::VecMulRotS(_) => return None,
             _ => return None,
         })
     }
