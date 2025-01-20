@@ -1,6 +1,6 @@
 set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES})
 
-add_subdirectory(code_gen)
+add_subdirectory(code_gen) 
 add_subdirectory(dsl)
 add_subdirectory(ir)
 add_subdirectory(param_select)

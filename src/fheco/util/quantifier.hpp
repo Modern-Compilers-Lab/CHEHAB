@@ -91,7 +91,7 @@ public:
   {
     double opposite_level_;
     double size_;
-  };
+  }; 
 
   using CtxtTermsInfo = std::unordered_map<const ir::Term *, CtxtTermInfo, ir::Term::HashPtr, ir::Term::EqualPtr>;
 
@@ -313,7 +313,7 @@ Quantifier::DepthSummary operator*(int coeff, const Quantifier::DepthSummary &rh
 
 Quantifier::DepthSummary operator*=(Quantifier::DepthSummary &lhs, int coeff);
 
-Quantifier::CtxtTermsDepthInfo operator/(
+Quantifier::CtxtTermsDepthInfo operator/( 
   const Quantifier::CtxtTermsDepthInfo &lhs, const Quantifier::CtxtTermsDepthInfo &rhs);
 
 Quantifier::CtxtTermsDepthInfo &operator/=(

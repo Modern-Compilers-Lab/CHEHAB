@@ -7,23 +7,31 @@ using namespace std;
 
 namespace fheco::param_select
 {
+
+/********************************************************************************************************/
 EncParams::EncParams(size_t poly_mod_degree, int plain_mod_bit_size, int coeff_mod_data_level_bit_count)
   : poly_mod_degree_{poly_mod_degree}, plain_mod_bit_size_{plain_mod_bit_size}
 {
   coeff_mod_bit_sizes_.assign(coeff_mod_data_level_bit_count / MOD_BIT_COUNT_MAX, MOD_BIT_COUNT_MAX);
   int remaining_bits = coeff_mod_data_level_bit_count % MOD_BIT_COUNT_MAX;
   if (remaining_bits)
-  {
+  { 
     coeff_mod_bit_sizes_.push_back(MOD_BIT_COUNT_MAX);
     // Remove exceeding bits
     for (int i = 0; i < MOD_BIT_COUNT_MAX - remaining_bits; ++i)
       --coeff_mod_bit_sizes_.end()[-1 - (i % coeff_mod_bit_sizes_.size())];
   }
+  /*
+  coeff_mod_data_level_bit_count = 190 
+  MOD_BIT_COUNT_MAX = 60 
+  coeff_mod_bit_sizes_ = {48 48 47 47}
+  */
   // Add special prime, should be as large as the largest of the other primes
   coeff_mod_bit_sizes_.push_back(coeff_mod_bit_sizes_.front());
+  //coeff_mod_bit_sizes_ = {48 48 47 47 48}
   coeff_mod_bit_count_ = coeff_mod_data_level_bit_count + coeff_mod_bit_sizes_.back();
 }
-
+/*************************************************************************************************/
 EncParams::EncParams(size_t poly_mod_degree, integer plain_mod, vector<int> coeff_mod_bit_sizes)
   : poly_mod_degree_{poly_mod_degree}, coeff_mod_bit_sizes_{move(coeff_mod_bit_sizes)}
 {
@@ -32,6 +40,13 @@ EncParams::EncParams(size_t poly_mod_degree, integer plain_mod, vector<int> coef
   for (auto prime_size : coeff_mod_bit_sizes_)
     coeff_mod_bit_count_ += prime_size;
 }
+/**************************************************************************************************/
+EncParams::EncParams(size_t poly_mod_degree, int plain_mod_bit_size)
+  : poly_mod_degree_{poly_mod_degree}, plain_mod_bit_size_{plain_mod_bit_size}
+{
+
+}
+/**************************************************************************************************/
 
 int EncParams::increase_coeff_mod_bit_sizes(int max_total_amount)
 {
@@ -48,6 +63,30 @@ int EncParams::increase_coeff_mod_bit_sizes(int max_total_amount)
   coeff_mod_bit_count_ += i;
   return i;
 }
+/***************************************************************************************************/
+EncParams &EncParams::operator=(const EncParams &other)
+{
+  if(this != &other){
+    poly_mod_degree_ = other.poly_mod_degree_ ;
+    plain_mod_bit_size_ = other.plain_mod_bit_size_ ;
+    coeff_mod_bit_sizes_ = other.coeff_mod_bit_sizes_ ;
+    coeff_mod_bit_count_ = other.coeff_mod_bit_count_ ;
+  }
+  return *this ;
+}
+
+EncParams &EncParams::operator=(EncParams &&other)
+{
+  if(this != &other){
+    poly_mod_degree_ = other.poly_mod_degree_ ;
+    plain_mod_bit_size_ = other.plain_mod_bit_size_ ;
+    coeff_mod_bit_sizes_ = std::move(other.coeff_mod_bit_sizes_) ;
+    coeff_mod_bit_count_ = other.coeff_mod_bit_count_ ;
+  }
+  return *this ;
+}
+/***************************************************************************/
+/***************************************************************************/
 
 int EncParams::last_coeff_mod_big_prime_idx() const
 {
@@ -58,6 +97,9 @@ int EncParams::last_coeff_mod_big_prime_idx() const
   return idx;
 }
 
+/***************************************************************************/
+/***************************************************************************/
+
 vector<int> EncParams::coeff_mod_data_level_bit_sizes() const
 {
   vector<int> data_level_part{coeff_mod_bit_sizes_};
@@ -65,6 +107,9 @@ vector<int> EncParams::coeff_mod_data_level_bit_sizes() const
   data_level_part.pop_back();
   return data_level_part;
 }
+
+/***************************************************************************/
+/***************************************************************************/
 
 void EncParams::print_params(ostream &os) const
 {
@@ -82,7 +127,7 @@ void EncParams::print_params(ostream &os) const
     ++it;
     if (it == coeff_mod_bit_sizes_.cend())
     {
-      os << ") bits\n";
+      os << ") bits\n"; 
       break;
     }
     os << " + ";

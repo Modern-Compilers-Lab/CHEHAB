@@ -1,64 +1,74 @@
 #include "fheco/fheco.hpp"
-#include <chrono>
-#include <cstddef>
-#include <cstdint>
-#include <fstream>
-#include <iostream>
-#include <ostream>
-#include <stdexcept>
-#include <string>
 
 using namespace std;
 using namespace fheco;
-
-void hamming_dist(size_t slot_count)
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cmath> 
+#include "fheco/dsl/benchmark_types.cpp"
+ 
+/****************/
+ void fhe_vectorized(int slot_count)
 {
-  Ciphertext c1("c1");
-  Ciphertext c2("c2");
+  Ciphertext c1("v1");
+  Ciphertext c2("v2");
   Ciphertext slot_wise_xor = c1 + c2 - 2 * (c1 * c2);
-  Ciphertext sum = encrypt(0);
-  for (size_t i = 0; i < slot_count; ++i)
-    sum += slot_wise_xor << i;
-  sum.set_output("result");
+  Ciphertext sum = SumVec(slot_wise_xor,slot_count);
+  sum.set_output("output");
 }
-
+/************************************/
+void fhe(int slot_count)
+{
+  size_t size = slot_count;
+  std::vector<Ciphertext> c1(size);
+  std::vector<Ciphertext> c2(size);
+  //std::vector<Ciphertext> output_vec(size);
+  Ciphertext output = encrypt(0);
+  for (int i = 0; i < size; i++)
+  {
+    c1[i] = Ciphertext("v1_" + std::to_string(i));
+    c2[i] = Ciphertext("v2_" + std::to_string(i));
+  }
+  for (int i = 0; i < size; i++)
+  {
+    output+= c1[i] + c2[i] - 2*(c1[i] * c2[i]);
+  }
+  output.set_output("output");
+}
+/******************************************************************************************/
+/******************************************************************************************/
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
   os << (arg ? name : "no_" + name);
 }
-
 int main(int argc, char **argv)
 {
-  bool call_quantifier = false;
+  bool vectorized = true;
   if (argc > 1)
-    call_quantifier = stoi(argv[1]);
+    vectorized = stoi(argv[1]);
 
-  auto ruleset = Compiler::Ruleset::joined;
-  if (argc > 2)
-    ruleset = static_cast<Compiler::Ruleset>(stoi(argv[2]));
+  int window = 0;
+  if (argc > 2) 
+    window = stoi(argv[2]);
 
-  auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+  bool call_quantifier = true;
   if (argc > 3)
-    rewrite_heuristic = static_cast<trs::RewriteHeuristic>(stoi(argv[3]));
+    call_quantifier = stoi(argv[3]);
 
   bool cse = true;
   if (argc > 4)
     cse = stoi(argv[4]);
+  
+  int slot_count = 1 ;
+  if (argc > 5)
+    slot_count = stoi(argv[5]);
 
   bool const_folding = true;
   if (argc > 5)
     const_folding = stoi(argv[5]);
-
-  print_bool_arg(call_quantifier, "quantifier", clog);
-  clog << " ";
-  clog << ruleset << "_trs";
-  clog << " ";
-  clog << rewrite_heuristic;
-  clog << " ";
-  print_bool_arg(cse, "cse", clog);
-  clog << " ";
-  print_bool_arg(const_folding, "constant_folding", clog);
-  clog << '\n';
 
   if (cse)
   {
@@ -74,35 +84,68 @@ int main(int argc, char **argv)
   if (const_folding)
     Compiler::enable_const_folding();
   else
-    Compiler::disable_const_folding();
+    Compiler::disable_const_folding(); 
 
   chrono::high_resolution_clock::time_point t;
   chrono::duration<double, milli> elapsed;
-  t = chrono::high_resolution_clock::now();
-  string func_name = "hamming_dist";
-  size_t slot_count = 4096;
-  const auto &func = Compiler::create_func(func_name, slot_count, 20, true, true);
-  hamming_dist(slot_count);
-
-  string gen_name = "_gen_he_" + func_name;
-  string gen_path = "he/" + gen_name;
-  ofstream header_os(gen_path + ".hpp");
-  if (!header_os)
-    throw logic_error("failed to create header file");
-
-  ofstream source_os(gen_path + ".cpp");
-  if (!source_os)
-    throw logic_error("failed to create source file");
-
-  Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os, true);
-  elapsed = chrono::high_resolution_clock::now() - t;
-  cout << elapsed.count() << " ms\n";
-
-  if (call_quantifier)
+  string func_name = "fhe";
+  /**************/t = chrono::high_resolution_clock::now();
+  if (vectorized)
   {
-    util::Quantifier quantifier{func};
-    quantifier.run_all_analysis();
-    quantifier.print_info(cout);
+    int benchmark_type = STRUCTURED_WITH_ONE_OUTPUT;
+    std::cout << "benchmark_type is : " << STRUCTURED_WITH_ONE_OUTPUT << std::endl;
+    const auto &func = Compiler::create_func(func_name, 1, 20, false, true);
+    fhe(slot_count);
+    string gen_name = "_gen_he_" + func_name;
+    string gen_path = "he/" + gen_name;
+    ofstream header_os(gen_path + ".hpp");
+    if (!header_os)
+      throw logic_error("failed to create header file");
+    ofstream source_os(gen_path + ".cpp");
+    if (!source_os)
+      throw logic_error("failed to create source file");
+    cout << " window is " << window << endl;
+    Compiler::gen_vectorized_code(func, window, benchmark_type);
+    auto ruleset = Compiler::Ruleset::ops_cost;
+    auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+    Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+        Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
+
+    /************/elapsed = chrono::high_resolution_clock::now() - t;
+    
+    cout << elapsed.count() << " ms\n";
+    if (call_quantifier)
+    {
+      util::Quantifier quantifier{func};
+      quantifier.run_all_analysis();
+      quantifier.print_info(cout);
+    }
+  }
+  else
+  {
+    const auto &func = Compiler::create_func(func_name, slot_count, 20, false, true);
+    fhe_vectorized(slot_count);
+    string gen_name = "_gen_he_" + func_name;
+    string gen_path = "he/" + gen_name; 
+    ofstream header_os(gen_path + ".hpp");
+    if (!header_os)
+      throw logic_error("failed to create header file");
+    ofstream source_os(gen_path + ".cpp");
+    if (!source_os)
+      throw logic_error("failed to create source file");
+    auto ruleset = Compiler::Ruleset::ops_cost;
+    auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+    Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+    
+    /************/elapsed = chrono::high_resolution_clock::now() - t;
+
+    cout << elapsed.count() << " ms\n";
+    if (call_quantifier)
+    {
+      util::Quantifier quantifier{func};
+      quantifier.run_all_analysis();
+      quantifier.print_info(cout);
+    }
   }
   return 0;
 }

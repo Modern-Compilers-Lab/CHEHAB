@@ -8,7 +8,7 @@
 
 namespace fheco::ir
 {
-class OpCode
+class OpCode 
 {
 public:
   enum class Type
@@ -22,10 +22,11 @@ public:
     square,
     mul,
     mod_switch,
-    relin
+    relin,
+    SumVec,
   };
 
-  static const OpCode nop;
+  static const OpCode nop; 
   static const OpCode encrypt;
   static const OpCode add;
   static const OpCode sub;
@@ -35,7 +36,9 @@ public:
   static const OpCode mul;
   static const OpCode mod_switch;
   static const OpCode relin;
-
+  ////****************************
+  static OpCode SumVec(int size) ;
+  ////****************************
   OpCode(Type type, std::vector<int> generators, std::size_t arity, bool commutativity, std::string str_repr)
     : type_{type}, generators_{std::move(generators)}, arity_{arity}, commutativity_{commutativity},
       str_repr_{std::move(str_repr)}
@@ -53,7 +56,7 @@ public:
 
   // an alias of o.generators()[0] for rotate operation type
   int steps() const;
-
+  int size() const;
 private:
   Type type_;
 

@@ -10,14 +10,28 @@
 
 namespace fheco::trs
 {
+/*
+  ir::OpCode::Type type_;
+
+  std::vector<OpGenMatcher> generators_;
+
+  std::size_t arity_;
+
+  bool commutativity_;
+
+  std::string str_repr_;
+
+  const TermOpCode TermOpCode::nop{ir::OpCode::Type::nop, {}, 0, false, "_"};
+*/
 class TermOpCode
 {
 public:
   static const TermOpCode nop;
   static const TermOpCode add;
   static const TermOpCode sub;
-  static const TermOpCode negate;
+  static const TermOpCode negate; 
   static TermOpCode rotate(OpGenMatcher steps);
+  static TermOpCode SumVec(OpGenMatcher steps);
   static const TermOpCode square;
   static const TermOpCode mul;
 

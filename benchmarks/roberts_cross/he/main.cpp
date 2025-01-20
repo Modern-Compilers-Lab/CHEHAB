@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include "_gen_he_roberts_cross.hpp"
+#include "_gen_he_fhe.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -23,8 +23,8 @@ int main(int argc, char **argv)
   print_bool_arg(opt, "opt", clog);
   clog << '\n';
 
-  string app_name = "roberts_cross";
-  ifstream is("../" + app_name + "_io_example.txt");
+  string app_name = "fhe";
+  ifstream is("../" + app_name + "_io_example_adapted.txt");
   if (!is)
     throw invalid_argument("failed to open io example file");
 
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
   ClearArgsInfo clear_inputs, clear_outputs;
   size_t func_slot_count;
   parse_inputs_outputs_file(is, params.plain_modulus().value(), clear_inputs, clear_outputs, func_slot_count);
-  params.set_coeff_modulus(CoeffModulus::Create(n, {60, 60, 60}));
+  params.set_coeff_modulus(CoeffModulus::Create(n, {60, 60}));
   SEALContext context(params, true, sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);
@@ -46,7 +46,8 @@ int main(int argc, char **argv)
   keygen.create_relin_keys(relin_keys);
   GaloisKeys galois_keys;
 
-  keygen.create_galois_keys(get_rotation_steps_roberts_cross(), galois_keys);
+  keygen.create_galois_keys(get_rotation_steps_fhe(), galois_keys);
+
   Encryptor encryptor(context, public_key);
   Evaluator evaluator(context);
   Decryptor decryptor(context, secret_key);
@@ -60,14 +61,11 @@ int main(int argc, char **argv)
   chrono::high_resolution_clock::time_point t;
   chrono::duration<double, milli> elapsed;
   t = chrono::high_resolution_clock::now();
-  if (opt)
-    roberts_cross_opt(
-      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-      relin_keys, galois_keys);
-  else
-    roberts_cross_noopt(
-      encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
-      relin_keys, galois_keys);
+
+  fhe(
+    encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
+    relin_keys, galois_keys);
+
   elapsed = chrono::high_resolution_clock::now() - t;
 
   ClearArgsInfo obtained_clear_outputs;

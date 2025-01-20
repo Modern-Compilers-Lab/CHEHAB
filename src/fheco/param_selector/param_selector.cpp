@@ -3,8 +3,8 @@
 #include "term.hpp"
 #include <iostream>
 #include <stdexcept>
-
-using namespace std;
+#define MOD_BIT_COUNT_MAX 60
+using namespace std; 
 
 namespace param_selector
 {
@@ -333,12 +333,13 @@ EncryptionParameters ParameterSelector::select_params(bool &use_mod_switch)
     break;
   }
 }
-
+/*********************************************************************************/
+/*********************************************************************************/
 EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
 {
   int plain_mod_size = program_->get_bit_width() + 1;
   if (program_->get_signedness())
-    ++plain_mod_size;
+    ++plain_mod_size;;
 
   auto plain_mod_noise_estimates_it = bfv_noise_estimates_seal.find(plain_mod_size);
   while (plain_mod_noise_estimates_it == bfv_noise_estimates_seal.end() &&
@@ -365,6 +366,7 @@ EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
   if (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end())
     throw logic_error("the maximum polynomial modulus degree of the noise estimates for the given plaintext modulus "
                       "size is smaller than vector_size");
+  /**************************/
   int circuit_noise = 0;
   EncryptionParameters params;
   unordered_map<string, int> nodes_noise;
@@ -394,6 +396,7 @@ EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
 
     ++poly_modulus_degree_noise_estimates_it;
   }
+  /**************************/
   if (poly_modulus_degree_noise_estimates_it == plain_mod_noise_estimates_it->second.end())
     throw logic_error("could not find suitable parameters");
 
@@ -424,7 +427,8 @@ EncryptionParameters ParameterSelector::select_params_bfv(bool &use_mod_switch)
 
   return params;
 }
-
+/*********************************************************************************/
+/*********************************************************************************/
 int ParameterSelector::simulate_noise_bfv(
   NoiseEstimatesValue noise_estimates, unordered_map<string, int> &nodes_noise) const
 {
@@ -455,7 +459,8 @@ int ParameterSelector::simulate_noise_bfv(
     {{ir::OpCode::assign, ir::TermType::ciphertext, ir::TermType::undefined}, 0},
     {{ir::OpCode::encrypt, ir::TermType::plaintext, ir::TermType::undefined}, fresh_noise},
     {{ir::OpCode::encrypt, ir::TermType::scalar, ir::TermType::undefined}, fresh_noise},
-    {{ir::OpCode::relinearize, ir::TermType::ciphertext, ir::TermType::undefined}, 0}};
+    {{ir::OpCode::relinearize, ir::TermType::ciphertext, ir::TermType::undefined}, 0}
+  };
 
   int circuit_noise = fresh_noise;
 
@@ -544,7 +549,8 @@ int ParameterSelector::simulate_noise_bfv(
   }
   return circuit_noise;
 }
-
+/*********************************************************************************/
+/*********************************************************************************/
 bool ParameterSelector::insert_mod_switch_bfv(
   const vector<int> &data_level_primes_sizes, unordered_map<string, int> &nodes_noise, int safety_margin)
 {
@@ -763,7 +769,8 @@ bool ParameterSelector::insert_mod_switch_bfv(
   }
   return used_mod_switch;
 }
-
+/*********************************************************************************/
+/*********************************************************************************/
 void apply_mod_switch_schedule(
   ir::Program *program, const unordered_map<string, tuple<size_t, size_t>> &nodes_noise,
   const unordered_map<string, unordered_map<string, size_t>> &nodes_level_matching_mod_switch)
@@ -849,7 +856,8 @@ void apply_mod_switch_schedule(
     }
   }
 }
-
+/*********************************************************************************/
+/*********************************************************************************/
 unordered_map<string, unordered_set<string>> ParameterSelector::get_outputs_composing_nodes() const
 {
   unordered_map<string, unordered_set<string>> outputs_composing_nodes;

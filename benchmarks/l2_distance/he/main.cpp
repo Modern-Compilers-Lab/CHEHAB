@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include "_gen_he_l2_distance.hpp"
+#include "_gen_he_fhe.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -23,8 +23,8 @@ int main(int argc, char **argv)
   print_bool_arg(opt, "opt", clog);
   clog << '\n';
 
-  string app_name = "l2_distance";
-  ifstream is("../" + app_name + "_io_example.txt");
+  string app_name = "fhe";
+  ifstream is("../" + app_name + "_io_example_adapted.txt");
   if (!is)
     throw invalid_argument("failed to open io example file");
 
@@ -45,7 +45,8 @@ int main(int argc, char **argv)
   RelinKeys relin_keys;
   keygen.create_relin_keys(relin_keys);
   GaloisKeys galois_keys;
-  keygen.create_galois_keys(get_rotation_steps_l2_distance(), galois_keys);
+
+  keygen.create_galois_keys(get_rotation_steps_fhe(), galois_keys);
 
   Encryptor encryptor(context, public_key);
   Evaluator evaluator(context);
@@ -61,7 +62,7 @@ int main(int argc, char **argv)
   chrono::duration<double, milli> elapsed;
   t = chrono::high_resolution_clock::now();
 
-  l2_distance(
+  fhe(
     encrypted_inputs, encoded_inputs, encrypted_outputs, encoded_outputs, batch_encoder, encryptor, evaluator,
     relin_keys, galois_keys);
 

@@ -1,17 +1,24 @@
 #pragma once
 
 #include "fheco/ir/func.hpp"
+#include "fheco/param_select/enc_params.hpp"
 #include "fheco/trs/common.hpp"
 #include <cstddef>
 #include <limits>
+#include <map>
 #include <memory>
 #include <ostream>
+#include <queue>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
+using std::queue;
+using std::string;
+using std::vector;
 namespace fheco
 {
 class Compiler
@@ -23,7 +30,7 @@ public:
     ops_cost,
     joined
   };
-
+ 
   static inline const std::shared_ptr<ir::Func> &create_func(
     std::string name, std::size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
     bool need_cyclic_rotation, bool overflow_warnings = false)
@@ -42,22 +49,30 @@ public:
 
   static void compile(
     std::shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::ostream &header_os,
-    std::string_view header_name, std::ostream &source_os, bool log2_reduct = false);
+    std::string_view header_name, std::ostream &source_os, bool log2_reduct = false, param_select::EncParams::SecurityLevel security_level=param_select::EncParams::SecurityLevel::tc128);
+  
+  static ir::Term *build_expression(
+  const std::shared_ptr<ir::Func> &func, std::map<string, ir::Term *> map, queue<string> &tokens);
+  static ir::OpCode operationFromString(string operation);
+  
+  static void gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int benchmark_type);
+  static void format_vectorized_code(const std::shared_ptr<ir::Func> &func, int benchmark_type);
 
+  static void gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window, int benchmark_type);
   static void gen_he_code(
     const std::shared_ptr<ir::Func> &func, std::ostream &header_os, std::string_view header_name,
     std::ostream &source_os, std::size_t rotation_keys_threshold = std::numeric_limits<std::size_t>::max(),
-    bool lazy_relin = false);
-
+    bool lazy_relin = false,param_select::EncParams::SecurityLevel security_level=param_select::EncParams::SecurityLevel::tc128);
   static inline const std::shared_ptr<ir::Func> &active_func()
   {
     if (active_func_it_ == funcs_table_.cend())
       throw std::logic_error("active_func is null");
-
     return active_func_it_->second;
   }
 
   static void set_active_func(const std::string &name);
+  static void call_vectorizer(int vector_width, int benchmark_type);
+  static void call_script();
 
   static const std::shared_ptr<ir::Func> &get_func(const std::string &name);
 
@@ -87,6 +102,12 @@ public:
 
   static inline void disable_scalar_vector_shape() { scalar_vector_shape_ = false; }
 
+  static inline void enable_auto_enc_params_selection() {automatic_enc_params_enabled_ = true ;}
+
+  static inline void disable_auto_enc_params_selection() {automatic_enc_params_enabled_ = false ;}
+
+  static inline bool auto_enc_params_selection_enabled() {return automatic_enc_params_enabled_ ;}
+
 private:
   using FuncsTable = std::unordered_map<std::string, std::shared_ptr<ir::Func>>;
 
@@ -103,6 +124,8 @@ private:
   static bool const_folding_enabled_;
 
   static bool scalar_vector_shape_;
+
+  static bool automatic_enc_params_enabled_ ;
 };
 
 std::ostream &operator<<(std::ostream &os, Compiler::Ruleset ruleset);

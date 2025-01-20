@@ -1,0 +1,7 @@
+benchmark,add,sub,multiply_plain,rotate_rows,square,multiply,Depth,Multplicative Depth,compile_time( ms ),execution_time (ms)
+tree_50-50-5,2,0,0,0,0,1,2,1,188,13
+tree_50-50-10,3,0,0,0,0,3,5,2,101,190
+tree_100-50-5,3,0,0,0,0,3,2,2,38,141
+tree_100-50-10,42,0,0,0,0,42,5,4,65,3708
+tree_100-100-5,0,0,0,0,0,2,2,2,39,80
+tree_100-100-10,1,0,0,0,0,4,5,4,60,391

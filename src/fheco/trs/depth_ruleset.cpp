@@ -41,7 +41,7 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
     {"simplify-add-mul_negate-3", z + x * (-y), z - x * y},
     {"simplify-add-mul_negate-4", z + (-y) * x, z - y * x},
 
-    {"part-fold-assoc-add-1", c0 + (c1 + x), (c0 + c1) + x},
+    {"part-fold-assoc-add-1", c0 + (c1 + x), (c0 + c1) + x}, 
     {"part-fold-assoc-add-2", c0 + (x + c1), (c0 + c1) + x},
     {"part-fold-assoc-add-3", (c0 + x) + c1, x + (c0 + c1)},
     {"part-fold-assoc-add-4", (x + c0) + c1, x + (c0 + c1)},
@@ -76,11 +76,13 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
 
     {"part-fold-zero_m-1", x + ((zero - y) - z), x - (y + z)},
     {"part-fold-zero_m-2", ((zero - x) - y) + z, z - (x + y)},
+    
 
     {"assoc-balan-add-1", ((x + y) + z) + t, (x + y) + (z + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
     {"assoc-balan-add-2", (z + (x + y)) + t, (z + x) + (y + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
     {"assoc-balan-add-3", x + (y + (z + t)), (x + y) + (z + t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
     {"assoc-balan-add-4", x + ((z + t) + y), (x + z) + (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+
 
     {"assoc-balan-add-sub-1", ((x + y) - z) + t, (x + y) - (z - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
     {"assoc-balan-add-sub-2", (z - (x + y)) + t, (z - x) - (y - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
@@ -222,7 +224,7 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
 
   return Ruleset{
     func,
-    "depth_ruleset",
+    "depth_ruleset", 
     {{ir::OpCode::Type::add, move(add_rules)},
      {ir::OpCode::Type::sub, move(sub_rules)},
      {ir::OpCode::Type::negate, move(negate_rules)},
