@@ -29,25 +29,35 @@ In order to build and use the compiler, you need to have installed:
 
 - Cmake
 - GCC compiler
-- SEAL library
+- SEAL library version 4.1
+- Python requirements for the RL framework
+
+Start by cloning the Repo to your local machine:
+```shell
+git clone https://github.com/Abderraouf-D/CHEHAB_FHE_Compiler_RL.git
+```
+Setup a python environement and install the requirementsl: 
+
+```shell 
+cd CHEHAB_FHE_Compiler_RL
+python3 -m venv ./RL/rl_venv 
+Source ./RL/rl_venv/bin/activate
+pip3 install-r ./RL/requirements.txt 
+#make sure to update numpy to the latest version 
+pip3 install numpy --upgrade
+```
 
 To build CHEHAB, you need to follow these steps:
-1. Clone the repository to your local machine.
-
+1. Navigate to the cloned repository.
 ```shell
-git clone https://github.com/Modern-Compilers-Lab/CHEHAB.git
+cd CHEHAB_FHE_Compiler_RL
 ```
-
-2. Navigate to the cloned repository.
-```shell
-cd CHEHAB
-```
-3. Create a directory to build the compiler in
+2. Create a directory to build the compiler in
 ```shell
 mkdir build
 cmake -S . -B build
 ```
-4. Build the compiler
+3. Build the compiler
 ```shell
 cd build
 make
@@ -62,8 +72,24 @@ A benchmark is run in two phases. The first execution triggers our compiler to t
 
 ```shell
 cd benchmarks/box_blur
-./box_blur
+./box_blur 1 0 1 1 4 1 0
 ```
+
+The general command to execute a benchmark is; 
+
+```shell
+./benchmark_name <vectorize_code> <window> <call_quantifier> <cse> <slot_count> <const_folding> <optimization_method>
+```
+
+
+- **vectorized_code:**	(0/1)	to enable vectorized vs scalar code generation  
+- **window:**	0	Vectorization window size  
+- **call_quantifier:**	(0/1)	to enable performance analysis and metrics  
+- **cse:**	(0/1)	to enable Common Subexpression Elimination  
+- **slot_count:**	to Specify the input size/dimensions for the benchmark  
+- **const_folding:**	(0/1)	to enable constant folding  
+- **optimization_method:** (0/1): 1 for RL, 0 for egraphs; selects the optimization process to use.
+
 2. Navigate to the `he` directory, where you can find the created files to build the final executable. This automatically links the generated file with the SEAL library.
 
 ```shell
