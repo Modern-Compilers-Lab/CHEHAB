@@ -95,30 +95,31 @@ int main(int argc, char **argv)
   bool vectorize_code = true;
   if (argc > 1)
     vectorize_code = stoi(argv[1]);
-
-  int window = 0;
-  if (argc > 2) 
-    window = stoi(argv[2]);
-
-  bool call_quantifier = true;
-  if (argc > 3)
-    call_quantifier = stoi(argv[3]);
-
-  bool cse = false;
-  if (argc > 4)
-    cse = stoi(argv[4]);
   
   int slot_count = 1 ;
-  if (argc > 5)
-    slot_count = stoi(argv[5]);
-
-  bool const_folding = false;
-  if (argc > 6)
-    const_folding = stoi(argv[6]);
+  if (argc > 2)
+    slot_count = stoi(argv[2]);
 
   int optimization_method = 0;  // 0 = egraph (default), 1 = RL
+  if (argc > 3)
+    optimization_method = stoi(argv[3]); 
+
+  int window = 0;
+  if (argc > 4) 
+    window = stoi(argv[4]);
+
+  bool call_quantifier = true;
+  if (argc > 5)
+    call_quantifier = stoi(argv[5]);
+
+  bool cse = true;
+  if (argc > 6)
+    cse = stoi(argv[6]);
+   
+  bool const_folding = true; 
   if (argc > 7)
-    optimization_method = stoi(argv[7]); 
+    const_folding = stoi(argv[7]); 
+
 
   if (cse)
   {
@@ -202,62 +203,3 @@ int main(int argc, char **argv)
   }
   return 0;
 }
-/*
-void fhe(int slot_count)
-{
-  size_t size = (slot_count + 1) * (slot_count + 2) + slot_count + 1 + 6 + 1;
-  std::vector<Ciphertext> v(size);
-  std::vector<Ciphertext> output(size);
-  std::cout<<"welcome in fhe \n";
-  std::cout<<"size is : "<<size<<"\n";
-  for (int i = 0; i < size; i++)
-  {
-    std::cout<<i<<"\n";
-    v[i] = Ciphertext("v_" + std::to_string(i));
-    //output[i] = v[i];
-  }
-  for (int i = 0; i < size; i++)
-  {
-    output[i] = v[i];
-  }
-  for (int i = 0; i < slot_count + 2; i++)
-  {
-    for (int j = 0; j < slot_count + 2; j++)
-    {
-      int ii = i * (slot_count + 2) + j;
-      Ciphertext temp_out = Ciphertext(Plaintext(0));
-
-      // Top left
-      if (ii - 6 > 0)
-      {
-        temp_out -= v[ii - 6];
-      }
-      // Top right
-      if (ii - 4 > 0)
-      {
-        temp_out += v[ii - 4];
-      }
-      
-      // Middle left
-      if (ii - 1 > 0)
-      {
-        temp_out = temp_out - 2 * v[ii - 1];
-      }
-      // Middle right
-      temp_out = temp_out + 2 * v[ii + 1];
-
-      // Bottom left
-      temp_out = temp_out - v[ii + 4];
-
-      // Bottom right
-      temp_out = temp_out + v[ii + 6];
-      output[ii] = temp_out;
-    }
-    // cout << endl;
-  }
-  for (int i = 0; i < size; i++)
-  {
-    output[i].set_output("output_" + std::to_string(i));
-  }
-}
-*/

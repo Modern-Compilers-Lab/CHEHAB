@@ -194,15 +194,13 @@ int main(int argc, char **argv) {
     if (argc < 5) {
         throw invalid_argument("Some arguments are lacking, needed arguments are: depth, iteration, regime , vectorize_code");
     }
-
-    int optimization_method = 0;  // 0 = egraph (default), 1 = RL
-    if (argc > 6)
-        optimization_method = stoi(argv[6]);
-
     int depth = stoi(argv[1]);
     int iteration = stoi(argv[2]);
     string regime = argv[3];
     vectorize_code = stoi(argv[4]);
+    int optimization_method = 0;  // 0 = egraph (default), 1 = RL
+    if (argc > 5)
+        optimization_method = stoi(argv[5]);
     
     if (cse) {
         Compiler::enable_cse();

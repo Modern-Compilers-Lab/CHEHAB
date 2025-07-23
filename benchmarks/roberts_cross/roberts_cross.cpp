@@ -25,7 +25,7 @@ void fhe_vectorized(int width){
   // combine
   Ciphertext result = gx_result * gx_result + gy_result * gy_result;
   result.set_output("result");
-}
+} 
 /**********************************************************************************/
 using Matrix = std::vector<std::vector<Ciphertext>>;
 
@@ -77,31 +77,31 @@ int main(int argc, char **argv)
 {
   bool vectorize_code = true;
   if (argc > 1)
-    vectorize_code = stoi(argv[1]);
-
-  int window = 0;
-  if (argc > 2) 
-    window = stoi(argv[2]);
-
-  bool call_quantifier = true;
-  if (argc > 3)
-    call_quantifier = stoi(argv[3]);
-
-  bool cse = true;
-  if (argc > 4)
-    cse = stoi(argv[4]);
-   
+    vectorize_code = stoi(argv[1]); 
+  
   int slot_count = 1 ;
-  if (argc > 5)
-    slot_count = stoi(argv[5]);
-
-  bool const_folding = true;
-  if (argc > 6)
-    const_folding = stoi(argv[6]); 
+  if (argc > 2)
+    slot_count = stoi(argv[2]);
 
   int optimization_method = 0;  // 0 = egraph (default), 1 = RL
+  if (argc > 3)
+    optimization_method = stoi(argv[3]); 
+
+  int window = 0;
+  if (argc > 4) 
+    window = stoi(argv[4]);
+
+  bool call_quantifier = true;
+  if (argc > 5)
+    call_quantifier = stoi(argv[5]);
+
+  bool cse = true;
+  if (argc > 6)
+    cse = stoi(argv[6]);
+   
+  bool const_folding = true; 
   if (argc > 7)
-    optimization_method = stoi(argv[7]); 
+    const_folding = stoi(argv[7]); 
 
   if (cse)
   {
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
         quantifier.print_info(cout);
       }
   }
-  else
+  else 
   {
       const auto &func = Compiler::create_func(func_name,slot_count*slot_count, 20, false, true);
       // update io file 

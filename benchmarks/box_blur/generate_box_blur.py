@@ -15,7 +15,7 @@ N = n_rows_image*n_cols_image
 input_image = np.random.randint(0,10,(N))
 output_image = np.zeros((n_rows_image*n_cols_image))
 ##############################################
-##############################################
+############################################## 
 kernel = [[1,1,1],[1,1,1],[1,1,1]]
 for x in range(n_rows_image): 
     for y in range(n_cols_image):
@@ -61,61 +61,4 @@ else :
                 output_lines.append(output_line)
         f.writelines(input_lines)
         f.writelines(output_lines)
-###################################################################
-##########################################################################
-"""
-input_image1=np.reshape(input_image,(n_rows_image,n_cols_image))
-output_image1=np.reshape(output_image,(n_rows_image,n_cols_image))
-half_kernel = 1
-for i in range(n_rows_image):
-        for j in range(n_cols_image):
-            total_sum = 0
-            # Traverse the kernel window centered around (i, j)
-            for ki in range(-half_kernel, half_kernel + 1):
-                for kj in range(-half_kernel, half_kernel + 1):
-                    ni, nj = i + ki, j + kj
 
-                    # Ensure the indices are within the image bounds
-                    if 0 <= ni < n_rows_image and 0 <= nj < n_cols_image:
-                        total_sum += input_image1[ni, nj]
-
-            # Calculate the average for the output pixel
-            output_image1[i, j] = total_sum 
-
-# Process each element
-for i in range(n_rows_image):
-        for j in range(n_cols_image):
-            # Handle boundary elements by copying img to output
-            if i == 0 or i == n_rows_image - 1 or j == 0 or j == n_cols_image - 1:
-                output[i*n_cols_image+j] = input_image[i*n_cols_image+j]
-                continue
-
-            # Compute the sum of neighboring elements (with boundary checks)
-            sum_ = input_image[i*n_cols_image+j]  # Start with the current pixel
-
-            # Add neighbors with boundary checks
-            if i > 0 and j > 0:
-                sum_ = sum_ + input_image[(i - 1)*n_cols_image+j - 1]  # Low left
-            if j > 0:
-                sum_ = sum_ + input_image[i*n_cols_image+j - 1]      # Low center
-            if i < n_rows_image - 1 and j > 0:
-                sum_ = sum_ + input_image[(i + 1)*n_cols_image+j - 1]  # Low right
-
-            if i > 0:
-                sum_ = sum_ + input_image[(i - 1)*n_cols_image+j]      # Mid left
-            if i < n_rows_image - 1:
-                sum_ = sum_ + input_image[(i + 1)*n_cols_image+j]      # Mid right
-
-            if i > 0 and j < n_cols_image - 1:
-                sum_ = sum_ + input_image[(i - 1)*n_cols_image+j + 1]  # Top left
-            if j < n_cols_image - 1:
-                sum_ = sum_ + input_image[i*n_cols_image + j + 1]      # Top center
-            if i < n_rows_image - 1 and j < n_cols_image - 1:
-                sum_ = sum_ + input_image[(i + 1)*n_cols_image + j + 1]  # Top right
-            ##############################
-            output[i*n_cols_image+j] = sum_
-for i in range(n_rows_image):
-        for j in range(n_cols_image):
-            print(f"{output_image[i*n_cols_image+j]} : {output[i*n_cols_image+j]} \n")
-output_image=output 
-"""

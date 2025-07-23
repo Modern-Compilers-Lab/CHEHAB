@@ -1,0 +1,5 @@
+benchmark,add,sub,multiply_plain,rotate_rows,negate,multiply,Depth,Multplicative Depth,compile_time (s),execution_time (s)
+max_3,5.0,1.0,0.0,1.0,2.0,5.0,7.0,2.0,0.176,0.570
+max_4,13.0,1.0,0.0,1.0,6.0,13.0,9.0,3.0,0.145,1.360
+max_5,27.0,1.0,0.0,1.0,12.0,26.0,11.0,4.0,0.716,2.896
+sort_3,9.0,1.0,0.0,1.0,4.0,9.0,9.0,3.0,0.252,1.002

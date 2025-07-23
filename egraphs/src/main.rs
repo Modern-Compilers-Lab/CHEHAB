@@ -11,7 +11,7 @@ use std::{env, fs};
 use std::collections::BinaryHeap;
 use std::cmp::Ordering; 
 use std::cmp::Reverse; 
-
+ 
 #[derive(Debug, Eq, PartialEq)]
 struct State {
     cost: usize,
@@ -88,6 +88,12 @@ fn main() {
     let mut comp = 0;
     let mut iteration = 0;
     let mut current_vector_width = vector_width ; 
+    /** Extraction techniques 
+        0 ==> GreedyExtractor
+        1 ==> ExhaustiveExtractor
+        2 ==> SimulatedAnnealingExtractor
+    */
+    let extracation_technic : usize = 0;
     while (comp != rulesets_appplying_order.len()){
         let (cost, best, stop_reason) = rules::run(&current_expr, timeout, current_vector_width,node_limit,rulesets_appplying_order[iteration%rulesets_appplying_order.len()],0);
         current_expr = best ; 
@@ -101,10 +107,7 @@ fn main() {
         }
         iteration = iteration + 1 ;
         eprintln!("Best cost at iteration {}: {} ", iteration, current_cost);
-        //eprintln!("Obtained expression ==> : {}", current_expr.to_string());
     } 
-    // 43163
-    // 50114
     let mut best_cost = current_cost ;
     let mut best_expr = current_expr.clone(); 
     let duration = start_time.elapsed();

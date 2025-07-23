@@ -23,7 +23,7 @@ pub fn run(
     prog: &RecExpr<VecLang>,
     timeout: u64,
     vector_width: usize,
-    node_limit: usize,
+    node_limit: usize, 
     selected_ruleset_order : usize ,
     extraction_technic : usize ,
 ) -> (usize, RecExpr<VecLang>, usize) {
@@ -32,16 +32,10 @@ pub fn run(
     // Find the depth of the expression 
     let expression_depth : usize = ast_depth(&prog);
     match selected_ruleset_order {
-        //0 => {rules = rules0(vector_width);},
-        //1 => {rules = vector_rules(vector_width);},
         2 => {rules = addition_rules(vector_width,expression_depth);},
         3 => {rules = minus_rules(vector_width,expression_depth);},
         4 => {rules = multiplication_rules(vector_width,expression_depth);},
-        5 => {rules = neg_rules(vector_width,expression_depth); }, 
-
-        //7 => {rules = rot_minus_rules(vector_width,expression_depth);},
-        //8 => {rules = rot_multiplication_rules(vector_width,expression_depth);},
-
+        
         9 => {rules = vector_assoc_add_rules(vector_width);},
         10 => {rules = vector_assoc_min_rules(vector_width);},
         11 => {rules = vector_assoc_mul_rules(vector_width);},
@@ -141,7 +135,6 @@ pub fn run(
             &mut HashMap::new(), 
         );
         let extract_time = start_extract_time.elapsed();
-        /******************************************************************************/
     }else if extraction_technic == 2 {
         /********************************** SA extraction *****************************/
         /******************************************************************************/
@@ -164,9 +157,11 @@ pub fn run(
     (best_cost, best_expr, stop_reason)
 
 }
+
 /***********************************************************************************/
 /***********************************************************************************/
 /***********************************************************************************/
+// return the depth of the expresison expr
 pub fn ast_depth(expr: &RecExpr<VecLang>) -> usize {
     fn depth_helper(id: Id, expr: &RecExpr<VecLang>) -> usize {
         let node = &expr[id];
@@ -181,6 +176,7 @@ pub fn ast_depth(expr: &RecExpr<VecLang>) -> usize {
     depth_helper(Id::from(expr.as_ref().len() - 1), expr)
 }
 /************************************/
+// return the length of the longest vector in the input expression
 pub fn get_vector_width(expr: &RecExpr<VecLang>) -> usize {
     fn vector_width_helper(id: Id, expr: &RecExpr<VecLang>) -> usize {
         let node = &expr[id];
@@ -294,184 +290,12 @@ pub fn print_egraph(egraph: Egraph)
         eprintln!("Class {} linked to {}", class_id, connections_str);
     }
 }
-/*************************************/
-pub fn vectorization_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
-    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
 
-    let mut searcher_add = Vec::new();
-    let mut searcher_mul = Vec::new();
-    let mut searcher_sub = Vec::new();
-    let mut searcher_neg = Vec::new();
-
-    let mut applier_1 = Vec::new();
-    let mut applier_2 = Vec::new();
-
-    for i in 0..vector_width {
-        searcher_add.push(format!("( + ?a{} ?b{}) ", i, i));
-        searcher_mul.push(format!("( * ?a{} ?b{}) ", i, i));
-        searcher_sub.push(format!("( - ?a{} ?b{}) ", i, i));
-        searcher_neg.push(format!("( - ?a{}) ", i));
-
-        applier_1.push(format!("?a{} ", i));
-        applier_2.push(format!("?b{} ", i));
-    }
-
-    let lhs_add: Pattern<VecLang> = format!("(Vec {})", searcher_add.concat()).parse().unwrap();
-    let lhs_mul: Pattern<VecLang> = format!("(Vec {})", searcher_mul.concat()).parse().unwrap();
-    let lhs_sub: Pattern<VecLang> = format!("(Vec {})", searcher_sub.concat()).parse().unwrap();
-    let lhs_neg: Pattern<VecLang> = format!("(Vec {})", searcher_neg.concat()).parse().unwrap();
-
-    // Parse the right-hand side patterns
-    let rhs_add: Pattern<VecLang> = format!(
-        "(VecAdd (Vec {}) (Vec {}))",
-        applier_1.concat(),
-        applier_2.concat()
-    )
-    .parse()
-    .unwrap();
-    eprintln!("{} => {}", lhs_add, rhs_add);
-    let rhs_mul: Pattern<VecLang> = format!(
-        "(VecMul (Vec {}) (Vec {}))",
-        applier_1.concat(),
-        applier_2.concat()
-    )
-    .parse()
-    .unwrap();
-
-    let rhs_sub: Pattern<VecLang> = format!(
-        "(VecMinus (Vec {}) (Vec {}))",
-        applier_1.concat(),
-        applier_2.concat()
-    )
-    .parse()
-    .unwrap();
-
-    let rhs_neg: Pattern<VecLang> = format!("(VecNeg (Vec {}) )", applier_1.concat(),)
-        .parse()
-        .unwrap();
-
-    // Push the rewrite rules into the rules vector
-
-    rules.push(rw!(format!("add-vectorize" ); { lhs_add.clone() } => { rhs_add.clone() }));
-    rules.push(rw!(format!("mul-vectorize"); { lhs_mul.clone() } => { rhs_mul.clone() }));
-    rules.push(rw!(format!("sub-vectorize"); { lhs_sub.clone() } => { rhs_sub.clone() }));
-    rules.push(rw!(format!("neg-vectorize"); { lhs_neg.clone() } => { rhs_neg.clone() }));
-    rules
-}
-/******************************************/
-pub fn is_not_vector_of_scalar_operations(
-    vars: &'static str, // Make vars static
-) -> impl Fn(&mut Egraph, Id, &Subst) -> bool + 'static {
-    let vars = &vars[5..vars.len() - 2];
-    let vars_vector = vars.split(" ").collect::<Vec<&str>>();
-    move |egraph, _, subst| {
-        let mut no_scalar_operations = true;
-        for var in &vars_vector {
-            let var = var.parse().unwrap();
-            no_scalar_operations = no_scalar_operations
-                && egraph[subst[var]].nodes.iter().any(|n| match n {
-                    VecLang::Num(..) | VecLang::Symbol(..) => true,
-                    _ => false,
-                });
-            if !no_scalar_operations {
-                break;
-            }
-        }
-        return no_scalar_operations;
-    }
-}
-/********************************************/
-pub fn split_vectors(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
-    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
-
-    // Store vector width in a constant
-
-    /************************** Zakaria implementaion *********************************/
-
-    let lhs = format!(
-        "(Vec {})",
-        (0..vector_width)
-            .map(|i| format!("?a{} ", i))
-            .collect::<String>()
-    );
-
-    let searcher: Pattern<VecLang> = lhs.parse().unwrap();
-
-    for i in 0..vector_width {
-        let vector1_add = format!(
-            "(Vec {})",
-            (0..vector_width)
-                .map(|j| if i == j {
-                    "0 ".to_string()
-                } else {
-                    format!("?a{} ", j)
-                })
-                .collect::<String>()
-        );
-        let vector1_mul = format!(
-            "(Vec {})",
-            (0..vector_width)
-                .map(|j| if i == j {
-                    "1 ".to_string()
-                } else {
-                    format!("?a{} ", j)
-                })
-                .collect::<String>()
-        );
-
-        let vector2_add = format!(
-            "(Vec {})",
-            (0..vector_width)
-                .map(|j| if i == j {
-                    format!("?a{} ", j)
-                } else {
-                    "0 ".to_string()
-                })
-                .collect::<String>()
-        );
-        let vector2_mul = format!(
-            "(Vec {})",
-            (0..vector_width)
-                .map(|j| if i == j {
-                    format!("?a{} ", j)
-                } else {
-                    "1 ".to_string()
-                })
-                .collect::<String>()
-        );
-
-        let rhs_add = format!("(VecAdd {} {})", vector1_add, vector2_add);
-        let rhs_mul = format!("(VecMul {} {})", vector1_mul, vector2_mul);
-        let applier_add: Pattern<VecLang> = rhs_add.parse().unwrap();
-        let applier_mul: Pattern<VecLang> = rhs_mul.parse().unwrap();
-
-        rules.push(rw!(format!("exp-split-add-{}", i); {  searcher.clone()} => {  applier_add}));
-        rules.push(rw!(format!("exp-split-mul-{}", i); {  searcher.clone()} => {  applier_mul}))
-    }
-    rules
-}
-/*******************************************/
-pub fn commutativity_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
-    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
-
-    for i in (0..vector_width).step_by(2) {
-        // Create the lhs and rhs expressions directly as strings
-        let lhs = format!("(+ (* a{} b{}) c{})", i, i, i);
-        let rhs = format!("(+ c{} (* a{} b{}))", i, i, i);
-
-        // Parse the expressions into patterns
-        let lhs_pattern: Pattern<VecLang> = lhs.parse().unwrap();
-        let rhs_pattern: Pattern<VecLang> = rhs.parse().unwrap();
-
-        // Add the rewrite rule using a literal string for the rule name
-        rules.push(rw!(format!("exp-assoc-{}", i); lhs_pattern => rhs_pattern));
-    }
-
-    rules
-}
 /******************************************************************************************/
 /********************************Conditions ***********************************************/
 /******************************************************************************************/
+// check if all provided eclasses are Vector instances 
+// they can be either a Vec instance, VecAdd, VecMinus, VecMul or VecNeg 
 fn is_vec(var1: &'static str,var2: &'static str,var3: &'static str,var4: &'static str) -> impl Fn(&mut EGraph<VecLang, ConstantFold>, Id, &Subst) -> bool {
     let var1_str = var1.parse().unwrap();
     let var2_str = var2.parse().unwrap();
@@ -490,6 +314,7 @@ fn is_vec(var1: &'static str,var2: &'static str,var3: &'static str,var4: &'stati
     }
 }
 /****************************************/
+// same as is_vec function
 fn is_vec_mul(var1: &'static str,var2: &'static str,var3: &'static str,var4: &'static str,var5: &'static str,var6: &'static str,var7: &'static str,var8: &'static str) -> impl Fn(&mut EGraph<VecLang, ConstantFold>, Id, &Subst) -> bool {
     let var1_str = var1.parse().unwrap();
     let var2_str = var2.parse().unwrap();
@@ -521,6 +346,7 @@ fn is_vec_mul(var1: &'static str,var2: &'static str,var3: &'static str,var4: &'s
     }
 }
 /***************************************/
+// check if an e-class with Id = eclass_id has a Vec instance as parent 
 fn has_vec_parent(egraph: &EGraph<VecLang, ConstantFold>, eclass_id: Id) -> bool {
     // Use iter() to explicitly iterate over classes
     for eclass in egraph.classes() {
@@ -538,6 +364,7 @@ fn has_vec_parent(egraph: &EGraph<VecLang, ConstantFold>, eclass_id: Id) -> bool
     false
 }
 /***************************************/
+// check if input e-classes as leaves 
 fn is_leaf(var1: &'static str,var2: &'static str) -> impl Fn(&mut EGraph<VecLang, ConstantFold>, Id, &Subst) -> bool {
     let var1_str = var1.parse().unwrap();
     let var2_str = var2.parse().unwrap();
@@ -550,6 +377,18 @@ fn is_leaf(var1: &'static str,var2: &'static str) -> impl Fn(&mut EGraph<VecLang
         //let inf = (nodes1.len()==1) && (nodes2.len() == 1) && !has_vec_parent(egraph, subst[var1_str]) && !has_vec_parent(egraph, subst[var2_str]); 
         // Return true if both e-classes are leaves
         is_leaf1&&is_leaf2&&inf
+    }
+}
+/***************************************/
+fn is_not_leaf(var1: &'static str,var2: &'static str) -> impl Fn(&mut EGraph<VecLang, ConstantFold>, Id, &Subst) -> bool {
+    let var1_str = var1.parse().unwrap();
+    let var2_str = var2.parse().unwrap();
+    move |egraph : &mut EGraph<VecLang, ConstantFold>, _, subst| {
+        let nodes1 = &egraph[subst[var1_str]].nodes ;
+        let nodes2 = &egraph[subst[var2_str]].nodes ;
+        let is_leaf1 = nodes1.iter().all(|enode| enode.children().is_empty());    
+        let is_leaf2 = nodes2.iter().all(|enode| enode.children().is_empty());
+        (!&egraph[subst[var1_str]].nodes.iter().any(|node| matches!(node, VecLang::Num(_))))||(!&egraph[subst[var2_str]].nodes.iter().any(|node| matches!(node, VecLang::Num(_))))
     }
 }
 /***************************************/
@@ -606,6 +445,9 @@ pub fn cond_check_any_elems_composed(vector_width: usize)-> impl Fn(&mut EGraph<
         count * 2 >= vector_width || count1 >= 1 // Check if at least half of the elements satisfy the condition
     }
 }
+
+
+/***********************************************************************************************/
 /*******************************operation rules*************************************************/
 /***********************************************************************************************/
 pub fn addition_rules(vector_width: usize, expression_depth: usize) -> Vec<Rewrite<VecLang, ConstantFold>>{
@@ -698,65 +540,9 @@ pub fn addition_rules(vector_width: usize, expression_depth: usize) -> Vec<Rewri
         rules.push(rw!(format!("neg-vectorize-{}",initial_vector_size); { lhs_neg.clone() } => { rhs_neg.clone() }));
         initial_vector_size=initial_vector_size*2 ;
     }
-    /*************************************************************/
-    /*************************************************************
-    max_vector_size = base.pow(expression_depth as u32 - 1) * vector_width; 
-    max_vector_size = min(max_vector_size,4096);
-    initial_vector_size = 1 ;
-    while initial_vector_size <= max_vector_size{
-        let mut searcher_mul = Vec::new();
-        let mut applier_1 = Vec::new();
-        let mut applier_2 = Vec::new();
-        for i in 0..initial_vector_size {
-            searcher_mul.push(format!("( * ?a{} ?b{}) ", i, i));
-            applier_1.push(format!("?a{} ", i));
-            applier_2.push(format!("?b{} ", i));
-        }
-        let lhs_mul: Pattern<VecLang> = format!("(Vec {})", searcher_mul.concat()).parse().unwrap();
-        // Parse the right-hand side patterns
-        let rhs_mul: Pattern<VecLang> = format!(
-            "(VecMul (Vec {}) (Vec {}))",
-            applier_1.concat(),
-            applier_2.concat()
-        )
-        .parse()
-        .unwrap();
-        // Push the rewrite rules into the rules vector
-        rules.push(rw!(format!("mul-vectorize-{}",initial_vector_size); { lhs_mul.clone() } => { rhs_mul.clone() } 
-        if cond_check_not_all_values_eq1(initial_vector_size)
-        ));
-        initial_vector_size=initial_vector_size*2;
-    }
-    /**********************************************/
-    max_vector_size = base.pow(expression_depth as u32 - 2) * vector_width;
-    max_vector_size = min(max_vector_size,4096); 
-    initial_vector_size = 1 ;
-    while initial_vector_size <= max_vector_size {
-        let mut searcher_mul_red = Vec::with_capacity(initial_vector_size);
-        let mut applier_1 = Vec::with_capacity(initial_vector_size*2);
-        applier_1.resize(initial_vector_size*2,String::from(""));
-        for i in 0..initial_vector_size {
-            searcher_mul_red.push(format!("( * ?a{} ?b{}) ", i, i));
-            applier_1[i]=format!("?a{} ", i);
-            applier_1[i+initial_vector_size]=format!("?b{} ", i);
-        }
-        let lhs_add: Pattern<VecLang> = format!("(Vec {})", searcher_mul_red.concat()).parse().unwrap();
-        // Parse the right-hand side patterns
-        let rhs_add: Pattern<VecLang> = format!(
-            "(VecMulRot (Vec {}) {})",
-            applier_1.concat(),
-            initial_vector_size
-        )
-        .parse()
-        .unwrap();
-        rules.push(rw!(format!("rot-mul-vectorize-{}",initial_vector_size); { lhs_add.clone() } => { rhs_add.clone() } 
-        if cond_check_all_elems_composed(initial_vector_size)
-        ));
-        initial_vector_size=initial_vector_size*2;
-    }
-    *************************************************/
     rules
 }
+
 /*************************************************************/
 pub fn minus_rules(vector_width: usize, expression_depth: usize) -> Vec<Rewrite<VecLang, ConstantFold>>{
     let base: usize = 2;
@@ -840,6 +626,7 @@ pub fn minus_rules(vector_width: usize, expression_depth: usize) -> Vec<Rewrite<
     /***********************************************/
     rules
 } 
+
 /*************************************************************/
 pub fn multiplication_rules(vector_width: usize, expression_depth: usize) -> Vec<Rewrite<VecLang, ConstantFold>>{
     let base: usize = 2;
@@ -860,7 +647,6 @@ pub fn multiplication_rules(vector_width: usize, expression_depth: usize) -> Vec
         rw!("add--a-0+-a"; "(- ?a)" => 
         "(* 1 (- ?a))"
         ),
-        
         /*rw!("part-fold-assoc-mul-add1"; "(* (+ ?b ?c) ?a)" => 
         "(* a? (+ ?b ?c))"
         if is_leaf("?a","?a")
@@ -931,45 +717,9 @@ pub fn multiplication_rules(vector_width: usize, expression_depth: usize) -> Vec
     /********************************************/
     rules
 }
-/*************************************************************/
-pub fn neg_rules(vector_width : usize, expression_depth: usize) ->  Vec<Rewrite<VecLang, ConstantFold>>{
-    let base: usize = 2;
-    let mut max_vector_size : usize = base.pow(expression_depth as u32 - 1) * vector_width; 
-    max_vector_size = min(max_vector_size,4096);
 
-    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![
-        rw!("neg-0-0+0"; "0" => "(- 0)"),
-    ];
-    let mut initial_vector_size : usize = 1 ;
-    while initial_vector_size <= max_vector_size{
-        let mut searcher_neg = Vec::new();
-        let mut applier_1 = Vec::new();
-        for i in 0..initial_vector_size {
-            searcher_neg.push(format!("( - ?b{}) ", i));
-            applier_1.push(format!("?b{} ", i));
-        }
-        let lhs_neg: Pattern<VecLang> = format!("(Vec {})", searcher_neg.concat()).parse().unwrap();
-        let rhs_neg: Pattern<VecLang> = format!("(VecNeg (Vec {}) )", applier_1.concat(),)
-        .parse()
-        .unwrap();
-        // Push the rewrite rules into the rules vector
-        rules.push(rw!(format!("neg-vectorize-{}",initial_vector_size); { lhs_neg.clone() } => { rhs_neg.clone() }));
-        initial_vector_size=initial_vector_size*2 ;
-    }
-    rules
-}
-/***************************************/
-fn is_not_leaf(var1: &'static str,var2: &'static str) -> impl Fn(&mut EGraph<VecLang, ConstantFold>, Id, &Subst) -> bool {
-    let var1_str = var1.parse().unwrap();
-    let var2_str = var2.parse().unwrap();
-    move |egraph : &mut EGraph<VecLang, ConstantFold>, _, subst| {
-        let nodes1 = &egraph[subst[var1_str]].nodes ;
-        let nodes2 = &egraph[subst[var2_str]].nodes ;
-        let is_leaf1 = nodes1.iter().all(|enode| enode.children().is_empty());    
-        let is_leaf2 = nodes2.iter().all(|enode| enode.children().is_empty());
-        (!&egraph[subst[var1_str]].nodes.iter().any(|node| matches!(node, VecLang::Num(_))))||(!&egraph[subst[var2_str]].nodes.iter().any(|node| matches!(node, VecLang::Num(_))))
-    }
-}
+
+/**********************************************************************************************/
 /*********************************Simplication rules*******************************************/
 /**********************************************************************************************/
 pub fn vector_assoc_mul_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
@@ -1289,10 +1039,98 @@ pub fn assoc_neg_rules(vector_width : usize) -> Vec<Rewrite<VecLang,ConstantFold
     ];
     rules
 }
-/**********************************************************************************************/
-/**********************************************************************************************/
 
-/*
-    {"simplify-add-negate-2-1", x + (-y - z), x - (y + z)},
-    {"simplify-add-negate-2-2", (-y - z) + x, x - (y + z)},
-*/
+
+
+
+/**********************************************************************************************/
+/**********************************************************************************************/
+pub fn split_vectors(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
+    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
+
+    // Store vector width in a constant
+
+    /************************** Zakaria implementaion *********************************/
+
+    let lhs = format!(
+        "(Vec {})",
+        (0..vector_width)
+            .map(|i| format!("?a{} ", i))
+            .collect::<String>()
+    );
+
+    let searcher: Pattern<VecLang> = lhs.parse().unwrap();
+
+    for i in 0..vector_width {
+        let vector1_add = format!(
+            "(Vec {})",
+            (0..vector_width)
+                .map(|j| if i == j {
+                    "0 ".to_string()
+                } else {
+                    format!("?a{} ", j)
+                })
+                .collect::<String>()
+        );
+        let vector1_mul = format!(
+            "(Vec {})",
+            (0..vector_width)
+                .map(|j| if i == j {
+                    "1 ".to_string()
+                } else {
+                    format!("?a{} ", j)
+                })
+                .collect::<String>()
+        );
+
+        let vector2_add = format!(
+            "(Vec {})",
+            (0..vector_width)
+                .map(|j| if i == j {
+                    format!("?a{} ", j)
+                } else {
+                    "0 ".to_string()
+                })
+                .collect::<String>()
+        );
+        let vector2_mul = format!(
+            "(Vec {})",
+            (0..vector_width)
+                .map(|j| if i == j {
+                    format!("?a{} ", j)
+                } else {
+                    "1 ".to_string()
+                })
+                .collect::<String>()
+        );
+
+        let rhs_add = format!("(VecAdd {} {})", vector1_add, vector2_add);
+        let rhs_mul = format!("(VecMul {} {})", vector1_mul, vector2_mul);
+        let applier_add: Pattern<VecLang> = rhs_add.parse().unwrap();
+        let applier_mul: Pattern<VecLang> = rhs_mul.parse().unwrap();
+
+        rules.push(rw!(format!("exp-split-add-{}", i); {  searcher.clone()} => {  applier_add}));
+        rules.push(rw!(format!("exp-split-mul-{}", i); {  searcher.clone()} => {  applier_mul}))
+    }
+    rules
+}
+/*******************************************/
+pub fn commutativity_rules(vector_width: usize) -> Vec<Rewrite<VecLang, ConstantFold>> {
+    let mut rules: Vec<Rewrite<VecLang, ConstantFold>> = vec![];
+
+    for i in (0..vector_width).step_by(2) {
+        // Create the lhs and rhs expressions directly as strings
+        let lhs = format!("(+ (* a{} b{}) c{})", i, i, i);
+        let rhs = format!("(+ c{} (* a{} b{}))", i, i, i);
+
+        // Parse the expressions into patterns
+        let lhs_pattern: Pattern<VecLang> = lhs.parse().unwrap();
+        let rhs_pattern: Pattern<VecLang> = rhs.parse().unwrap();
+
+        // Add the rewrite rule using a literal string for the rule name
+        rules.push(rw!(format!("exp-assoc-{}", i); lhs_pattern => rhs_pattern));
+    }
+
+    rules
+}
+

@@ -49,7 +49,7 @@ cse_enabled = 1
 vectorize_code = 1 
 slot_counts= [4,8]
 iterations = 2 #minimum 2
-window_size = 0   
+window_size = 0    
 depths = [5,10] 
 regimes = ["50-50","100-50","100-100"]
 compile_time_timeout_seconds = 7200
@@ -59,8 +59,7 @@ output_csv = f"results_{'RL' if optimization_method == 1 else 'EGraph'}.csv"
 with open(output_csv, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(infos)
-
-
+########################################
 for subfolder_name in benchmark_folders:
     benchmark_path = os.path.join(benchmarks_folder, subfolder_name)
     build_path = os.path.join(build_folder, subfolder_name) 
@@ -92,7 +91,7 @@ for subfolder_name in benchmark_folders:
                 for iteration in range(iterations):
                     print(f"===> Running iteration : {iteration + 1}")
                     # Step 1: Run the first benchmark command
-                    benchmark_run_command = f"./{subfolder_name} {vectorize_code} {window_size} 1 {cse_enabled} {slot_count} 1 {optimization_method}"
+                    benchmark_run_command = f"./{subfolder_name} {vectorize_code} {slot_count} {optimization_method} {window_size} 1 {cse_enabled}  1 "
                     try: 
                         result = subprocess.run(
                             benchmark_run_command, shell=True, check=True, 
