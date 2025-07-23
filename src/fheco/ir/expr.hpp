@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <unordered_map>
 #include <utility>
-#include <vector>
+#include <vector> 
 
 namespace fheco::ir
 {
@@ -80,14 +80,27 @@ public:
 
   inline const OutputTermsInfo &outputs_info() const { return outputs_info_; }
 
-  const std::vector<const Term *> &get_top_sorted_terms();
+  inline const orderedOutputTermsKeys &output_keys() const { return output_keys_ ;}
+
+  const std::vector<const Term *> &get_top_sorted_terms(); 
 
   const std::vector<std::size_t> &get_top_sorted_terms_ids();
+
+  void update_negative_rotation_steps(int polynomial_modulus_degree) ;
 
   bool valid_top_sort() const { return valid_top_sort_; }
 
   const Term::PtrSet &terms() const { return terms_; }
-
+  
+  void clear(){
+    const_terms_info_.clear();
+    inputs_info_.clear();
+    op_terms_.clear();
+    outputs_info_.clear();
+    sorted_terms_.clear();
+    terms_.clear();
+  }
+  
 private:
   struct OpTermKey
   {
@@ -114,6 +127,8 @@ private:
   std::unordered_map<PackedVal, Term *, HashPackedVal> values_to_const_terms_{};
 
   OutputTermsInfo outputs_info_{};
+
+  orderedOutputTermsKeys output_keys_{};
 
   std::vector<const Term *> sorted_terms_{};
 

@@ -43,6 +43,6 @@ build/
 *.build
 env
 thirdparty/
-
+target/**
 # Jupyter checkpoints
 .ipynb_checkpoints/

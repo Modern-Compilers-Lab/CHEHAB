@@ -11,9 +11,9 @@ namespace fheco::trs
 {
 Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
 {
-  TermMatcher w{TermMatcherType::term, "w"};
+  TermMatcher w{TermMatcherType::term, "w"}; 
   TermMatcher x{TermMatcherType::term, "x"};
-  TermMatcher y{TermMatcherType::term, "y"};
+  TermMatcher y{TermMatcherType::term, "y"}; 
   TermMatcher z{TermMatcherType::term, "z"};
   TermMatcher t{TermMatcherType::term, "t"};
 
@@ -25,7 +25,7 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
   TermMatcher m_one{"m_one", PackedVal(func->slot_count(), -1)};
 
   OpGenMatcher n{"n"};
-  OpGenMatcher m{"m"};
+  OpGenMatcher m{"m"}; 
 
   auto cache = make_unique<TermsMetric>();
 
@@ -41,7 +41,7 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
     {"simplify-add-mul_negate-3", z + x * (-y), z - x * y},
     {"simplify-add-mul_negate-4", z + (-y) * x, z - y * x},
 
-    {"part-fold-assoc-add-1", c0 + (c1 + x), (c0 + c1) + x},
+    {"part-fold-assoc-add-1", c0 + (c1 + x), (c0 + c1) + x}, 
     {"part-fold-assoc-add-2", c0 + (x + c1), (c0 + c1) + x},
     {"part-fold-assoc-add-3", (c0 + x) + c1, x + (c0 + c1)},
     {"part-fold-assoc-add-4", (x + c0) + c1, x + (c0 + c1)},
@@ -76,11 +76,13 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
 
     {"part-fold-zero_m-1", x + ((zero - y) - z), x - (y + z)},
     {"part-fold-zero_m-2", ((zero - x) - y) + z, z - (x + y)},
+    
 
     {"assoc-balan-add-1", ((x + y) + z) + t, (x + y) + (z + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
     {"assoc-balan-add-2", (z + (x + y)) + t, (z + x) + (y + t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
     {"assoc-balan-add-3", x + (y + (z + t)), (x + y) + (z + t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
     {"assoc-balan-add-4", x + ((z + t) + y), (x + z) + (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
+
 
     {"assoc-balan-add-sub-1", ((x + y) - z) + t, (x + y) - (z - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
     {"assoc-balan-add-sub-2", (z - (x + y)) + t, (z - x) - (y - t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
@@ -93,7 +95,10 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
     {"assoc-balan-add-sub-9", x + (y + (z - t)), (x + y) + (z - t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
     {"assoc-balan-add-sub-10", x + ((z - t) + y), (x + z) - (t - y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
     {"assoc-balan-add-sub-11", x + (y - (z - t)), (x + y) - (z - t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
-    {"assoc-balan-add-sub-12", x + ((z - t) - y), (x + z) - (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)}};
+    {"assoc-balan-add-sub-12", x + ((z - t) - y), (x + z) - (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)}
+    
+  };
+    
 
   vector<Rule> sub_rules{
     {"sub_0", x - zero, x},
@@ -172,11 +177,16 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
     {"assoc-balan-sub-add-9", x - (y - (z + t)), (x - y) + (z + t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
     {"assoc-balan-sub-add-10", x - ((z + t) - y), (x - z) - (t - y), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
     {"assoc-balan-sub-add-11", x - (y + (z + t)), (x - y) - (z + t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
-    {"assoc-balan-sub-add-12", x - ((z + t) + y), (x - z) - (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)}};
+    {"assoc-balan-sub-add-12", x - ((z + t) + y), (x - z) - (t + y), Rule::has_less_ctxt_leaves(x, z, t, *cache)}
+  };
 
   vector<Rule> negate_rules{
-    {"fold-negate", -(-x), x}, {"fold-negate-add", -(x - y), y - x}, {"fold-negate-sub", -(-x - y), x + y}};
+    //{"fold-negate", -(-x), x}, 
+    {"fold-negate-add", -(x - y), y - x}, 
+    {"fold-negate-sub", -(-x - y), x + y}
+  };
 
+  
   vector<Rule> rotate_rules{
     {"rotate_0", x << 0, x},
 
@@ -189,7 +199,9 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
     {"undo-nest-rotate-sub-2", ((y << (n)) - x) << m, (y << (n + m) % func->slot_count()) - (x << m)},
 
     {"undo-nest-rotate-mul-1", (x * (y << (n))) << m, (x << m) * (y << (n + m) % func->slot_count())},
-    {"undo-nest-rotate-mul-2", ((y << (n)) * x) << m, (y << (n + m) % func->slot_count()) * (x << m)}};
+    {"undo-nest-rotate-mul-2", ((y << (n)) * x) << m, (y << (n + m) % func->slot_count()) * (x << m)}
+    
+  };
 
   vector<Rule> mul_rules{
     {"mul_0-1", x * zero, zero},
@@ -218,11 +230,12 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
     {"assoc-balan-mul-1", ((x * y) * z) * t, (x * y) * (z * t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
     {"assoc-balan-mul-2", (z * (x * y)) * t, (z * x) * (y * t), Rule::has_less_ctxt_leaves(t, x, y, *cache)},
     {"assoc-balan-mul-3", x * (y * (z * t)), (x * y) * (z * t), Rule::has_less_ctxt_leaves(x, z, t, *cache)},
-    {"assoc-balan-mul-4", x * ((z * t) * y), (x * z) * (t * y), Rule::has_less_ctxt_leaves(x, z, t, *cache)}};
+    {"assoc-balan-mul-4", x * ((z * t) * y), (x * z) * (t * y), Rule::has_less_ctxt_leaves(x, z, t, *cache)}
+  };
 
   return Ruleset{
     func,
-    "depth_ruleset",
+    "depth_ruleset", 
     {{ir::OpCode::Type::add, move(add_rules)},
      {ir::OpCode::Type::sub, move(sub_rules)},
      {ir::OpCode::Type::negate, move(negate_rules)},

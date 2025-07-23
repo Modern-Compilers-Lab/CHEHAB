@@ -6,6 +6,24 @@ using namespace std;
 
 namespace fheco::util
 {
+
+void copyFile(const std::string& sourceFile, const std::string& destinationFile) {
+    std::ifstream inFile(sourceFile);
+    std::ofstream outFile(destinationFile);
+
+    if (!inFile || !outFile) {
+        std::cerr << "Error opening files!" << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(inFile, line)) {
+        outFile << line << "\n";  // Write each line to the new file
+    }
+
+    std::cout << "File copied successfully." << std::endl;
+}
+
 void init_random(PackedVal &packed_val, integer slot_min, integer slot_max)
 {
   random_device rd;

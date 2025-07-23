@@ -16,7 +16,7 @@ namespace fheco::trs
 class Rule;
 
 class TermMatcher
-{
+{ 
 public:
   using RefWrapp = std::reference_wrapper<const TermMatcher>;
 

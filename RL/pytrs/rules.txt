@@ -1,0 +1,143 @@
+Rewrite { name: "add-0-0+0", searcher: 0, applier: (+ 0 0) }
+Rewrite { name: "mul-0-0x0", searcher: 0, applier: (* 0 0) }
+Rewrite { name: "add-a-a+0", searcher: ?a, applier: (+ ?a 0) }
+Rewrite { name: "mul-a-ax1", searcher: ?a, applier: (* ?a 1) }
+Rewrite { name: "mul-deco-0", searcher: (* ?a ?b), applier: (+ 0 (* ?a ?b)) }
+Rewrite { name: "add-0-0-0", searcher: 0, applier: (- 0 0) }
+Rewrite { name: "add-a-a-0", searcher: ?a, applier: (- ?a 0) }
+Rewrite { name: "add-vectorize", searcher: (Vec (+ ?a0 ?b0) (+ ?a1 ?b1) (+ ?a2 ?b2) (+ ?a3 ?b3) (+ ?a4 ?b4) (+ ?a5 ?b5) (+ ?a6 ?b6) (+ ?a7 ?b7) (+ ?a8 ?b8)), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec ?b0 ?b1 ?b2 ?b3 ?b4 ?b5 ?b6 ?b7 ?b8)) }
+Rewrite { name: "mul-vectorize", searcher: (Vec (* ?a0 ?b0) (* ?a1 ?b1) (* ?a2 ?b2) (* ?a3 ?b3) (* ?a4 ?b4) (* ?a5 ?b5) (* ?a6 ?b6) (* ?a7 ?b7) (* ?a8 ?b8)), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec ?b0 ?b1 ?b2 ?b3 ?b4 ?b5 ?b6 ?b7 ?b8)) }
+Rewrite { name: "sub-vectorize", searcher: (Vec (- ?a0 ?b0) (- ?a1 ?b1) (- ?a2 ?b2) (- ?a3 ?b3) (- ?a4 ?b4) (- ?a5 ?b5) (- ?a6 ?b6) (- ?a7 ?b7) (- ?a8 ?b8)), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec ?b0 ?b1 ?b2 ?b3 ?b4 ?b5 ?b6 ?b7 ?b8)) }
+Rewrite { name: "neg-vectorize", searcher: (Vec (- ?a0) (- ?a1) (- ?a2) (- ?a3) (- ?a4) (- ?a5) (- ?a6) (- ?a7) (- ?a8)), applier: (VecNeg (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8)) }
+Rewrite { name: "add-a*b-0+a*b", searcher: (* ?a ?b), applier: (+ 0 (* ?a ?b)) }
+Rewrite { name: "add-a-b-0+a-b", searcher: (- ?a ?b), applier: (+ 0 (- ?a ?b)) }
+Rewrite { name: "add--a-0+-a", searcher: (- ?a), applier: (+ 0 (- ?a)) }
+Rewrite { name: "sub-0-0-0", searcher: 0, applier: (- 0 0) }
+Rewrite { name: "sub-a-a-0", searcher: ?a, applier: (- ?a 0) }
+Rewrite { name: "sub-a*b-0-a*b", searcher: (* ?a ?b), applier: (- 0 (* ?a ?b)) }
+Rewrite { name: "sub-a+b-0-a+b", searcher: (+ ?a ?b), applier: (- 0 (+ ?a ?b)) }
+Rewrite { name: "sub--a-0--a", searcher: (- ?a), applier: (- 0 (- ?a)) }
+Rewrite { name: "mul-0-0*0", searcher: 0, applier: (* 0 0) }
+Rewrite { name: "mul-a-a*1", searcher: ?a, applier: (* ?a 1) }
+Rewrite { name: "mul-a+b-1-a+b", searcher: (+ ?a ?b), applier: (* 1 (+ ?a ?b)) }
+Rewrite { name: "mul-a-b-1-a-b", searcher: (- ?a ?b), applier: (* 1 (- ?a ?b)) }
+Rewrite { name: "add--a-0+-a", searcher: (- ?a), applier: (* 1 (- ?a)) }
+Rewrite { name: "assoc-balan-add-1", searcher: (VecAdd ?x (VecAdd ?y (VecAdd ?z ?t))), applier: (VecAdd (VecAdd ?x ?y) (VecAdd ?z ?t)) }
+Rewrite { name: "assoc-balan-add-2", searcher: (VecAdd ?x (VecAdd (VecAdd ?z ?t) ?y)), applier: (VecAdd (VecAdd ?x ?z) (VecAdd ?t ?y)) }
+Rewrite { name: "assoc-balan-add-3", searcher: (VecAdd (VecAdd (VecAdd ?x ?y) ?z) ?t), applier: (VecAdd (VecAdd ?x ?y) (VecAdd ?z ?t)) }
+Rewrite { name: "assoc-balan-add-4", searcher: (VecAdd (VecAdd ?x (VecAdd ?y ?z)) ?t), applier: (VecAdd (VecAdd ?x ?y) (VecAdd ?z ?t)) }
+Rewrite { name: "assoc-balan-min-1", searcher: (VecMinus ?x (VecMinus ?y (VecMinus ?z ?t))), applier: (VecMinus (VecMinus ?x ?y) (VecMinus ?z ?t)) }
+Rewrite { name: "assoc-balan-min-2", searcher: (VecMinus ?x (VecMinus (VecMinus ?z ?t) ?y)), applier: (VecMinus (VecMinus ?x ?z) (VecMinus ?t ?y)) }
+Rewrite { name: "assoc-balan-min-3", searcher: (VecMinus (VecMinus (VecMinus ?x ?y) ?z) ?t), applier: (VecMinus (VecMinus ?x ?y) (VecMinus ?z ?t)) }
+Rewrite { name: "assoc-balan-min-4", searcher: (VecMinus (VecMinus ?x (VecMinus ?y ?z)) ?t), applier: (VecMinus (VecMinus ?x ?y) (VecMinus ?z ?t)) }
+Rewrite { name: "assoc-balan-mul-1", searcher: (VecMul ?x (VecMul ?y (VecMul ?z ?t))), applier: (VecMul (VecMul ?x ?y) (VecMul ?z ?t)) }
+Rewrite { name: "assoc-balan-mul-2", searcher: (VecMul ?x (VecMul (VecMul ?z ?t) ?y)), applier: (VecMul (VecMul ?x ?z) (VecMul ?t ?y)) }
+Rewrite { name: "assoc-balan-mul-3", searcher: (VecMul (VecMul (VecMul ?x ?y) ?z) ?t), applier: (VecMul (VecMul ?x ?y) (VecMul ?z ?t)) }
+Rewrite { name: "assoc-balan-mul-4", searcher: (VecMul (VecMul ?x (VecMul ?y ?z)) ?t), applier: (VecMul (VecMul ?x ?y) (VecMul ?z ?t)) }
+Rewrite { name: "assoc-balan-mul-5", searcher: (VecMul ?x (VecMul (VecMul ?y ?z) ?t)), applier: (VecMul (VecMul ?x ?y) (VecMul ?z ?t)) }
+Rewrite { name: "assoc-balan-mul-6", searcher: (VecMul ?x (VecMul (VecMul ?y ?z) ?t)), applier: (VecMul (VecMul ?x ?y) (VecMul ?z ?t)) }
+Rewrite { name: "assoc-balan-add-mul-1", searcher: (VecAdd (VecAdd (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2)) (VecMul ?b1 ?b2)) (VecMul ?a1 ?a2)), applier: (VecAdd (VecAdd (VecMul ?a1 ?a2) (VecMul ?b1 ?b2)) (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2))) }
+Rewrite { name: "assoc-balan-add-mul-2", searcher: (VecAdd (VecMul ?a1 ?a2) (VecAdd (VecMul ?b1 ?b2) (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2)))), applier: (VecAdd (VecAdd (VecMul ?a1 ?a2) (VecMul ?b1 ?b2)) (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2))) }
+Rewrite { name: "assoc-balan-add-mul-3", searcher: (VecAdd (VecAdd (VecMul ?a1 ?a2) (VecAdd (VecMul ?b1 ?b2) (VecMul ?c1 ?c2))) (VecMul ?d1 ?d2)), applier: (VecAdd (VecAdd (VecMul ?a1 ?a2) (VecMul ?b1 ?b2)) (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2))) }
+Rewrite { name: "distribute-mul-over-add", searcher: (VecMul ?a (VecAdd ?b ?c)), applier: (VecAdd (VecMul ?a ?b) (VecMul ?a ?c)) }
+Rewrite { name: "assoc-balan-add-mul-", searcher: (VecAdd (VecAdd (VecMul ?a ?b) ?c) ?d), applier: (VecAdd (VecMul ?a ?b) (VecAdd ?c ?d)) }
+Rewrite { name: "assoc-balan-add-min-1", searcher: (VecAdd (VecAdd (VecAdd (VecMinus ?c1 ?c2) (VecMinus ?d1 ?d2)) (VecMinus ?b1 ?b2)) (VecMinus ?a1 ?a2)), applier: (VecAdd (VecAdd (VecMinus ?a1 ?a2) (VecMinus ?b1 ?b2)) (VecAdd (VecMinus ?c1 ?c2) (VecMinus ?d1 ?d2))) }
+Rewrite { name: "assoc-balan-add-min-2", searcher: (VecAdd (VecMinus ?a1 ?a2) (VecAdd (VecMinus ?b1 ?b2) (VecAdd (VecMinus ?c1 ?c2) (VecMinus ?d1 ?d2)))), applier: (VecAdd (VecAdd (VecMinus ?a1 ?a2) (VecMinus ?b1 ?b2)) (VecAdd (VecMinus ?c1 ?c2) (VecMinus ?d1 ?d2))) }
+Rewrite { name: "assoc-balan-add-min-3", searcher: (VecAdd (VecAdd (VecMinus ?a1 ?a2) (VecAdd (VecMinus ?b1 ?b2) (VecMinus ?c1 ?c2))) (VecMinus ?d1 ?d2)), applier: (VecAdd (VecAdd (VecMinus ?a1 ?a2) (VecMinus ?b1 ?b2)) (VecAdd (VecMinus ?c1 ?c2) (VecMinus ?d1 ?d2))) }
+Rewrite { name: "neg-0-0+0", searcher: 0, applier: (- 0) }
+Rewrite { name: "neg-vectorize", searcher: (Vec (- ?b0) (- ?b1) (- ?b2) (- ?b3) (- ?b4) (- ?b5) (- ?b6) (- ?b7) (- ?b8)), applier: (VecNeg (Vec ?b0 ?b1 ?b2 ?b3 ?b4 ?b5 ?b6 ?b7 ?b8)) }
+Rewrite { name: "simplify-sub-negate", searcher: (VecMinus ?x (VecNeg ?y)), applier: (VecAdd ?x ?y) }
+Rewrite { name: "simplify-sub-negate-1", searcher: (VecAdd ?x (VecNeg ?y)), applier: (VecMinus ?x ?y) }
+Rewrite { name: "simplify-sub-negate-1-2", searcher: (VecAdd (VecNeg ?y) ?x), applier: (VecMinus ?x ?y) }
+Rewrite { name: "simplify-add-mul-negate-1", searcher: (VecAdd (VecMul ?x (VecNeg ?y)) ?z), applier: (VecMinus ?z (VecMul ?x ?y)) }
+Rewrite { name: "simplify-add-mul-negate-2", searcher: (VecAdd (VecMul (VecNeg ?y) ?x) ?z), applier: (VecMinus ?z (VecMul ?x ?y)) }
+Rewrite { name: "simplify-add-mul-negate-3", searcher: (VecAdd ?z (VecMul ?x (VecNeg ?y))), applier: (VecMinus ?z (VecMul ?x ?y)) }
+Rewrite { name: "simplify-add-mul-negate-4", searcher: (VecAdd ?z (VecMul (VecNeg ?y) ?x)), applier: (VecMinus ?z (VecMul ?y ?x)) }
+Rewrite { name: "simplify-sub-mul-negate-1", searcher: (VecMinus ?z (VecMul ?x (VecNeg ?y))), applier: (VecAdd ?z (VecMul ?x ?y)) }
+Rewrite { name: "simplify-sub-mul-negate-2", searcher: (VecMinus ?z (VecMul (VecNeg ?y) ?x)), applier: (VecAdd ?z (VecMul ?x ?y)) }
+Rewrite { name: "simplify-add-negate-2-1", searcher: (VecAdd ?x (VecMinus (VecNeg ?y) ?z)), applier: (VecMinus ?x (VecAdd ?x ?y)) }
+Rewrite { name: "simplify-add-negate-2-2", searcher: (VecAdd (VecMinus ?z (VecNeg ?y)) ?x), applier: (VecMinus ?x (VecAdd ?x ?y)) }
+Rewrite { name: "factor-out-mul", searcher: (VecAdd (VecMul ?a ?b) (VecMul ?a ?c)), applier: (VecMul ?a (VecAdd ?b ?c)) }
+Rewrite { name: "assoc-balan-min-mul-1", searcher: (VecMinus (VecMinus (VecMinus (VecMul ?c1 ?c2) (VecMul ?d1 ?d2)) (VecMul ?b1 ?b2)) (VecMul ?a1 ?a2)), applier: (VecMinus (VecMinus (VecMul ?a1 ?a2) (VecMul ?b1 ?b2)) (VecAdd (VecMul ?c1 ?c2) (VecMul ?d1 ?d2))) }
+Rewrite { name: "assoc-balan-min-mul-2", searcher: (VecMinus (VecMul ?a1 ?a2) (VecMinus (VecMul ?b1 ?b2) (VecMinus (VecMul ?c1 ?c2) (VecMul ?d1 ?d2)))), applier: (VecMinus (VecMinus (VecMul ?a1 ?a2) (VecMul ?b1 ?b2)) (VecMinus (VecMul ?c1 ?c2) (VecMul ?d1 ?d2))) }
+Rewrite { name: "assoc-balan-min-mul-3", searcher: (VecMinus (VecMinus (VecMul ?a1 ?a2) (VecMinus (VecMul ?b1 ?b2) (VecMul ?c1 ?c2))) (VecMul ?d1 ?d2)), applier: (VecMinus (VecMinus (VecMul ?a1 ?a2) (VecMul ?b1 ?b2)) (VecMinus (VecMul ?c1 ?c2) (VecMul ?d1 ?d2))) }
+Rewrite { name: "distribute-mul-over-min", searcher: (VecMul ?a (VecMinus ?b ?c)), applier: (VecMinus (VecMul ?a ?b) (VecMul ?a ?c)) }
+Rewrite { name: "factor-out-mul_min", searcher: (VecMinus (VecMul ?a ?b) (VecMul ?a ?c)), applier: (VecMul ?a (VecMinus ?b ?c)) }
+Rewrite { name: "rotations-1", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (<< (Vec ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8 ?a0) 8) }
+Rewrite { name: "rotations-1-rev", searcher: (<< (Vec ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8 ?a0) 8), applier: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) }
+Rewrite { name: "rotations-2", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (<< (Vec ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8 ?a0 ?a1) 7) }
+Rewrite { name: "rotations-2-rev", searcher: (<< (Vec ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8 ?a0 ?a1) 7), applier: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) }
+Rewrite { name: "rotations-3", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (<< (Vec ?a3 ?a4 ?a5 ?a6 ?a7 ?a8 ?a0 ?a1 ?a2) 6) }
+Rewrite { name: "rotations-3-rev", searcher: (<< (Vec ?a3 ?a4 ?a5 ?a6 ?a7 ?a8 ?a0 ?a1 ?a2) 6), applier: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) }
+Rewrite { name: "rotations-4", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (<< (Vec ?a4 ?a5 ?a6 ?a7 ?a8 ?a0 ?a1 ?a2 ?a3) 5) }
+Rewrite { name: "rotations-4-rev", searcher: (<< (Vec ?a4 ?a5 ?a6 ?a7 ?a8 ?a0 ?a1 ?a2 ?a3) 5), applier: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) }
+Rewrite { name: "rotations-5", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (<< (Vec ?a5 ?a6 ?a7 ?a8 ?a0 ?a1 ?a2 ?a3 ?a4) 4) }
+Rewrite { name: "rotations-5-rev", searcher: (<< (Vec ?a5 ?a6 ?a7 ?a8 ?a0 ?a1 ?a2 ?a3 ?a4) 4), applier: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) }
+Rewrite { name: "rotations-6", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (<< (Vec ?a6 ?a7 ?a8 ?a0 ?a1 ?a2 ?a3 ?a4 ?a5) 3) }
+Rewrite { name: "rotations-6-rev", searcher: (<< (Vec ?a6 ?a7 ?a8 ?a0 ?a1 ?a2 ?a3 ?a4 ?a5) 3), applier: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) }
+Rewrite { name: "rotations-7", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (<< (Vec ?a7 ?a8 ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6) 2) }
+Rewrite { name: "rotations-7-rev", searcher: (<< (Vec ?a7 ?a8 ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6) 2), applier: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) }
+Rewrite { name: "rotations-8", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (<< (Vec ?a8 ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7) 1) }
+Rewrite { name: "rotations-8-rev", searcher: (<< (Vec ?a8 ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7) 1), applier: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) }
+Rewrite { name: "add-split-0", searcher: (Vec (+ ?a01 ?a02) ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a01 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec ?a02 0 0 0 0 0 0 0 0)) }
+Rewrite { name: "mul-split-0", searcher: (Vec (* ?a01 ?a02) ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a01 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec ?a02 1 1 1 1 1 1 1 1)) }
+Rewrite { name: "sub-split-0", searcher: (Vec (- ?a01 ?a02) ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a01 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec ?a02 0 0 0 0 0 0 0 0)) }
+Rewrite { name: "neg-split-0", searcher: (Vec (- ?a0) ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMinus (Vec 0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec ?a0 0 0 0 0 0 0 0 0)) }
+Rewrite { name: "add-split-1", searcher: (Vec ?a0 (+ ?a11 ?a12) ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a11 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 ?a12 0 0 0 0 0 0 0)) }
+Rewrite { name: "mul-split-1", searcher: (Vec ?a0 (* ?a11 ?a12) ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a11 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 1 ?a12 1 1 1 1 1 1 1)) }
+Rewrite { name: "sub-split-1", searcher: (Vec ?a0 (- ?a11 ?a12) ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a11 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 ?a12 0 0 0 0 0 0 0)) }
+Rewrite { name: "neg-split-1", searcher: (Vec ?a0 (- ?a1) ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a0 0 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 ?a1 0 0 0 0 0 0 0)) }
+Rewrite { name: "add-split-2", searcher: (Vec ?a0 ?a1 (+ ?a21 ?a22) ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a21 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 ?a22 0 0 0 0 0 0)) }
+Rewrite { name: "mul-split-2", searcher: (Vec ?a0 ?a1 (* ?a21 ?a22) ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a21 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 1 1 ?a22 1 1 1 1 1 1)) }
+Rewrite { name: "sub-split-2", searcher: (Vec ?a0 ?a1 (- ?a21 ?a22) ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a21 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 ?a22 0 0 0 0 0 0)) }
+Rewrite { name: "neg-split-2", searcher: (Vec ?a0 ?a1 (- ?a2) ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a1 0 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 ?a2 0 0 0 0 0 0)) }
+Rewrite { name: "add-split-3", searcher: (Vec ?a0 ?a1 ?a2 (+ ?a31 ?a32) ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a31 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 0 ?a32 0 0 0 0 0)) }
+Rewrite { name: "mul-split-3", searcher: (Vec ?a0 ?a1 ?a2 (* ?a31 ?a32) ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a31 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 1 1 1 ?a32 1 1 1 1 1)) }
+Rewrite { name: "sub-split-3", searcher: (Vec ?a0 ?a1 ?a2 (- ?a31 ?a32) ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a31 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 0 ?a32 0 0 0 0 0)) }
+Rewrite { name: "neg-split-3", searcher: (Vec ?a0 ?a1 ?a2 (- ?a3) ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a2 0 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 0 ?a3 0 0 0 0 0)) }
+Rewrite { name: "add-split-4", searcher: (Vec ?a0 ?a1 ?a2 ?a3 (+ ?a41 ?a42) ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 ?a41 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 0 0 ?a42 0 0 0 0)) }
+Rewrite { name: "mul-split-4", searcher: (Vec ?a0 ?a1 ?a2 ?a3 (* ?a41 ?a42) ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 ?a41 ?a5 ?a6 ?a7 ?a8) (Vec 1 1 1 1 ?a42 1 1 1 1)) }
+Rewrite { name: "sub-split-4", searcher: (Vec ?a0 ?a1 ?a2 ?a3 (- ?a41 ?a42) ?a5 ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 ?a41 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 0 0 ?a42 0 0 0 0)) }
+Rewrite { name: "neg-split-4", searcher: (Vec ?a0 ?a1 ?a2 ?a3 (- ?a4) ?a5 ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 0 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 0 0 ?a4 0 0 0 0)) }
+Rewrite { name: "add-split-5", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 (+ ?a51 ?a52) ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a51 ?a6 ?a7 ?a8) (Vec 0 0 0 0 0 ?a52 0 0 0)) }
+Rewrite { name: "mul-split-5", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 (* ?a51 ?a52) ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a51 ?a6 ?a7 ?a8) (Vec 1 1 1 1 1 ?a52 1 1 1)) }
+Rewrite { name: "sub-split-5", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 (- ?a51 ?a52) ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a51 ?a6 ?a7 ?a8) (Vec 0 0 0 0 0 ?a52 0 0 0)) }
+Rewrite { name: "neg-split-5", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 (- ?a5) ?a6 ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 ?a4 0 ?a6 ?a7 ?a8) (Vec 0 0 0 0 0 ?a5 0 0 0)) }
+Rewrite { name: "add-split-6", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 (+ ?a61 ?a62) ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a61 ?a7 ?a8) (Vec 0 0 0 0 0 0 ?a62 0 0)) }
+Rewrite { name: "mul-split-6", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 (* ?a61 ?a62) ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a61 ?a7 ?a8) (Vec 1 1 1 1 1 1 ?a62 1 1)) }
+Rewrite { name: "sub-split-6", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 (- ?a61 ?a62) ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a61 ?a7 ?a8) (Vec 0 0 0 0 0 0 ?a62 0 0)) }
+Rewrite { name: "neg-split-6", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 (- ?a6) ?a7 ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 0 ?a7 ?a8) (Vec 0 0 0 0 0 0 ?a6 0 0)) }
+Rewrite { name: "add-split-7", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 (+ ?a71 ?a72) ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a71 ?a8) (Vec 0 0 0 0 0 0 0 ?a72 0)) }
+Rewrite { name: "mul-split-7", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 (* ?a71 ?a72) ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a71 ?a8) (Vec 1 1 1 1 1 1 1 ?a72 1)) }
+Rewrite { name: "sub-split-7", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 (- ?a71 ?a72) ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a71 ?a8) (Vec 0 0 0 0 0 0 0 ?a72 0)) }
+Rewrite { name: "neg-split-7", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 (- ?a7) ?a8), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 0 ?a8) (Vec 0 0 0 0 0 0 0 ?a7 0)) }
+Rewrite { name: "add-split-8", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 (+ ?a81 ?a82)), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a81) (Vec 0 0 0 0 0 0 0 0 ?a82)) }
+Rewrite { name: "mul-split-8", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 (* ?a81 ?a82)), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a81) (Vec 1 1 1 1 1 1 1 1 ?a82)) }
+Rewrite { name: "sub-split-8", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 (- ?a81 ?a82)), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a81) (Vec 0 0 0 0 0 0 0 0 ?a82)) }
+Rewrite { name: "neg-split-8", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 (- ?a8)), applier: (VecMinus (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 0) (Vec 0 0 0 0 0 0 0 0 ?a8)) }
+Rewrite { name: "exp-split-add-0", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec 0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec ?a0 0 0 0 0 0 0 0 0)) }
+Rewrite { name: "exp-split-mul-0", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec 1 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec ?a0 1 1 1 1 1 1 1 1)) }
+Rewrite { name: "exp-split-add-1", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 0 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 ?a1 0 0 0 0 0 0 0)) }
+Rewrite { name: "exp-split-mul-1", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 1 ?a1 1 1 1 1 1 1 1)) }
+Rewrite { name: "exp-split-add-2", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 0 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 ?a2 0 0 0 0 0 0)) }
+Rewrite { name: "exp-split-mul-2", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 1 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 1 1 ?a2 1 1 1 1 1 1)) }
+Rewrite { name: "exp-split-add-3", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 0 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 0 ?a3 0 0 0 0 0)) }
+Rewrite { name: "exp-split-mul-3", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 1 ?a4 ?a5 ?a6 ?a7 ?a8) (Vec 1 1 1 ?a3 1 1 1 1 1)) }
+Rewrite { name: "exp-split-add-4", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 0 ?a5 ?a6 ?a7 ?a8) (Vec 0 0 0 0 ?a4 0 0 0 0)) }
+Rewrite { name: "exp-split-mul-4", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 1 ?a5 ?a6 ?a7 ?a8) (Vec 1 1 1 1 ?a4 1 1 1 1)) }
+Rewrite { name: "exp-split-add-5", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 ?a4 0 ?a6 ?a7 ?a8) (Vec 0 0 0 0 0 ?a5 0 0 0)) }
+Rewrite { name: "exp-split-mul-5", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 ?a4 1 ?a6 ?a7 ?a8) (Vec 1 1 1 1 1 ?a5 1 1 1)) }
+Rewrite { name: "exp-split-add-6", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 0 ?a7 ?a8) (Vec 0 0 0 0 0 0 ?a6 0 0)) }
+Rewrite { name: "exp-split-mul-6", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 1 ?a7 ?a8) (Vec 1 1 1 1 1 1 ?a6 1 1)) }
+Rewrite { name: "exp-split-add-7", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 0 ?a8) (Vec 0 0 0 0 0 0 0 ?a7 0)) }
+Rewrite { name: "exp-split-mul-7", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 1 ?a8) (Vec 1 1 1 1 1 1 1 ?a7 1)) }
+Rewrite { name: "exp-split-add-8", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecAdd (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 0) (Vec 0 0 0 0 0 0 0 0 ?a8)) }
+Rewrite { name: "exp-split-mul-8", searcher: (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 ?a8), applier: (VecMul (Vec ?a0 ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?a7 1) (Vec 1 1 1 1 1 1 1 1 ?a8)) }
+Rewrite { name: "exp-assoc-0", searcher: (+ (* a0 b0) c0), applier: (+ c0 (* a0 b0)) }
+Rewrite { name: "exp-assoc-2", searcher: (+ (* a2 b2) c2), applier: (+ c2 (* a2 b2)) }
+Rewrite { name: "exp-assoc-4", searcher: (+ (* a4 b4) c4), applier: (+ c4 (* a4 b4)) }
+Rewrite { name: "exp-assoc-6", searcher: (+ (* a6 b6) c6), applier: (+ c6 (* a6 b6)) }
+Rewrite { name: "exp-assoc-8", searcher: (+ (* a8 b8) c8), applier: (+ c8 (* a8 b8)) }
+Rewrite { name: "exp-comm-mul-add", searcher: (+ ?c0 (* ?a0 ?b0)), applier: (+ (* ?a0 ?b0) ?c0) }
+Rewrite { name: "associativity", searcher: (* ?a0 (* ?b0 ?c0)), applier: (* (* ?b0 ?c0) ?a0) }
+Rewrite { name: "commutativity", searcher: (+ ?a0 (+ ?b0 ?c0)), applier: (+ (+ ?b0 ?c0) ?c0) }

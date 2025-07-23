@@ -4,8 +4,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
-#include <utility>
+#include <utility> 
 #include <vector>
+# include <iostream>
+#include <iostream>
+#include <cstdlib>  
 
 using namespace std;
 
@@ -136,22 +139,31 @@ Ciphertext operator*(const Ciphertext &lhs, const Ciphertext &rhs)
 {
   if (lhs.idx().size() || rhs.idx().size())
     throw invalid_argument("subscript read must be performed on const variables");
-
+  
   Ciphertext dest{};
   Compiler::active_func()->operate_binary(ir::OpCode::mul, lhs, rhs, dest);
   return dest;
 }
-
+/********************************************************************/
 Ciphertext operator*(const Ciphertext &lhs, const Plaintext &rhs)
 {
   if (lhs.idx().size() || rhs.idx().size())
     throw invalid_argument("subscript read must be performed on const variables");
-
   Ciphertext dest{};
   Compiler::active_func()->operate_binary(ir::OpCode::mul, lhs, rhs, dest);
   return dest;
 }
+/*********************************/
+Ciphertext operator*(const Ciphertext* lhs, const Plaintext &rhs)
+{
+  if ((*lhs).idx().size() || rhs.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+  Ciphertext dest{};
+  Compiler::active_func()->operate_binary(ir::OpCode::mul, *lhs, rhs, dest);
+  return dest;
+}
 
+/********************************************************************/
 Ciphertext operator*(const Plaintext &lhs, const Ciphertext &rhs)
 {
   if (lhs.idx().size() || rhs.idx().size())
@@ -212,19 +224,22 @@ Plaintext operator-(const Plaintext &arg)
   return dest;
 }
 
-// rotation
+// rotation  
 Ciphertext rotate(const Ciphertext &arg, int steps)
 {
   if (arg.idx().size())
     throw invalid_argument("subscript read must be performed on const variables");
 
   auto signed_slot_count = static_cast<int64_t>(Compiler::active_func()->slot_count());
+  //int real_slot_count = 2048 ;
   if (steps >= signed_slot_count || steps < 0)
   {
     steps %= signed_slot_count;
-    if (steps < 0)
-      steps += signed_slot_count;
+    /*std::cout<<"rotations in ops_overloads :"<<steps<<" \n";
+    if (steps < 0) 
+      steps += real_slot_count;*/
   }
+  
   Ciphertext dest{};
   Compiler::active_func()->operate_unary(ir::OpCode::rotate(steps), arg, dest);
   return dest;
@@ -242,7 +257,7 @@ Plaintext rotate(const Plaintext &arg, int steps)
     if (steps < 0)
       steps += signed_slot_count;
   }
-  Plaintext dest{};
+  Plaintext dest{}; 
   Compiler::active_func()->operate_unary(ir::OpCode::rotate(steps), arg, dest);
   return dest;
 }
@@ -291,7 +306,23 @@ Plaintext &operator>>=(Plaintext &arg, int steps)
   arg = arg >> steps;
   return arg;
 }
-
+/***************************************************************************************/
+Ciphertext SumVec(const Ciphertext &arg, int size)
+{
+  if (arg.idx().size())
+    throw invalid_argument("subscript read must be performed on const variables");
+  auto signed_slot_count = static_cast<int64_t>(Compiler::active_func()->slot_count());
+  if (size > signed_slot_count || size < 0)
+  {
+    size %= signed_slot_count;
+    if (size < 0)
+      size += signed_slot_count;
+  }
+  Ciphertext dest{};
+  Compiler::active_func()->operate_unary(ir::OpCode::SumVec(size), arg, dest);
+  return dest;
+}
+/***************************************************************************************/
 // encryption
 Ciphertext encrypt(const Plaintext &arg)
 {

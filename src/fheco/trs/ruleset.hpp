@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
+ 
 namespace fheco::ir
 {
 class Func;
@@ -24,6 +24,8 @@ class Ruleset
 public:
   using RulesByRootOp = std::unordered_map<ir::OpCode::Type, std::vector<Rule>>;
 
+  static Ruleset simplification_ruleset(std::shared_ptr<ir::Func> func);
+
   static Ruleset depth_ruleset(std::shared_ptr<ir::Func> func);
 
   static Ruleset ops_cost_ruleset(std::shared_ptr<ir::Func> func);
@@ -35,6 +37,8 @@ public:
   static Ruleset halide_adapted_ruleset(std::shared_ptr<ir::Func> func);
 
   static Ruleset log2_reduct_opt_ruleset(std::shared_ptr<ir::Func> func);
+
+  static Ruleset SumVec_reduct_opt_ruleset(std::shared_ptr<ir::Func> func);
 
   static Ruleset customize_generic_rules(const Ruleset &ruleset);
 
@@ -67,9 +71,9 @@ public:
 private:
   static std::vector<Rule> get_log_reduct_rules(
     const TermMatcher &x, const TermOpCode &op_code, std::size_t slot_count);
-
   static Rule make_log_reduct_comp(const TermMatcher &x, const TermOpCode &op_code, std::size_t size);
-
+  ///////******************************************* *
+  static Rule make_SumVec_reduct_comp(const TermMatcher &x, TermOpCode op_code,size_t size);
   std::shared_ptr<ir::Func> func_;
 
   std::string name_;

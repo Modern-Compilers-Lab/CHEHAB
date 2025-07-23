@@ -81,6 +81,8 @@ using InputTermsInfo = std::unordered_map<const Term *, InputTermInfo, Term::Has
 
 using OutputTermsInfo = std::unordered_map<const Term *, OutputTermInfo, Term::HashPtr, Term::EqualPtr>;
 
+using orderedOutputTermsKeys = std::vector<const Term*>;
+
 struct ConstInfo
 {
   bool is_scalar_;

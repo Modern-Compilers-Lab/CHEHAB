@@ -2,10 +2,10 @@
 #include "fheco/util/common.hpp"
 #include <stdexcept>
 
-using namespace std;
+using namespace std; 
 
 namespace fheco::ir
-{
+{ 
 const OpCode OpCode::nop{Type::nop, {}, 0, false, "_"};
 
 const OpCode OpCode::encrypt{Type::encrypt, {}, 1, false, "encrypt"};
@@ -20,6 +20,12 @@ OpCode OpCode::rotate(int steps)
 {
   return OpCode(Type::rotate, {steps}, 1, false, "<< " + to_string(steps));
 }
+//
+OpCode OpCode::SumVec(int size)
+{
+    return OpCode(Type::SumVec, {size}, 1, false, "SumVec " +to_string(size));
+}
+///////////
 
 const OpCode OpCode::square{Type::square, {}, 1, false, "square"};
 
@@ -37,7 +43,13 @@ int OpCode::steps() const
 
   return generators_[0];
 }
+int OpCode::size() const
+{
+  if (type_ != Type::SumVec)
+    throw invalid_argument("steps should be called only on rotate_* operations");
 
+  return generators_[0];
+}
 bool operator==(const OpCode &lhs, const OpCode &rhs)
 {
   if (lhs.type() != rhs.type())
@@ -100,7 +112,11 @@ ostream &operator<<(ostream &os, OpCode::Type op_code_type)
   case OpCode::Type::square:
     os << "square";
     break;
-
+  //////////////////
+  case OpCode::Type::SumVec:
+    os << "SumVec";
+    break;
+  /////////////////
   case OpCode::Type::mul:
     os << "mul";
     break;
