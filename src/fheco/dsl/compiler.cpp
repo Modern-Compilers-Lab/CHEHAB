@@ -546,8 +546,8 @@ void Compiler::call_rl_vectorizer(int vector_width)
     -----------------------------------------------------------------*/
     const fs::path project_root          = fs::absolute("../../../RL");
     const fs::path venv_activate         = project_root / "rl_venv/bin/activate";
-    const fs::path model_file            = project_root / "fhe_rl/trained_models/model_10793668.zip";
-    const fs::path embeddings_model_file = project_root / "fhe_rl/trained_models/model_Transformer_ddp_10399047_epoch_5000000.pth";
+    const fs::path model_file            = project_root / "fhe_rl/trained_models/model_11293089.zip";
+    const fs::path embeddings_model_file = project_root / "fhe_rl/trained_models/embeddings_ROT_15_32_5m_10742576.pth";
     const fs::path expr_file             = fs::absolute("../expression.txt");
     const fs::path vect_file             = fs::absolute("../vectorized_code.txt");
 

@@ -26,7 +26,6 @@ from pytrs import (
     tokenize,
     MAX_INT_TOKENS
 )
-
 torch.set_float32_matmul_precision("high")
 
 # ------------------------------------------------------------------
@@ -35,7 +34,6 @@ torch.set_float32_matmul_precision("high")
 def print(*args, **kwargs):  
     kwargs["flush"] = True
     builtins.print(*args, **kwargs)
-
 
 
 # ------------------------------------------------------------------
@@ -88,12 +86,12 @@ if master_process:
     
 debug_print_memory("After device setup")  
 
-
+MAX_INT_TOKENS = 401
 # ------------------------------------------------------------------
 # Configuration and token setup
 # ------------------------------------------------------------------
 class Config:
-    max_gen_length = 25122
+    max_gen_length = 20000
 
     vocab_size = CONST_OFFSET + MAX_INT_TOKENS + 2 + 1 + 1
     start_token = CONST_OFFSET + MAX_INT_TOKENS
@@ -109,7 +107,7 @@ class Config:
     num_decoder_layers = 4
     dim_feedforward = 512
     transformer_dropout = 0.2
-    max_seq_length = 25200
+    max_seq_length = 20000
 
     batch_size = 16 
     learning_rate = 3e-4
@@ -632,7 +630,7 @@ def parameter_counts(model):
 def demo():
     model = TRAE()
     model.eval()
-    state_dict = torch.load("./fhe_rl/trained_models/model_Transformer_ddp_10399047_epoch_5000000.pth", map_location=device)
+    state_dict = torch.load("./fhe_rl/trained_models/embeddings_ROT_15_32_5m_10742576.pth", map_location=device)
     new_sd = {k[len("module.") :] if k.startswith("module.") else k: v for k, v in state_dict.items()}
     model.load_state_dict(new_sd)
     model.to(device)

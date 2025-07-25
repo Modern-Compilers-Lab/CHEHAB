@@ -33,7 +33,7 @@ try:
         universal_newlines=True
     )  
 except subprocess.CalledProcessError as e:
-    print(f"Command failed with error:\n{e.stderr.decode('utf-8')}")    
+    print(f"Command failed with error:\n{e.stderr}")    
 
 benchmark_folders = ["max","sort","lin_reg","hamming_dist","poly_reg","l2_distance","dot_product","box_blur","gx_kernel","gy_kernel","roberts_cross","matrix_mul"] 
 exceptions = ["max","sort"]
@@ -47,8 +47,8 @@ benchmarks_slot_counts  = {
 optimization_method = 1 # 0 = egraph (default), 1 = RL
 cse_enabled = 1
 vectorize_code = 1 
-slot_counts= [4,8]
-iterations = 2 #minimum 2
+slot_counts= [4,8,16,32]
+iterations = 5 #minimum 2
 window_size = 0    
 depths = [5,10] 
 regimes = ["50-50","100-50","100-100"]
@@ -134,7 +134,7 @@ for subfolder_name in benchmark_folders:
                         print(f"Command `{benchmark_run_command}` timed out after {compile_time_timeout_seconds} seconds.")
                         benchmark_compilation_timed_out = True
                     except subprocess.CalledProcessError as e:
-                        error_message = e.stderr.decode('utf-8') if e.stderr else "No error message available."
+                        error_message = e.stderr if e.stderr else "No error message available."
                         print("Command for {} failed with error:\n{}".format(subfolder_name, error_message))
                         continue
                     if benchmark_compilation_timed_out : 
@@ -204,8 +204,8 @@ for subfolder_name in benchmark_folders:
                             if key == "compile_time (s)" or key == "execution_time (s)" :
                                 result = result / 1000
                                 result = format(result, ".3f")
+                                row.append(result) if values else None     
                         print(f"{key} {values} {result}")
-                        row.append(result) if values else None
                 ##########################################################################
                 ##########################################################################
                 with open(output_csv, mode='a', newline='') as file:
@@ -376,8 +376,9 @@ for subfolder_name in polynomial_folders:
                             if key == "compile_time (s)" or key == "execution_time (s)" :
                                 result = result / 1000
                                 result = format(result, ".3f")
+                                row.append(result) if values else None
+                                
                         print(f"{key} {values} {result}")
-                        row.append(result) if values else None
                 with open(output_csv, mode='a', newline='') as file:
                     writer = csv.writer(file)
                     writer.writerow(row)   

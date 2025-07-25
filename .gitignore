@@ -32,7 +32,7 @@
 *.exe
 *.out
 *.app
-
+*.pyc
 # VSCode settings
 .vscode/
 
@@ -47,3 +47,5 @@ thirdparty/
 egraphs/target/**
 # Jupyter checkpoints
 .ipynb_checkpoints/
+**/__pycache__
+__pycache__/

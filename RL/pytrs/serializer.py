@@ -18,8 +18,7 @@ PAREN_OPEN = 2
 PAREN_CLOSE = 3
 VARIABLE_RANGE = (25, 2000)
 CONST_OFFSET = VARIABLE_RANGE[1] + 1
-MAX_INT_TOKENS = 200
-
+MAX_INT_TOKENS = 401
 
 def expr_to_str(expr: Expr) -> str:
     """

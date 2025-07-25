@@ -30,9 +30,9 @@ def test_agent(expressions_file: str,embeddings_model, model_filepath: str):
             "ent_coef": 0.1,
             "rule_dim":      len(rules_list),
             "max_positions": max_positions,
-            "rule_hidden_dims":   [128, 128],
-            "pos_hidden_dims":    [128, 128],
-            "value_hidden_dims":    [256, 128, 64],
+            "rule_hidden_dims":   [128, 64],
+            "pos_hidden_dims":    [128, 128, 64],
+            "value_hidden_dims":    [256, 128, 64, 64],
         },
     )
     model = model.load(model_filepath)
@@ -51,7 +51,7 @@ def test_agent(expressions_file: str,embeddings_model, model_filepath: str):
         actions, _, _ = self.forward(obs, deterministic=deterministic)
         return actions.cpu().numpy(), state
     import types
-    model.policy.predict = types.MethodType(predict_method, model.policy)
+    #model.policy.predict = types.MethodType(predict_method, model.policy)
     num_expr = len(expressions)
     for _ in range(num_expr):
         obs = env.reset()

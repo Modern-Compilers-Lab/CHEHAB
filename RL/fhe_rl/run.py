@@ -26,15 +26,15 @@ def run_agent(expressions_file: str,embeddings_model, model_filepath: str,output
     env = DummyVecEnv([
     lambda: Monitor(fheEnv(rules_list, expressions, max_positions=max_positions,embeddings_model=embeddings_model))
     ])
-    test_env = VecNormalize(
-    env,
-    norm_obs=False,
-    norm_reward=True,
-    clip_reward=100.0 
-    )
+    # test_env = VecNormalize(
+    # env,
+    # norm_obs=False,
+    # norm_reward=True,
+    # clip_reward=100.0 
+    # )
     model = PPO(
         policy=HierarchicalMaskablePolicy,
-        env=test_env,
+        env=env,
         policy_kwargs={
             "ent_coef": 0.1,
             "rule_dim":      len(rules_list),

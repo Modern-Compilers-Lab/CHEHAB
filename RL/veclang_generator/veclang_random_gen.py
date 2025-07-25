@@ -8,7 +8,7 @@ from pytrs import MAX_INT_TOKENS   # upper bound for arbitrary integers
 from pytrs import (tokenize)  
 
 # configurable ranges
-MAX_INT_NUMBER = MAX_INT_TOKENS          # ± range for random constants
+
 VARIABLE_NAMES = [f"v{i}" for i in range(1, 2_000)]
 
 # operator families
@@ -22,8 +22,8 @@ ROT_OP             = "<<"                 # (<< <vector> k)
 
 # helpers
 def rnd_var()  -> str: return random.choice(VARIABLE_NAMES)
-def rnd_int()  -> str: return str(random.randint(-MAX_INT_NUMBER,
-                                                 MAX_INT_NUMBER))
+def rnd_int()  -> str: return str(random.randint(-MAX_INT_TOKENS,
+                                                 MAX_INT_TOKENS))
 def rnd_term() -> str: return random.choice([rnd_var(), rnd_int()])
 
 # scalar expression
