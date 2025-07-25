@@ -66,7 +66,7 @@ else:
     master_process = True
     ddp_rank = 0
     ddp_world_size = 1
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 
 

@@ -1,6 +1,6 @@
 from stable_baselines3 import PPO
 import time
-from .utils import load_expressions, create_rules, parse_sexpr, load_embedding_model,predict_method,calc_vec_sizes
+from .utils import load_expressions, create_rules, parse_sexpr, load_embedding_model,predict_method,calc_vec_sizes, DEVICE
 import sys
 from .env import fheEnv
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
@@ -45,7 +45,7 @@ def run_agent(expressions_file: str,embeddings_model, model_filepath: str,output
         },
     )
     
-    model = model.load(model_filepath,device="cuda")
+    model = model.load(model_filepath,device=DEVICE)
     
     import types
     model.policy.predict = types.MethodType(predict_method, model.policy)

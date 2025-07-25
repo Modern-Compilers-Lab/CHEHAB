@@ -27,12 +27,12 @@
 *.la
 *.a
 *.lib
-
+**/*/pyc
 # Executables
 *.exe
 *.out
 *.app
-*.pyc
+
 # VSCode settings
 .vscode/
 
@@ -47,5 +47,7 @@ thirdparty/
 egraphs/target/**
 # Jupyter checkpoints
 .ipynb_checkpoints/
-**/__pycache__
+*.pyc
 __pycache__/
+*.pyo
+*.pyd

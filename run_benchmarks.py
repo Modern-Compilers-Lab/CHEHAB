@@ -204,7 +204,8 @@ for subfolder_name in benchmark_folders:
                             if key == "compile_time (s)" or key == "execution_time (s)" :
                                 result = result / 1000
                                 result = format(result, ".3f")
-                                row.append(result) if values else None     
+                            row.append(result) if values else None
+                                     
                         print(f"{key} {values} {result}")
                 ##########################################################################
                 ##########################################################################
@@ -376,7 +377,7 @@ for subfolder_name in polynomial_folders:
                             if key == "compile_time (s)" or key == "execution_time (s)" :
                                 result = result / 1000
                                 result = format(result, ".3f")
-                                row.append(result) if values else None
+                            row.append(result) if values else None
                                 
                         print(f"{key} {values} {result}")
                 with open(output_csv, mode='a', newline='') as file:

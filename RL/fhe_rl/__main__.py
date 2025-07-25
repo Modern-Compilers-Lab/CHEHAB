@@ -4,7 +4,7 @@ import os
 from .run   import run_agent
 from .train import train_agent
 from .test  import test_agent
-from .utils import load_embedding_model
+from .utils import load_embedding_model, DEVICE
 
 
 def usage() -> None:
@@ -22,7 +22,7 @@ def load_embeddings(path: str):
     if not os.path.isfile(path):
         print(f"Error: embeddings model '{path}' not found.")
         sys.exit(1)
-    return load_embedding_model(checkpoint_path=path, device="cuda")
+    return load_embedding_model(checkpoint_path=path, device=DEVICE)
 
 
 

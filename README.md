@@ -51,7 +51,7 @@ void example()
 
 - GCC and G++ compilers
 - CMake
-- SEAL library (v4.1)
+- SEAL library (v4.1.0)
 - Rust (for TRS/e-graph optimizer via `egg`)
 - Python dependencies (for RL optimization)
 
@@ -70,6 +70,8 @@ This directory contains an `environment.yml` for setting up the Conda environmen
 ```bash
 conda env create -f environment.yml -n chehabEnv
 conda activate chehabEnv
+cd RL/pytrs
+pip3 install -e . # To install the pytrs package
 ```
 
 ### 3. Install SEAL (Microsoft SEAL Library)
@@ -78,9 +80,12 @@ conda activate chehabEnv
 cd /scratch/<your_user_id>/
 git clone https://github.com/microsoft/SEAL.git
 cd SEAL
-cmake -S . -B build -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
-cmake --build build
+git checkout v4.1.1   
+
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSEAL_USE_CXX17=ON -DSEAL_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" -G Ninja
+cmake --build build 
 cmake --install build
+
 ```
 
 ---

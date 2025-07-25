@@ -545,7 +545,6 @@ void Compiler::call_rl_vectorizer(int vector_width)
           (project_root is the parent of fhe_rl and rl_venv)
     -----------------------------------------------------------------*/
     const fs::path project_root          = fs::absolute("../../../RL");
-    const fs::path venv_activate         = project_root / "rl_venv/bin/activate";
     const fs::path model_file            = project_root / "fhe_rl/trained_models/model_11293089.zip";
     const fs::path embeddings_model_file = project_root / "fhe_rl/trained_models/embeddings_ROT_15_32_5m_10742576.pth";
     const fs::path expr_file             = fs::absolute("../expression.txt");
@@ -570,18 +569,13 @@ void Compiler::call_rl_vectorizer(int vector_width)
           Every path lives inside single quotes to survive spaces.
     -----------------------------------------------------------------*/
     std::ostringstream cmd;
-    cmd << "bash -c \""
-        << "source '" << venv_activate.string() << "'"
-        << " && python -m fhe_rl run "
+    cmd << "python -m fhe_rl run "
         << "'" << model_file.string()            << "' "
         << "'" << embeddings_model_file.string() << "' "
         << "'" << expr_file.string()             << "' "
-        << "'" << vect_file.string()             << "'"
-        << "\"";
-
+        << "'" << vect_file.string()             << "'";
     std::cout << "Executing: " << cmd.str() << '\n';
     const int rc = std::system(cmd.str().c_str());
-
     /*-----------------------------------------------------------------
       5.  Restore caller’s working directory
     -----------------------------------------------------------------*/
