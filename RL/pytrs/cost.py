@@ -2,7 +2,7 @@
 from expr import Expr, Var, Const, Op
 from serializer import expr_to_str
 import subprocess
-
+from rules import create_rules
 
 
 
@@ -19,34 +19,35 @@ def operations_cost(expr: Expr) -> int:
         op = expr.op
         visit_all_children = True
         if op in ("+", "Add", "-", "Minus", "*", "Mul"):
-            node_cost = OP * 10000
+            node_cost = OP * 250
         elif op == "Neg":
-            node_cost = OP * 10000
+            node_cost = OP * 250
         elif op == "<<":
             node_cost = VEC_OP * 50
+            visit_all_children = False
         elif op == "Vec":
-            node_cost = STRUCTURE
+            node_cost = 0
         elif op == "VecAdd":
             second_child = expr.args[1] if len(expr.args) > 1 else None
             node_cost = VEC_OP
-            if isinstance(second_child, Op):
-                if second_child.op == "<<":
-                    node_cost = VEC_OP * 1051
-                    visit_all_children = False
+            # if isinstance(second_child, Op):
+            #     if second_child.op == "<<":
+            #         node_cost = VEC_OP * 1051
+            #         visit_all_children = False
         elif op == "VecMinus":
             second_child = expr.args[1] if len(expr.args) > 1 else None
             node_cost = VEC_OP
-            if isinstance(second_child, Op):
-                if second_child.op == "<<":
-                    node_cost = VEC_OP * 1051
-                    visit_all_children = False
+            # if isinstance(second_child, Op):
+            #     if second_child.op == "<<":
+            #         node_cost = VEC_OP * 1051
+            #         visit_all_children = False
         elif op == "VecMul":
             second_child = expr.args[1] if len(expr.args) > 1 else None
             node_cost = VEC_OP * 100
-            if isinstance(second_child, Op):
-                if second_child.op == "<<":
-                    node_cost = VEC_OP * 2150
-                    visit_all_children = False
+            # if isinstance(second_child, Op):
+            #     if second_child.op == "<<":
+            #         node_cost = VEC_OP * 2150
+            #         visit_all_children = False
         elif op == "VecNeg":
             node_cost = VEC_OP
         else:
@@ -56,48 +57,15 @@ def operations_cost(expr: Expr) -> int:
         if visit_all_children:
             for child in expr.args:
                 node_cost += operations_cost(child)
-        else:
-            node_cost += operations_cost(expr.args[0] )  # Only recurse into the first child
+        # else:
+        #     node_cost += operations_cost(expr.args[0] )  # Only recurse into the first child
 
     else:
         # any other unexpected node
         node_cost = 0
 
     return node_cost
-# def calculate_cost(expr: Expr, vector_size) -> float:
-#     """
-#     Calculate the cost of an expression based on multiplicative depth, normal depth, total operations, and expression size.
-    
-#     :param expr: The expression to evaluate.
-#     :param var_values: Variable assignments (not used here but can be integrated if needed).
-#     :param weights: A dictionary specifying weights for different cost components.
-#                     Example: {'depth': 2.0, 'normal_depth': 1.0, 'operations': 0.5, 'size': 0.1}
-#     :return: The calculated cost as a float.
-#     """
-#     weights = {
-#         'multiplicative_depth': 0.55,  # Higher weight to prioritize depth minimization
-#         'normal_depth': 0.3,
-#         'operations': 0.1,
-#         'size': 0.05
-#     }
-    
-#     multiplicative_depth = get_multiplicative_depth(expr)
-#     normal_depth = get_normal_depth(expr)
-#     total_operations = count_operations(expr)
-#     expression_size = count_nodes(expr)
-#     print("multiplicative_depth :" ,multiplicative_depth)
-#     print("depth :" ,normal_depth)
-    
-#     # Calculate weighted cost
-#     cost = (
-#         weights.get('multiplicative_depth', 0.55) * multiplicative_depth +
-#         weights.get('normal_depth', 0.3) * normal_depth 
-       
-#     )
-#     BASE_LITERAL_COST = 10
-#     BASE_OP_COST = 5
 
-#     return None
 
 def get_multiplicative_depth(expr: Expr) -> int:
     """
@@ -139,6 +107,7 @@ def get_normal_depth(expr: Expr) -> int:
         else:
             return 1 + max(get_normal_depth(arg) for arg in args)
     else:
+        print("here",expr.op)
         raise ValueError(f"Unknown expression type: {expr}")
 
 def count_operations(expr: Expr) -> int:
@@ -201,10 +170,13 @@ def calculate_cost(expr: Expr,
                w_ops=1.0,
                w_rot=1.0,
                w_depth=1.0,
-               w_muldepth=1.0) -> float:
+               w_muldepth=1.0,
+               w_vec=-1.0
+               ) -> float:
     return (
         w_ops * operations_cost(expr) +
         w_rot * rotations_cost(expr) +
         w_depth * get_normal_depth(expr) +
-        w_muldepth * get_multiplicative_depth(expr)
+        w_muldepth * get_multiplicative_depth(expr) 
     )
+

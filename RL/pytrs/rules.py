@@ -2,10 +2,10 @@
 
 
 from expr import Const, Var, Op
-from pattern import RewriteRule
+from rewrite_rule import RewriteRule
 import re
 from typing import List
-from pattern import RewriteRule,parse_rules_from_text
+from rule_parser import parse_rules_from_text
 from expr import Expr, Const, Var
 from parser import parse_sexpr
 import subprocess
@@ -13,9 +13,7 @@ import subprocess
 
 
 
-def create_rules(path) :
-    #command = ["./pytrs/egraphs-vectorization","rules", str(vector_size)]
-    #subprocess.run(command, stderr=subprocess.DEVNULL)
+def create_rules(path: str) -> dict:
     
     rules_text = open(path,'r').read().replace("?","")
     rules = parse_rules_from_text(rules_text)
