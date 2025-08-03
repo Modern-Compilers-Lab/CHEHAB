@@ -128,7 +128,7 @@ int main(int argc, char **argv)
     Compiler::gen_vectorized_code(func, window, optimization_method);
     auto ruleset = Compiler::Ruleset::depth;
     auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-    Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+    //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
     Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
     /************/elapsed = chrono::high_resolution_clock::now() - t;
     cout<<"Compile time : \n";
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     cout << " window is " << window << endl;
     auto ruleset = Compiler::Ruleset::simplification_ruleset;
     auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-    Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+    //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
     Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
     /************/elapsed = chrono::high_resolution_clock::now() - t;
     cout<<"Compile time : \n";

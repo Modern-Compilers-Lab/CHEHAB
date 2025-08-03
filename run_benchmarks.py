@@ -35,7 +35,7 @@ try:
 except subprocess.CalledProcessError as e:
     print(f"Command failed with error:\n{e.stderr}")    
 
-benchmark_folders = ["max","sort","lin_reg","hamming_dist","poly_reg","l2_distance","dot_product","box_blur","gx_kernel","gy_kernel","roberts_cross","matrix_mul"] 
+benchmark_folders = ["box_blur","lin_reg","hamming_dist","poly_reg","l2_distance","dot_product","gx_kernel","gy_kernel","roberts_cross","matrix_mul","max","sort"] 
 exceptions = ["max","sort"]
 benchmarks_slot_counts  = {
     "max" : [3,4,5], 
@@ -47,8 +47,8 @@ benchmarks_slot_counts  = {
 optimization_method = 1 # 0 = egraph (default), 1 = RL
 cse_enabled = 1
 vectorize_code = 1 
-slot_counts= [4,8,16,32]
-iterations = 5 #minimum 2
+slot_counts= [3,4,5,8,16,32]
+iterations = 30 #minimum 2
 window_size = 0    
 depths = [5,10] 
 regimes = ["50-50","100-50","100-100"]
