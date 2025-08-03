@@ -161,6 +161,8 @@ class fheEnv(gym.Env):
         expr_tree = parse_sexpr(expr)
         with torch.no_grad():
             emb = get_expression_cls_embedding(expr_tree, self.embeddings_model)
+        if emb is None:
+            return None
         return emb.squeeze(0).cpu().numpy().astype(np.float32)
     
     def get_action_mask(self) -> np.ndarray:

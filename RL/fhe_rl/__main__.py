@@ -39,7 +39,7 @@ if __name__ == "__main__":
             usage()
         embeddings_path = sys.argv[2]
         embeddings = load_embeddings(embeddings_path)
-        train_agent(".dataset/all_expressions_cleaned.txt", embeddings, total_timesteps=1_000_000)
+        train_agent("./fhe_rl/datasets/new_dataset_random.txt", embeddings, total_timesteps=2_000_000)
 
     # ─────────────────────────────── TEST ─────────────────────────────
     elif mode == "test":

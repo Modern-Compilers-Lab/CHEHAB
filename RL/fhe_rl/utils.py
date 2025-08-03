@@ -34,7 +34,7 @@ def load_expressions(file_path: str,validation_exprs = []):
         
     
     unique_expressions = {}
-    recap = { "1": 0,"2":0, "4": 0, "8": 0, "16": 0, "32": 0,"25":0 ,"9":0}
+    recap = { "1":0,"4":0,"8":0,"9":0,"16":0,"25":0,"32":0}
 
     with open(file_path, "r") as f:
         for line in f:
@@ -44,23 +44,23 @@ def load_expressions(file_path: str,validation_exprs = []):
             try:
                 
                 expr = parse_sexpr(exp_str)
+                vec_size = len(expr.args)
+                if  not (str(vec_size) in recap.keys()):
+                    continue
+                token_seq = get_token_sequence(exp_str)
+                if token_seq in validation_token_set:
+                    continue
+
+                if token_seq not in unique_expressions:
+                    recap[str(vec_size)] += 1
+                    unique_expressions[token_seq] = exp_str
             except Exception as e:
                 continue
-            vec_size = len(expr.args)
-            if  not (vec_size > 0 and (vec_size & (vec_size - 1) == 0) and vec_size <= 32):
-                continue
-            token_seq = get_token_sequence(exp_str)
-            if token_seq in validation_token_set:
-                continue
-
-            if token_seq not in unique_expressions:
-                recap[str(vec_size)] += 1
-                unique_expressions[token_seq] = exp_str
+            
             
     print(recap)
     print("Number of unique valid expressions (excluding validation):", len(unique_expressions))
     return list(unique_expressions.values())
-
 
 
 def mlp(in_dim, hidden_dims, out_dim, *,
