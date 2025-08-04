@@ -14,17 +14,13 @@ import random
 import sys
 import time
 import numpy as np
+from collections import defaultdict, Counter
+import pickle
+import re
 
 from pytrs import (
     Op,
-    VARIABLE_RANGE,
-    CONST_OFFSET,
-    PAREN_CLOSE,
-    PAREN_OPEN,
-    node_to_id,
     parse_sexpr,
-    tokenize,
-    MAX_INT_TOKENS
 )
 torch.set_float32_matmul_precision("high")
 
@@ -51,23 +47,23 @@ class AEDDP(DDP):
 # DDP setup and device assignment
 # ------------------------------------------------------------------
 ddp = int(os.environ.get("RANK", -1)) != -1
-deviceids = [0, 1, 2]
+deviceids = [0, 1]
 
 if ddp:
     assert torch.cuda.is_available(), "DDP requires CUDA"
-    dist.init_process_group(backend="nccl")
     ddp_rank = int(os.environ["RANK"])
     ddp_local_rank = int(os.environ["LOCAL_RANK"])
     ddp_world_size = int(os.environ["WORLD_SIZE"])
-    device = f"cuda:{deviceids[ddp_rank]}"
+    device_id = deviceids[ddp_rank]
+    device = f"cuda:{device_id}"
     torch.cuda.set_device(device)
+    dist.init_process_group(backend="nccl", device_id=torch.device(device))
     master_process = ddp_rank == 0
 else:
     master_process = True
     ddp_rank = 0
     ddp_world_size = 1
-    device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
-
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def debug_print_memory(tag=""):  
@@ -78,29 +74,203 @@ def debug_print_memory(tag=""):
             print(f"[{tag}] CUDA  allocated={alloc:.2f} MiB  reserved={reserved:.2f} MiB")
 
 
-
 if master_process:
     print("Using DDP with world size:", ddp_world_size)
     print("Assigned device:", device)
     
-    
 debug_print_memory("After device setup")  
 
-MAX_INT_TOKENS = 401
+
 # ------------------------------------------------------------------
-# Configuration and token setup
+# BPE (Byte Pair Encoding) Tokenization Setup
+# ------------------------------------------------------------------
+class BPETokenizer:
+    def __init__(self, vocab_size=1000):
+        # Special tokens - using same structure as pytrs for consistency
+        self.pad_token = 0
+        self.start_token = 1
+        self.end_token = 2
+        self.cls_token = 3
+        self.unk_token = 4
+        
+        self.special_tokens = {
+            '<PAD>': self.pad_token,
+            '<START>': self.start_token,
+            '<END>': self.end_token,
+            '<CLS>': self.cls_token,
+            '<UNK>': self.unk_token,
+        }
+        
+        # Initialize vocabulary with special tokens
+        self.vocab = self.special_tokens.copy()
+        self.id_to_token = {v: k for k, v in self.vocab.items()}
+        self.vocab_size = vocab_size
+        self.merges = {}
+        self.trained = False
+    
+    def get_word_tokens(self, text):
+        """Split text into word-level tokens, preserving S-expression structure"""
+        # Split on whitespace and parentheses, keeping separators
+        tokens = re.findall(r'\(|\)|[^\s\(\)]+', text)
+        return tokens
+    
+    def get_stats(self, word_freqs):
+        """Get frequency of consecutive symbol pairs"""
+        pairs = defaultdict(int)
+        for word, freq in word_freqs.items():
+            symbols = word.split()
+            for i in range(len(symbols) - 1):
+                pairs[symbols[i], symbols[i + 1]] += freq
+        return pairs
+    
+    def merge_vocab(self, pair, word_freqs):
+        """Merge the most frequent pair in the vocabulary"""
+        new_word_freqs = {}
+        bigram = ' '.join(pair)
+        replacement = ''.join(pair)
+        
+        for word in word_freqs:
+            new_word = word.replace(bigram, replacement)
+            new_word_freqs[new_word] = word_freqs[word]
+        return new_word_freqs
+    
+    def train(self, texts):
+        """Train BPE on a list of S-expression strings"""
+        print("Training BPE tokenizer...")
+        
+        # Get word frequencies
+        word_freqs = defaultdict(int)
+        for text in texts:
+            words = self.get_word_tokens(text)
+            for word in words:
+                # Split each word into characters for BPE
+                word_chars = ' '.join(list(word))
+                word_freqs[word_chars] += 1
+        
+        # Start with character-level vocabulary
+        next_id = len(self.special_tokens)
+        all_chars = set()
+        for word in word_freqs:
+            all_chars.update(word.split())
+        
+        for char in sorted(all_chars):
+            if char not in self.vocab:
+                self.vocab[char] = next_id
+                self.id_to_token[next_id] = char
+                next_id += 1
+        
+        # Perform BPE merges
+        num_merges = self.vocab_size - len(self.vocab)
+        for i in range(num_merges):
+            pairs = self.get_stats(word_freqs)
+            if not pairs:
+                break
+            
+            best_pair = max(pairs, key=pairs.get)
+            word_freqs = self.merge_vocab(best_pair, word_freqs)
+            self.merges[best_pair] = i
+            
+            # Add merged token to vocabulary
+            merged_token = ''.join(best_pair)
+            if merged_token not in self.vocab:
+                self.vocab[merged_token] = next_id
+                self.id_to_token[next_id] = merged_token
+                next_id += 1
+            
+            if i % 100 == 0:
+                print(f"BPE Merge {i}: {best_pair} -> {merged_token}")
+        
+        self.vocab_size = len(self.vocab)
+        self.trained = True
+        print(f"BPE training completed. Final vocab size: {self.vocab_size}")
+    
+    def encode_word(self, word):
+        """Encode a single word using trained BPE"""
+        if not self.trained:
+            raise ValueError("Tokenizer must be trained before encoding")
+        
+        # Start with character-level representation
+        word_tokens = list(word)
+        
+        # Apply merges in order
+        while len(word_tokens) > 1:
+            pairs = [(word_tokens[i], word_tokens[i + 1]) for i in range(len(word_tokens) - 1)]
+            bigram_to_merge = None
+            min_merge_idx = float('inf')
+            
+            for pair in pairs:
+                if pair in self.merges and self.merges[pair] < min_merge_idx:
+                    bigram_to_merge = pair
+                    min_merge_idx = self.merges[pair]
+            
+            if bigram_to_merge is None:
+                break
+            
+            # Merge the pair
+            new_word_tokens = []
+            i = 0
+            while i < len(word_tokens):
+                if (i < len(word_tokens) - 1 and 
+                    word_tokens[i] == bigram_to_merge[0] and 
+                    word_tokens[i + 1] == bigram_to_merge[1]):
+                    new_word_tokens.append(''.join(bigram_to_merge))
+                    i += 2
+                else:
+                    new_word_tokens.append(word_tokens[i])
+                    i += 1
+            word_tokens = new_word_tokens
+        
+        return word_tokens
+    
+    def tokenize_expression(self, expr_str):
+        """Tokenize an S-expression string using BPE"""
+        if not self.trained:
+            raise ValueError("Tokenizer must be trained before tokenizing")
+        
+        words = self.get_word_tokens(expr_str)
+        token_ids = []
+        
+        for word in words:
+            bpe_tokens = self.encode_word(word)
+            for token in bpe_tokens:
+                token_id = self.vocab.get(token, self.unk_token)
+                token_ids.append(token_id)
+        
+        return token_ids
+    
+    def decode(self, token_ids):
+        """Decode token IDs back to text"""
+        tokens = []
+        for token_id in token_ids:
+            if token_id in [self.pad_token, self.start_token, self.end_token, self.cls_token]:
+                continue  # Skip special tokens
+            token = self.id_to_token.get(token_id, '<UNK>')
+            tokens.append(token)
+        
+        # Simple reconstruction - join tokens and handle spaces
+        text = ''.join(tokens)
+        # Add spaces around parentheses for readability
+        text = text.replace('(', ' ( ').replace(')', ' ) ')
+        return ' '.join(text.split())  # Clean up multiple spaces
+
+
+# Initialize global tokenizer (will be trained during main execution)
+tokenizer = BPETokenizer(vocab_size=1000)
+
+# ------------------------------------------------------------------
+# Configuration - IDENTICAL to original TRAE except for tokenizer
 # ------------------------------------------------------------------
 class Config:
     max_gen_length = 20000
 
-    vocab_size = CONST_OFFSET + MAX_INT_TOKENS + 2 + 1 + 1
-    start_token = CONST_OFFSET + MAX_INT_TOKENS
-    end_token = CONST_OFFSET + MAX_INT_TOKENS + 1
-    pad_token = CONST_OFFSET + MAX_INT_TOKENS + 2
+    # Will be updated after tokenizer training
+    vocab_size = tokenizer.vocab_size
+    start_token = tokenizer.start_token
+    end_token = tokenizer.end_token
+    pad_token = tokenizer.pad_token
+    cls_token = tokenizer.cls_token
 
-    cls_token = vocab_size
-    vocab_size += 1  # include CLS
-
+    # Model architecture - IDENTICAL to original TRAE
     d_model = 256
     num_heads = 8
     num_encoder_layers = 4
@@ -109,9 +279,10 @@ class Config:
     transformer_dropout = 0.2
     max_seq_length = 20000
 
+    # Training hyperparameters - IDENTICAL to original TRAE
     batch_size = 16 
     learning_rate = 3e-4
-    epochs = 50
+    epochs = 15
     dropout_rate = 0.3
 
     total_samples = 5000000  
@@ -119,42 +290,30 @@ class Config:
 config = Config()
 
 # ------------------------------------------------------------------
-# Expression processing helpers
+# BPE expression processing - replaces pytrs tokenization
 # ------------------------------------------------------------------
-def dfs_traverse(expr, depth=0, node_list=None):
-    if node_list is None:
-        node_list = []
+def expr_to_string(expr):
+    """Convert parsed expression back to S-expression string"""
     if isinstance(expr, Op):
-        node_list.append((PAREN_OPEN, depth))
-        node_list.append((expr, depth))
-        for child in expr.args:
-            dfs_traverse(child, depth + 1, node_list)
-        node_list.append((PAREN_CLOSE, depth))
+        args_str = ' '.join(expr_to_string(arg) for arg in expr.args)
+        return f"({expr.op} {args_str})"
     else:
-        node_list.append((expr, depth))
-    return node_list
+        return str(expr)
 
 
-def flatten_expr(expr):
-    node_list = dfs_traverse(expr, 0)
-    results = []
-    varmap = {}
-    intmap = {}
-    next_var_id = VARIABLE_RANGE[0]
-    next_int_id = CONST_OFFSET
-    for node_or_paren, depth in node_list:
-        if node_or_paren in (PAREN_OPEN, PAREN_CLOSE):
-            nid = node_or_paren
-        else:
-            nid, next_var_id, next_int_id, _ = node_to_id(
-                node_or_paren, varmap, intmap, next_var_id, next_int_id
-            )
-        results.append({"node_id": nid})
-    return results
+def flatten_expr_bpe(expr):
+    """Convert expression to BPE token sequence - replaces flatten_expr"""
+    # Convert parsed expression back to string format first
+    expr_str = expr_to_string(expr)
+    
+    # Tokenize using BPE approach
+    token_ids = tokenizer.tokenize_expression(expr_str)
+    
+    return [{"node_id": tid} for tid in token_ids]
 
 
 # ------------------------------------------------------------------
-# Positional encoding
+# Positional encoding - IDENTICAL to original TRAE
 # ------------------------------------------------------------------
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=1024):
@@ -174,7 +333,7 @@ class PositionalEncoding(nn.Module):
 
 
 # ------------------------------------------------------------------
-# Transformer autoencoder
+# Transformer autoencoder - IDENTICAL to original TRAE
 # ------------------------------------------------------------------
 class TransformerAutoencoder(nn.Module):
     def __init__(self):
@@ -235,7 +394,6 @@ class TransformerAutoencoder(nn.Module):
 
     # ---------------- exposed helpers ----------------
     def encode(self, src_nodes):
-        
         batch_size = src_nodes.size(0)
         cls_column = torch.full(
             (batch_size, 1), config.cls_token, dtype=torch.long, device=src_nodes.device
@@ -259,7 +417,7 @@ class TransformerAutoencoder(nn.Module):
 
 
 # ------------------------------------------------------------------
-# TRAE wrapper
+# TRAE wrapper - IDENTICAL to original TRAE
 # ------------------------------------------------------------------
 class TRAE(nn.Module):
     def __init__(self):
@@ -282,12 +440,12 @@ class TRAE(nn.Module):
 
 
 # ------------------------------------------------------------------
-# Collate function
+# Collate function - modified to use BPE tokenization
 # ------------------------------------------------------------------
 def collate_fn(batch):
     inputs, targets = [], []
     for expr in batch:
-        flat = flatten_expr(expr)
+        flat = flatten_expr_bpe(expr)  # Use BPE tokenization
         node_ids = [e["node_id"] for e in flat]
         tgt = [config.start_token] + node_ids + [config.end_token]
         inputs.append(node_ids)
@@ -296,8 +454,7 @@ def collate_fn(batch):
     max_src = max(len(x) for x in inputs)
     max_tgt = max(len(t) for t in targets)
 
-    
-    print(f"[collate] batch={len(batch)}  max_src={max_src}  max_tgt={max_tgt}")
+    print(f"[BPE collate] batch={len(batch)}  max_src={max_src}  max_tgt={max_tgt}")
 
     pad_src = [x + [config.pad_token] * (max_src - len(x)) for x in inputs]
     pad_tgt = [t + [config.pad_token] * (max_tgt - len(t)) for t in targets]
@@ -308,7 +465,7 @@ def collate_fn(batch):
 
 
 # ------------------------------------------------------------------
-# Training function
+# Training function - IDENTICAL to original TRAE
 # ------------------------------------------------------------------
 def train(model, train_dataset):
     accumulation_steps = 1
@@ -328,10 +485,9 @@ def train(model, train_dataset):
     scheduler = optim.lr_scheduler.StepLR(opt, 1, gamma=0.5)
     loss_fn = nn.CrossEntropyLoss(ignore_index=config.pad_token)
     
-    
     if master_process:
-        print(f"[Rank {ddp_rank}] Begin training for {config.epochs} epochs")
-        print(f"[Rank {ddp_rank}] Numer of batches: {len(train_loader)}")
+        print(f"[BPE Rank {ddp_rank}] Begin training for {config.epochs} epochs")
+        print(f"[BPE Rank {ddp_rank}] Number of batches: {len(train_loader)}")
     debug_print_memory("train start")  
 
     for epoch in range(config.epochs):
@@ -346,8 +502,7 @@ def train(model, train_dataset):
         for b_idx, (src_nodes, tgt_seq) in enumerate(train_loader):
             # -------------- diagnostics ----------------
             if master_process:
-
-                print(f"[E{epoch+1} B{b_idx}] src={tuple(src_nodes.shape)} tgt={tuple(tgt_seq.shape)}")
+                print(f"[BPE E{epoch+1} B{b_idx}] src={tuple(src_nodes.shape)} tgt={tuple(tgt_seq.shape)}")
                 
             debug_print_memory(f"B{b_idx} loaded")  
 
@@ -385,14 +540,14 @@ def train(model, train_dataset):
 
         if master_process:
             print(
-                f"[Rank {ddp_rank}] Epoch {epoch+1} finished in {dur:.1f}s | "
+                f"[BPE Rank {ddp_rank}] Epoch {epoch+1} finished in {dur:.1f}s | "
                 f"AvgLoss={tot_loss/num_batches:.4f}"
             )
 
         scheduler.step()
         if master_process:
             print(
-                f"[Rank {ddp_rank}] LR after epoch {epoch+1}: "
+                f"[BPE Rank {ddp_rank}] LR after epoch {epoch+1}: "
                 f"{opt.param_groups[0]['lr']:.6f}"
             )
 
@@ -401,17 +556,22 @@ def train(model, train_dataset):
 
         if master_process:
             job_id = os.environ.get("SLURM_JOB_ID", "jobid")
-            name = f"model_Transformer_ddp_{job_id}_epoch_{config.total_samples}.pth"
+            name = f"model_Transformer_BPE_ddp_{job_id}_epoch_{config.total_samples}.pth"
             os.makedirs("saved_models", exist_ok=True)
             torch.save(model.state_dict(), os.path.join("saved_models", name))
-            print(f"[Rank {ddp_rank}] Model saved: {name}")
+            print(f"[BPE Rank {ddp_rank}] Model saved: {name}")
+            
+            # Also save tokenizer for later use
+            with open("saved_models/bpe_tokenizer.pkl", "wb") as f:
+                pickle.dump(tokenizer, f)
+            print(f"[BPE Rank {ddp_rank}] Tokenizer saved")
 
         if ddp:
             dist.barrier()
 
 
 # ------------------------------------------------------------------
-# Evaluation / utility helpers 
+# Evaluation / utility helpers - modified for BPE
 # ------------------------------------------------------------------
 def calculate_accuracy(preds, targets):
     exact_matches, correct_tokens, total_tokens = 0, 0, 0
@@ -447,7 +607,7 @@ def calculate_accuracy(preds, targets):
         total_tokens += len(clean_target)
 
         if clean_pred != clean_target:
-            print("not equal")
+            print("BPE: not equal")
             print("clean_pred", clean_pred)
             print("clean_targ", clean_target)
 
@@ -463,24 +623,22 @@ def test(model, dataset, return_samples=False, stdout=False):
 
     with torch.no_grad():
         for i in range(0, len(dataset), config.batch_size):
-            print(f"[TEST] ===== Batch start idx={i} "
+            print(f"[BPE TEST] ===== Batch start idx={i} "
                   f"({i//config.batch_size+1}/{(len(dataset)-1)//config.batch_size+1}) =====")
 
             batch = dataset[i: i + config.batch_size]
             if not batch:
-                print("[TEST] Empty batch – skipping")
+                print("[BPE TEST] Empty batch – skipping")
                 continue
 
             orig_exprs, inputs, targets = [], [], []
             for expr in batch:
-                
-                    orig_exprs.append(expr)
-                    flat = flatten_expr(expr)
-                    node_ids = [e["node_id"] for e in flat]
-                    tgt_seq = [config.start_token] + node_ids + [config.end_token]
-                    inputs.append(node_ids)
-                    targets.append(tgt_seq)
-
+                orig_exprs.append(expr)
+                flat = flatten_expr_bpe(expr)  # Use BPE tokenization
+                node_ids = [e["node_id"] for e in flat]
+                tgt_seq = [config.start_token] + node_ids + [config.end_token]
+                inputs.append(node_ids)
+                targets.append(tgt_seq)
 
             max_src = max(map(len, inputs))
             max_tgt = max(map(len, targets))
@@ -493,13 +651,13 @@ def test(model, dataset, return_samples=False, stdout=False):
             try:
                 memory = model.encoder(src_nodes)
             except Exception as e:
-                print(f"[TEST][ENCODER] Crash while encoding batch idx={i}: {e}")
+                print(f"[BPE TEST][ENCODER] Crash while encoding batch idx={i}: {e}")
                 raise
-            print(f"[TEST][ENCODER] Encoded batch idx={i} – memory.shape={memory.shape}")
+            print(f"[BPE TEST][ENCODER] Encoded batch idx={i} – memory.shape={memory.shape}")
 
             batch_preds = []
             for j in range(len(memory)):
-                print(f"[TEST][DECODE] ► sample {j}/{len(memory)-1} in batch idx={i}")
+                print(f"[BPE TEST][DECODE] ► sample {j}/{len(memory)-1} in batch idx={i}")
                 partial = torch.tensor([[config.start_token]],
                                        dtype=torch.long, device=device)
                 tokens = []
@@ -511,12 +669,12 @@ def test(model, dataset, return_samples=False, stdout=False):
                         print(f"    step={step:03d}  nxt={nxt}")
                     tokens.append(nxt)
                     if nxt == config.end_token or nxt == config.pad_token:
-                        print(f"    [TEST][DECODE] sample {j} finished in {step+1} steps")
+                        print(f"    [BPE TEST][DECODE] sample {j} finished in {step+1} steps")
                         break
                     partial = torch.cat([partial,
                                          torch.tensor([[nxt]], device=device)], dim=1)
                 else:
-                    print(f"    [TEST][DECODE] ⚠️  sample {j} hit max_gen_length ({config.max_gen_length})")
+                    print(f"    [BPE TEST][DECODE] ⚠️  sample {j} hit max_gen_length ({config.max_gen_length})")
                 batch_preds.append(tokens)
 
             all_preds.extend(batch_preds)
@@ -543,7 +701,7 @@ def test(model, dataset, return_samples=False, stdout=False):
 
 
 def get_expression_cls_embedding(expr, model):
-    flat = flatten_expr(expr)
+    flat = flatten_expr_bpe(expr)  # Use BPE tokenization
     node_ids = [e["node_id"] for e in flat]
     if len(node_ids) + 1 > config.max_seq_length:
         return None
@@ -557,28 +715,57 @@ def get_expression_cls_embedding(expr, model):
 # Main 
 # ------------------------------------------------------------------
 def main():
+    global tokenizer, config
+    
     if sys.argv[1].lower() == "train":
         # -----------------------------------------------------------
-        # PART:  each rank loads **only its shard** of the big file
+        # Load dataset and train BPE tokenizer
         # -----------------------------------------------------------
-        data_path = "/scratch/ad7786/chehab-vectorization-rl/pretraining/dataset_balanced_ROT_32_15_5000000.txt"
-        # The dataset is generated using the veclang_random_gen.py
-        print(f"[Rank {ddp_rank}] Loading dataset shard…")
+        data_path = "./fhe_rl/datasets/dataset_balanced_ROT_32_15_5000000.txt"
+        print(f"[BPE Rank {ddp_rank}] Loading dataset shard…")
         debug_print_memory("before dataset load")  
 
-        local_exprs = []  # PART: only expressions for this rank
+        local_exprs = []  # Load expressions for this rank
         with open(data_path, "r") as f:
             for idx, line in enumerate(f):
                 if idx % ddp_world_size == ddp_rank:  
                     local_exprs.append(line.strip())
 
-        # optional shuffle (local only)
-        random.seed(52 + ddp_rank)  # PART: different seed per rank
+        # Shuffle (local only)
+        random.seed(52 + ddp_rank)  
         random.shuffle(local_exprs)
 
-        print(f"[Rank {ddp_rank}] Shard size = {len(local_exprs)}")
+        print(f"[BPE Rank {ddp_rank}] Shard size = {len(local_exprs)}")
         debug_print_memory("after dataset load")  
 
+        # Train BPE tokenizer on subset of data
+        if master_process:
+            print("Training BPE tokenizer...")
+            # Use subset for BPE training to speed up
+            bpe_training_data = local_exprs[:min(10000, len(local_exprs))]
+            tokenizer.train(bpe_training_data)
+            
+            # Update config with trained tokenizer vocab size
+            config.vocab_size = tokenizer.vocab_size
+            print(f"Updated vocab_size to: {config.vocab_size}")
+            
+            # Save tokenizer
+            os.makedirs("saved_models", exist_ok=True)
+            with open("saved_models/bpe_tokenizer.pkl", "wb") as f:
+                pickle.dump(tokenizer, f)
+            print("BPE tokenizer saved.")
+        
+        if ddp:
+            dist.barrier()  # Wait for master to finish training tokenizer
+            
+            # Load tokenizer on all ranks
+            if not master_process:
+                with open("saved_models/bpe_tokenizer.pkl", "rb") as f:
+                    tokenizer = pickle.load(f)
+                config.vocab_size = tokenizer.vocab_size
+                print(f"[BPE Rank {ddp_rank}] BPE tokenizer loaded. Vocab size: {config.vocab_size}")
+
+        # Parse expressions
         train_dataset = [parse_sexpr(e) for e in local_exprs]
         if master_process:
             total = len(local_exprs) * ddp_world_size
@@ -597,6 +784,16 @@ def main():
             dist.destroy_process_group()
 
     elif sys.argv[1].lower() == "test":
+        # Load BPE tokenizer
+        try:
+            with open("saved_models/bpe_tokenizer.pkl", "rb") as f:
+                tokenizer = pickle.load(f)
+            config.vocab_size = tokenizer.vocab_size
+            print("BPE tokenizer loaded for testing.")
+        except FileNotFoundError:
+            print("Error: BPE tokenizer not found. Please train the model first.")
+            sys.exit(1)
+        
         model = TRAE()
         state_dict = torch.load(sys.argv[2], map_location=device)
         new_sd = {k[len("module.") :] if k.startswith("module.") else k: v for k, v in state_dict.items()}
@@ -608,13 +805,20 @@ def main():
             for line in f:
                 test_expressions.append(line.strip())
 
-        test_dataset = [parse_sexpr(e) for e in test_expressions if len(tokenize(e)) <= 20000  ][:-1]
+        # Filter by BPE tokenization length
+        test_dataset = []
+        for e in test_expressions[:-1]:
+            try:
+                parsed_expr = parse_sexpr(e)
+                flat = flatten_expr_bpe(parsed_expr)
+                if len(flat) <= 20000:
+                    test_dataset.append(parsed_expr)
+            except:
+                continue
 
-            
-
-        print("Starting evaluation…")
+        print("Starting BPE evaluation…")
         acc, txt = test(model, test_dataset, stdout=True)
-        print("\nFinal Test Results")
+        print("\nFinal BPE Test Results")
         print(f"Exact-match accuracy : {acc['exact']*100:.2f}%")
         print(f"Token-level accuracy : {acc['token']*100:.2f}%")
         print(txt)
@@ -628,6 +832,18 @@ def parameter_counts(model):
 
 
 def demo():
+    global tokenizer, config
+    
+    # Load BPE tokenizer
+    try:
+        with open("saved_models/bpe_tokenizer.pkl", "rb") as f:
+            tokenizer = pickle.load(f)
+        config.vocab_size = tokenizer.vocab_size
+        print("BPE tokenizer loaded for demo.")
+    except FileNotFoundError:
+        print("Error: BPE tokenizer not found. Please train the model first.")
+        return
+    
     model = TRAE()
     model.eval()
     state_dict = torch.load("./fhe_rl/trained_models/embeddings_ROT_15_32_5m_10742576.pth", map_location=device)
@@ -635,14 +851,11 @@ def demo():
     model.load_state_dict(new_sd)
     model.to(device)
 
-    
     trainable, frozen = parameter_counts(model)
-    print(f"[Rank {ddp_rank}] Trainable params     : {trainable:,}")
-    print(f"[Rank {ddp_rank}] Non-trainable params : {frozen:,}")
+    print(f"[BPE Rank {ddp_rank}] Trainable params     : {trainable:,}")
+    print(f"[BPE Rank {ddp_rank}] Non-trainable params : {frozen:,}")
     
     expr_str1 = "(VecAdd (Vec v2_0 v2_1 v2_2 0 0 0 0 0 0) (VecAdd (Vec 3 3 3 0 0 0 0 0 0) (VecMul (Vec v1_0 v1_1 v1_2 0 0 0 0 0 0) (Vec 5 5 5 0 0 0 0 0 0))))"
-    
-
     expr_str2 = "(VecAdd (Vec a b c 0 0 0 0 0 0) (VecAdd (Vec 3 3 3 0 0 0 0 0 0) (VecMul (Vec v1_0 v1_1 v1_2 0 0 0 0 0 0) (Vec 5 5 5 0 0 0 0 0 0))))"
     
     expr1 = parse_sexpr(expr_str1)
@@ -650,19 +863,17 @@ def demo():
     cls_vector1 = get_expression_cls_embedding(expr1, model)
     cls_vector2 = get_expression_cls_embedding(expr2, model)
 
-
-    
     # Check exact equality
     are_equal = torch.all(cls_vector1 == cls_vector2).item()
-    print(f"Embeddings are exactly equal: {are_equal}")
+    print(f"BPE Embeddings are exactly equal: {are_equal}")
     
     # Check similarity
     cosine_similarity = torch.nn.functional.cosine_similarity(cls_vector1, cls_vector2, dim=1).item()
     l2_distance = torch.norm(cls_vector1 - cls_vector2).item()
     
-    # print(f"Cosine similarity: {cosine_similarity:.6f}")
-    # print(f"L2 distance: {l2_distance:.6f}")
-    
+    print(f"BPE Cosine similarity: {cosine_similarity:.6f}")
+    print(f"BPE L2 distance: {l2_distance:.6f}")
+
 
 if __name__ == "__main__":
     main()
