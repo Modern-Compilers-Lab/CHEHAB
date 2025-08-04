@@ -48,7 +48,7 @@ optimization_method = 1 # 0 = egraph (default), 1 = RL
 cse_enabled = 1
 vectorize_code = 1 
 slot_counts= [3,4,5,8,16,32]
-iterations = 30 #minimum 2
+iterations = 5 #minimum 2
 window_size = 0    
 depths = [5,10] 
 regimes = ["50-50","100-50","100-100"]
