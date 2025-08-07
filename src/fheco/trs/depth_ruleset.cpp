@@ -188,6 +188,7 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
 
   
   vector<Rule> rotate_rules{
+    /*
     {"rotate_0", x << 0, x},
 
     {"fold-rotate", x << n << m, x << ((m + n) % func->slot_count())},
@@ -200,7 +201,22 @@ Ruleset Ruleset::depth_ruleset(shared_ptr<ir::Func> func)
 
     {"undo-nest-rotate-mul-1", (x * (y << (n))) << m, (x << m) * (y << (n + m) % func->slot_count())},
     {"undo-nest-rotate-mul-2", ((y << (n)) * x) << m, (y << (n + m) % func->slot_count()) * (x << m)}
-    
+    /************************************************************************************************/
+    // TODO : practically FHE rorations are cyclic but we can have the cycle only after 
+    // running the heuristic used to find encryption params mainly the poly_modulus degree
+    // that determine the vector size used at execution
+    {"rotate_0", x << 0, x},
+
+    {"fold-rotate", x << n << m, x << ((m + n))},
+
+    {"undo-nest-rotate-add-1", (x + (y << (n))) << m, (x << m) + (y << (n + m) )},
+    {"undo-nest-rotate-add-2", ((y << (n)) + x) << m, (y << (n + m)) + (x << m)},
+
+    {"undo-nest-rotate-sub-1", (x - (y << (n))) << m, (x << m) - (y << (n + m) )},
+    {"undo-nest-rotate-sub-2", ((y << (n)) - x) << m, (y << (n + m)) - (x << m)},
+
+    //{"undo-nest-rotate-mul-1", (x * (y << (n))) << m, (x << m) * (y << (n + m))},
+    {"undo-nest-rotate-mul-2", ((y << (n)) * x) << m, (y << (n + m)) * (x << m)}
   };
 
   vector<Rule> mul_rules{

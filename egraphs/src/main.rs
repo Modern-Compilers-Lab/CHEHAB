@@ -11,7 +11,7 @@ use std::{env, fs};
 use std::collections::BinaryHeap;
 use std::cmp::Ordering; 
 use std::cmp::Reverse; 
- 
+  
 #[derive(Debug, Eq, PartialEq)]
 struct State {
     cost: usize,
@@ -108,7 +108,7 @@ fn main() {
         iteration = iteration + 1 ;
         eprintln!("Best cost at iteration {}: {} ", iteration, current_cost);
     } 
-    let mut best_cost = current_cost ;
+    let mut best_cost = current_cost ; 
     let mut best_expr = current_expr.clone(); 
     let duration = start_time.elapsed();
     /************************************************/

@@ -2,71 +2,60 @@
 
 using namespace std;
 using namespace fheco;
-#include <chrono> 
+#include <chrono>
 #include <fstream>
 #include <iostream> 
 #include <string> 
-#include <vector>
-#include <cmath>
-#include "../global_variables.hpp"  
-/**************************/ 
-void fhe_vectorized(int width){
-  throw invalid_argument("vectorized implementation doesnt exist");
-}
-/************************************/ 
-Ciphertext cond(Ciphertext val ,Ciphertext  ch1,Ciphertext ch2){
-    return val*ch1 + (1-val)*ch2;
-}
+#include <vector> 
+#include "../global_variables.hpp" 
+/********************/
+void fhe_vectorized(int slot_count){
+  Ciphertext c1("c1"); 
+  Ciphertext c2("c2");
+  Ciphertext slot_wise_diff = (c1 - c2) * (c1 - c2);
+  Ciphertext sum = SumVec(slot_wise_diff,slot_count);
+  sum.set_output("result"); 
+} 
+/***************************/
 void fhe(int slot_count)
-{ 
-  Ciphertext c12("c12"); 
-  Ciphertext c23("c23"); 
-  Ciphertext c24("c24"); 
-  Ciphertext c13("c13"); 
-  Ciphertext c14("c14");  
-  Ciphertext c34("c34");
+{
+  Ciphertext x("x");                 // scalar ciphertext input
+  Plaintext  p0("p0");               // scalar plaintext coeffs
+  Plaintext  p1("p1");
+  Plaintext  p2("p2");
+  Plaintext  p3("p3");
 
-  Ciphertext c25("c25");  
-  Ciphertext c15("c15"); 
-  Ciphertext c45("c45"); 
-  Ciphertext c35("c35");
-  
-  Ciphertext o1("o1"); 
-  Ciphertext o2("o2"); 
-  Ciphertext o3("o3"); 
-  Ciphertext o4("o4"); 
-  Ciphertext o5("o5");
-  Ciphertext output ;
-  if(slot_count == 5){
-    output =  cond(c12, 
-                (cond(c13,
-                    cond(c14,cond(c15, o1, o5),cond(c45, o4, o5)),
-                    cond(c34,cond(c35, o3, o5),cond(c45, o4, o5)))
-                ),
-                (cond(c23,
-                    cond(c24,cond(c25, o2, o5),cond(c45, o4, o5)),
-                    cond(c34, cond(c35, o3, o5), cond(c45, o4, o5)))
-                )
-              ); 
-  }else if (slot_count == 4){
-    output = cond( c12, 
-      cond(c13,cond(c14,o1,o4),cond(c34,o3,o4)),
-      cond(c23,cond(c24,o2,o4),cond(c34,o3,o4))
-    );
-  }else if (slot_count == 3){
-    output = cond(c12, cond(c13,o1,o3) , cond(c23,o2,o3));
-  }
-  output.set_output("output");
+  // Compute powers of x
+  Ciphertext x2 = x * x;            // x^2
+  Ciphertext x3 = x2 * x;           // x^3
+
+  // p(x) = p3*x^3 + p2*x^2 + p1*x + p0
+  Ciphertext term3 = x3 * p3;
+  Ciphertext term2 = x2 * p2;
+  Ciphertext term1 = x  * p1; 
+
+  Ciphertext p = term3 + term2 + term1 + p0;
+
+  // p'(x) = 3*p3*x^2 + 2*p2*x + p1
+  // we consider p3 = p3*3 and p2 = p2*2 because backedn doesnt support palin_plain multiplications
+  Ciphertext dp_term2 = x2 * p3 ; // x2 * (p3 * 3);
+  Ciphertext dp_term1 = x  * p2; // x  * (p2 * 2)
+
+  Ciphertext dp = dp_term2 + dp_term1 + p1;
+
+  // Outputs
+  p.set_output("p"); 
+  dp.set_output("dp");
 }
-/******************************************************************************************/
-/******************************************************************************************/
+/********************************************/
 void print_bool_arg(bool arg, const string &name, ostream &os)
 {
   os << (arg ? name : "no_" + name);
 }
+
 int main(int argc, char **argv)
 {
- bool vectorize_code = true;
+  bool vectorize_code = true;
   if (argc > 1)
     vectorize_code = stoi(argv[1]);
   
@@ -94,7 +83,6 @@ int main(int argc, char **argv)
   if (argc > 7)
     const_folding = stoi(argv[7]); 
 
-
   if (cse)
   {
     Compiler::enable_cse();
@@ -118,7 +106,7 @@ int main(int argc, char **argv)
   if (vectorize_code)
   {
     const auto &func = Compiler::create_func(func_name, 1, 20, false, true);
-    fhe(slot_count); 
+    fhe(slot_count);
     string gen_name = "_gen_he_" + func_name;
     string gen_path = "he/" + gen_name;
     ofstream header_os(gen_path + ".hpp");
@@ -149,10 +137,10 @@ int main(int argc, char **argv)
         quantifier.run_all_analysis();
         quantifier.print_info(cout);
     }
-  }
+  } 
   else
   {
-    const auto &func = Compiler::create_func(func_name, 1, 20, false, true);
+    const auto &func = Compiler::create_func(func_name, slot_count, 20, false, true);
     // update_io_file 
     std::string updated_inputs_file_name = "fhe_io_example_adapted.txt" ;
     std::string inputs_file_name = "fhe_io_example.txt";
@@ -169,10 +157,9 @@ int main(int argc, char **argv)
     cout << " window is " << window << endl;
     auto ruleset = Compiler::Ruleset::simplification_ruleset;
     auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-    //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+    Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
     Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
     /************/elapsed = chrono::high_resolution_clock::now() - t;
-    cout<<"Compile time : \n";
     cout << elapsed.count() << " ms\n";
     if (call_quantifier)
     {

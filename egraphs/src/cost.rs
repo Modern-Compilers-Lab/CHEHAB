@@ -7,7 +7,7 @@ use crate::veclang::{Egraph, VecLang};
 pub struct VecCostFn<'a> { 
     pub egraph: &'a Egraph,
 }
- 
+  
 // &'a EGraph
 pub trait CostFunction<L: Language> {
     type Cost;

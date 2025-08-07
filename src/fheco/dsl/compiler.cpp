@@ -139,25 +139,26 @@ void Compiler::compile(
   shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, ostream &header_os,
   string_view header_name, ostream &source_os, bool log2_reduct,
   param_select::EncParams::SecurityLevel security_level)
-{ 
+{ std::cout<<"==> greedy TRS part : \n";
   switch (ruleset)
   {
     case Ruleset::simplification_ruleset:
     {
-      //std::cout<<"Run simplification TRS ===> \n";
+      std::cout<<"Run simplification TRS ===> \n";
       trs::TRS simplification_ruleset{trs::Ruleset::simplification_ruleset(func)};
       simplification_ruleset.run(rewrite_heuristic);
       break;
     }
     case Ruleset::depth:
     {
-      //std::cout<<"Run depth TRS ===> \n";
+      std::cout<<"Run depth TRS ===> \n";
       trs::TRS depth_trs{trs::Ruleset::depth_ruleset(func)};
       depth_trs.run(rewrite_heuristic);
       break;
     }
     case Ruleset::ops_cost:
     {
+      std::cout<<"Run ops_cost TRS ===> \n";
       trs::TRS ops_cost_trs{trs::Ruleset::ops_cost_ruleset(func)};
       ops_cost_trs.run(rewrite_heuristic);
       break;
@@ -165,6 +166,7 @@ void Compiler::compile(
 
     case Ruleset::joined:
     {
+      std::cout<<"Run joined TRS ===> \n";
       trs::TRS joined_trs{trs::Ruleset::joined_ruleset(func)};
       joined_trs.run(rewrite_heuristic);
       break;
@@ -201,7 +203,7 @@ void Compiler::compile(
  * 14. Appends the vector width to vectorized_code.txt.
  * 15. Calls a python script to build the source code that operates on vectors.
  *
- * @param func Shared pointer to the function to be vectorized.
+ * @param func Shared pointer to the function to be vectorized. 
  */
 void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int optimization_method)
 {
@@ -337,7 +339,7 @@ void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int op
  */
 void Compiler::gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window, int optimization_method)
 {
-  if (window < 0)
+  if (window < 0) 
   {
     std::cerr << "Window size must be greater than 0." << std::endl;
     return;

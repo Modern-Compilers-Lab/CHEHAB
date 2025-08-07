@@ -19,7 +19,7 @@ use core::cmp::min;
 /// Run the rewrite rules over the input program and return the best (cost, program)
 use std::time::Instant; 
 
-pub fn run(
+pub fn run( 
     prog: &RecExpr<VecLang>,
     timeout: u64,
     vector_width: usize,
@@ -401,7 +401,7 @@ pub fn cond_check_not_all_values_eq1(vector_width: usize)-> impl Fn(&mut EGraph<
             (!&egraph[bi].nodes.iter().any(|node| matches!(node, VecLang::Num(1))))&&(!&egraph[ai].nodes.iter().any(|node| matches!(node, VecLang::Num(1))))
         })
     }
-}
+} 
 /***************************************/
 pub fn cond_check_not_all_values_eq0(vector_width: usize)-> impl Fn(&mut EGraph<VecLang, ConstantFold>, Id, &Subst) -> bool {
 

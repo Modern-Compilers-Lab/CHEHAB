@@ -116,31 +116,38 @@ int main(int argc, char **argv)
   /**************/t = chrono::high_resolution_clock::now();
   if (vectorize_code)
   {
-      const auto &func = Compiler::create_func(func_name, 1, 20, false, true);
-      fhe(slot_count);
-      string gen_name = "_gen_he_" + func_name;
-      string gen_path = "he/" + gen_name;
-      ofstream header_os(gen_path + ".hpp");
-      if (!header_os)
-        throw logic_error("failed to create header file");
-      ofstream source_os(gen_path + ".cpp");
-      if (!source_os) 
-        throw logic_error("failed to create source file");
-      cout << " window is " << window << endl;
-      Compiler::gen_vectorized_code(func, window, optimization_method);
+    const auto &func = Compiler::create_func(func_name, 1, 20, false, true);
+    fhe(slot_count);
+    string gen_name = "_gen_he_" + func_name;
+    string gen_path = "he/" + gen_name;
+    ofstream header_os(gen_path + ".hpp");
+    if (!header_os)
+      throw logic_error("failed to create header file");
+    ofstream source_os(gen_path + ".cpp");
+    if (!source_os) 
+      throw logic_error("failed to create source file");
+    cout << " window is " << window << endl;
+    /********** vectorization Part *******************************/
+    if(VECTORIZATION_ENABLED){
+      Compiler::gen_vectorized_code(func, window, optimization_method);  // add a flag to specify if the benchmark is structured or no
+    }
+    /********** Simplification & depth reduction Part ************/
+    if(SIMPLIFICATION_ENABLED){
       auto ruleset = Compiler::Ruleset::depth;
       auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-      //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
-      Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os, 29);
-      /************/elapsed = chrono::high_resolution_clock::now() - t;
-      cout<<"Compile time : \n";
-      cout << elapsed.count() << " ms\n";
-      if (call_quantifier)
-      {
+      Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+    }
+    /********** FHE code generation  *****************************/
+    Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
+    
+    /************/elapsed = chrono::high_resolution_clock::now() - t;
+    cout << elapsed.count() << " ms\n";
+    if (call_quantifier)
+    {
         util::Quantifier quantifier{func};
         quantifier.run_all_analysis();
         quantifier.print_info(cout);
-      }
+    }
   }
   else
   {
