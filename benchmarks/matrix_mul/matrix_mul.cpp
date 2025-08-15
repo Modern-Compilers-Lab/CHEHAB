@@ -105,7 +105,7 @@ int main(int argc, char **argv)
   if (argc > 5)
     call_quantifier = stoi(argv[5]);
 
-  bool cse = true;
+  bool cse = true; 
   if (argc > 6)
     cse = stoi(argv[6]);
    
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
   if (argc > 7)
     const_folding = stoi(argv[7]); 
 
-
+ 
   if (cse)
   {
     Compiler::enable_cse();
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
       if(SIMPLIFICATION_ENABLED){
         auto ruleset = Compiler::Ruleset::depth;
         auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-        Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+        Compiler::compile(func, ruleset, rewrite_heuristic);
       }
       /********** FHE code generation  *****************************/
       Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
       cout << " window is " << window << endl;
       auto ruleset = Compiler::Ruleset::simplification_ruleset;
       auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-      //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+      Compiler::compile(func, ruleset, rewrite_heuristic);
       Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os, 29);
       /************/elapsed = chrono::high_resolution_clock::now() - t;
       cout<<"Compile time : \n";

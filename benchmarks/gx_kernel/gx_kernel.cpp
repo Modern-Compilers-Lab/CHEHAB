@@ -11,7 +11,7 @@ using namespace fheco;
 /*****************************/
 void fhe_vectorized(int width){ 
   vector<vector<integer>> kernel = {{1, 0, 1}, {2, 0, 2}, {1, 0, 1}};
-  Ciphertext img("img");
+  Ciphertext img("img"); 
   Ciphertext top_row = img >> width;
   Ciphertext bottom_row = img << width;
   Ciphertext top_sum =  kernel[0][1] * top_row - kernel[0][0] * (top_row >> 1) + kernel[0][2] * (top_row << 1);
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
     if(SIMPLIFICATION_ENABLED){
       auto ruleset = Compiler::Ruleset::depth;
       auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-      Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+      Compiler::compile(func, ruleset, rewrite_heuristic);
     }
     /********** FHE code generation  *****************************/
     Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
@@ -166,13 +166,9 @@ int main(int argc, char **argv)
       if (!source_os) 
         throw logic_error("failed to create source file");
       cout << " window is " << window << endl;
-      //auto ruleset = Compiler::Ruleset::depth;
-      //auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-      ////Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
       auto ruleset = Compiler::Ruleset::simplification_ruleset;
       auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-      //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
-    
+      Compiler::compile(func, ruleset, rewrite_heuristic);
       Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os, 29);
       /************/elapsed = chrono::high_resolution_clock::now() - t;
       cout<<"Compile time : \n";

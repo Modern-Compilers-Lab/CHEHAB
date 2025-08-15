@@ -7,10 +7,10 @@ target_link_libraries(roberts_cross PRIVATE fheco)
 
 
  
-set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/roberts_cross/he/utils.cpp)
+set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/utils.cpp)
 set(DESTINATION_FILE_2 ${CMAKE_SOURCE_DIR}/build/benchmarks/roberts_cross/he/utils.cpp)
 
-set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/roberts_cross/he/utils.hpp)
+set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/utils.hpp)
 set(DESTINATION_FILE_3 ${CMAKE_SOURCE_DIR}/build/benchmarks/roberts_cross/he/utils.hpp)
 
 set(SOURCE_FILE_4 ${CMAKE_SOURCE_DIR}/benchmarks/roberts_cross/he/CMakeLists.txt)

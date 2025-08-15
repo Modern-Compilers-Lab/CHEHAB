@@ -10,7 +10,7 @@ pub struct VecCostFn<'a> {
   
 // &'a EGraph
 pub trait CostFunction<L: Language> {
-    type Cost;
+    type Cost; 
     fn cost<C>(&mut self, enode: &L, costs: C) -> usize
     where
         C: FnMut(Id) -> usize;

@@ -3,12 +3,12 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/benchmarks/discrete_cosin_transform/he)
 add_executable(discrete_cosin_transform discrete_cosin_transform.cpp)
 target_link_libraries(discrete_cosin_transform PRIVATE fheco)
  
-# Define the source file and destination file
+# Define the source file and destination file 
 
 
-set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/discrete_cosin_transform/he/utils.cpp)
+set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/utils.cpp)
 set(DESTINATION_FILE_2 ${CMAKE_SOURCE_DIR}/build/benchmarks/discrete_cosin_transform/he/utils.cpp) 
-set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/discrete_cosin_transform/he/utils.hpp)
+set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/utils.hpp)
 set(DESTINATION_FILE_3 ${CMAKE_SOURCE_DIR}/build/benchmarks/discrete_cosin_transform/he/utils.hpp)
 set(SOURCE_FILE_4 ${CMAKE_SOURCE_DIR}/benchmarks/discrete_cosin_transform/he/CMakeLists.txt)
 set(DESTINATION_FILE_4 ${CMAKE_SOURCE_DIR}/build/benchmarks/discrete_cosin_transform/he/CMakeLists.txt)

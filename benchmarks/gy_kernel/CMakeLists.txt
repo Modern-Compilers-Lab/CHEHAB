@@ -7,10 +7,10 @@ target_link_libraries(gy_kernel PRIVATE fheco)
 
 
 
-set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/gy_kernel/he/utils.cpp)
+set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/utils.cpp)
 set(DESTINATION_FILE_2 ${CMAKE_SOURCE_DIR}/build/benchmarks/gy_kernel/he/utils.cpp)
 
-set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/gy_kernel/he/utils.hpp)
+set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/utils.hpp)
 set(DESTINATION_FILE_3 ${CMAKE_SOURCE_DIR}/build/benchmarks/gy_kernel/he/utils.hpp)
 
 set(SOURCE_FILE_4 ${CMAKE_SOURCE_DIR}/benchmarks/gy_kernel/he/CMakeLists.txt)

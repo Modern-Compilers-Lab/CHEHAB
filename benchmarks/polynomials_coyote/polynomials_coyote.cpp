@@ -10,7 +10,7 @@
 #include <vector>
 #include <sstream> 
 #include <random> 
-#include <queue>
+#include <queue> 
 using namespace std; 
 using namespace fheco;
 #include "../global_variables.hpp" 
@@ -132,7 +132,7 @@ Ciphertext treeGenerator(int originalDepth, int maxDepth, int& seed, const std::
         seed += 1;
         return Ciphertext(VarName);  // Return Ciphertext instance instead of Tree(Var)
     }
-}
+} 
 /*****************************************************/
 void fhe(int depth,int iteration, string regime) {
     //vector<int> depths = {5, 10};
@@ -245,7 +245,7 @@ int main(int argc, char **argv) {
         if(SIMPLIFICATION_ENABLED){
         auto ruleset = Compiler::Ruleset::depth;
         auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-        Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+        Compiler::compile(func, ruleset, rewrite_heuristic);
         }
         /********** FHE code generation  *****************************/
         Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
@@ -278,7 +278,7 @@ int main(int argc, char **argv) {
         cout << " window is " << window << endl;
         auto ruleset = Compiler::Ruleset::simplification_ruleset;
         auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-        //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+        Compiler::compile(func, ruleset, rewrite_heuristic);
         Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
         /************/elapsed = chrono::high_resolution_clock::now() - t;
         cout<<"Compile time : \n";

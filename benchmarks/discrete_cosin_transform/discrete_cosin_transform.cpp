@@ -11,7 +11,7 @@ using namespace fheco;
 /********************/
 void fhe_vectorized(int slot_count){
   Ciphertext c1("c1");  
-  Ciphertext c2("c2"); 
+  Ciphertext c2("c2");  
   Ciphertext slot_wise_diff = (c1 - c2) * (c1 - c2);
   Ciphertext sum = SumVec(slot_wise_diff,slot_count);
   sum.set_output("result"); 
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
     if(SIMPLIFICATION_ENABLED){
       auto ruleset = Compiler::Ruleset::depth;
       auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-      Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+      Compiler::compile(func, ruleset, rewrite_heuristic);
     }
     /********** FHE code generation  *****************************/
     Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
     fhe(slot_count);
     string gen_name = "_gen_he_" + func_name;
     string gen_path = "he/" + gen_name;
-    ofstream header_os(gen_path + ".hpp");
+    ofstream header_os(gen_path + ".hpp"); 
     if (!header_os)
       throw logic_error("failed to create header file");
     ofstream source_os(gen_path + ".cpp");
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
     cout << " window is " << window << endl;
     auto ruleset = Compiler::Ruleset::simplification_ruleset;
     auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-    Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+    Compiler::compile(func, ruleset, rewrite_heuristic);
     Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
     /************/elapsed = chrono::high_resolution_clock::now() - t;
     cout << elapsed.count() << " ms\n";

@@ -144,7 +144,7 @@ int main(int argc, char **argv)
     if(SIMPLIFICATION_ENABLED){
       auto ruleset = Compiler::Ruleset::depth;
       auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-      Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+      Compiler::compile(func, ruleset, rewrite_heuristic);
     }
     /********** FHE code generation  *****************************/
     Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
   else
   {
       const auto &func = Compiler::create_func(func_name,slot_count*slot_count, 20, false, true);
-      // update io file 
+      // update io file  
       std::string updated_inputs_file_name = "fhe_io_example_adapted.txt" ;
       std::string inputs_file_name = "fhe_io_example.txt";
       util::copyFile(inputs_file_name,updated_inputs_file_name);
@@ -176,8 +176,8 @@ int main(int argc, char **argv)
         throw logic_error("failed to create source file");
       cout << " window is " << window << endl; 
       auto ruleset = Compiler::Ruleset::simplification_ruleset;
-      auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-      //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+      auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up; 
+      Compiler::compile(func, ruleset, rewrite_heuristic);
       Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os, 29);
       /************/elapsed = chrono::high_resolution_clock::now() - t;
       cout<<"Compile time \n :";

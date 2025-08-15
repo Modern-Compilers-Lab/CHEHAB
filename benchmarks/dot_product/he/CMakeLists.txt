@@ -9,7 +9,7 @@ target_compile_features(gen_he_fhe PUBLIC cxx_std_17)
 set_target_properties(gen_he_fhe PROPERTIES CXX_EXTENSIONS OFF)
 target_link_libraries(gen_he_fhe SEAL::seal)
  
-
+ 
 add_library(utils STATIC utils.cpp)
 target_compile_features(utils PUBLIC cxx_std_17)
 set_target_properties(utils PROPERTIES CXX_EXTENSIONS OFF)

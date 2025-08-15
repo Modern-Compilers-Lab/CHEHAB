@@ -10,10 +10,10 @@ use std::collections::hash_map::RandomState;
 use std::collections::HashMap;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
-
+ 
 pub struct Runner<L: Language, N: Analysis<L>, IterData = ()> {
     /// The [`EGraph`] used.
-    pub egraph: EGraph<L, N>,
+    pub egraph: EGraph<L, N>, 
     /// Data accumulated over each [`Iteration`].
     pub iterations: Vec<Iteration<IterData>>,
     /// The roots of expressions added by the
@@ -265,8 +265,11 @@ where
         let rules: Vec<&Rewrite<L, N>> = rules.into_iter().collect();
         check_rules(&rules);
         self.egraph.rebuild();
+        let  expensive_rules_max_application_iterations_number : usize = 4;
+        let mut counter = 0;
         loop {
-            let iter = self.run_one(&rules);
+            let iter = self.run_one(&rules,&counter,&expensive_rules_max_application_iterations_number);
+            counter+=1;
             self.iterations.push(iter);
             let stop_reason = self.iterations.last().unwrap().stop_reason.clone();
             // we need to check_limits after the iteration is complete to check for iter_limit
@@ -303,7 +306,7 @@ where
         }
     }
 
-    fn run_one(&mut self, rules: &[&Rewrite<L, N>]) -> Iteration<IterData> {
+    fn run_one(&mut self, rules: &[&Rewrite<L, N>],counter: &usize, expensive_rules_max_application_iterations_number:&usize) -> Iteration<IterData> {
         assert!(self.stop_reason.is_none());
 
         info!("\nIteration {}", self.iterations.len());
@@ -341,11 +344,10 @@ where
                 let start = Instant::now();
                 // Vec<SearchMatches<'a, L>>
                 // eprintln!("===> Search Rewrite for rule '{}'", rw.name);
-                let mut ms = self.scheduler.search_rewrite(i, &self.egraph, rw);
                 //let total_matches: usize = ms.iter().map(|m| m.substs.len()).sum();
                 // eprintln!("Rewrite rule '{}' matched {} times.", rw.name, ms.len());
-                debug!("Rewrite rule '{}' matched {} times.", rw.name, ms.len());
-                if rw.name.as_str().starts_with("exp"){
+                //debug!("Rewrite rule '{}' matched {} times.", rw.name, ms.len());
+                /*if rw.name.as_str().starts_with("exp"){
                     // Expansive rule: sample matches
                     let sampled_matches: Vec<_> = ms.into_iter().take(sample_size).collect();
                     matches.push(sampled_matches);
@@ -369,8 +371,42 @@ where
                             ast: match_item.ast.clone(),
                         }
                     }).collect::<Vec<SearchMatches<L>>>();*/ 
-                    matches.push(ms);
+                   
                     //debug!("Applied all {} matches for rule {}", total_matches, rw.name);
+                }*/
+                let mut ms = self.scheduler.search_rewrite(i, &self.egraph, rw);
+                /**************************************************************/
+                let max_subs_size : usize = 50 ;
+                let max_matches : usize = 20 ;
+                let mut rng = thread_rng(); 
+                ms.shuffle(&mut rng); 
+                ms.truncate(max_matches);
+                ms.iter_mut().map(|match_item| {
+                    if(match_item.substs.len()>max_subs_size){
+                        eprintln!("subs  for rw : {} ==> '{}' ",match_item.substs.len(),rw.name);
+                    }
+                    if(!rw.name.as_str().starts_with("assoc")){
+                        match_item.substs.shuffle(&mut rng);
+                        match_item.substs.truncate(max_subs_size);
+                    }else{
+                        eprintln!("===> Assoc subs  is  for rw : {} ==> '{}' ",match_item.substs.len(),rw.name);
+                    }
+                    SearchMatches {
+                        eclass: match_item.eclass.clone(),
+                        substs: match_item.substs.clone(),
+                        ast: match_item.ast.clone(),
+                    }
+                }).collect::<Vec<SearchMatches<L>>>();
+                /**************************************************************/
+                if rw.name.as_str().starts_with("exp"){
+                    if counter < expensive_rules_max_application_iterations_number {
+
+                        matches.push(ms);
+                    }else{
+                        matches.push(vec![]);
+                    }
+                }else{
+                    matches.push(ms);
                 }
                 let end = start.elapsed();
                 // eprintln!("time for searching the rewrte rule {:?} is {:?}", rw.name, end);
@@ -382,7 +418,6 @@ where
         //eprintln!("Total Search time: {}", search_time);
 
         let apply_time = Instant::now();
-        /********************************************/
         //eprintln!("/*************Applying Found matches *****************/");
         result = result.and_then(|_| {
             rules.iter().zip(matches).try_for_each(|(rw, ms)| {
@@ -408,8 +443,6 @@ where
                 self.check_limits()
             })
         });
-        //eprintln!("/***********************************************************************/");
-        /************************************************/
         let apply_time = apply_time.elapsed().as_secs_f64();
         // eprintln!("Total Apply time: {}", apply_time);
         let rebuild_time = Instant::now();
@@ -421,7 +454,7 @@ where
             self.egraph.total_size(),
             self.egraph.number_of_classes()
         );
-        /************************************************/
+        /***********************************************************************/
         let can_be_saturated = applied.is_empty()
             && self.scheduler.can_stop(i)
             // now make sure the hooks didn't do anything
@@ -435,7 +468,7 @@ where
         if can_be_saturated {
             result = result.and(Err(StopReason::Saturated))
         }
-        /************************************************/
+        /**********************************************************************/
         Iteration {
             applied,
             egraph_nodes,
@@ -528,7 +561,7 @@ where
     /// A hook allowing you to customize rewrite application behavior.
     /// Useful to implement rule management.
     ///
-    fn apply_rewrite(
+    fn apply_rewrite( 
         &mut self,
         iteration: usize,
         egraph: &mut EGraph<L, N>,
@@ -653,7 +686,7 @@ where
         let stats = self.rule_stats(rewrite.name);
         let exp_rule = rewrite.name.as_str().starts_with("exp");
         // Define the limit for the number of matches for expensive rules
-        let max_expensive_matches = 10; // Set this to your desired limit
+        let max_expensive_matches = usize::MAX; // Set this to your desired limit
     
         if iteration < stats.banned_until {
             debug!(

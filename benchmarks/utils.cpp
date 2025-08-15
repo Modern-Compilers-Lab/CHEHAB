@@ -12,7 +12,7 @@ void parse_inputs_outputs_file(
   string header;
   getline(is, header);
   auto tokens = split(header, delim);
-  if (tokens.size() < 3)
+  if (tokens.size() < 3) 
     throw invalid_argument("malformatted header");
 
   func_slot_count = stoull(tokens[0]);
@@ -163,9 +163,9 @@ void print_encrypted_outputs_info(
   const SEALContext &context, Decryptor &decryptor, const EncryptedArgs &encrypted_outputs, ostream &os)
 {
   int L = context.first_context_data()->parms().coeff_modulus().size();
-  os << "output ciphertexts info (L=" << L - 1 << ")\n";
-  os << "id: level, remaining_noise_budget, actual_noise_upper_bound (maybe mod_switch was used to sacrifice some "
-        "noise budget)\n";
+  //os << "output ciphertexts info (L=" << L - 1 << ")\n";
+  //os << "id: level, remaining_noise_budget, actual_noise_upper_bound (maybe mod_switch was used to sacrifice some "
+  //      "noise budget)\n";
   int init_noise_budget = context.first_context_data()->total_coeff_modulus_bit_count() -
                           context.first_context_data()->parms().plain_modulus().bit_count();
   for (const auto &output : encrypted_outputs)
@@ -173,7 +173,9 @@ void print_encrypted_outputs_info(
     int level = context.get_context_data(output.second.parms_id())->chain_index();
     int remaining_noise_budget = decryptor.invariant_noise_budget(output.second);
     int noise_upper_bound = init_noise_budget - remaining_noise_budget;
-    os << output.first << ": " << level << ", " << remaining_noise_budget << ", " << noise_upper_bound << '\n';
+    //os << output.first << ": " << level << ", " << remaining_noise_budget << ", " << noise_upper_bound << '\n';
+    std::cout <<"Remaining_noise_budget: "<< remaining_noise_budget<<" \n"<< std::flush;
+
   }
 }
 

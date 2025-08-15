@@ -5,10 +5,10 @@ target_link_libraries(matrix_mul PRIVATE fheco)
 
 # Define the source file and destination file 
 
-set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/matrix_mul/he/utils.cpp)
+set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/utils.cpp)
 set(DESTINATION_FILE_2 ${CMAKE_SOURCE_DIR}/build/benchmarks/matrix_mul/he/utils.cpp)
 
-set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/matrix_mul/he/utils.hpp) 
+set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/utils.hpp) 
 set(DESTINATION_FILE_3 ${CMAKE_SOURCE_DIR}/build/benchmarks/matrix_mul/he/utils.hpp)
 
 set(SOURCE_FILE_4 ${CMAKE_SOURCE_DIR}/benchmarks/matrix_mul/he/CMakeLists.txt)

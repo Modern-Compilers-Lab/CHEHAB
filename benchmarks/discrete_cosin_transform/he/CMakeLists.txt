@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 project(HEBoxBlur VERSION 1.0 LANGUAGES CXX)
 find_package(SEAL 4.1 REQUIRED)
 
-
+ 
 add_library(gen_he_fhe STATIC _gen_he_fhe.cpp)
 target_compile_features(gen_he_fhe PUBLIC cxx_std_17) 
 set_target_properties(gen_he_fhe PROPERTIES CXX_EXTENSIONS OFF)

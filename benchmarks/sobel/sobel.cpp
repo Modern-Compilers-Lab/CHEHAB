@@ -162,7 +162,7 @@ int main(int argc, char **argv)
       if(SIMPLIFICATION_ENABLED){
         auto ruleset = Compiler::Ruleset::depth;
         auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-        Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+        Compiler::compile(func, ruleset, rewrite_heuristic);
       }
       /********** FHE code generation  *****************************/
       Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);

@@ -1,6 +1,6 @@
 import os
 import shutil
-import subprocess
+import subprocess 
 import csv 
 import re
 import statistics
@@ -10,7 +10,7 @@ benchmarks_folder = "benchmarks"
 build_folder = os.path.join("build", "benchmarks")
 operations = ["add", "sub", "multiply_plain", "rotate_rows", "negate", "multiply"]
 infos = ["benchmark"]
-additional_infos =[ "Depth", "Multplicative Depth","compile_time (s)", "execution_time (s)"]
+additional_infos =[ "Depth", "Multplicative Depth","compile_time (s)", "execution_time (s)","Remaining_noise_budget"]
 infos.extend(operations) 
 infos.extend(additional_infos) 
 
@@ -35,7 +35,7 @@ try:
 except subprocess.CalledProcessError as e:
     print(f"Command failed with error:\n{e.stderr}")    
 
-benchmark_folders = ["max","sort","discrete_cosin_transform","poly_derivative","box_blur","lin_reg","hamming_dist","poly_reg","l2_distance","dot_product","gx_kernel","gy_kernel","roberts_cross","matrix_mul","max","sort"] 
+benchmark_folders = ["max","sort","discrete_cosin_transform","poly_derivative","box_blur","lin_reg","hamming_dist","poly_reg","l2_distance","dot_product","gx_kernel","gy_kernel","roberts_cross","matrix_mul"] 
 #benchmark_folders = ["lin_reg","hamming_dist","poly_reg","l2_distance","dot_product","gx_kernel","gy_kernel","roberts_cross","matrix_mul","max","sort"] 
 exceptions = ["max","sort","discrete_cosin_transform","poly_derivative"]
 benchmarks_slot_counts  = {
@@ -51,7 +51,7 @@ optimization_method = 0 # 0 = egraph (default), 1 = RL
 cse_enabled = 1
 vectorize_code = 1 
 slot_counts= [4,8,16,32]
-iterations = 30 #minimum 2
+iterations = 5 #minimum 2
 window_size = 0    
 depths = [5,10] 
 regimes = ["50-50","100-50","100-100"]
@@ -63,6 +63,7 @@ output_csv = f"results_{'RL' if optimization_method == 1 else 'EGraph'}.csv"
 with open(output_csv, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(infos)
+
 ########################################
 for subfolder_name in benchmark_folders:
     benchmark_path = os.path.join(benchmarks_folder, subfolder_name)
@@ -85,7 +86,7 @@ for subfolder_name in benchmark_folders:
                 operation_stats = {
                 "add": [], "sub": [], "multiply_plain": [], "rotate_rows": [],
                 "negate": [], "multiply": [], "Depth": [], "Multiplicative Depth": [],
-                "compile_time (s)": [], "execution_time (s)": [], 
+                "compile_time (s)": [], "execution_time (s)": [],"Remaining_noise_budget": [],
                 }
                 ###generate io_file for benchmark with slot_count 
                 if not subfolder_name in exceptions :
@@ -177,11 +178,21 @@ for subfolder_name in benchmark_folders:
                                 if counter > 0 :
                                     lines = result.stdout.splitlines()
                                     # Collect execution time (ms)
+                                    comp = 0
+                                    print(f"returned lines : \n {lines} \n\n")
                                     for line in lines:
-                                        if ' ms' in line:
+                                        if 'execution_time_(ms):' in line:
                                             #print(f"==> execution time {line.split()[0]}")
-                                            execution_time = float(line.split()[0])
+                                            execution_time = float(line.split()[1])
                                             operation_stats["execution_time (s)"].append(execution_time)
+                                            comp=comp+1
+                                        ####################################
+                                        if 'Remaining_noise_budget:' in line:
+                                            Remaining_noise_budget=int(line.split()[1])
+                                            operation_stats["Remaining_noise_budget"].append(Remaining_noise_budget)
+                                            comp=comp+1
+                                        ##############
+                                        if comp == 2 :
                                             break
 
                         except subprocess.CalledProcessError as e:
@@ -219,6 +230,7 @@ for subfolder_name in benchmark_folders:
             except Exception as e:
                 print(f"Command for {subfolder_name} failed with error:\n{e}")
                 continue
+
 ######################################################################################
 ######################################################################################
 print("Run polynomial benchmarks !!!!!! ")
@@ -236,7 +248,7 @@ for subfolder_name in polynomial_folders:
                     operation_stats = {
                     "add": [], "sub": [], "multiply_plain": [], "rotate_rows": [],
                     "negate": [], "multiply": [], "Depth": [], "Multiplicative Depth": [],
-                    "compile_time (s)": [], "execution_time (s)": [], 
+                    "compile_time (s)": [], "execution_time (s)": [],"Remaining_noise_budget": []
                     }
                     benchmark_name = f'tree_{regime}_{tree_depth}_{instance}'
                     print(f"Benchmark '{benchmark_name}' will be run...")
@@ -323,12 +335,20 @@ for subfolder_name in polynomial_folders:
                                         #print(result.stderr)
                                         if counter > 0 :
                                             lines = result.stdout.splitlines()
-                                            # Collect execution time (ms)
+                                            comp = 0
                                             for line in lines:
-                                                if ' ms' in line:
+                                                if 'execution_time_(ms):' in line:
                                                     #print(f"==> execution time {line.split()[0]}")
-                                                    execution_time = float(line.split()[0])
+                                                    execution_time = float(line.split()[1])
                                                     operation_stats["execution_time (s)"].append(execution_time)
+                                                    comp=comp+1
+                                                ####################################
+                                                if 'Remaining_noise_budget:' in line:
+                                                    Remaining_noise_budget=int(line.split()[1])
+                                                    operation_stats["Remaining_noise_budget"].append(Remaining_noise_budget)
+                                                    comp=comp+1
+                                                ##############
+                                                if comp == 2 :
                                                     break
 
                                 except subprocess.CalledProcessError as e:
@@ -342,34 +362,6 @@ for subfolder_name in polynomial_folders:
                             for op in operations:
                                 nb_occurrences = len(re.findall(rf'\b{op}', file_content))
                                 operation_stats[op].append(int(nb_occurrences))
-                            try:
-                                command = f"./main"
-                                result = subprocess.run(
-                                    command, shell=True, check=True, 
-                                    stdout=subprocess.PIPE, 
-                                    stderr=subprocess.PIPE, 
-                                    universal_newlines=True, 
-                                    cwd=build_path_he_build
-                                )
-                                lines = result.stdout.splitlines()
-                                for line in lines :
-                                    if ' ms' in line:
-                                        execution_time = line.split()[0]
-                                        print(f"====> Execution time {execution_time}")
-                                        operation_stats["execution_time (s)"].append(float(execution_time))
-                                        break
-                                ## analyzing generated code for statistics ###
-                                file_name = build_path_he +"/_gen_he_fhe.cpp"
-                                ########################################################
-                                with open(file_name,"r") as file : 
-                                    file_content = file.read()
-                                    for op in operations :
-                                        nb_occurrences = len(re.findall(rf'\b{op}', file_content))
-                                        operation_stats[op].append(int(nb_occurrences))              
-                                # print(f"Output for {subfolder_name}:\n{result.stdout}")
-                            except subprocess.CalledProcessError as e:
-                                print(f"Running fhe code for {subfolder_name} failed with error:\n{e.stderr}")
-                    ##################################################################
                     ##################################################################
                     row=[benchmark_name]
                     if not benchmark_compilation_timed_out : 

@@ -8,12 +8,12 @@ use crate::{
     runner::Runner,
     runner::StopReason, 
     cost::VecCostFn, 
-}; 
+};  
 use std::collections::HashMap;   
 use std::collections::HashSet;  
 use egg::rewrite as rw;
 use egg::*;
-use core::cmp::min;
+use core::cmp::*;
 // Check if all the variables, in this case memories, are equivalent
 
 /// Run the rewrite rules over the input program and return the best (cost, program)
@@ -50,12 +50,18 @@ pub fn run(
     let start_time = Instant::now();
     // Initialize the e-graph with constant folding enabled and add a zero literal
     let mut init_eg = Egraph::new(ConstantFold);
+    init_eg.add_expr(&prog);
+    let initial_size = init_eg.total_size();
+    eprintln!("===> Initial e-graph size: {}", initial_size);
+    ////////////////////////////////////////////////////////
+    let real_enodes_limit =  max(initial_size*2,node_limit);
+    let mut init_eg = Egraph::new(ConstantFold);
     init_eg.add(VecLang::Num(0));
     type MyRunner = Runner<VecLang, ConstantFold>;
     let runner = MyRunner::new(Default::default())
         .with_egraph(init_eg)
         .with_expr(&prog)
-        .with_node_limit(node_limit)
+        .with_node_limit(real_enodes_limit)
         .with_time_limit(std::time::Duration::from_secs(timeout))
         .with_iter_limit(10_000)
         .with_hook({
@@ -67,11 +73,9 @@ pub fn run(
             }
         })
         .run(&rules);
-        let report = runner.report();
-        //eprintln!("report : {:?}", report);
-        /* for the rules , if the rule is expensive we add the prefix exp to its name */
-    // Stop timing after the e-graph is built
     let build_time = start_time.elapsed();
+    let report = runner.report();
+    //eprintln!("report : {:?}", report);
     
     //eprintln!("E-graph built in {:?}", build_time);
     // Print the reason for stopping to STDERR
@@ -436,13 +440,14 @@ pub fn cond_check_any_elems_composed(vector_width: usize)-> impl Fn(&mut EGraph<
             egraph[bi].nodes.iter().all(|node| matches!(node, VecLang::Add(_) | VecLang::Mul(_) | VecLang::Minus(_))) &&
             egraph[ai].nodes.iter().all(|node| matches!(node, VecLang::Add(_) | VecLang::Mul(_) | VecLang::Minus(_)))
         }).count();
-        let count1 = (0..vector_width).filter(|&i| {
+        /*let count1 = (0..vector_width).filter(|&i| {
             let bi = subst[format!("?b{}", i).as_str().parse().unwrap()];
             let ai = subst[format!("?a{}", i).as_str().parse().unwrap()];
             
             egraph[bi].nodes.iter().all(|node| matches!(node, VecLang::Mul(_))) || egraph[ai].nodes.iter().all(|node| matches!(node, VecLang::Mul(_)))
-        }).count();
-        count * 2 >= vector_width || count1 >= 1 // Check if at least half of the elements satisfy the condition
+        }).count();*/
+        //count * 2 >= vector_width || count1 >= 1 // Check if at least half of the elements satisfy the condition
+        count * 2 >= vector_width 
     }
 }
 
