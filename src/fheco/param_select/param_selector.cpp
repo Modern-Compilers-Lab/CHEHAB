@@ -12,7 +12,7 @@ const unordered_map<EncParams::SecurityLevel, unordered_map<size_t, int>> Parame
   {EncParams::SecurityLevel::tc192, {{1024, 19}, {2048, 37}, {4096, 75}, {8192, 152}, {16384, 305}, {32768, 612}}},
   {EncParams::SecurityLevel::tc256, {{1024, 14}, {2048, 29}, {4096, 58}, {8192, 118}, {16384, 237}, {32768, 476}}}
 }; 
-
+ 
 const map<int, map<size_t, ParameterSelector::NoiseEstimatesValue>> ParameterSelector::bfv_noise_estimates_seal = {
   {14, {{1024, {6, 25, 18}}, {2048, {7, 26, 18}}}},
   {15, {{1024, {6, 25, 18}}}},
@@ -911,3 +911,4 @@ unordered_map<string, unordered_set<string>> ParameterSelector::get_outputs_comp
 }
 /**************************************************************/
 } // namespace param_selector
+ 

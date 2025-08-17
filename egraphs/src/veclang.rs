@@ -8,7 +8,7 @@ define_language! {
         // children nodes
         "+" = Add([Id; 2]),
         "*" = Mul([Id; 2]), 
-        "-" = Minus([Id; 2]),
+        "-" = Minus([Id; 2]), 
         "<<" = Rot([Id; 2]),
         "-" = Neg([Id; 1]), 
         // Vectors have width elements

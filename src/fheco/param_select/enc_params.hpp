@@ -9,7 +9,7 @@
 
 namespace fheco::param_select 
 {
-  class EncParams
+  class EncParams 
   {
   public:
     enum class SecurityLevel{

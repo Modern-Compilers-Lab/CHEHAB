@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 
   print_bool_arg(opt, "opt", clog);
   clog << '\n';
- 
+
   string app_name = "fhe";
   ifstream is("../" + app_name + "_io_example_adapted.txt");
   if (!is)
@@ -35,8 +35,7 @@ int main(int argc, char **argv)
   ClearArgsInfo clear_inputs, clear_outputs;
   size_t func_slot_count;
   parse_inputs_outputs_file(is, params.plain_modulus().value(), clear_inputs, clear_outputs, func_slot_count);
-
-  params.set_coeff_modulus(CoeffModulus::BFVDefault(n));
+  params.set_coeff_modulus(CoeffModulus::Create(n, {60, 60, 60}));
   SEALContext context(params, true, sec_level_type::tc128);
   BatchEncoder batch_encoder(context);
   KeyGenerator keygen(context);

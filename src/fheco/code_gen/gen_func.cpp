@@ -10,7 +10,7 @@
 #include <string>
 #include <string_view>
 using namespace std;
- 
+  
 namespace fheco::code_gen
 {
 
@@ -54,7 +54,7 @@ void gen_func(
     //std::cout<<"Encryption params have been printed succefully\n";
     gen_main_code(params,security_level,automatic_enc_params_enabled);
   }else{ 
-    int poly_modulus_degree = 16384 ;
+    int poly_modulus_degree = 16384 ; 
     param_select::EncParams params = param_select::EncParams(poly_modulus_degree,func->plain_modulus()); 
     gen_main_code(params,security_level,automatic_enc_params_enabled);
   }
@@ -437,10 +437,10 @@ void gen_main_code(fheco::param_select::EncParams params,param_select::EncParams
       get_clear_outputs(
         batch_encoder, decryptor, encrypted_outputs, encoded_outputs, func_slot_count, obtained_clear_outputs);
       print_encrypted_outputs_info(context, decryptor, encrypted_outputs, clog);
-      cout << elapsed.count() << " ms\n";
+      cout <<"execution_time_(ms): "<<elapsed.count() <<"\n"<<std::flush;
     }
     )"
-    };
+    }; 
       string str_2_converted{str_2};
       out<<str_2_converted ;
       out.close();

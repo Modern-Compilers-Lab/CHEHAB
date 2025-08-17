@@ -5,12 +5,12 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include <stdexcept>
+#include <stdexcept> 
 #include <string>
 #include <vector>
 #include <sstream> 
 #include <random> 
-#include <queue>
+#include <queue> 
 using namespace std; 
 using namespace fheco;
 #include "../global_variables.hpp" 
@@ -132,7 +132,7 @@ Ciphertext treeGenerator(int originalDepth, int maxDepth, int& seed, const std::
         seed += 1;
         return Ciphertext(VarName);  // Return Ciphertext instance instead of Tree(Var)
     }
-}
+} 
 /*****************************************************/
 void fhe(int depth,int iteration, string regime) {
     //vector<int> depths = {5, 10};
@@ -142,7 +142,7 @@ void fhe(int depth,int iteration, string regime) {
     bool construct_polynomial_from_file = true;
     std::unordered_map<std::string, int> labels_values;
     if(construct_polynomial_from_file){
-        std::string filename = "polynomial_trees/tree_" + regime + "_" + std::to_string(depth) + ".txt";
+        std::string filename = "polynomial_trees/tree_" + regime + "_" + std::to_string(depth)+ "_" + std::to_string(iteration) + ".txt";
         std::ifstream inFile(filename);
         if (!inFile) {
             std::cerr << "Error: Unable to open file " << filename << std::endl;
@@ -237,15 +237,22 @@ int main(int argc, char **argv) {
             throw logic_error("Failed to create source file");
         }
         cout << " window is " << window << endl;
-        Compiler::gen_vectorized_code(func, window, optimization_method);  // add a flag to specify if the benchmark is structured or no
+        /********** vectorization Part *******************************/
+        if(VECTORIZATION_ENABLED){
+        Compiler::gen_vectorized_code(func, window,optimization_method);  // add a flag to specify if the benchmark is structured or no
+        }
+        /********** Simplification & depth reduction Part ************/
+        if(SIMPLIFICATION_ENABLED){
         auto ruleset = Compiler::Ruleset::depth;
         auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-        //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+        Compiler::compile(func, ruleset, rewrite_heuristic);
+        }
+        /********** FHE code generation  *****************************/
         Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
+        
         /************/elapsed = chrono::high_resolution_clock::now() - t;
-        cout<<"Compile time : \n";
         cout << elapsed.count() << " ms\n";
-        if (call_quantifier) 
+        if (call_quantifier)
         {
             util::Quantifier quantifier{func};
             quantifier.run_all_analysis();
@@ -271,7 +278,7 @@ int main(int argc, char **argv) {
         cout << " window is " << window << endl;
         auto ruleset = Compiler::Ruleset::simplification_ruleset;
         auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-        //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+        Compiler::compile(func, ruleset, rewrite_heuristic);
         Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
         /************/elapsed = chrono::high_resolution_clock::now() - t;
         cout<<"Compile time : \n";

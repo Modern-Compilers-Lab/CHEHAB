@@ -3,7 +3,7 @@
 using namespace std;
 using namespace fheco;
 #include <chrono>
-#include <fstream>
+#include <fstream> 
 #include <iostream>
 #include <string>
 #include <vector> 
@@ -109,19 +109,26 @@ int main(int argc, char **argv)
     if (!source_os)
       throw logic_error("failed to create source file");
     cout << " window is " << window << endl;
-    Compiler::gen_vectorized_code(func, window, optimization_method);
-    auto ruleset = Compiler::Ruleset::depth;
-    auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-    //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+    /********** vectorization Part *******************************/
+    if(VECTORIZATION_ENABLED){
+      Compiler::gen_vectorized_code(func, window,optimization_method);  // add a flag to specify if the benchmark is structured or no
+    }
+    /********** Simplification & depth reduction Part ************/
+    if(SIMPLIFICATION_ENABLED){
+      auto ruleset = Compiler::Ruleset::depth;
+      auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
+      Compiler::compile(func, ruleset, rewrite_heuristic);
+    }
+    /********** FHE code generation  *****************************/
     Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
+    
     /************/elapsed = chrono::high_resolution_clock::now() - t;
-    cout<<"Compile time : \n";
     cout << elapsed.count() << " ms\n";
     if (call_quantifier)
     {
-      util::Quantifier quantifier{func};
-      quantifier.run_all_analysis();
-      quantifier.print_info(cout);
+        util::Quantifier quantifier{func};
+        quantifier.run_all_analysis();
+        quantifier.print_info(cout);
     }
   }
   else
@@ -143,7 +150,7 @@ int main(int argc, char **argv)
     cout << " window is " << window << endl;
     auto ruleset = Compiler::Ruleset::simplification_ruleset;
     auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
-    //Compiler::compile(func, ruleset, rewrite_heuristic, header_os, gen_name + ".hpp", source_os);
+    Compiler::compile(func, ruleset, rewrite_heuristic);
     Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
     /************/elapsed = chrono::high_resolution_clock::now() - t;
     cout<<"Compile time : \n";

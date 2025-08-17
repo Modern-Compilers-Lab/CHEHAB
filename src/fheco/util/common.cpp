@@ -8,7 +8,7 @@ namespace fheco::util
 {
 
 void copyFile(const std::string& sourceFile, const std::string& destinationFile) {
-    std::ifstream inFile(sourceFile);
+    std::ifstream inFile(sourceFile); 
     std::ofstream outFile(destinationFile);
 
     if (!inFile || !outFile) {

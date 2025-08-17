@@ -50,7 +50,7 @@ class AEDDP(DDP):
 # ------------------------------------------------------------------
 # DDP setup and device assignment
 # ------------------------------------------------------------------
-ddp = 0 # int(os.environ.get("RANK", -1)) != -1
+ddp = int(os.environ.get("RANK", -1)) != -1
 deviceids = [0, 1, 2]
 
 if ddp:
@@ -313,7 +313,7 @@ def collate_fn(batch):
 def train(model, train_dataset):
     accumulation_steps = 1
 
-    train_sampler = None # DistributedSampler(train_dataset) if ddp else None
+    train_sampler = DistributedSampler(train_dataset) if ddp else None
     train_loader = DataLoader(
         train_dataset,
         batch_size=config.batch_size,
@@ -665,4 +665,4 @@ def demo():
     
 
 if __name__ == "__main__":
-    demo()
+    main()

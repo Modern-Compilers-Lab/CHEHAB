@@ -5,7 +5,7 @@
 
 Fully Homomorphic Encryption (FHE) allows computations on encrypted data **without decrypting it**, enabling privacy-preserving computation. Despite its potential, FHE adoption remains limited due to challenges such as:
 
-- High computational overhead
+- High computational overhead 
 - Parameter tuning complexity
 - Tedious ciphertext management
 

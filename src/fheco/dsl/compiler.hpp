@@ -4,6 +4,10 @@
 #include "fheco/param_select/enc_params.hpp"
 #include "fheco/trs/common.hpp"
 #include "fheco/dsl/compiler_helper_functions.hpp"
+
+#include "fheco/param_select/enc_params.hpp"
+#include "fheco/param_select/param_selector.hpp"
+
 #include <cstddef>
 #include <limits>
 #include <map>
@@ -16,7 +20,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
+ 
 using std::queue;
 using std::string;
 using std::vector;
@@ -49,16 +53,15 @@ public:
       std::move(name), slot_count, bit_width, signedness, need_cyclic_rotation, overflow_warnings));
   }
 
-  static void compile(
-    std::shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic, std::ostream &header_os,
-    std::string_view header_name, std::ostream &source_os, bool log2_reduct = false, param_select::EncParams::SecurityLevel security_level=param_select::EncParams::SecurityLevel::tc128);
+  static void compile( 
+    std::shared_ptr<ir::Func> func, Ruleset ruleset, trs::RewriteHeuristic rewrite_heuristic);
   
   static ir::Term *build_expression(
   const std::shared_ptr<ir::Func> &func, std::map<string, ir::Term *> map, queue<string> &tokens);
   
   static void gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int optimization_method);
 
-  static void format_vectorized_code(const std::shared_ptr<ir::Func> &func);
+  static void format_vectorized_code(const std::shared_ptr<ir::Func> &func,bool final_expression_reached);
 
   static void gen_vectorized_code(const std::shared_ptr<ir::Func> &func, int window, int optimization_method);
   
@@ -75,7 +78,7 @@ public:
 
   static void set_active_func(const std::string &name);
 
-  static void call_egraph_vectorizer(int vector_width);
+  static void call_egraph_vectorizer(int vector_width,int rewrite_rule_family_index);
   
   static void call_rl_vectorizer(int vector_width);
 

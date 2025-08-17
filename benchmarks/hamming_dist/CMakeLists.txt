@@ -5,10 +5,10 @@ target_link_libraries(hamming_dist PRIVATE fheco)
  
 # Define the source file and destination file
 
-set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/hamming_dist/he/utils.cpp)
+set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/benchmarks/utils.cpp)
 set(DESTINATION_FILE_2 ${CMAKE_SOURCE_DIR}/build/benchmarks/hamming_dist/he/utils.cpp)
 
-set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/hamming_dist/he/utils.hpp)
+set(SOURCE_FILE_3 ${CMAKE_SOURCE_DIR}/benchmarks/utils.hpp)
 set(DESTINATION_FILE_3 ${CMAKE_SOURCE_DIR}/build/benchmarks/hamming_dist/he/utils.hpp)
 
 set(SOURCE_FILE_4 ${CMAKE_SOURCE_DIR}/benchmarks/hamming_dist/he/CMakeLists.txt)
