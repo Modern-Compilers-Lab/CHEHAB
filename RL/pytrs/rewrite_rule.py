@@ -8,6 +8,7 @@ from pattern import Pattern
 from vectorization_analyzer import VectorizationAnalyzer
 from util import generate_random_assignments, evaluate_expr
 
+MAX_VECTOR_SIZE = 32
 
 class RewriteRule:
     """
@@ -37,7 +38,7 @@ class RewriteRule:
             # Uniform rotation vectorization
             self.scalar_op = lhs.name if isinstance(lhs, Var) else str(lhs)
             self.vector_op = rhs.name if isinstance(rhs, Var) else str(rhs)
-            self.max_vector_size = 32  # size limit for resulting vector
+            self.max_vector_size = MAX_VECTOR_SIZE  # size limit for resulting vector
             self.lhs = None
             self.rhs = None
         elif rule_type == "vectorize-rotation-flexible":
@@ -46,7 +47,7 @@ class RewriteRule:
             self.target_ops = [scalar_op]
             self.vector_op = rhs.name if isinstance(rhs, Var) else str(rhs)
             self.min_count = 2
-            self.max_vector_size = 32
+            self.max_vector_size = MAX_VECTOR_SIZE
             self.lhs = None
             self.rhs = None
         else:
@@ -474,9 +475,16 @@ class RewriteRule:
                         matches.append((path.copy(), current))
             
             if isinstance(current, Op):
-                for i, child in enumerate(current.args):
-                    _find_recursive(child, path + [i])
-        
+                rotation = False
+                for rule in self.rotation_rules:
+                    if rule.lhs.match(current) is not None:
+                        rotation = True
+                        break
+                if not rotation:
+                        for i, child in enumerate(current.args):
+                            _find_recursive(child, path + [i])
+                else:
+                    _find_recursive( current.args[0],path + [0])   
         _find_recursive(expr, [])
         return matches
 
@@ -498,7 +506,6 @@ class RewriteRule:
                 rotation = False
                 
                 for rule in self.rotation_rules:
-                    
                     if rule.lhs.match(node) is not None:
                         rotation = True
                 if not rotation:
