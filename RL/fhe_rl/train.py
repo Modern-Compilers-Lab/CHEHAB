@@ -13,13 +13,13 @@ from stable_baselines3.common.callbacks import EvalCallback
 def train_agent(expressions_file: str, embeddings_model, total_timesteps: int = 1_000_000, num_envs: int = 8):
     benchmarks = load_expressions("./fhe_rl/datasets/benchmarks.txt") 
     expressions = load_expressions(expressions_file, benchmarks)
-    max_positions = 32
+    max_positions = 16
     rules_list  = create_rules("rules.txt")
     rules_list["END"] = None
     job_id = os.environ.get("SLURM_JOB_ID", "jobid")
     run_name = f"model_{job_id}"
     tensorboard_log_dir = f"./tensorboard/{run_name}"
-    def make_env(): return Monitor(fheEnv(rules_list, expressions, max_positions=32, embeddings_model=embeddings_model))
+    def make_env(): return Monitor(fheEnv(rules_list, expressions, max_positions=max_positions, embeddings_model=embeddings_model))
     env = SubprocVecEnv([make_env for _ in range(num_envs)], start_method='spawn')    
     val_env = DummyVecEnv([
     lambda: Monitor(fheEnv(rules_list, benchmarks, max_positions=max_positions,embeddings_model=embeddings_model))
@@ -32,7 +32,7 @@ def train_agent(expressions_file: str, embeddings_model, total_timesteps: int = 
         "n_steps": 2048,
         "batch_size": 256,
         "gamma": 0.99,
-        "gae_lambda": 0.95,
+        "gae_lambda": 0.98,
         "n_epochs": 15,
         "clip_range": 0.1,
         "clip_range_vf": 0.2,
@@ -44,8 +44,8 @@ def train_agent(expressions_file: str, embeddings_model, total_timesteps: int = 
             "rule_dim":      len(rules_list),
             "max_positions": max_positions,
             "rule_hidden_dims":   [128, 64],
-            "pos_hidden_dims":    [128, 64],
-            "value_hidden_dims":    [256, 128, 128, 64],
+            "pos_hidden_dims":    [64, 64],
+            "value_hidden_dims":    [256, 128, 64],
         }
     }
     model = PPO(**model_params)
@@ -56,7 +56,7 @@ def train_agent(expressions_file: str, embeddings_model, total_timesteps: int = 
         num_actions=len(rules_list),
         total_timesteps=total_timesteps,
         output_model_name=run_name,
-        notes="2 level hierarchical PPO max steps 60 and 8 envs"
+        notes="2 level hierarchical PPO max steps 75 and 8 envs"
     )
     num_benchmarks = len(benchmarks)
     eval_callback = EvalCallback(
@@ -69,7 +69,6 @@ def train_agent(expressions_file: str, embeddings_model, total_timesteps: int = 
         render=False, 
         verbose=1
     )
-    
     model.learn(
         total_timesteps=total_timesteps, 
         log_interval=1, 

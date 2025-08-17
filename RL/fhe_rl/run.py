@@ -5,6 +5,7 @@ import sys
 from .env import fheEnv
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize,SubprocVecEnv
 from .policy import HierarchicalMaskablePolicy
+import sys, importlib
 
 from stable_baselines3.common.monitor import Monitor
 def run_agent(expressions_file: str,embeddings_model, model_filepath: str,output_file: str):
@@ -17,67 +18,36 @@ def run_agent(expressions_file: str,embeddings_model, model_filepath: str,output
     rules_list = create_rules("rules.txt")
     rules_list["END"] = None
     results = []
-    max_positions = 32
+    max_positions = 16
     end_time = time.perf_counter()
     elapsed_seconds = end_time - start_time
-    print(f"[run_agent] Elapsed time: {elapsed_seconds:.4f} seconds")
     env = DummyVecEnv([
     lambda: Monitor(fheEnv(rules_list, expressions, max_positions=max_positions,embeddings_model=embeddings_model))
     ])
     model = PPO(
         policy=HierarchicalMaskablePolicy,
-        env=env,
-        policy_kwargs={
-            "ent_coef": 0.1,
-            "rule_dim":      len(rules_list),
-            "max_positions": max_positions,
-            "rule_hidden_dims":   [128, 64],
-            "pos_hidden_dims":    [128, 64],
-            "value_hidden_dims":    [256, 128, 128, 64],
-        },
+        env=env
     )
-    
+    sys.modules["fhe_rl_new"] = importlib.import_module("fhe_rl")
     model = model.load(model_filepath)
     start_time = time.perf_counter()
-
     obs = env.reset()
     wrapper  = env.envs[0]
     fhe_env   = wrapper.env
     test_expr = fhe_env.initial_expression
     initial_cost = fhe_env.initial_cost
-
     done = False
     steps = 0
-
     last_expr = None
-    final_expr = None
     bad_count = 0
-
     while not done:
         last_expr = fhe_env.expression
         last_cost = fhe_env.current_cost
-
         action, _ = model.predict(obs, deterministic=True)
         obs, rewards, dones, infos = env.step(action)
-
-        if rewards[0] < 0:
-            bad_count += 1
-            if bad_count == 1:
-                final_expr = last_expr
-        else:
-            bad_count = 0
-            final_expr = None
-
-        if bad_count >= 3:
-            final_expr = last_expr
-            break
-
         done = bool(dones[0])
         steps += 1
-    if not final_expr:
-        final_expr = last_expr
-    print(f"[run_agent] Elapsed time: {elapsed_seconds:.4f} seconds")
-    parsed = parse_sexpr(final_expr)
+    parsed = parse_sexpr(last_expr)
     vec_sizes=" ".join(str(x) for x in calc_vec_sizes(parsed))
     with open (output_file, "w") as f:
         f.write(last_expr+"\n"+vec_sizes)

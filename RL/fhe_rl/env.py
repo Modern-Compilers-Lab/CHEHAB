@@ -29,7 +29,7 @@ class fheEnv(gym.Env):
         self.expressions = expressions
         self.max_positions = max_positions
         self.embeddings_model = embeddings_model
-        self.max_steps =    60
+        self.max_steps =    75
         self.max_expression_size = 10000
         self.initial_cost = 0
         self.embedding_dim = 256

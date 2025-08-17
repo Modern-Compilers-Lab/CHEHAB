@@ -48,7 +48,7 @@ if __name__ == "__main__":
         agent_zip       = sys.argv[2]
         embeddings_path = sys.argv[3]
         embeddings = load_embeddings(embeddings_path)
-        test_agent(".dataset/test.txt", embeddings, agent_zip)
+        test_agent("./fhe_rl/datasets/benchmarks.txt", embeddings, agent_zip)
 
     # ─────────────────────────────── RUN ──────────────────────────────
     elif mode == "run":

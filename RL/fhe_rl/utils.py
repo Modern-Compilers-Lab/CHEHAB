@@ -31,14 +31,11 @@ def load_expressions(file_path: str,validation_exprs = []):
         
         token_seq = get_token_sequence(exp_str)
         validation_token_set.add(token_seq)
-        
-    
     unique_expressions = {}
     recap = { "1":0,"4":0,"8":0,"9":0,"16":0,"25":0,"32":0}
-
     with open(file_path, "r") as f:
         for line in f:
-            exp_str = line.split("|||")[0].strip()
+            exp_str = line.split(":")[0].strip()
             if not exp_str:
                 continue
             try:
@@ -56,9 +53,6 @@ def load_expressions(file_path: str,validation_exprs = []):
                     unique_expressions[token_seq] = exp_str
             except Exception as e:
                 continue
-            
-            
-    print(recap)
     print("Number of unique valid expressions (excluding validation):", len(unique_expressions))
     return list(unique_expressions.values())
 
