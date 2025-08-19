@@ -35,7 +35,8 @@ try:
 except subprocess.CalledProcessError as e:
     print(f"Command failed with error:\n{e.stderr}")    
 
-benchmark_folders = ["max","sort","discrete_cosin_transform","poly_derivative","box_blur","lin_reg","hamming_dist","poly_reg","l2_distance","dot_product","gx_kernel","gy_kernel","roberts_cross","matrix_mul"] 
+benchmark_folders = ["max","sort","box_blur","lin_reg","hamming_dist","poly_reg","l2_distance","dot_product","gx_kernel","gy_kernel","roberts_cross","matrix_mul"] 
+
 #benchmark_folders = ["lin_reg","hamming_dist","poly_reg","l2_distance","dot_product","gx_kernel","gy_kernel","roberts_cross","matrix_mul","max","sort"] 
 exceptions = ["max","sort","discrete_cosin_transform","poly_derivative"]
 benchmarks_slot_counts  = {
@@ -47,15 +48,15 @@ benchmarks_slot_counts  = {
 ###############################
 ### specify the number of iteration  
 ###### Configurations ############## 
-optimization_method = 0 # 0 = egraph (default), 1 = RL
+optimization_method = 1 # 0 = egraph (default), 1 = RL
 cse_enabled = 1
 vectorize_code = 1 
-slot_counts= [4,8,16,32]
-iterations = 5 #minimum 2
+slot_counts= [3,4,5,8,16,32]
+iterations = 2 #minimum 2
 window_size = 0    
 depths = [5,10] 
 regimes = ["50-50","100-50","100-100"]
-number_instances_each_polynomial_configuration = 2
+number_instances_each_polynomial_configuration = 1
 compile_time_timeout_seconds = 7200
 output_csv = f"results_{'RL' if optimization_method == 1 else 'EGraph'}.csv"
 
@@ -185,12 +186,10 @@ for subfolder_name in benchmark_folders:
                                             #print(f"==> execution time {line.split()[0]}")
                                             execution_time = float(line.split()[1])
                                             operation_stats["execution_time (s)"].append(execution_time)
-                                            comp=comp+1
                                         ####################################
                                         if 'Remaining_noise_budget:' in line:
                                             Remaining_noise_budget=int(line.split()[1])
                                             operation_stats["Remaining_noise_budget"].append(Remaining_noise_budget)
-                                            comp=comp+1
                                         ##############
                                         if comp == 2 :
                                             break
@@ -341,12 +340,10 @@ for subfolder_name in polynomial_folders:
                                                     #print(f"==> execution time {line.split()[0]}")
                                                     execution_time = float(line.split()[1])
                                                     operation_stats["execution_time (s)"].append(execution_time)
-                                                    comp=comp+1
                                                 ####################################
                                                 if 'Remaining_noise_budget:' in line:
                                                     Remaining_noise_budget=int(line.split()[1])
                                                     operation_stats["Remaining_noise_budget"].append(Remaining_noise_budget)
-                                                    comp=comp+1
                                                 ##############
                                                 if comp == 2 :
                                                     break

@@ -10,13 +10,7 @@ set_target_properties(gen_he_fhe PROPERTIES CXX_EXTENSIONS OFF)
 target_link_libraries(gen_he_fhe SEAL::seal)
  
  
-
-
 add_library(utils STATIC utils.cpp)
-
-
-
-
 target_compile_features(utils PUBLIC cxx_std_17)
 set_target_properties(utils PROPERTIES CXX_EXTENSIONS OFF)
 target_link_libraries(utils SEAL::seal)
@@ -32,3 +26,4 @@ add_custom_target(copy_input_1box_blur ALL
     DEPENDS ${SOURCE_FILE}
     COMMENT "Copying ${SOURCE_FILE_1} to ${DESTINATION_FILE_1}"
 )
+

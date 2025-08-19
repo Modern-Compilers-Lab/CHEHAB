@@ -117,6 +117,9 @@ int main(int argc, char **argv)
       auto rewrite_heuristic = trs::RewriteHeuristic::bottom_up;
       Compiler::compile(func, ruleset, rewrite_heuristic);
     }
+        /********** FHE code generation  *****************************/
+    Compiler::gen_he_code(func, header_os, gen_name + ".hpp", source_os);
+    
     /************/elapsed = chrono::high_resolution_clock::now() - t;
     cout << elapsed.count() << " ms\n";
     if (call_quantifier) 
