@@ -1,8 +1,9 @@
 import os, sys
-from pytrs import create_rules as _create_rules,parse_sexpr,Expr,Const,Var,Op
+from pytrs import create_rules as _create_rules,parse_sexpr,Expr,Const,Var,Op,VARIABLE_RANGE,CONST_OFFSET,PAREN_CLOSE,PAREN_OPEN,node_to_id,get_normal_depth,tokenize
 
 import torch, torch.nn as nn
-from .TRAE import TRAE,get_expression_cls_embedding,flatten_expr
+from .TRAE import TRAE,get_expression_cls_embedding
+# from .TRAE_bpe import TRAE,get_expression_cls_embedding,BPETokenizer
 
 DEVICE = "cpu"
 
@@ -17,12 +18,102 @@ def load_embedding_model(checkpoint_path=None, device=DEVICE):
     embeddings_model.to(device) 
     embeddings_model.eval()
     return embeddings_model
+def load_embedding_model_bpe(checkpoint_path=None, device="cpu"):
+    # Load state dict first to extract vocab size
+    state_dict = torch.load(checkpoint_path, map_location=device, weights_only=True)
+    new_sd = {k[len("module.") :] if k.startswith("module.") else k: v for k, v in state_dict.items()}
+    
+    # Extract vocab size from the model state dict
+    if 'model.token_embedding.weight' in new_sd:
+        vocab_size = new_sd['model.token_embedding.weight'].shape[0]
+    elif 'token_embedding.weight' in new_sd:
+        vocab_size = new_sd['token_embedding.weight'].shape[0]
+    else:
+        print("Warning: Could not determine vocab size from state dict, using default 1000")
+        vocab_size = 1000
+    
+    print(f"Detected model vocab size: {vocab_size}")
+    
+    # Load BPE tokenizer if available
+    try:
+        import pickle
+        
+        tokenizer_paths = [
+            "./fhe_rl/trained_models/bpe_tokenizer.pkl"
+        ]
+        
+        loaded_tokenizer = None
+        for path in tokenizer_paths:
+            try:
+                with open(path, "rb") as f:
+                    loaded_tokenizer = pickle.load(f)
+                print(f"BPE tokenizer loaded from: {path}")
+                break
+            except (FileNotFoundError, OSError) as e:
+                print(e)
+                continue
+        
+        if loaded_tokenizer is None:
+            raise FileNotFoundError("BPE tokenizer not found in any expected location")
+        
+        # Update the global config and tokenizer in TRAE module
+        from . import TRAE_bpe as   TRAE_module
+        print(vocab_size)
+        TRAE_module.config.vocab_size = vocab_size
+        TRAE_module.tokenizer = loaded_tokenizer
+        loaded_tokenizer.trained = True
+        TRAE_module.loaded_tokenizer = loaded_tokenizer
+        print("BPE tokenizer loaded for embeddings.")
+    except (FileNotFoundError, AttributeError, pickle.PickleError) as e:
+        print(f"Warning: BPE tokenizer loading failed: {e}")
+        print("Using default tokenizer setup.")
+        # Update the global config in TRAE module
+        from . import TRAE_bpe  as  TRAE_module
+        TRAE_module.config.vocab_size = vocab_size
+    
+    # Now create model with correct vocab size
+    embeddings_model = TRAE()  
+    embeddings_model.load_state_dict(new_sd)
+    embeddings_model.to(device) 
+    embeddings_model.eval()
+    return embeddings_model
+
 
 def get_token_sequence(exp_str: str):
     expr = parse_sexpr(exp_str)
     flat = flatten_expr(expr)
     node_ids = tuple(entry["node_id"] for entry in flat)
     return node_ids
+def dfs_traverse(expr, depth=0, node_list=None):
+    if node_list is None:
+        node_list = []
+    if isinstance(expr, Op):
+        node_list.append((PAREN_OPEN, depth))
+        node_list.append((expr, depth))
+        for child in expr.args:
+            dfs_traverse(child, depth + 1, node_list)
+        node_list.append((PAREN_CLOSE, depth))
+    else:
+        node_list.append((expr, depth))
+    return node_list
+
+
+def flatten_expr(expr):
+    node_list = dfs_traverse(expr, 0)
+    results = []
+    varmap = {}
+    intmap = {}
+    next_var_id = VARIABLE_RANGE[0]
+    next_int_id = CONST_OFFSET
+    for node_or_paren, depth in node_list:
+        if node_or_paren in (PAREN_OPEN, PAREN_CLOSE):
+            nid = node_or_paren
+        else:
+            nid, next_var_id, next_int_id, _ = node_to_id(
+                node_or_paren, varmap, intmap, next_var_id, next_int_id
+            )
+        results.append({"node_id": nid})
+    return results
 
 def load_expressions(file_path: str,validation_exprs = []):
     validation_token_set = set()
@@ -52,6 +143,7 @@ def load_expressions(file_path: str,validation_exprs = []):
                     recap[str(vec_size)] += 1
                     unique_expressions[token_seq] = exp_str
             except Exception as e:
+                print(e)
                 continue
     print("Number of unique valid expressions (excluding validation):", len(unique_expressions))
     return list(unique_expressions.values())

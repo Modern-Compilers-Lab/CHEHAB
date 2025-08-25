@@ -4,7 +4,8 @@ from gymnasium import spaces
 from pytrs import parse_sexpr, calculate_cost, Expr, Const, Var, Op,expr_to_str
 import torch
 
-from .TRAE import TRAE, get_expression_cls_embedding
+# from .TRAE_bpe import get_expression_cls_embedding
+from .TRAE import get_expression_cls_embedding
 
 
 

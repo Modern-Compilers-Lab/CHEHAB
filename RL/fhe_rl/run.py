@@ -15,6 +15,7 @@ def run_agent(expressions_file: str,embeddings_model, model_filepath: str,output
         print("No valid expressions found in the file.")
         sys.exit(1)
         return
+    print(expressions)
     rules_list = create_rules("rules.txt")
     rules_list["END"] = None
     results = []
@@ -45,8 +46,24 @@ def run_agent(expressions_file: str,embeddings_model, model_filepath: str,output
         last_cost = fhe_env.current_cost
         action, _ = model.predict(obs, deterministic=True)
         obs, rewards, dones, infos = env.step(action)
+        # if rewards[0] < 0:
+        #     bad_count += 1
+        #     # on first bad decision, remember the expression
+        #     if bad_count == 1:
+        #         final_expr = last_expr
+        # else:
+        #     # any non-negative reward resets the streak
+        #     bad_count = 0
+        #     final_expr = None
+
+        # # once we've seen 3 negatives in a row, capture and break
+        # if bad_count >= 3:
+        #     final_expr = last_expr
+        #     break
         done = bool(dones[0])
         steps += 1
+    # if final_expr is not None:
+    #     last_expr = final_expr
     parsed = parse_sexpr(last_expr)
     vec_sizes=" ".join(str(x) for x in calc_vec_sizes(parsed))
     with open (output_file, "w") as f:

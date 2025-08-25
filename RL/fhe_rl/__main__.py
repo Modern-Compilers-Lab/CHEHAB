@@ -4,7 +4,8 @@ import os
 from .run   import run_agent
 from .train import train_agent
 from .test  import test_agent
-from .utils import load_embedding_model, DEVICE
+from .utils import load_embedding_model, DEVICE,load_embedding_model_bpe
+from .TRAE_bpe import BPETokenizer  # Import for pickle compatibility
 
 
 def usage() -> None:
