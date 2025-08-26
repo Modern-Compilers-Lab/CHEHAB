@@ -555,8 +555,6 @@ void Compiler::call_rl_vectorizer(int vector_width)
         (project_root is the parent of fhe_rl and rl_venv)
   -----------------------------------------------------------------*/
   const fs::path project_root = fs::absolute("../../../RL");
-  const fs::path model_file = project_root / "fhe_rl/trained_models/agent_dynamic_llm_data.zip";
-  const fs::path embeddings_model_file = project_root / "fhe_rl/trained_models/embeddings_ROT_15_32_5m_10742576.pth";
   const fs::path expr_file = fs::absolute("../expression.txt");
   const fs::path vect_file = fs::absolute("../vectorized_code.txt");
 
@@ -577,11 +575,10 @@ void Compiler::call_rl_vectorizer(int vector_width)
         - source the venv
         - then run the package in that environment
         Every path lives inside single quotes to survive spaces.
+        Note: embeddings model path is now loaded from config.py
   -----------------------------------------------------------------*/
   std::ostringstream cmd;
   cmd << "python -m fhe_rl run "
-      << "'" << model_file.string() << "' "
-      << "'" << embeddings_model_file.string() << "' "
       << "'" << expr_file.string() << "' "
       << "'" << vect_file.string() << "'";
   std::cout << "Executing: " << cmd.str() << '\n';

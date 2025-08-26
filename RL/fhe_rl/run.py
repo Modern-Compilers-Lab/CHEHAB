@@ -1,6 +1,6 @@
 from stable_baselines3 import PPO
 import time
-from .utils import load_expressions, create_rules, parse_sexpr, load_embedding_model,predict_method,calc_vec_sizes
+from .utils import load_expressions, create_rules, parse_sexpr, load_embeddings,predict_method,calc_vec_sizes
 import sys
 from .env import fheEnv
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize,SubprocVecEnv

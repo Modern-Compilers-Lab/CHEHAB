@@ -1,7 +1,7 @@
 from .logger import log_test_results
 from stable_baselines3 import PPO
 import sys
-from .utils import load_expressions, load_embedding_model,create_rules
+from .utils import load_expressions, load_embeddings,create_rules
 from .env import fheEnv
 from .policy import HierarchicalMaskablePolicy
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize

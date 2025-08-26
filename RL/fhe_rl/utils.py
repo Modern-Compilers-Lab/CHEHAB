@@ -1,16 +1,47 @@
-import os, sys
-from pytrs import create_rules as _create_rules,parse_sexpr,Expr,Const,Var,Op,VARIABLE_RANGE,CONST_OFFSET,PAREN_CLOSE,PAREN_OPEN,node_to_id,get_normal_depth,tokenize
+import os
+import sys
+from pytrs import (
+    create_rules as _create_rules, parse_sexpr, tokenize,
+    Expr, Const, Var, Op, VARIABLE_RANGE, CONST_OFFSET, 
+    PAREN_CLOSE, PAREN_OPEN, node_to_id, get_normal_depth
+)
+import torch
+import torch.nn as nn
 
-import torch, torch.nn as nn
-from .TRAE import TRAE,get_expression_cls_embedding
-# from .TRAE_bpe import TRAE,get_expression_cls_embedding,BPETokenizer
+from .config import (
+    get_model_path, get_tokenizer_type, get_device, get_vocab_size,
+    TOKENIZER_CONFIG, AGENT_CONFIG
+)
 
-DEVICE = "cpu"
+if get_tokenizer_type() == "bpe":
+    from .TRAE_bpe import TRAE, get_expression_cls_embedding, BPETokenizer
+else:   
+    from .TRAE import TRAE, get_expression_cls_embedding
 
+DEVICE = get_device()
+
+def load_embeddings(tokenizer_type=None, checkpoint_path=None, device=None):
+
+    if tokenizer_type is None:
+        tokenizer_type = get_tokenizer_type()
+    
+    if device is None:
+        device = get_device()
+    
+    if checkpoint_path is None:
+        checkpoint_path = get_model_path("embeddings_model")
+    
+    print(f"Loading embeddings with tokenizer type: {tokenizer_type}")
+    
+    if tokenizer_type == "bpe":
+        return load_embedding_model_bpe(checkpoint_path, device)
+    else:
+        model = load_embedding_model_dynamic(checkpoint_path, device)
+        return model, None  
 def create_rules(path):
     return _create_rules(path=path)
 
-def load_embedding_model(checkpoint_path=None, device=DEVICE):
+def load_embedding_model_dynamic(checkpoint_path=None, device=DEVICE):
     embeddings_model = TRAE()  
     state_dict = torch.load(checkpoint_path, map_location=device,weights_only=True)
     new_sd = {k[len("module.") :] if k.startswith("module.") else k: v for k, v in state_dict.items()}
@@ -18,6 +49,7 @@ def load_embedding_model(checkpoint_path=None, device=DEVICE):
     embeddings_model.to(device) 
     embeddings_model.eval()
     return embeddings_model
+
 def load_embedding_model_bpe(checkpoint_path=None, device="cpu"):
     # Load state dict first to extract vocab size
     state_dict = torch.load(checkpoint_path, map_location=device, weights_only=True)
@@ -76,7 +108,7 @@ def load_embedding_model_bpe(checkpoint_path=None, device="cpu"):
     embeddings_model.load_state_dict(new_sd)
     embeddings_model.to(device) 
     embeddings_model.eval()
-    return embeddings_model
+    return embeddings_model,None
 
 
 def get_token_sequence(exp_str: str):
@@ -168,8 +200,9 @@ def mlp(in_dim, hidden_dims, out_dim, *,
         layers.append(act())
         if dropout > 0:
             layers.append(nn.Dropout(dropout))
-        if residual and prev == h and i % 2 == 1:
-            layers.append(Residual())
+        # Note: Residual connections removed for simplicity
+        # if residual and prev == h and i % 2 == 1:
+        #     layers.append(Residual())
         prev = h
     layers.append(nn.Linear(prev, out_dim))
     return nn.Sequential(*layers)

@@ -557,12 +557,12 @@ def train(model, train_dataset):
         if master_process:
             job_id = os.environ.get("SLURM_JOB_ID", "jobid")
             name = f"model_Transformer_BPE_ddp_{job_id}_epoch_{config.total_samples}.pth"
-            os.makedirs("saved_models", exist_ok=True)
-            torch.save(model.state_dict(), os.path.join("saved_models", name))
+            os.makedirs("trained_models", exist_ok=True)
+            torch.save(model.state_dict(), os.path.join("trained_models", name))
             print(f"[BPE Rank {ddp_rank}] Model saved: {name}")
             
             # Also save tokenizer for later use
-            with open("saved_models/bpe_tokenizer.pkl", "wb") as f:
+            with open("trained_models/bpe_tokenizer.pkl", "wb") as f:
                 pickle.dump(tokenizer, f)
             print(f"[BPE Rank {ddp_rank}] Tokenizer saved")
 
@@ -750,8 +750,8 @@ def main():
             print(f"Updated vocab_size to: {config.vocab_size}")
             
             # Save tokenizer
-            os.makedirs("saved_models", exist_ok=True)
-            with open("saved_models/bpe_tokenizer.pkl", "wb") as f:
+            os.makedirs("trained_models", exist_ok=True)
+            with open("trained_models/bpe_tokenizer.pkl", "wb") as f:
                 pickle.dump(tokenizer, f)
             print("BPE tokenizer saved.")
         
@@ -760,7 +760,7 @@ def main():
             
             # Load tokenizer on all ranks
             if not master_process:
-                with open("saved_models/bpe_tokenizer.pkl", "rb") as f:
+                with open("trained_models/bpe_tokenizer.pkl", "rb") as f:
                     tokenizer = pickle.load(f)
                 config.vocab_size = tokenizer.vocab_size
                 print(f"[BPE Rank {ddp_rank}] BPE tokenizer loaded. Vocab size: {config.vocab_size}")
@@ -786,7 +786,7 @@ def main():
     elif sys.argv[1].lower() == "test":
         # Load BPE tokenizer
         try:
-            with open("saved_models/bpe_tokenizer.pkl", "rb") as f:
+            with open("trained_models/bpe_tokenizer.pkl", "rb") as f:
                 tokenizer = pickle.load(f)
             config.vocab_size = tokenizer.vocab_size
             print("BPE tokenizer loaded for testing.")
@@ -836,7 +836,7 @@ def demo():
     
     # Load BPE tokenizer
     try:
-        with open("saved_models/bpe_tokenizer.pkl", "rb") as f:
+        with open("trained_models/bpe_tokenizer.pkl", "rb") as f:
             tokenizer = pickle.load(f)
         config.vocab_size = tokenizer.vocab_size
         print("BPE tokenizer loaded for demo.")

@@ -3,9 +3,15 @@ import gymnasium as gym
 from gymnasium import spaces
 from pytrs import parse_sexpr, calculate_cost, Expr, Const, Var, Op,expr_to_str
 import torch
+from .config import get_tokenizer_type
 
-# from .TRAE_bpe import get_expression_cls_embedding
-from .TRAE import get_expression_cls_embedding
+if get_tokenizer_type() == "bpe":
+    
+    from .TRAE_bpe import get_expression_cls_embedding
+    
+else:
+    
+    from .TRAE import get_expression_cls_embedding
 
 
 
