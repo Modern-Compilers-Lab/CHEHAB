@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.13)
 
+# Prefer system GCC/G++ (fixes glibc mismatch with Conda toolchains) unless overridden.
+if(NOT DEFINED CMAKE_C_COMPILER AND EXISTS "/usr/bin/gcc")
+    set(CMAKE_C_COMPILER "/usr/bin/gcc")
+endif()
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "/usr/bin/g++")
+    set(CMAKE_CXX_COMPILER "/usr/bin/g++")
+endif()
+
 project(FHECo VERSION 1.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)

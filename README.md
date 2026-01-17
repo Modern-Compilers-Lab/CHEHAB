@@ -55,17 +55,10 @@ void example()
 - Rust (for TRS/e-graph optimizer via `egg`)
 - Python dependencies (for RL optimization)
 
-### 1. Clone the Repository
-
-```bash
-cd /scratch/<your_user_id>/
-git clone https://github.com/Modern-Compilers-Lab/CHEHAB.git
-cd CHEHAB
-```
 
 This directory contains an `environment.yml` for setting up the Conda environment.
 
-### 2. Create and Activate Conda Environment
+### 1. Create and Activate Conda Environment
 
 ```bash
 conda env create -f environment.yml -n chehabEnv
@@ -74,7 +67,7 @@ cd RL/pytrs
 pip3 install -e . # To install the pytrs package
 ```
 
-### 3. Install SEAL (Microsoft SEAL Library)
+### 2. Install SEAL (Microsoft SEAL Library)
 
 ```bash
 cd /scratch/<your_user_id>/
@@ -150,6 +143,7 @@ python3 generate_box_blur.py --slot_count 4
 
 ```bash
 cd he
+rm -r build
 mkdir build
 cmake -S . -B build
 cd build
@@ -162,5 +156,52 @@ make
 ./main
 ```
 
+---
+
+## Docker (recommended)
+
+This repository includes Docker/Compose workflows that install Microsoft SEAL, build dependencies, and the Python environment inside the container.
+
+### 1) Interactive shell (compiler + benchmarks)
+From the repo root:
+
+```bash
+docker compose build chehab-main
+docker compose run --rm -it chehab-main /bin/bash
+```
+
+Inside the container, ensure the Conda environment is active (it is auto-activated for interactive `bash`, but you can run the following if needed):
+
+```bash
+source /opt/conda/etc/profile.d/conda.sh
+conda activate chehabEnv
+```
+
+Run the benchmark sweep (writes CSV results):
+
+```bash
+python run_benchmarks.py
+```
+
+Results are written under `results/` (and are available on the host via the bind mount configured in `docker-compose.yml`).
+
+### 2) Web UI (optional)
+Start the web service and open the browser UI:
+
+```bash
+docker compose build chehab-demo
+docker compose up chehab-demo
+```
+
+Then browse to `http://localhost:8000`.
+
+### 3) Generate plots from CSV results
+After producing a CSV (e.g., `results/results_RL.csv`), generate plots:
+
+```bash
+python results/generate_graphs.py --metric exec --csv results/results_RL.csv --label "CHEHAB RL" --output results/exec_time.png
+python results/generate_graphs.py --metric compile --csv results/results_RL.csv --label "CHEHAB RL" --output results/compile_time.png
+python results/generate_graphs.py --metric noise --csv results/results_RL.csv --label "CHEHAB RL" --output results/noise_budget.png
+```
 
 

@@ -155,7 +155,7 @@ def load_expressions(file_path: str,validation_exprs = []):
         token_seq = get_token_sequence(exp_str)
         validation_token_set.add(token_seq)
     unique_expressions = {}
-    recap = { "1":0,"4":0,"8":0,"9":0,"16":0,"25":0,"32":0}
+    # recap = { "1":0,"4":0,"8":0,"9":0,"16":0,"25":0,"32":0}
     with open(file_path, "r") as f:
         for line in f:
             exp_str = line.split(":")[0].strip()
@@ -165,14 +165,14 @@ def load_expressions(file_path: str,validation_exprs = []):
                 
                 expr = parse_sexpr(exp_str)
                 vec_size = len(expr.args)
-                if  not (str(vec_size) in recap.keys()):
-                    continue
+                # if  not (str(vec_size) in recap.keys()):
+                #     continue
                 token_seq = get_token_sequence(exp_str)
                 if token_seq in validation_token_set:
                     continue
 
                 if token_seq not in unique_expressions:
-                    recap[str(vec_size)] += 1
+                    # recap[str(vec_size)] += 1
                     unique_expressions[token_seq] = exp_str
             except Exception as e:
                 print(e)

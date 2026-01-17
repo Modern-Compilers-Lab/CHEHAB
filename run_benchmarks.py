@@ -15,6 +15,11 @@ infos.extend(operations)
 infos.extend(additional_infos) 
 
 #############################################
+# Force system toolchain to avoid glibc mismatches with Conda compilers.
+cmake_env = os.environ.copy()
+cmake_env["CC"] = "/usr/bin/gcc"
+cmake_env["CXX"] = "/usr/bin/g++"
+
 try:
     print("run=> cmake', '-S', '.', '-B', 'build' ")
     result = subprocess.run(
@@ -22,7 +27,8 @@ try:
         check=True, 
         stdout=subprocess.PIPE, 
         stderr=subprocess.PIPE, 
-        universal_newlines=True
+        universal_newlines=True,
+        env=cmake_env
     )
     print("run=> 'cmake', '--build', 'build'")
     result = subprocess.run(
@@ -30,7 +36,8 @@ try:
         check=True, 
         stdout=subprocess.PIPE, 
         stderr=subprocess.PIPE, 
-        universal_newlines=True
+        universal_newlines=True,
+        env=cmake_env
     )  
 except subprocess.CalledProcessError as e:
     print(f"Command failed with error:\n{e.stderr}")    
@@ -58,7 +65,7 @@ depths = [5,10]
 regimes = ["50-50","100-50","100-100"]
 number_instances_each_polynomial_configuration = 1
 compile_time_timeout_seconds = 7200
-output_csv = f"results_{'RL' if optimization_method == 1 else 'EGraph'}.csv"
+output_csv = f"results/results_{'RL' if optimization_method == 1 else 'EGraph'}.csv"
 
 ######################################
 with open(output_csv, mode='w', newline='') as file:
@@ -147,17 +154,27 @@ for subfolder_name in benchmark_folders:
                         break 
                     ## building and running fhe code 
                     build_path_he = os.path.join(build_path, "he")
-                    result = subprocess.run(['cmake', '-S', '.', '-B', 'build'], 
-                                cwd=build_path_he,
-                                check=True, 
-                                stdout=subprocess.PIPE, 
-                                stderr=subprocess.PIPE, 
-                                universal_newlines=True
-                                )
-                    result =subprocess.run(['cmake', '--build', 'build'], cwd=build_path_he,universal_newlines=True,
+                    build_path_he_build = os.path.join(build_path_he, "build")
+                    if os.path.isdir(build_path_he_build):
+                        shutil.rmtree(build_path_he_build, ignore_errors=True)
+                    result = subprocess.run(
+                        ['cmake', '-S', '.', '-B', 'build'], 
+                        cwd=build_path_he,
                         check=True, 
                         stdout=subprocess.PIPE, 
-                        stderr=subprocess.PIPE,)
+                        stderr=subprocess.PIPE, 
+                        universal_newlines=True,
+                        env=cmake_env
+                    )
+                    result = subprocess.run(
+                        ['cmake', '--build', 'build'],
+                        cwd=build_path_he,
+                        universal_newlines=True,
+                        check=True, 
+                        stdout=subprocess.PIPE, 
+                        stderr=subprocess.PIPE,
+                        env=cmake_env
+                    )
                     build_path_he_build = os.path.join(build_path_he, "build")
                     # Step 2: Build and run fhe code
                     
@@ -296,6 +313,9 @@ for subfolder_name in polynomial_folders:
                             #########################################################################
                             ## building and running fhe code 
                             build_path_he = os.path.join(build_path, "he")
+                            build_path_he_build = os.path.join(build_path_he, "build")
+                            if os.path.isdir(build_path_he_build):
+                                shutil.rmtree(build_path_he_build, ignore_errors=True)
                             try:
                                 result = subprocess.run(
                                     ['cmake', '-S', '.', '-B', 'build'], 
@@ -303,7 +323,8 @@ for subfolder_name in polynomial_folders:
                                     stdout=subprocess.PIPE, 
                                     stderr=subprocess.PIPE, 
                                     universal_newlines=True, 
-                                    cwd=build_path_he
+                                    cwd=build_path_he,
+                                    env=cmake_env
                                 )
                                 result = subprocess.run(
                                     ['cmake', '--build', 'build'], 
@@ -311,7 +332,8 @@ for subfolder_name in polynomial_folders:
                                     stdout=subprocess.PIPE, 
                                     stderr=subprocess.PIPE, 
                                     universal_newlines=True, 
-                                    cwd=build_path_he
+                                    cwd=build_path_he,
+                                    env=cmake_env
                                 )
                                 # result = subprocess.run(['sudo','cmake','--install','build'], check=True, capture_output=False, text=True)
                             except :

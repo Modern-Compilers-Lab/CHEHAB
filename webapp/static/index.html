@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHEHAB Demo</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div>
+        <h1>CHEHAB RL Demo</h1>
+        <p class="lede">
+          Pick a benchmark, set the slot count and parameters, and observe compile metrics,
+          runtime noise, and the veclang expressions before and after RL optimization.
+        </p>
+      </div>
+      <div class="cta-card">
+        <form id="run-form">
+          <div class="field">
+            <label for="benchmark">Benchmark</label>
+            <select id="benchmark" name="benchmark"></select>
+          </div>
+          <div class="field two-col">
+            <div>
+              <label for="slot_count">Slot count</label>
+              <select id="slot_count" name="slot_count"></select>
+            </div>
+            <div>
+              <label for="window">Vector window</label>
+              <select id="window" name="window"></select>
+            </div>
+          </div>
+          <div class="field hidden" id="poly-fields">
+            <label>Polynomial settings</label>
+            <div class="field three-col">
+              <div>
+                <label for="poly_depth">Depth</label>
+                <select id="poly_depth" name="poly_depth"></select>
+              </div>
+              <div>
+                <label for="poly_iteration">Iteration</label>
+                <select id="poly_iteration" name="poly_iteration"></select>
+              </div>
+              <div>
+                <label for="poly_regime">Regime</label>
+                <select id="poly_regime" name="poly_regime"></select>
+              </div>
+            </div>
+          </div>
+          <div class="toggles">
+            <label for="vectorize_code">Vectorize code</label>
+            <select id="vectorize_code" name="vectorize_code"></select>
+            <label for="call_quantifier">Collect metrics</label>
+            <select id="call_quantifier" name="call_quantifier"></select>
+            <label for="cse">CSE</label>
+            <select id="cse" name="cse"></select>
+            <label for="const_folding">Const folding</label>
+            <select id="const_folding" name="const_folding"></select>
+          </div>
+          <button type="submit" id="run-btn">Run benchmark</button>
+          <p class="note">First run will configure & build; it may take a bit longer.</p>
+        </form>
+      </div>
+    </header>
+
+    <section class="results">
+      <div class="card">
+        <div class="card-header">
+          <h2>Metrics</h2>
+          <span id="status" class="status idle">Idle</span>
+        </div>
+        <div id="metrics" class="metric-grid"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Intermediate Representation</h2>
+        </div>
+        <div class="ir-grid">
+          <div>
+            <h3>Initial (veclang)</h3>
+            <pre id="initial-expr" class="code-block"></pre>
+          </div>
+          <div>
+            <h3>Optimized</h3>
+            <pre id="optimized-expr" class="code-block"></pre>
+            <p class="small" id="vector-sizes"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Logs</h2>
+        </div>
+        <div id="logs" class="logs"></div>
+      </div>
+    </section>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
