@@ -1,0 +1,7 @@
+torch==2.2.1
+gymnasium==0.29.1
+stable-baselines3==2.3.2
+pandas==2.2.2
+numpy==1.26.4
+tokenizers==0.15.2
+tqdm==4.66.4

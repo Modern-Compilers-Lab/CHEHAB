@@ -27,7 +27,7 @@
 *.la
 *.a
 *.lib
-
+**/*/pyc
 # Executables
 *.exe
 *.out
@@ -40,9 +40,14 @@
 bin/
 lib/
 build/
+target/
 *.build
 env
 thirdparty/
-
+egraphs/target/**
 # Jupyter checkpoints
 .ipynb_checkpoints/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd

@@ -12,64 +12,64 @@
 #endif
 #include <stack>
 #include <stdexcept>
-#include <unordered_map>
+#include <unordered_map> 
 #include <utility>
-
+#include <iostream>
 using namespace std;
 
 namespace fheco::trs
 {
+
 bool TRS::run(RewriteHeuristic heuristic, int64_t max_iter, bool rewrite_created_sub_terms, bool global_analysis)
 {
   bool order_operands_enabled = Compiler::order_operands_enabled();
   Compiler::disable_order_operands();
-#ifdef FHECO_LOGGING
-  util::ExprPrinter expr_printer{func_};
+  #ifdef FHECO_LOGGING
+  util::ExprPrinter expr_printer{func_}; 
   clog << "\ninitial IR, ";
   expr_printer.print_expand_outputs_str_expr(clog);
-#endif
+  #endif
   int64_t iter = max_iter;
   bool did_rewrite = false;
   switch (heuristic)
   {
-  case RewriteHeuristic::bottom_up:
-    for (auto id : func_->get_top_sorted_terms_ids())
-      did_rewrite = rewrite_term(id, RewriteHeuristic::bottom_up, iter, rewrite_created_sub_terms, global_analysis);
+    case RewriteHeuristic::bottom_up:
+      for (auto id : func_->get_top_sorted_terms_ids()){
+        did_rewrite = rewrite_term(id, RewriteHeuristic::bottom_up, iter, rewrite_created_sub_terms, global_analysis);
+      }
+      break;
 
-    break;
+    case RewriteHeuristic::top_down:
+    {
+      const auto &sorted_terms_ids = func_->get_top_sorted_terms_ids();
+      for (auto id_it = sorted_terms_ids.crbegin(); id_it != sorted_terms_ids.crend(); ++id_it)
+        did_rewrite = rewrite_term(*id_it, RewriteHeuristic::top_down, iter, rewrite_created_sub_terms, global_analysis);
 
-  case RewriteHeuristic::top_down:
-  {
-    const auto &sorted_terms_ids = func_->get_top_sorted_terms_ids();
-    for (auto id_it = sorted_terms_ids.crbegin(); id_it != sorted_terms_ids.crend(); ++id_it)
-      did_rewrite = rewrite_term(*id_it, RewriteHeuristic::top_down, iter, rewrite_created_sub_terms, global_analysis);
-
-    break;
+      break;
+    }
+    default:
+      throw logic_error("unhandled RewriteHeuristic");
   }
-
-  default:
-    throw logic_error("unhandled RewriteHeuristic");
-  }
-#ifdef FHECO_LOGGING
+  #ifdef FHECO_LOGGING
   clog << "\nfinal IR, ";
   expr_printer.print_expand_outputs_str_expr(clog);
   clog << '\n';
   clog << "performed " << max_iter - iter << " rewrite attempts\n";
-#endif
+  #endif
   if (order_operands_enabled)
     Compiler::enable_order_operands();
-  return did_rewrite;
+    return did_rewrite;
 }
 
 bool TRS::apply_rule(ir::Term *term, const Rule &rule)
 {
   bool order_operands_enabled = Compiler::order_operands_enabled();
   Compiler::disable_order_operands();
-#ifdef FHECO_LOGGING
-  util::ExprPrinter expr_printer{func_};
-  clog << "applying rule \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\" on term \""
-       << expr_printer.expand_term_str_expr(term) << "\"\n";
-#endif
+  #ifdef FHECO_LOGGING
+    util::ExprPrinter expr_printer{func_};
+    clog << "applying rule \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\" on term \""
+        << expr_printer.expand_term_str_expr(term) << "\"\n";
+  #endif
   Substitution subst;
   bool global_analysis = false;
   double rel_cost = 0;
@@ -77,32 +77,31 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
   bool matched = match(rule.lhs(), term, subst, global_analysis, rel_cost, to_delete);
   if (!matched)
   {
-#ifdef FHECO_LOGGING
-    clog << "matching failed\n";
-#endif
+    #ifdef FHECO_LOGGING
+        clog << "matching failed\n";
+    #endif
     return false;
   }
-#ifdef FHECO_LOGGING
-  clog << "unified with substitution:\n";
-  clog << "σ = ";
-  pprint_substitution(func_, subst, clog);
-  clog << '\n';
-#endif
-  if (!rule.check_cond(subst))
-  {
-#ifdef FHECO_LOGGING
-    clog << "condition not satisfied\n";
-#endif
+  #ifdef FHECO_LOGGING
+    clog << "unified with substitution:\n";
+    clog << "σ = ";
+    pprint_substitution(func_, subst, clog);
+    clog << '\n';
+  #endif
+    if (!rule.check_cond(subst))
+    {
+  #ifdef FHECO_LOGGING
+      clog << "condition not satisfied\n";
+  #endif
     if (order_operands_enabled)
       Compiler::enable_order_operands();
     return false;
   }
-
   vector<size_t> created_terms_ids;
   auto equiv_term = construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
-#ifdef FHECO_LOGGING
-  clog << "replace with \"" << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
-#endif
+  #ifdef FHECO_LOGGING
+    clog << "replace with \"" << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
+  #endif
   func_->replace_term_with(term, equiv_term);
   if (order_operands_enabled)
     Compiler::enable_order_operands();
@@ -112,9 +111,9 @@ bool TRS::apply_rule(ir::Term *term, const Rule &rule)
 bool TRS::rewrite_term(
   size_t id, RewriteHeuristic heuristic, int64_t &max_iter, bool rewrite_created_sub_terms, bool global_analysis)
 {
-#ifdef FHECO_LOGGING
-  util::ExprPrinter expr_printer{func_};
-#endif
+  #ifdef FHECO_LOGGING
+    util::ExprPrinter expr_printer{func_};
+  #endif
   bool did_rewrite = false;
   stack<size_t> call_stack;
   call_stack.push(id);
@@ -132,14 +131,14 @@ bool TRS::rewrite_term(
 
     --max_iter;
 
-#ifdef FHECO_LOGGING
-    clog << "\nrewriting term \"" << expr_printer.expand_term_str_expr(top_term) << "\"\n";
-#endif
+    #ifdef FHECO_LOGGING
+        clog << "\nrewriting term \"" << expr_printer.expand_term_str_expr(top_term) << "\"\n";
+    #endif
     for (const auto &rule : ruleset_.pick_rules(top_term->op_code().type()))
     {
-#ifdef FHECO_LOGGING
-      clog << "trying rule \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\", ";
-#endif
+      #ifdef FHECO_LOGGING
+            clog << "trying rule \"" << util::ExprPrinter::make_rule_str_repr(rule) << "\", ";
+      #endif
       Substitution subst;
       double rel_cost = 0;
       ir::Term::PtrSet to_delete;
@@ -147,40 +146,39 @@ bool TRS::rewrite_term(
 
       if (!matched)
       {
-#ifdef FHECO_LOGGING
-        clog << "matching failed\n";
-#endif
+        #ifdef FHECO_LOGGING
+                clog << "matching failed\n";
+        #endif
         continue;
       }
-#ifdef FHECO_LOGGING
-      clog << "unified with substitution:\n";
-      clog << "σ = ";
-      pprint_substitution(func_, subst, clog);
-      clog << '\n';
-#endif
+      #ifdef FHECO_LOGGING
+            clog << "unified with substitution:\n";
+            clog << "σ = ";
+            pprint_substitution(func_, subst, clog);
+            clog << '\n';
+      #endif
 
       if (!rule.check_cond(subst))
       {
-#ifdef FHECO_LOGGING
-        clog << "condition not satisfied\n";
-#endif
+        #ifdef FHECO_LOGGING
+                clog << "condition not satisfied\n";
+        #endif
         continue;
       }
 
       vector<size_t> created_terms_ids;
       auto equiv_term =
         construct_term(rule.get_rhs(subst), subst, to_delete, global_analysis, rel_cost, created_terms_ids);
-
-#ifdef FHECO_LOGGING
-      if (global_analysis)
-        clog << "constructed rhs, rel_cost=" << rel_cost << '\n';
-#endif
+      #ifdef FHECO_LOGGING
+            if (global_analysis)
+              clog << "constructed rhs, rel_cost=" << rel_cost << '\n';
+      #endif
 
       if (!global_analysis || rel_cost <= 0)
       {
-#ifdef FHECO_LOGGING
-        clog << "replace with \"" << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
-#endif
+        #ifdef FHECO_LOGGING
+            clog << "replace with \"" << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
+        #endif
         func_->replace_term_with(top_term, equiv_term);
         did_rewrite = true;
 
@@ -188,19 +186,19 @@ bool TRS::rewrite_term(
         {
           switch (heuristic)
           {
-          case RewriteHeuristic::bottom_up:
-            for (auto created_term_id_it = created_terms_ids.crbegin(); created_term_id_it != created_terms_ids.crend();
-                 ++created_term_id_it)
-              call_stack.push(*created_term_id_it);
-            break;
+            case RewriteHeuristic::bottom_up:
+              for (auto created_term_id_it = created_terms_ids.crbegin(); created_term_id_it != created_terms_ids.crend();
+                  ++created_term_id_it)
+                call_stack.push(*created_term_id_it);
+              break;
 
-          case RewriteHeuristic::top_down:
-            for (auto created_term_id : created_terms_ids)
-              call_stack.push(created_term_id);
-            break;
+            case RewriteHeuristic::top_down:
+              for (auto created_term_id : created_terms_ids)
+                call_stack.push(created_term_id);
+              break;
 
-          default:
-            throw logic_error("unhandled RewriteHeuristic");
+            default:
+              throw logic_error("unhandled RewriteHeuristic");
           }
         }
         else
@@ -211,9 +209,9 @@ bool TRS::rewrite_term(
         break;
       }
       else if (func_->data_flow().can_delete(equiv_term))
-#ifdef FHECO_LOGGING
-        clog << "delete constructed equiv_term \"" << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
-#endif
+      #ifdef FHECO_LOGGING
+              clog << "delete constructed equiv_term \"" << expr_printer.expand_term_str_expr(equiv_term) << "\"\n";
+      #endif
       func_->delete_term_cascade(equiv_term);
     }
   }
@@ -243,12 +241,13 @@ bool TRS::match(
     auto top_call = call_stack.top();
     call_stack.pop();
     auto top_term = top_call.term_;
-    if (global_analysis && top_call.children_processed_)
+    
+    /*if (global_analysis && top_call.children_processed_)
     {
       visited_terms.insert(top_term);
       sorted_terms.push_back(top_term);
       continue;
-    }
+    }*/
 
     if (term_matchers.empty())
     {
@@ -257,7 +256,6 @@ bool TRS::match(
 
       break;
     }
-
     const TermMatcher &top_term_matcher = term_matchers.top();
     term_matchers.pop();
     if (top_term_matcher.is_variable())
@@ -313,11 +311,11 @@ bool TRS::match(
         if (top_term_matcher.type() != top_term->type())
           return false;
 
-        if (global_analysis)
+        /*if (global_analysis)
         {
           if (auto it = visited_terms.find(top_term); it == visited_terms.end())
             call_stack.push(Call{top_term, true});
-        }
+        }*/
         for (size_t i = 0; i < top_term_matcher.operands().size(); ++i)
         {
           term_matchers.push(top_term_matcher.operands()[i]);
@@ -326,7 +324,7 @@ bool TRS::match(
       }
     }
   }
-  if (global_analysis)
+  /*if (global_analysis)
   {
     to_delete.insert(term);
     rel_cost = -ir::static_eval_op(func_, term->op_code(), term->operands());
@@ -350,7 +348,7 @@ bool TRS::match(
       if (to_delete_it != to_delete.end())
         rel_cost -= ir::static_eval_op(func_, sorted_term->op_code(), sorted_term->operands());
     }
-  }
+  }*/
   return true;
 }
 
@@ -400,8 +398,10 @@ ir::Term *TRS::construct_term(
           ir::OpCode term_op_code = convert_op_code(matcher_op_code, move(generators_vals));
           if (global_analysis)
           {
+            //std::cout<<"===> check if cse is enabled : \n";
             if (Compiler::cse_enabled())
             {
+              //std::cout<<"===> welcome in trs cse : \n";
               if (!func_->data_flow().find_op_commut(&term_op_code, &term_operands))
                 rel_cost += ir::static_eval_op(func_, term_op_code, term_operands);
             }
@@ -411,8 +411,10 @@ ir::Term *TRS::construct_term(
 
           bool inserted;
           auto term = func_->insert_op_term(move(term_op_code), move(term_operands), inserted);
+          //std::cout<<"===> check if cse & global_anaylsis is enabled : \n";
           if (global_analysis && Compiler::cse_enabled())
           {
+            //std::cout<<"===> welcome in trs cse : \n";
             if (to_delete.find(term) != to_delete.end())
               rel_cost += ir::static_eval_op(func_, term->op_code(), term->operands());
           }
@@ -433,4 +435,5 @@ ir::Term *TRS::construct_term(
   }
   return matching.find(matcher)->second;
 }
+
 } // namespace fheco::trs

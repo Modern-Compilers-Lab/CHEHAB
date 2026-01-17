@@ -16,15 +16,15 @@ class Term;
 
 class Func
 {
-public:
+public: 
   Func(
-    std::string name, std::size_t slot_count, bool delayed_reduct, integer modulus, bool signedness,
+    std::string name, std::size_t slot_count, bool delayed_reduct, int plain_modulus_bit_size, bool signedness,
     bool need_cyclic_rotation, bool overflow_warnings);
 
   Func(
     std::string name, std::size_t slot_count, int bit_width, bool signedness, bool need_cyclic_rotation,
     bool overflow_warnings)
-    : Func(std::move(name), slot_count, true, 1 << bit_width, signedness, need_cyclic_rotation, overflow_warnings)
+    : Func(std::move(name), slot_count, true, bit_width, signedness, need_cyclic_rotation, overflow_warnings)
   {}
 
   template <typename T>
@@ -41,6 +41,8 @@ public:
 
   template <typename T>
   void set_output(const T &out, std::string label);
+  
+  void update_negative_rotation_steps(int polynomial_modulus_degree);
 
   inline Term *insert_op_term(OpCode op_code, std::vector<Term *> operands)
   {
@@ -67,7 +69,7 @@ public:
   Term *insert_const_term(PackedVal packed_val, bool &inserted);
 
   void replace_term_with(Term *term1, Term *term2);
-
+ 
   inline void remove_dead_code() { data_flow_.prune_unreachabe_terms(); }
 
   inline void delete_term_cascade(Term *term) { data_flow_.delete_term_cascade(term); }
@@ -84,16 +86,25 @@ public:
 
   inline const std::size_t &slot_count() const { return slot_count_; }
 
-  inline const util::ClearDataEval &clear_data_evaluator() const { return clear_data_eval_; }
+  inline const int &plain_modulus() const { return plain_modulus_; }
 
+  void set_slot_count(size_t slot_count){
+      slot_count_ = slot_count ;
+  }
+  inline const util::ClearDataEval &clear_data_evaluator() const { return clear_data_eval_; }
+   
   inline bool need_cyclic_rotation() const { return need_cyclic_rotation_; }
 
   inline const Expr &data_flow() const { return data_flow_; }
-
+  void reset_data_flow(){
+    data_flow_.clear(); 
+  }
 private:
   std::string name_;
 
   std::size_t slot_count_;
+
+  int plain_modulus_ ;
 
   bool need_cyclic_rotation_;
 

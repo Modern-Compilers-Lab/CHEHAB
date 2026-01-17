@@ -2,6 +2,7 @@ set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/common.cpp
     ${CMAKE_CURRENT_LIST_DIR}/depth_after_simplify_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/depth_ruleset.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/simplification_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/fold_op_gen_matcher.cpp
     ${CMAKE_CURRENT_LIST_DIR}/halide_adapted_ruleset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/joined_ruleset.cpp

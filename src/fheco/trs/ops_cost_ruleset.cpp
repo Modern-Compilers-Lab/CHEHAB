@@ -187,7 +187,7 @@ Ruleset Ruleset::ops_cost_ruleset(shared_ptr<ir::Func> func)
     {"part-fold-assoc-sub-2", (x + c0) - (c1 - y), (x + y) + (c0 - c1)},
     {"part-fold-assoc-sub-3", (x + c0) - (y + c1), (x - y) + (c0 - c1)},
 
-    {"const-up-assoc-sub-1", (x + c0) - y, (x - y) + c0},
+    {"const-up-assoc-sub-1", (x + c0) - y, (x - y) + c0}, 
 
     {"rotation-up-assoc-sub-1", (x + (y << n)) - z, (x - z) + (y << n), Rule::is_not_rotation(z)},
 

@@ -33,7 +33,6 @@ constexpr std::string_view galois_keys_type{"GaloisKeys"};
 constexpr std::string_view galois_keys_id{"galois_keys"};
 
 const std::string rotation_steps_getter_id = "get_rotation_steps";
-
 constexpr std::size_t line_threshold = 16;
 
 constexpr std::string_view encoder_type{"BatchEncoder"};
@@ -64,7 +63,7 @@ constexpr std::string_view source_includes{
   R"(#include <cstddef>
 #include <cstdint>
 #include <utility>
-)"};
+)"}; 
 
 constexpr std::string_view source_usings{
   R"(using namespace std;

@@ -1,7 +1,9 @@
 #include "fheco/ir/func.hpp"
 #include "fheco/ir/term.hpp"
 #include "fheco/util/common.hpp"
-#include "fheco/util/expr_printer.hpp"
+#include "fheco/util/expr_printer.hpp" 
+#include <iostream>
+#include <sstream>
 #include <stack>
 #include <stdexcept>
 #include <utility>
@@ -10,17 +12,45 @@ using namespace std;
 
 namespace fheco::util
 {
+bool startsWith(const std::string &str, const std::string &prefix)
+{
+  // Check if the prefix is longer than the string
+  if (str.length() < prefix.length())
+  {
+    return false;
+  }
+
+  // Compare the first 'prefix.length()' characters of the string with the prefix
+  return str.compare(0, prefix.length(), prefix) == 0;
+}
+std::vector<std::string> split(const std::string &str, char delimiter)
+{
+  std::vector<std::string> tokens;
+  std::istringstream stream(str);
+  std::string token;
+
+  while (std::getline(stream, token, delimiter))
+  {
+    tokens.push_back(token);
+  }
+
+  return tokens;
+}
+
 // for infix representation to reduce unnecessary parenthesis
 const unordered_map<ir::OpCode::Type, int> ExprPrinter::ops_precedence_ = {
   {ir::OpCode::Type::encrypt, 1}, {ir::OpCode::Type::mod_switch, 1}, {ir::OpCode::Type::relin, 1},
   {ir::OpCode::Type::negate, 1},  {ir::OpCode::Type::mul, 2},        {ir::OpCode::Type::square, 2},
-  {ir::OpCode::Type::add, 3},     {ir::OpCode::Type::sub, 3},        {ir::OpCode::Type::rotate, 4}};
+  {ir::OpCode::Type::add, 3},     {ir::OpCode::Type::sub, 3},        {ir::OpCode::Type::rotate, 4},
+  {ir::OpCode::Type::SumVec, 4} 
+};
 
 const unordered_map<trs::OpGenOpCode::Type, int> ExprPrinter::op_gen_matcher_ops_precedence_ = {
   {trs::OpGenOpCode::Type::negate, 1},
   {trs::OpGenOpCode::Type::mod, 2},
   {trs::OpGenOpCode::Type::add, 3},
-  {trs::OpGenOpCode::Type::sub, 3}};
+  {trs::OpGenOpCode::Type::sub, 3}
+};
 
 string ExprPrinter::make_rule_str_repr(const trs::Rule &rule, bool show_label, Mode mode)
 {
@@ -60,7 +90,7 @@ string ExprPrinter::make_term_matcher_str_expr(const trs::TermMatcher &term_matc
     {
       const auto &arg = term_matcher.operands()[0];
       const auto &arg_expr = make_term_matcher_str_expr(arg, mode);
-      if (term_matcher.op_code().type() == ir::OpCode::Type::rotate)
+      if (term_matcher.op_code().type() == ir::OpCode::Type::rotate || term_matcher.op_code().type() == ir::OpCode::Type::SumVec)
       {
         auto steps_expr = make_op_gen_matcher_str_expr(term_matcher.op_code().steps(), mode);
         if (term_matcher.op_code().steps().is_operation())
@@ -192,7 +222,9 @@ string ExprPrinter::make_op_gen_matcher_str_expr(const trs::OpGenMatcher &op_gen
   else
     throw invalid_argument("invalid mode");
 }
-
+/******************************************************************************************/
+/*****************************************************************************************/
+/******************************************************************************************/
 void ExprPrinter::make_terms_str_expr(Mode mode)
 {
   terms_str_exprs_.clear();
@@ -200,7 +232,10 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
   for (auto term : func_->get_top_sorted_terms())
   {
     if (term->is_leaf())
+    {
+
       terms_str_exprs_.emplace(term->id(), make_leaf_str_expr(term));
+    }
     else
     {
       if (mode_ == Mode::infix || mode_ == Mode::infix_expl_paren)
@@ -210,7 +245,7 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
         {
           auto arg = term->operands()[0];
           const auto &arg_expr = terms_str_exprs_.at(arg->id());
-          if (term->op_code().type() == ir::OpCode::Type::rotate)
+          if (term->op_code().type() == ir::OpCode::Type::rotate || term->op_code().type() == ir::OpCode::Type::SumVec)
           {
             if (arg->is_operation())
               terms_str_exprs_.emplace(term->id(), "(" + arg_expr + ") " + term->op_code().str_repr());
@@ -250,9 +285,32 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
       }
       else if (mode == Mode::prefix)
       {
-        string tmp_str_expr = term->op_code().str_repr();
+        string opcode = term->op_code().str_repr();
+        string tmp_str_expr;
+        vector<string> operands;
         for (auto operand : term->operands())
-          tmp_str_expr += " " + terms_str_exprs_.at(operand->id());
+          operands.push_back(terms_str_exprs_.at(operand->id()));
+        if (startsWith(opcode, "<<"))
+        {
+          auto op = split(opcode, ' ');
+          tmp_str_expr = "( " + op[0] + " " + operands[0] + " " + op[1] + " )";
+        }else if (startsWith(opcode, "SumVec")){
+          auto op = split(opcode, ' ');
+          tmp_str_expr = "( " + op[0] + " " + operands[0] + " " + op[1] + " )";
+        }
+        else
+        {
+          if (opcode == "negate")
+          {
+            opcode = "-";
+          }
+          tmp_str_expr = "( " + opcode;
+          for (auto operand : operands)
+          {
+            tmp_str_expr += " " + operand;
+          }
+          tmp_str_expr += " )";
+        }
         terms_str_exprs_.emplace(term->id(), move(tmp_str_expr));
       }
       else if (mode == Mode::posfix)
@@ -268,7 +326,9 @@ void ExprPrinter::make_terms_str_expr(Mode mode)
     }
   }
 }
-
+/*************************************************************************************/
+/************************************************************************************/
+/*************************************************************************************** */
 void ExprPrinter::print_expand_outputs_str_expr(ostream &os, int depth, Mode mode) const
 {
   os << "output: expression\n";
@@ -327,7 +387,7 @@ string ExprPrinter::expand_term_str_expr(const ir::Term *term, int depth, Mode m
           if (top_term->op_code().arity() == 1)
           {
             auto arg = top_term->operands()[0];
-            if (top_term->op_code().type() == ir::OpCode::Type::rotate)
+            if (top_term->op_code().type() == ir::OpCode::Type::rotate || top_term->op_code().type() == ir::OpCode::Type::SumVec )
             {
               if (arg->is_operation())
                 result =

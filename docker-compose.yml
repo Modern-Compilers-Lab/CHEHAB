@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  chehab-main:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SKIP_BUILD: 0
+    container_name: chehab-main
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./RL/fhe_rl/config.py:/app/RL/fhe_rl/config.py
+      - ./run_benchmarks.py:/app/run_benchmarks.py
+      - ./results:/app/results
+    command: ["/bin/bash"]
+
+  chehab-demo:
+    build:
+      context: .
+      dockerfile: webapp/Dockerfile
+      args:
+        SKIP_BUILD: 0
+    ports:
+      - "8000:8000"
+    container_name: chehab-demo
+    volumes:
+      - .:/app
+    command: >
+      conda run --no-capture-output -n chehabEnv uvicorn webapp.main:app --host 0.0.0.0 --port 8000 --reload

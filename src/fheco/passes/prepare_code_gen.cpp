@@ -33,7 +33,7 @@ void prepare_code_gen(const shared_ptr<ir::Func> &func)
       if (arg1->type() == ir::Term::Type::plain)
       {
         if (term->op_code().commutativity())
-        {
+        { 
           ir::Term *adjusted_term = func->insert_op_term(term->op_code(), {arg2, arg1});
           func->replace_term_with(term, adjusted_term);
         }

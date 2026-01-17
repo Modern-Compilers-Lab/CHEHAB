@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <utility>
 
-using namespace std;
+using namespace std; 
 
 namespace fheco::ir
 {

@@ -12,7 +12,8 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
+#include <iostream>
+#include <fstream>
 static_assert(sizeof(std::size_t) == 8, "require sizeof(std::size_t) == 8");
 
 namespace fheco::ir
@@ -22,6 +23,9 @@ class Func;
 
 namespace fheco::util
 {
+
+
+void copyFile(const std::string& sourceFile, const std::string& destinationFile) ;
 // https://github.com/HowardHinnant/hash_append/issues/7#issuecomment-629414712
 template <typename T>
 inline void hash_combine(std::size_t &seed, const T &val)

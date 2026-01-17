@@ -3,7 +3,7 @@ set(FHECO_SOURCE_FILES ${FHECO_SOURCE_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/expr.cpp
     ${CMAKE_CURRENT_LIST_DIR}/func.cpp
     ${CMAKE_CURRENT_LIST_DIR}/op_code.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/term.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/term.cpp 
 )
 
 install(
